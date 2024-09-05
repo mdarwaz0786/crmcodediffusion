@@ -36,7 +36,7 @@ export const loginTeam = async (req, res) => {
       return res.status(404).json({ success: false, message: "Invalid Employee ID" });
     };
 
-    const isMatch = bcrypt.compare(password, team.password);
+    const isMatch = await bcrypt.compare(password, team.password);
 
     if (!isMatch) {
       return res.status(401).json({ success: false, message: "Invalid Password" });
