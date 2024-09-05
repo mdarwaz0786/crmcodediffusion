@@ -8,7 +8,7 @@
     "client": "npm run dev --prefix ./client",
     "server": "nodemon ./server/app.js",
     "dev": "concurrently \"npm run client\" \"npm run server\"",
-    "start": "pm2 start ./server/app.js --name crm-server",
+    "start": "pm2 start ./server/app.js --name crm-server --log ~/pm2-logs/crm-server.log --env production",
     "stop": "pm2 stop crm-server",
     "restart": "pm2 restart crm-server",
     "delete": "pm2 delete crm-server",
