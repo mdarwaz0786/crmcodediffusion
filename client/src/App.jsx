@@ -1,0 +1,117 @@
+import { Routes, Route } from "react-router-dom";
+import Login from "./Components/Login/Login.jsx";
+import Logout from "./Components/Logout/Logout.jsx";
+import MainPage from "./pages/MainPage/MainPage.jsx";
+import ProjectDashboard from "./Components/Dashboard/ProjectDashboard.jsx";
+import Project from "./Components/Project/Project.jsx";
+import AddProject from "./Components/Project/AddProject.jsx";
+import EditProject from "./Components/Project/EditProject.jsx";
+import SingleProjectDetail from "./Components/Project/SingleProjectDetail.jsx";
+import AddWorkDetail from "./Components/AddWorkDetail/AddWorkDetail.jsx";
+import AddPayment from "./Components/AddPayment/AddPayment.jsx";
+import ProjectType from './Components/Project/ProjectType/projectType.jsx';
+import AddProjectType from "./Components/Project/ProjectType/AddProjectType.jsx";
+import EditProjectType from "./Components/Project/ProjectType/EditProjectType.jsx";
+import ProjectCategory from './Components/Project/ProjectCategory/ProjectCategory.jsx';
+import AddProjectCategory from "./Components/Project/ProjectCategory/AddProjectCategory.jsx";
+import EditProjectCategory from "./Components/Project/ProjectCategory/EditProjectCategory.jsx";
+import ProjectStatus from './Components/Project/ProjectStatus/ProjectStatus.jsx';
+import AddProjectStatus from "./Components/Project/ProjectStatus/AddProjectStatus.jsx";
+import EditProjectStatus from "./Components/Project/ProjectStatus/EditProjectStatus.jsx";
+import Customer from './Components/Project/Customer/Customer.jsx';
+import AddCustomer from "./Components/Project/Customer/AddCustomer.jsx";
+import EditCustomer from "./Components/Project/Customer/EditCustomer.jsx";
+import TeamMember from "./Components/Project/TeamMember/TeamMember.jsx";
+import AddTeamMember from "./Components/Project/TeamMember/AddTeamMember.jsx";
+import EditTeamMember from "./Components/Project/TeamMember/EditTeamMember.jsx";
+import ProjectTiming from "./Components/Project/ProjectTiming/ProjectTiming.jsx";
+import AddProjectTiming from "./Components/Project/ProjectTiming/AddProjectTiming.jsx";
+import EditProjectTiming from "./Components/Project/ProjectTiming/EditProjectTiming.jsx";
+import ProjectPriority from "./Components/Project/ProjectPriority/ProjectPriority.jsx";
+import AddProjectPriority from "./Components/Project/ProjectPriority/AddProjectPriority.jsx";
+import EditProjectPriority from "./Components/Project/ProjectPriority/EditProjectPriority.jsx";
+import Role from "./Components/Project/Role/Role.jsx";
+import AddRole from "./Components/Project/Role/AddRole.jsx";
+import EditRole from "./Components/Project/Role/EditRole.jsx";
+import Designation from "./Components/Project/Designation/Designation.jsx";
+import AddDesignation from "./Components/Project/Designation/AddDesignation.jsx";
+import EditDesignation from "./Components/Project/Designation/EditDesignation.jsx";
+import TechnologyList from "./Components/Project/Technology/TechnologyList.jsx";
+import AddTechnology from "./Components/Project/Technology/AddTechnology.jsx";
+import EditTechnology from "./Components/Project/Technology/EditTechnology.jsx";
+import InvoiceList from "./Components/Invoice/InvoiceList.jsx";
+import AddInvoice from "./Components/Invoice/AddInvoice.jsx";
+import EditInvoice from "./Components/Invoice/EditInvoice.jsx";
+import SingleInvoice from "./Components/Invoice/SingleInvoice.jsx";
+import ProformaInvoiceList from "./Components/ProformaInvoice/ProformaInvoiceList.jsx";
+import EditProformaInvoice from "./Components/ProformaInvoice/EditProformaInvoice.jsx";
+import AddProformaInvoice from "./Components/ProformaInvoice/AddProformaInvoice.jsx";
+import SingleProformaInvoice from "./Components/ProformaInvoice/SingleProformaInvoice.jsx";
+import Profile from "./Components/Profile/Profile.jsx";
+import AttendanceList from "./Components/Attendance/AttendanceList.jsx";
+import AddAttendance from "./Components/Attendance/AddAttendance.jsx";
+import EditAttendance from "./Components/Attendance/EditAttendance.jsx";
+
+const App = () => {
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<MainPage />}>
+          <Route index element={<ProjectDashboard />} />
+          <Route path="client" element={<Customer />} />
+          <Route path="add-client" element={<AddCustomer />} />
+          <Route path="edit-client/:id" element={<EditCustomer />} />
+          <Route path="project" element={<Project />} />
+          <Route path="add-project" element={<AddProject />} />
+          <Route path="edit-project/:id" element={<EditProject />} />
+          <Route path="single-project-detail/:id" element={<SingleProjectDetail />} />
+          <Route path="add-work-detail" element={<AddWorkDetail />} />
+          <Route path="add-payment" element={<AddPayment />} />
+          <Route path="project-type" element={<ProjectType />} />
+          <Route path="add-project-type" element={<AddProjectType />} />
+          <Route path="edit-project-type/:id" element={<EditProjectType />} />
+          <Route path="project-category" element={<ProjectCategory />} />
+          <Route path="add-project-category" element={<AddProjectCategory />} />
+          <Route path="edit-project-category/:id" element={<EditProjectCategory />} />
+          <Route path="project-status" element={<ProjectStatus />} />
+          <Route path="add-project-status" element={<AddProjectStatus />} />
+          <Route path="edit-project-status/:id" element={<EditProjectStatus />} />
+          <Route path="employee" element={<TeamMember />} />
+          <Route path="add-employee" element={<AddTeamMember />} />
+          <Route path="edit-employee/:id" element={<EditTeamMember />} />
+          <Route path="project-timeline" element={<ProjectTiming />} />
+          <Route path="add-project-timeline" element={<AddProjectTiming />} />
+          <Route path="edit-project-timeline/:id" element={<EditProjectTiming />} />
+          <Route path="role" element={<Role />} />
+          <Route path="add-role" element={<AddRole />} />
+          <Route path="edit-role/:id" element={<EditRole />} />
+          <Route path="designation" element={<Designation />} />
+          <Route path="add-designation" element={<AddDesignation />} />
+          <Route path="edit-designation/:id" element={<EditDesignation />} />
+          <Route path="technology" element={<TechnologyList />} />
+          <Route path="add-technology" element={<AddTechnology />} />
+          <Route path="edit-technology/:id" element={<EditTechnology />} />
+          <Route path="project-priority" element={<ProjectPriority />} />
+          <Route path="add-project-priority" element={<AddProjectPriority />} />
+          <Route path="edit-project-priority/:id" element={<EditProjectPriority />} />
+          <Route path="invoice" element={<InvoiceList />} />
+          <Route path="add-invoice" element={<AddInvoice />} />
+          <Route path="edit-invoice/:id" element={<EditInvoice />} />
+          <Route path="single-invoice/:id" element={<SingleInvoice />} />
+          <Route path="proforma-invoice" element={<ProformaInvoiceList />} />
+          <Route path="add-proforma-invoice" element={<AddProformaInvoice />} />
+          <Route path="edit-proforma-invoice/:id" element={<EditProformaInvoice />} />
+          <Route path="single-proforma-invoice/:id" element={<SingleProformaInvoice />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="attendance" element={<AttendanceList />} />
+          <Route path="add-attendance" element={<AddAttendance />} />
+          <Route path="edit-attendance/:id" element={<EditAttendance />} />
+        </Route>
+        <Route path="/login" element={<Login />} />
+        <Route path="/logout" element={<Logout />} />
+      </Routes>
+    </>
+  );
+};
+
+export default App;

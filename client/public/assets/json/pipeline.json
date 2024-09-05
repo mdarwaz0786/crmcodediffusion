@@ -1,0 +1,95 @@
+{
+	"data":[
+		{
+			"id" : 1,
+			"si_no" : "",
+			"name" : "Sales",
+			"deal_value" : "$4,50,664",
+			"no_deal" : "315",
+			"stage" : "0",
+			"createdat" : "25 Sep 2023",
+			"status" : "1",
+			"Action" : ""
+		},
+		{
+			"id" : 2,
+			"si_no" : "",
+			"name" : "Marketing",
+			"deal_value" : "$3,12,893",
+			"no_deal" : "447",
+			"stage" : "0",
+			"createdat" : "29 Sep 2023",
+			"status" : "1",
+			"Action" : ""
+		},
+		{
+			"id" : 3,
+			"si_no" : "",
+			"name" : "Email",
+			"deal_value" : "$2,89,274",
+			"no_deal" : "654",
+			"stage" : "1",
+			"createdat" : "15 Oct 2023",
+			"status" : "1",
+			"Action" : ""
+		},
+		{
+			"id" : 4,
+			"si_no" : "",
+			"name" : "Chats",
+			"deal_value" : "$1,59,326",
+			"no_deal" : "768",
+			"stage" : "0",
+			"createdat" : "29 Oct 2023",
+			"status" : "1",
+			"Action" : ""
+		},
+		{
+			"id" : 5,
+			"si_no" : "",
+			"name" : "Operational",
+			"deal_value" : "$2,90,173",
+			"no_deal" : "142",
+			"stage" : "0",
+			"createdat" : "03 Nov 2023",
+			"status" : "0",
+			"Action" : ""
+		},
+		{
+			"id" : 6,
+			"si_no" : "",
+			"name" : "Collaborative",
+			"deal_value" : "$4,51,417",
+			"no_deal" : "315",
+			"stage" : "2",
+			"createdat" : "17 Nov 2023",
+			"status" : "1",
+			"Action" : ""
+		},
+		{
+			"id" : 7,
+			"si_no" : "",
+			"name" : "Differentiate",
+			"deal_value" : "$3,17,589",
+			"no_deal" : "478",
+			"stage" : "3",
+			"createdat" : "23 Nov 2023",
+			"status" : "1",
+			"Action" : ""
+		},
+		{
+			"id" : 8,
+			"si_no" : "",
+			"name" : "Interact ",
+			"deal_value" : "$1,69,146",
+			"no_deal" : "664",
+			"stage" : "4",
+			"createdat" : "09 Dec 2023",
+			"status" : "1",
+			"Action" : ""
+		}
+		
+	]
+	
+}
+

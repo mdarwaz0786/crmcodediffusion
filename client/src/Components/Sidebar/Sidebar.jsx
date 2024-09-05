@@ -1,0 +1,190 @@
+/* eslint-disable no-extra-semi */
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/authContext.jsx";
+import usericon from "../../Assets/user-icon.png";
+import { useState } from "react";
+
+const Sidebar = () => {
+  const { team, isLoggedIn } = useAuth();
+  const permissions = team?.role?.permissions;
+  const [active, setActive] = useState(null);
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const isMobile = window.innerWidth <= 991;
+
+  const handleActive = (element) => {
+    setActive(element);
+  };
+
+  return (
+    <div className="main-wrapper">
+      <div className="sidebar" id="sidebar">
+        <div className="sidebar-inner slimscroll">
+          <div id="sidebar-menu" className="sidebar-menu">
+            <ul>
+              <li className="clinicdropdown">
+                <Link to="#">
+                  <img src={usericon} className="img-fluid" alt="Profile" />
+                  <div className="user-names">
+                    {
+                      isLoggedIn ? (
+                        <>
+                          <h5>{team?.name}</h5>
+                          <h6>{team?.role?.name}</h6>
+                        </>
+                      ) : (
+                        <>
+                          <h5><Link to="/login">Login</Link></h5>
+                        </>
+                      )
+                    }
+                  </div>
+                </Link>
+              </li>
+            </ul>
+
+            <ul>
+              {
+                (permissions?.project?.access) && (
+                  <li>
+                    <h6 className="submenu-hdr">Main Menu</h6>
+                    <ul>
+                      <li><Link to="/" className={currentPath === "/" ? "active" : ""} id={isMobile && active === "dashboard" ? "mobile_btn" : ""} onClick={() => handleActive("dashboard")}><i className="ti ti-layout-2" style={{ color: currentPath === "/" ? "" : "#FFA201" }} /><span>Dashboard</span></Link></li>
+                    </ul>
+                  </li>
+                )
+              }
+              <li>
+                {
+                  (permissions?.project?.access ||
+                    permissions?.invoice?.access ||
+                    permissions?.proformaInvoice?.access ||
+                    permissions?.project?.fields?.workDetail?.show ||
+                    permissions?.project?.fields?.payment?.show ||
+                    permissions?.attendance?.access) && (
+                    <h6 className="submenu-hdr">CRM</h6>
+                  )
+                }
+                <ul>
+                  {
+                    (permissions?.project?.access) && (
+                      <li><Link to="/project" className={currentPath === "/project" ? "active" : ""} id={isMobile && active === "projects" ? "mobile_btn" : ""} onClick={() => handleActive("projects")}><i style={{ color: currentPath === "/project" ? "" : "#FFA201" }} className="ti ti-briefcase"></i><span>Projects</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.project?.fields?.workDetail?.show) && (
+                      <li><Link to="/add-work-detail" className={currentPath === "/add-work-detail" ? "active" : ""} id={isMobile && active === "addWorkDetail" ? "mobile_btn" : ""} onClick={() => handleActive("addWorkDetail")}><i style={{ color: currentPath === "/add-work-detail" ? "" : "#FFA201" }} className="ti ti-clipboard"></i><span>Add Work Detail</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.project?.fields?.payment?.show) && (
+                      <li><Link to="/add-payment" className={currentPath === "/add-payment" ? "active" : ""} id={isMobile && active === "addPayment" ? "mobile_btn" : ""} onClick={() => handleActive("addPayment")}><i style={{ color: currentPath === "/add-payment" ? "" : "#FFA201" }} className="ti ti-credit-card"></i><span>Add Payment</span></Link></li>
+                    )
+                  }
+                  {/* {
+                    (permissions?.attendance?.access) && (
+                      <li><Link to="/attendance" className={currentPath === "/attendance" ? "active" : ""} id={isMobile && active === "attendance" ? "mobile_btn" : ""} onClick={() => handleActive("attendance")}><i style={{ color: currentPath === "/attendance" ? "" : "#FFA201" }} className="ti ti-calendar-check"></i><span>Attendance</span></Link></li>
+                    )
+                  } */}
+                  <li className="submenu">
+                    <Link to="#" className={currentPath === "/invoice" || currentPath === "/proforma-invoice" ? "active subdrop" : ""}>
+                      {
+                        (permissions?.invoice?.access || permissions?.proformaInvoice?.access) && (
+                          <>
+                            <i className="ti ti-receipt" style={{ color: currentPath === "/invoice" || currentPath === "/proforma-invoice" ? "" : "#FFA201" }} /><span>Invoice</span><span className="menu-arrow" />
+                          </>
+                        )
+                      }
+                    </Link>
+                    <ul>
+                      {
+                        (permissions?.invoice?.access) && (
+                          <li><Link to="/invoice" className={currentPath === "/invoice" ? "active" : ""} id={isMobile && active === "invoice" ? "mobile_btn" : ""} onClick={() => handleActive("invoice")}>Invoice</Link></li>
+                        )
+                      }
+                      {
+                        (permissions?.proformaInvoice?.access) && (
+                          <li><Link to="/proforma-invoice" className={currentPath === "/proforma-invoice" ? "active" : ""} id={isMobile && active === "proformaInvoice" ? "mobile_btn" : ""} onClick={() => handleActive("proformaInvoice")}>Proforma Invoice</Link></li>
+                        )
+                      }
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                {
+                  (permissions?.customer?.access ||
+                    permissions?.team?.access ||
+                    permissions?.role?.access ||
+                    permissions?.designation?.access ||
+                    permissions?.technology?.access ||
+                    permissions?.projectType?.access ||
+                    permissions?.projectStatus?.access ||
+                    permissions?.projectCategory?.access ||
+                    permissions?.projectTiming?.access ||
+                    permissions?.projectPriority?.access) && (
+                    <h6 className="submenu-hdr">Master</h6>
+                  )
+                }
+                <ul>
+                  {
+                    (permissions?.customer?.access) && (
+                      <li><Link to="/client" className={currentPath === "/client" ? "active" : ""} id={isMobile && active === "client" ? "mobile_btn" : ""} onClick={() => handleActive("client")}><i style={{ color: currentPath === "/client" ? "" : "#FFA201" }} className="ti ti-user-circle"></i><span>Client</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.team?.access) && (
+                      <li><Link to="/employee" className={currentPath === "/employee" ? "active" : ""} id={isMobile && active === "employee" ? "mobile_btn" : ""} onClick={() => handleActive("employee")}><i style={{ color: currentPath === "/employee" ? "" : "#FFA201" }} className="ti ti-user"></i><span>Employee</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.role?.access) && (
+                      <li><Link to="/role" className={currentPath === "/role" ? "active" : ""} id={isMobile && active === "role" ? "mobile_btn" : ""} onClick={() => handleActive("role")}><i style={{ color: currentPath === "/role" ? "" : "#FFA201" }} className="ti ti-shield-check"></i><span>Role & Permission</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.designation?.access) && (
+                      <li><Link to="/designation" className={currentPath === "/designation" ? "active" : ""} id={isMobile && active === "designation" ? "mobile_btn" : ""} onClick={() => handleActive("designation")}><i style={{ color: currentPath === "/designation" ? "" : "#FFA201" }} className="ti ti-id-badge"></i><span>Designation</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.technology?.access) && (
+                      <li><Link to="/technology" className={currentPath === "/technology" ? "active" : ""} id={isMobile && active === "technology" ? "mobile_btn" : ""} onClick={() => handleActive("technology")}><i style={{ color: currentPath === "/technology" ? "" : "#FFA201" }} className="ti ti-code"></i><span>Technology</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.projectType?.access) && (
+                      <li><Link to="/project-type" className={currentPath === "/project-type" ? "active" : ""} id={isMobile && active === "projectType" ? "mobile_btn" : ""} onClick={() => handleActive("projectType")}><i style={{ color: currentPath === "/project-type" ? "" : "#FFA201" }} className="ti ti-apps"></i><span>Project Type</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.projectStatus?.access) && (
+                      <li><Link to="/project-status" className={currentPath === "/project-status" ? "active" : ""} id={isMobile && active === "projectStatus" ? "mobile_btn" : ""} onClick={() => handleActive("projectStatus")}><i style={{ color: currentPath === "/project-status" ? "" : "#FFA201" }} className="ti ti-clipboard-list"></i><span>Project Status</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.projectCategory?.access) && (
+                      <li><Link to="/project-category" className={currentPath === "/project-category" ? "active" : ""} id={isMobile && active === "projectCategory" ? "mobile_btn" : ""} onClick={() => handleActive("projectCategory")}><i style={{ color: currentPath === "/project-category" ? "" : "#FFA201" }} className="ti ti-tags"></i><span>Project Category</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.projectTiming?.access) && (
+                      <li><Link to="/project-timeline" className={currentPath === "/project-timeline" ? "active" : ""} id={isMobile && active === "projectTimeline" ? "mobile_btn" : ""} onClick={() => handleActive("projectTimeline")}><i style={{ color: currentPath === "/project-timeline" ? "" : "#FFA201" }} className="ti ti-clock"></i><span>Project Timeline</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.projectPriority?.access) && (
+                      <li><Link to="/project-priority" className={currentPath === "/project-priority" ? "active" : ""} id={isMobile && active === "projectPriority" ? "mobile_btn" : ""} onClick={() => handleActive("projectPriority")}><i style={{ color: currentPath === "/project-priority" ? "" : "#FFA201" }} className="ti ti-star"></i><span>Project Priority</span></Link></li>
+                    )
+                  }
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Sidebar;

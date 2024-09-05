@@ -1,0 +1,54 @@
+{
+	"data":[
+		{
+			"id" : 1,
+			"pages" :"Home",
+			"page_slug" : "home",
+			"status" : "0"
+			
+		},
+		{
+			"id" : 2,
+			"pages" :"About Us",
+			"page_slug" : "about-us",
+			"status" : "1"
+			
+		},
+		{
+			"id" : 3,
+			"pages" :"FAQ",
+			"page_slug" : "faq",
+			"status" : "0"
+			
+		},
+		{
+			"id" : 4,
+			"pages" :"Categories",
+			"page_slug" : "categories",
+			"status" : "0"
+			
+		},
+		{
+			"id" : 5,
+			"pages" :"Terms & Conditions",
+			"page_slug" : "terms-conditions",
+			"status" : "0"
+			
+		},
+		{
+			"id" : 6,
+			"pages" :"Privacy Policy",
+			"page_slug" : "privacy policy",
+			"status" : "0"
+			
+		},
+		{
+			"id" : 7,
+			"pages" :"Contact US",
+			"page_slug" : "contact-us",
+			"status" : "0"
+			
+		}
+	]
+	
+}

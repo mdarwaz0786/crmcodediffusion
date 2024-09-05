@@ -1,0 +1,110 @@
+{
+	"data":[
+		{
+			"id" : 1,
+			"si_no" : "",
+			"select" : "",
+            "country_code" : "AS",
+			"state_name" : "American Samosa(+684)",
+			"country_image":"assets/img/flags/as.png",
+			"state": "Swains Island",
+			"Action" : ""
+		},
+		{
+			"id" : 2,
+			"si_no" : "",
+			"select" : "",
+            "country_code" : "AD",
+			"state_name" : "Andorra(+376)",
+			"country_image":"assets/img/flags/ad.png",
+			"state": "Andorra la Vella",
+			"Action" : ""
+			
+		},
+		{
+			"id" : 3,
+			"si_no" : "",
+			"select" : "",
+            "country_code" : "AO",
+			"state_name" : "Angola(+244)",
+			"country_image":"assets/img/flags/ao.png",
+			"state": "Benguella",
+			"Action" : ""
+		},
+		{
+			"id" : 4,
+			"si_no" : "",
+			"select" : "",
+            "country_code" : "AI",
+			"state_name" : "Angulila(+1264)",
+			"country_image":"assets/img/flags/ai.png",
+			"state": "The Valley",
+			"Action" : ""
+		},
+		{
+			"id" : 5,
+			"si_no" : "",
+			"select" : "",
+			"country_code" : "AQ",
+			"state_name" : "Antartica(+672)",
+			"country_image":"assets/img/flags/qa.png",
+			"state": "Victoria Land",
+			"Action" : ""
+		},
+		{
+			"id" : 6,
+			"si_no" : "",
+			"select" : "",
+			"country_code" : "AG",
+			"state_name" : "Antigua & Barbuda(+1268)",
+			"country_image":"assets/img/flags/ag.png",
+			"state": "Saint Paul",
+			"Action" : ""
+		},
+		{
+			"id" : 7,
+			"si_no" : "",
+			"select" : "",
+			"country_code" : "AR",
+			"state_name" : "Argentina(+54)",
+			"country_image":"assets/img/flags/ar.png",
+			"state": "Santa Fe",
+			"Action" : ""
+		},
+		{
+			"id" : 8,
+			"si_no" : "",
+			"select" : "",
+			"country_code" : "AU",
+			"state_name" : "Australia(+61)",
+			"country_image":"assets/img/flags/au.png",
+			"state": "Queensland",
+			"Action" : ""
+		},
+		{
+			"id" : 9,
+			"si_no" : "",
+			"select" : "",
+			"country_code" : "AT",
+			"state_name" : "Austria(+43)",
+			"country_image":"assets/img/flags/at.png",
+			"state": "Tyrol",
+			"Action" : ""
+		}
+		,
+		{
+			"id" : 10,
+			"si_no" : "",
+			"select" : "",
+			"country_code" : "AZ",
+			"state_name" : "Azerbaijan(+994)",
+			"country_image":"assets/img/flags/az.png",
+			"state": "Karabakh",
+			"Action" : ""
+		}
+		
+		
+	]
+	
+}
+

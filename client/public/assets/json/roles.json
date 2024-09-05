@@ -1,0 +1,48 @@
+{
+	"data":[
+		{
+			"id" : 1,
+			"si_no" : "",
+			"roles_name" : "Admin",
+			"created" : "25 Sep 2023, 12:12 pm",
+			"Action" : ""
+		},
+		{
+			"id" : 2,
+			"si_no" : "",
+			"roles_name" : "Company Owner",
+			"created" : "27 Sep 2023, 07:40 am",
+			"Action" : ""
+		},
+		{
+			"id" : 3,
+			"si_no" : "",
+			"roles_name" : "Deal Owner",
+			"created" : "29 Sep 2023, 08:20 am",
+			"Action" : ""
+		},
+		{
+			"id" : 4,
+			"si_no" : "",
+			"roles_name" : "Project Manager",
+			"created" : "25 Sep 2023, 12:12 pm",
+			"Action" : ""
+		},
+		{
+			"id" : 5,
+			"si_no" : "",
+			"roles_name" : "Client",
+			"created" : "15 Oct 2023, 06:18 pm",
+			"Action" : ""
+		},
+		{
+			"id" : 6,
+			"si_no" : "",
+			"roles_name" : "Lead",
+			"created" : "29 Oct 2023, 03:10 pm",
+			"Action" : ""
+		}
+	]
+	
+}
+
