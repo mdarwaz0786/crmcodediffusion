@@ -1,6 +1,5 @@
-This is a CRM Web Application build using MERN STACK.<br>
-
-changes in table name and some input field name in the ui but in the backend it is same.<br>
+This is a crm web application build using MERN STACK.<br>
+Changes in table name and some input field name in the ui but in the backend it is same.<br>
 In the database team table represent emoloyee table.<br>
 In the database customer table represent client table.<br>
 In the database project timing table represent project timeline table.<br>

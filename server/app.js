@@ -48,9 +48,9 @@ if (cluster.isPrimary) {
     console.log(`Worker ${worker.process.pid} died. Forking a new worker...`);
     cluster.fork();
   });
-} else {
-  // Workers can share any TCP connection. In this case, it is an HTTP server.
 
+  // Workers can share any TCP connection. In this case, it is an HTTP server.
+} else {
   // REST API object
   const server = express();
 
@@ -61,7 +61,7 @@ if (cluster.isPrimary) {
 
   // Test route
   server.use("/api/v1", testRoute);
-  // Customer route
+  // Client route
   server.use("/api/v1/customer", customerRoute);
   // Project type route
   server.use("/api/v1/projectType", projectTypeRoute);
@@ -69,11 +69,11 @@ if (cluster.isPrimary) {
   server.use("/api/v1/projectCategory", projectCategoryRoute);
   // Project Status route
   server.use("/api/v1/projectStatus", projectStatusRoute);
-  // Team member route
+  // Employee route
   server.use("/api/v1/team", teamRoute);
   // Project route
   server.use("/api/v1/project", projectRoute);
-  // Project timing route
+  // Project timeline route
   server.use("/api/v1/projectTiming", projectTimingRoute);
   // Role route
   server.use("/api/v1/role", roleRoute);
@@ -85,14 +85,14 @@ if (cluster.isPrimary) {
   server.use("/api/v1/invoice", invoiceRoute);
   // Proforma invoice route
   server.use("/api/v1/proformaInvoice", proformaInvoiceRoute);
-  // Attendence route
+  // Attendance route
   server.use("/api/v1/attendance", attendanceRoute);
-  // Attendence route
+  // Holiday route
   server.use("/api/v1/holiday", holidayRoute);
   // Technology route
   server.use("/api/v1/technology", technologyRoute);
 
-  // Middleware for serving client static file
+  // Middleware for serving client index,html file
   server.use(express.static(path.join(__dirname, "/client/dist")), (req, res, next) => next());
 
   // Route for serving client index.html file
