@@ -6,7 +6,7 @@ import { useAuth } from "../../context/authContext.jsx";
 import Search from "./Search.jsx";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import logo from "../../Assets/logo.png"
+import logo from "../../Assets/logo.png";
 
 const Header = () => {
   const [total, setTotal] = useState("");
