@@ -53,11 +53,11 @@ const Header = () => {
         <div className="header-left active">
           <Link to="/" className="logo logo-normal">
             <img src={logo} alt="logo" />
-            <img src={logo} className="white-logo" alt="whitelogo" />
+            <img src={logo} className="white-logo" alt="white-logo" />
           </Link>
 
           <Link to="/" className="logo-small">
-            <img src={logo} alt="logo" />
+            <img src={logo} alt="logo-small" />
           </Link>
 
           <Link id="toggle_btn" to="#">

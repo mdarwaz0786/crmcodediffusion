@@ -184,6 +184,7 @@
 
 .header-left {
   margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
 }
 
 .header-left img {
@@ -271,18 +272,12 @@
 
   .header-left {
     margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
   }
 
   .header-left img {
     width: 60% !important;
-  }
-
-  .header-left {
-    margin-top: 0.5rem !important;
-  }
-
-  .header-left img {
-    width: 60% !important;
+    height: 60% !important;
   }
 
   .login-logo-custom img {
@@ -344,10 +339,12 @@
 
   .header-left {
     margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
   }
 
   .header-left img {
     width: 60% !important;
+    height: 60% !important;
   }
 
   .login-logo-custom img {
@@ -413,10 +410,12 @@
 
   .header-left {
     margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
   }
 
   .header-left img {
     width: 60% !important;
+    height: 60% !important;
   }
 
   .login-logo-custom img {

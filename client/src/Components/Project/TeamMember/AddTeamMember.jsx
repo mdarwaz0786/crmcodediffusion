@@ -183,7 +183,7 @@ const AddTeamMember = () => {
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="mobile">Mobile Number <span className="text-danger">*</span></label>
+              <label className="col-form-label" htmlFor="mobile">Mobile No. <span className="text-danger">*</span></label>
               <input type="text" className="form-control" name="mobile" id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} />
             </div>
           </div>
