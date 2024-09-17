@@ -73,12 +73,12 @@ const Sidebar = () => {
                   }
                   {
                     (permissions?.project?.fields?.workDetail?.show) && (
-                      <li><Link to="/add-work-detail" className={currentPath === "/add-work-detail" ? "active" : ""} id={isMobile && active === "addWorkDetail" ? "mobile_btn" : ""} onClick={() => handleActive("addWorkDetail")}><i style={{ color: currentPath === "/add-work-detail" ? "" : "#FFA201" }} className="ti ti-clipboard"></i><span>Add Work Detail</span></Link></li>
+                      <li><Link to="/add-work-detail" className={currentPath === "/add-work-detail" ? "active" : ""} id={isMobile && active === "addWorkDetail" ? "mobile_btn" : ""} onClick={() => handleActive("addWorkDetail")}><i style={{ color: currentPath === "/add-work-detail" ? "" : "#FFA201" }} className="ti ti-clipboard"></i><span>Add Daily Work Summary</span></Link></li>
                     )
                   }
                   {
                     (permissions?.project?.fields?.payment?.show) && (
-                      <li><Link to="/add-payment" className={currentPath === "/add-payment" ? "active" : ""} id={isMobile && active === "addPayment" ? "mobile_btn" : ""} onClick={() => handleActive("addPayment")}><i style={{ color: currentPath === "/add-payment" ? "" : "#FFA201" }} className="ti ti-credit-card"></i><span>Add Payment</span></Link></li>
+                      <li><Link to="/add-payment" className={currentPath === "/add-payment" ? "active" : ""} id={isMobile && active === "addPayment" ? "mobile_btn" : ""} onClick={() => handleActive("addPayment")}><i style={{ color: currentPath === "/add-payment" ? "" : "#FFA201" }} className="ti ti-credit-card"></i><span>Add Received Payment</span></Link></li>
                     )
                   }
                   {/* {

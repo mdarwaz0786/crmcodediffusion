@@ -111,8 +111,7 @@ const Header = () => {
                                       <i className="ti ti-briefcase"></i>
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Projects</p>
-                                      <span>Add New Project</span>
+                                      <p>Add New Project</p>
                                     </div>
                                   </div>
                                 </Link>
@@ -128,8 +127,7 @@ const Header = () => {
                                       <i className="ti ti-user-circle"></i>
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Client</p>
-                                      <span>Add New Client</span>
+                                      <p>Add New Client</p>
                                     </div>
                                   </div>
                                 </Link>
@@ -145,8 +143,7 @@ const Header = () => {
                                       <i className="ti ti-user"></i>
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Employee</p>
-                                      <span>Add New Employee</span>
+                                      <p>Add New Employee</p>
                                     </div>
                                   </div>
                                 </Link>
@@ -162,8 +159,7 @@ const Header = () => {
                                       <i className="ti ti-shield-check"></i>
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Role & Permission</p>
-                                      <span>Add New Role</span>
+                                      <p>Add New Role & Permission</p>
                                     </div>
                                   </div>
                                 </Link>
@@ -179,8 +175,7 @@ const Header = () => {
                                       <i className="ti ti-id-badge"></i>
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Designation</p>
-                                      <span>Add New Designation</span>
+                                      <p>Add New Designation</p>
                                     </div>
                                   </div>
                                 </Link>
@@ -196,15 +191,14 @@ const Header = () => {
                                       <i className="ti ti-receipt" />
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Invoice</p>
-                                      <span>Add New Invoice</span>
+                                      <p>Add New Invoice</p>
                                     </div>
                                   </div>
                                 </Link>
                               </li>
                             )
                           }
-                          {
+                          {/* {
                             (team?.role?.permissions?.attendance?.create) && (
                               <li>
                                 <Link to="/add-attendance">
@@ -220,6 +214,22 @@ const Header = () => {
                                 </Link>
                               </li>
                             )
+                          } */}
+                          {
+                            (team?.role?.permissions?.technology?.create) && (
+                              <li>
+                                <Link to="/add-technology">
+                                  <div className="menu-details">
+                                    <span className="menu-list-icon" style={{ background: "cyan" }}>
+                                      <i className="ti ti-code"></i>
+                                    </span>
+                                    <div className="menu-details-content">
+                                      <p>Add New Technology</p>
+                                    </div>
+                                  </div>
+                                </Link>
+                              </li>
+                            )
                           }
                           {
                             (team?.role?.permissions?.project?.fields?.workDetail?.show) && (
@@ -230,25 +240,7 @@ const Header = () => {
                                       <i className="ti ti-clipboard"></i>
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Add Work Detail</p>
-                                      <span>Add New Work Detail</span>
-                                    </div>
-                                  </div>
-                                </Link>
-                              </li>
-                            )
-                          }
-                          {
-                            (team?.role?.permissions?.technology?.create) && (
-                              <li>
-                                <Link to="/add-technology">
-                                  <div className="menu-details">
-                                    <span className="menu-list-icon" style={{ background: "cyan" }}>
-                                      <i className="ti ti-code"></i>
-                                    </span>
-                                    <div className="menu-details-content">
-                                      <p>Technology</p>
-                                      <span>Add New Technology</span>
+                                      <p>Add Daily Work Summary</p>
                                     </div>
                                   </div>
                                 </Link>
@@ -269,8 +261,7 @@ const Header = () => {
                                       <i className="ti ti-apps"></i>
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Project Type</p>
-                                      <span>Add New Project Type</span>
+                                      <p>Add New Project Type</p>
                                     </div>
                                   </div>
                                 </Link>
@@ -286,8 +277,7 @@ const Header = () => {
                                       <i className="ti ti-clipboard-list"></i>
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Project Status</p>
-                                      <span>Add New Project Status</span>
+                                      <p>Add New Project Status</p>
                                     </div>
                                   </div>
                                 </Link>
@@ -303,8 +293,7 @@ const Header = () => {
                                       <i className="ti ti-clock"></i>
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Project Timeline</p>
-                                      <span>Add New Project Timeline</span>
+                                      <p>Add New Project Timeline</p>
                                     </div>
                                   </div>
                                 </Link>
@@ -320,8 +309,7 @@ const Header = () => {
                                       <i className="ti ti-star"></i>
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Project Priority</p>
-                                      <span>Add New Project Priority</span>
+                                      <p>Add New Project Priority</p>
                                     </div>
                                   </div>
                                 </Link>
@@ -337,8 +325,7 @@ const Header = () => {
                                       <i className="ti ti-tags"></i>
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Project Category</p>
-                                      <span>Add New Project Category</span>
+                                      <p>Add New Project Category</p>
                                     </div>
                                   </div>
                                 </Link>
@@ -354,8 +341,7 @@ const Header = () => {
                                       <i className="ti ti-file-invoice" />
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Proforma Invoice</p>
-                                      <span>Add New Proforma Invoice</span>
+                                      <p>Add New Proforma Invoice</p>
                                     </div>
                                   </div>
                                 </Link>
@@ -371,8 +357,7 @@ const Header = () => {
                                       <i className="ti ti-credit-card"></i>
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Add Payment</p>
-                                      <span>Add New Payment</span>
+                                      <p>Add New Received Payment</p>
                                     </div>
                                   </div>
                                 </Link>

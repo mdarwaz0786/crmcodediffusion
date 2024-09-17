@@ -605,8 +605,8 @@ const EditRole = () => {
 
   const inputLabel = {
     customer: "Client",
-    workDetail: "Add Work Detail",
-    payment: "Add Payment",
+    workDetail: "Add Daily Work Summary",
+    payment: "Add Received Payment",
     projectPrice: "Project Cost",
     projectTiming: "Project Timeline",
     totalPaid: "Total Received",

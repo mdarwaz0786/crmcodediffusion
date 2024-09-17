@@ -159,7 +159,7 @@ const AddPayment = () => {
     <div className="page-wrapper" style={{ paddingBottom: "1rem" }}>
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <h4>Add Payment</h4>
+          <h4>Add Received Payment</h4>
           <Link to="#" onClick={() => navigate(-1)}><button className="btn btn-primary">Back</button></Link>
         </div>
         <div className="row">

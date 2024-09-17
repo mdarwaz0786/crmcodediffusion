@@ -172,7 +172,7 @@ const AddWorkLog = () => {
     <div className="page-wrapper" style={{ paddingBottom: "1rem" }}>
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <h4>Add Work Detail</h4>
+          <h4>Add Daily Work Summary</h4>
           <Link to="#" onClick={() => navigate(-1)}><button className="btn btn-primary">Back</button></Link>
         </div>
         <div className="row">
