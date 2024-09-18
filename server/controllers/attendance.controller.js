@@ -110,17 +110,6 @@ export const fetchAllAttendance = async (req, res) => {
     // Calculate total count of attendance
     const totalCount = await Attendance.countDocuments(filter);
 
-    // Create an array to hold attendance for all days of the month
-    // const daysInMonth = moment(monthYear, "YYYY-MM").daysInMonth();
-    // const attendanceByDay = Array.from({ length: daysInMonth }, (_, day) => {
-    //   const date = moment(monthYear, "YYYY-MM").date(day + 1).toDate();
-    //   const attendanceForDay = attendanceRecords.find((record) => moment(record.date).isSame(date, 'day'));
-    //   return {
-    //     date,
-    //     attendance: attendanceForDay || null,
-    //   };
-    // });
-
     return res.status(200).json({ success: true, message: "All attendance fetched successfully", attendance: attendanceRecords, totalCount });
   } catch (error) {
     console.log("Error while fetching all attendance:", error.message);
