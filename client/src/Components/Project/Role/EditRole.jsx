@@ -588,7 +588,7 @@ const EditRole = () => {
 
   const permissionLabels = {
     project: "Projects",
-    invoice: "Invoice",
+    invoice: "Tax Invoice",
     proformaInvoice: "Proforma Invoice",
     // attendance: "Attendance",
     customer: "Client",

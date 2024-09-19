@@ -54,7 +54,7 @@ const SingleInvoice = () => {
   const exportInvoiceAsPdf = () => {
     const element = document.querySelector("#exportInvoice");
     const options = {
-      filename: `${data?.invoiceId}-${data?.project?.projectName}.pdf`,
+      filename: `${data?.invoiceId}-${data?.projects[0]?.project?.customer?.companyName}.pdf`,
       html2canvas: {
         useCORS: true,
       },
@@ -66,11 +66,15 @@ const SingleInvoice = () => {
     html2pdf().set(options).from(element).save();
   };
 
+  if (!data || !data?.projects || data?.projects?.length === 0) {
+    return <div>No data available</div>;
+  };
+
   return (
     <div className="page-wrapper">
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h4>Invoice</h4>
+          <h4>Tax Invoice</h4>
           {
             permissions?.export && (
               <button className="btn btn-secondary" onClick={exportInvoiceAsPdf}>Download</button>
@@ -88,7 +92,7 @@ const SingleInvoice = () => {
               </div>
               <div className="col-md-6 px-4">
                 <div className="name d-flex mt-4 justify-content-end">
-                  <h4>INVOICE</h4>
+                  <h4>TAX INVOICE</h4>
                 </div>
               </div>
             </div>
@@ -122,40 +126,25 @@ const SingleInvoice = () => {
                     <h5 style={{ color: "#262a2a7a" }}>Bill To:</h5>
                     <div>
                       <strong style={{ color: "#000" }}>
-                        {data?.project?.customer?.name}
+                        {data?.projects[0]?.project?.customer?.companyName}
                       </strong>
                     </div>
-                    <div>
-                      <strong style={{ color: "#000" }}>
-                        {data?.project?.customer?.companyName}
-                      </strong>
-                    </div>
-                    <div><strong>GST No: {data?.project?.customer?.GSTNumber}</strong></div>
+                    <div><strong>GST No: {data?.projects[0]?.project?.customer?.GSTNumber}</strong></div>
                   </div>
                 </div>
-                <div className="content">
+                <div className="content w-100">
                   <div className="pera">
                     <h5 style={{ color: "#262a2a7a" }}>Ship To:</h5>
                     <p>
                       <strong style={{ color: "#000" }}>
-                        {data?.project?.customer?.address}
+                        {data?.projects[0]?.project?.customer?.address}
                       </strong>
                     </p>
                   </div>
                 </div>
               </div>
               <div className="col-md-4 d-flex justify-content-end align-items-baseline" style={{ padding: "0 45px 0 0" }}>
-                {
-                  (data?.tax === "Inclusive") ? (
-                    <>
-                      <div style={{ borderRadius: "5px", display: "inline-block", fontWeight: "bold" }} ><p>Balance Due: ₹{data?.amount}</p></div>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{ borderRadius: "5px", display: "inline-block", fontWeight: "bold" }} ><p>Balance Due: ₹{data?.totalAmount}</p></div>
-                    </>
-                  )
-                }
+                <div style={{ borderRadius: "5px", display: "inline-block", fontWeight: "bold" }} ><p>Balance Due: ₹{data?.total}</p></div>
               </div>
             </div>
             <div className="row px-3">
@@ -170,40 +159,23 @@ const SingleInvoice = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="text-start">
-                      <th scope="col">{data?.project?.projectName}</th>
-                      <th scope="col" className="ps-5">{data?.quantity}</th>
-                      {
-                        (data?.tax === "Inclusive") ? (
-                          <>
-                            <th scope="col">₹{data?.totalAmount}</th>
-                            <th scope="col" className="text-end">₹{data?.totalAmount}</th>
-                          </>
-                        ) : (
-                          <>
-                            <th scope="col">₹{data?.amount}</th>
-                            <th scope="col" className="text-end">₹{data?.amount}</th>
-                          </>
-                        )
-                      }
-                    </tr>
+                    {
+                      data?.projects?.map((d) => (
+                        <tr className="text-start" key={d?._id}>
+                          <th scope="col">{d?.project?.projectName}</th>
+                          <th scope="col" className="ps-5">1</th>
+                          <th scope="col">₹{d?.amount}</th>
+                          <th scope="col" className="text-end">₹{d?.amount}</th>
+                        </tr>
+                      ))
+                    }
                   </tbody>
                   <tbody className="text-end mt-5 pt-5">
                     <tr>
                       <th scope="col" />
                       <th scope="col" />
                       <th scope="col-1">Subtotal :</th>
-                      {
-                        (data?.tax === "Inclusive") ? (
-                          <>
-                            <th scope="col-2">₹{data?.totalAmount}</th>
-                          </>
-                        ) : (
-                          <>
-                            <th scope="col-2">₹{data?.amount}</th>
-                          </>
-                        )
-                      }
+                      <th scope="col-2">₹{data?.subtotal}</th>
                     </tr>
                     {
                       (data?.CGST > 0) && (
@@ -239,17 +211,7 @@ const SingleInvoice = () => {
                       <th scope="col" />
                       <th scope="col" />
                       <th scope="col-1">Total :</th>
-                      {
-                        (data?.tax === "Inclusive") ? (
-                          <>
-                            <th scope="col-2">₹{data?.amount}</th>
-                          </>
-                        ) : (
-                          <>
-                            <th scope="col-2">₹{data?.totalAmount}</th>
-                          </>
-                        )
-                      }
+                      <th scope="col-2">₹{data?.total}</th>
                     </tr>
                   </tbody>
                 </table>

@@ -13,50 +13,55 @@ const getNextInvoiceId = async () => {
 export const createInvoice = async (req, res) => {
   try {
     const invoiceId = await getNextInvoiceId();
-    const { project, amount, tax, date } = req.body;
+    const { projects, quantity, date, tax } = req.body;
 
-    const projectData = await Project.findById(project).populate('customer');
-    const customerState = projectData.customer.state;
+    let total = 0;
+    let subtotal = 0;
+    let basePrice = 0;
+    let CGST = 0;
+    let SGST = 0;
+    let IGST = 0;
 
-    let calculatedCGST = 0;
-    let calculatedSGST = 0;
-    let calculatedIGST = 0;
-    let basePrice = parseFloat(amount);
-    let totalAmount = 0;
+    // Calculate subtotal by summing up the amount of all projects
+    const invoiceProjects = await Promise.all(
+      projects.map(async (projectData) => {
+        const { project, amount } = projectData;
+        subtotal += parseFloat(amount);
 
-    if (tax === "Inclusive") {
-      basePrice = parseFloat(amount) / 1.18;
-      if (customerState === "Delhi") {
-        calculatedCGST = basePrice * 0.09;
-        calculatedSGST = basePrice * 0.09;
-        totalAmount = basePrice;
-      } else {
-        calculatedIGST = basePrice * 0.18;
-        totalAmount = basePrice;
-      };
+        return {
+          project,
+          amount: parseFloat(amount),
+        };
+      })
+    );
+
+    // Determine whether to apply CGST/SGST or IGST based on customer's state
+    const firstProjectDetails = await Project.findById(projects[0].project).populate("customer");
+    const customerState = firstProjectDetails.customer.state;
+
+    basePrice = tax === "Inclusive" ? subtotal / 1.18 : subtotal;
+
+    if (customerState === "Delhi") {
+      CGST = basePrice * 0.09;
+      SGST = basePrice * 0.09;
+      total = tax === "Inclusive" ? basePrice : subtotal + CGST + SGST;
     } else {
-      if (customerState === "Delhi") {
-        calculatedCGST = basePrice * 0.09;
-        calculatedSGST = basePrice * 0.09;
-        totalAmount = basePrice + calculatedCGST + calculatedSGST;
-      } else {
-        calculatedIGST = basePrice * 0.18;
-        totalAmount = basePrice + calculatedIGST;
-      };
+      IGST = basePrice * 0.18;
+      total = tax === "Inclusive" ? basePrice : subtotal + IGST;
     };
 
     const newInvoice = new Invoice({
       invoiceId,
-      project,
-      quantity: 1,
-      amount: parseFloat(amount),
+      projects: invoiceProjects,
       tax,
-      CGST: parseFloat(calculatedCGST.toFixed(2)),
-      SGST: parseFloat(calculatedSGST.toFixed(2)),
-      IGST: parseFloat(calculatedIGST.toFixed(2)),
-      totalAmount: parseFloat(totalAmount.toFixed(2)),
-      balanceDue: parseFloat(totalAmount.toFixed(2)),
       date,
+      quantity,
+      subtotal: subtotal.toFixed(2),
+      CGST: CGST.toFixed(2),
+      SGST: SGST.toFixed(2),
+      IGST: IGST.toFixed(2),
+      total: total.toFixed(2),
+      balanceDue: total.toFixed(2),
     });
 
     await newInvoice.save();
@@ -189,11 +194,11 @@ export const fetchAllInvoice = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .populate({
-        path: 'project',
+        path: "projects.project",
         select: "customer projectName projectId",
         populate: [
           {
-            path: 'customer',
+            path: "customer",
             select: "",
           },
         ],
@@ -221,11 +226,11 @@ export const fetchSingleInvoice = async (req, res) => {
     const invoiceId = req.params.id;
     const invoice = await Invoice.findById(invoiceId)
       .populate({
-        path: 'project',
+        path: "projects.project",
         select: "customer projectName projectId",
         populate: [
           {
-            path: 'customer',
+            path: "customer",
             select: "",
           },
         ],

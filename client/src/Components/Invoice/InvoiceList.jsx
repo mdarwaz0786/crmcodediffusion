@@ -153,7 +153,6 @@ const InvoiceList = () => {
     };
   };
 
-
   const exportInvoiceListAsExcel = () => {
     const element = document.querySelector("#exportInvoiceList");
     if (!element) return;
@@ -221,7 +220,7 @@ const InvoiceList = () => {
               <div className="page-header">
                 <div className="row align-items-center">
                   <div className="col-4">
-                    <h4 className="page-title">Invoices<span className="count-title">{total}</span></h4>
+                    <h4 className="page-title">Tax Invoices<span className="count-title">{total}</span></h4>
                   </div>
                   <div className="col-8 text-end">
                     <div className="head-icons">
@@ -284,7 +283,7 @@ const InvoiceList = () => {
                                 <li>
                                   <Link to="/add-invoice" className="btn btn-primary">
                                     <i className="ti ti-square-rounded-plus" />
-                                    Add New Invoice
+                                    Add New Tax Invoice
                                   </Link>
                                 </li>
                               )
@@ -460,17 +459,17 @@ const InvoiceList = () => {
                               }
                               {
                                 (filedPermissions?.project?.show) && (
-                                  <td>{d?.project?.projectName}</td>
+                                  <td>{d?.projects?.map((value) => value?.project?.projectName).join(", ")}</td>
                                 )
                               }
                               {
                                 (filedPermissions?.project?.show) && (
-                                  <td>{d?.project?.customer?.name}</td>
+                                  <td>{d?.projects[0]?.project?.customer?.name}</td>
                                 )
                               }
                               {
                                 (filedPermissions?.amount?.show) && (
-                                  <td>₹{d?.amount}</td>
+                                  <td>₹{d?.subtotal}</td>
                                 )
                               }
                               {

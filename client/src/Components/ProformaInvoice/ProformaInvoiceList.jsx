@@ -553,7 +553,7 @@ const ProformaInvoiceList = () => {
                                       (team?.role?.permissions?.invoice?.create) && (
                                         <Link to="#" onClick={() => setId(d?._id)} className="dropdown-item">
                                           <i className="ti ti-arrow-right text-blue"></i>
-                                          Move to invoice
+                                          Move to tax invoice
                                         </Link>
                                       )
                                     }

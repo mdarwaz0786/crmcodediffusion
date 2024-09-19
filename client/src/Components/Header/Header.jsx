@@ -191,7 +191,7 @@ const Header = () => {
                                       <i className="ti ti-receipt" />
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Add New Invoice</p>
+                                      <p>Add New Tax Invoice</p>
                                     </div>
                                   </div>
                                 </Link>

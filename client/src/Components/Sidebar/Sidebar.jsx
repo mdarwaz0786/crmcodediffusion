@@ -99,7 +99,7 @@ const Sidebar = () => {
                     <ul>
                       {
                         (permissions?.invoice?.access) && (
-                          <li><Link to="/invoice" className={currentPath === "/invoice" ? "active" : ""} id={isMobile && active === "invoice" ? "mobile_btn" : ""} onClick={() => handleActive("invoice")}>Invoice</Link></li>
+                          <li><Link to="/invoice" className={currentPath === "/invoice" ? "active" : ""} id={isMobile && active === "invoice" ? "mobile_btn" : ""} onClick={() => handleActive("invoice")}>Tax Invoice</Link></li>
                         )
                       }
                       {
