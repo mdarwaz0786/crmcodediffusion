@@ -95,7 +95,7 @@ const AddCustomer = () => {
       if (response?.data?.success) {
         setFormData((prev) => Object.keys(prev).reduce((accumulator, key) => ({ ...accumulator, [key]: "" }), {}));
         setSelectedState(null);
-        toast.success("Added successfully");
+        toast.success("Submitted Successfully");
         navigate(-1);
       };
     } catch (error) {
@@ -166,7 +166,7 @@ const AddCustomer = () => {
           </div>
           <div className="submit-button text-end">
             <Link to="#" onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
-            <button type="submit" className="btn btn-primary">Add</button>
+            <button type="submit" className="btn btn-primary">Submit</button>
           </div>
         </form>
       </div>

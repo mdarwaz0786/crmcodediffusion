@@ -15,7 +15,7 @@ const AddPayment = () => {
   const [totalPaid, setTotalPaid] = useState("");
   const [totalDues, setTotalDues] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState("");
-  const [payment, setPayment] = useState([{ amount: "", date: "" }]);
+  const [payment, setPayment] = useState([{ amount: "", date: new Date().toISOString().split("T")[0] }]);
   const { validToken, team, isLoading } = useAuth();
   const navigate = useNavigate();
   const permissions = team?.role?.permissions?.project;
@@ -137,7 +137,7 @@ const AddPayment = () => {
       if (response?.data?.success) {
         setSelectedProjectId("");
         setProjectId("");
-        setPayment([{ amount: "", date: "" }]);
+        setPayment([{ amount: "", date: new Date().toISOString().split("T")[0] }]);
         toast.success("Added successfully");
         navigate(-1);
       };
@@ -156,7 +156,7 @@ const AddPayment = () => {
   };
 
   return (
-    <div className="page-wrapper" style={{ paddingBottom: "1rem" }}>
+    <div className="page-wrapper" style={{ paddingBottom: "2rem" }}>
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <h4>Add Received Payment</h4>
@@ -249,7 +249,7 @@ const AddPayment = () => {
         </div>
         <div className="submit-button text-end">
           <Link to="#" onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
-          <Link to="#" className="btn btn-primary" onClick={(e) => handleUpdate(e, selectedProjectId)}>Add</Link>
+          <Link to="#" className="btn btn-primary" onClick={(e) => handleUpdate(e, selectedProjectId)}>Submit</Link>
         </div>
       </div>
     </div>

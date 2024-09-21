@@ -285,7 +285,7 @@ const AddProject = () => {
         setEndDate("");
         setTotalHour("");
         setDescription("");
-        toast.success("Added successfully");
+        toast.success("Submitted Successfully");
         navigate(-1);
       };
     } catch (error) {

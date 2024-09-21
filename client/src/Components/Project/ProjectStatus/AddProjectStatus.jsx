@@ -31,7 +31,7 @@ const AddProjectStatus = () => {
       if (response?.data?.success) {
         setStatus("");
         setDescription("");
-        toast.success("Added successfully");
+        toast.success("Submitted Successfully");
         navigate(-1);
       };
     } catch (error) {

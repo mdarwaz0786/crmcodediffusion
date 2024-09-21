@@ -31,7 +31,7 @@ const AddProjectTiming = () => {
       if (response?.data?.success) {
         setName("");
         setDescription("");
-        toast.success("Added successfully");
+        toast.success("Submitted Successfully");
         navigate(-1);
       };
     } catch (error) {

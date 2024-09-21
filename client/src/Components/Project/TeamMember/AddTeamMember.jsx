@@ -133,7 +133,7 @@ const AddTeamMember = () => {
         setSelectedDesignation("");
         setSelectedRole("");
         setSelectedReportingTo([]);
-        toast.success("Added successfully");
+        toast.success("Submitted Successfully");
         navigate(-1);
       };
     } catch (error) {

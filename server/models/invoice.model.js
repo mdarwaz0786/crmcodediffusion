@@ -13,14 +13,14 @@ const invoiceSchema = new mongoose.Schema(
           required: true,
         },
         amount: {
-          type: Number,
+          type: String,
           required: true,
           trim: true,
         },
       },
     ],
     quantity: {
-      type: Number,
+      type: String,
       default: 1,
     },
     tax: {
@@ -33,27 +33,27 @@ const invoiceSchema = new mongoose.Schema(
       required: true,
     },
     subtotal: {
-      type: Number,
+      type: String,
       default: 0,
     },
     CGST: {
-      type: Number,
+      type: String,
       default: 0,
     },
     SGST: {
-      type: Number,
+      type: String,
       default: 0,
     },
     IGST: {
-      type: Number,
+      type: String,
       default: 0,
     },
     total: {
-      type: Number,
+      type: String,
       default: 0,
     },
     balanceDue: {
-      type: Number,
+      type: String,
       default: 0,
     },
   },

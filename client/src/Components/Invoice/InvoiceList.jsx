@@ -335,32 +335,32 @@ const InvoiceList = () => {
                                 <div className="accordion" id="accordionExample">
                                   <div className="filter-set-content">
                                     <div className="filter-set-content-head">
-                                      <Link to="#" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Project Name</Link>
+                                      <Link to="#" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Invoice Id</Link>
                                     </div>
                                     <div className="filter-set-contents accordion-collapse collapse show" id="collapseTwo" data-bs-parent="#accordionExample">
                                       <div className="filter-content-list">
                                         <div className="form-wrap icon-form">
                                           <span className="form-icon"><i className="ti ti-search" /></span>
-                                          <input type="text" className="form-control" placeholder="Search Project Name" onChange={(e) => setNameSearch(e.target.value)} />
+                                          <input type="text" className="form-control" placeholder="Search Invoice Id" onChange={(e) => setNameSearch(e.target.value)} />
                                         </div>
                                         <ul>
                                           {
                                             nameData?.map((n) => (
-                                              <li key={n._id}>
+                                              <li key={n?._id}>
                                                 <div className="filter-checks">
                                                   <label className="checkboxs">
                                                     <input
                                                       type="checkbox"
                                                       name="nameFilter"
-                                                      value={n?.project?.projectName}
-                                                      checked={filters.nameFilter.includes(n?.project?.projectName)}
+                                                      value={n?.invoiceId}
+                                                      checked={filters.nameFilter.includes(n?.invoiceId)}
                                                       onChange={handleFilterChange}
                                                     />
                                                     <span className="checkmarks" />
                                                   </label>
                                                 </div>
                                                 <div className="collapse-inside-text">
-                                                  <h5>{n?.project?.projectName}</h5>
+                                                  <h5>{n?.invoiceId}</h5>
                                                 </div>
                                               </li>
                                             ))
@@ -407,22 +407,22 @@ const InvoiceList = () => {
                             )
                           }
                           {
-                            (filedPermissions?.project?.show) && (
+                            (filedPermissions?.invoiceId?.show) && (
                               <th>Invoice ID</th>
                             )
                           }
                           {
-                            (filedPermissions?.project?.show) && (
+                            (filedPermissions?.projects?.show) && (
                               <th>Project Name</th>
                             )
                           }
                           {
-                            (filedPermissions?.project?.show) && (
+                            (filedPermissions?.projects?.show) && (
                               <th>Client Name</th>
                             )
                           }
                           {
-                            (filedPermissions?.amount?.show) && (
+                            (filedPermissions?.subtotal.show) && (
                               <th>Amount</th>
                             )
                           }
@@ -453,22 +453,22 @@ const InvoiceList = () => {
                                 )
                               }
                               {
-                                (filedPermissions?.project?.show) && (
+                                (filedPermissions?.invoiceId?.show) && (
                                   <td>{d?.invoiceId}</td>
                                 )
                               }
                               {
-                                (filedPermissions?.project?.show) && (
+                                (filedPermissions?.projects?.show) && (
                                   <td>{d?.projects?.map((value) => value?.project?.projectName).join(", ")}</td>
                                 )
                               }
                               {
-                                (filedPermissions?.project?.show) && (
+                                (filedPermissions?.projects?.show) && (
                                   <td>{d?.projects[0]?.project?.customer?.name}</td>
                                 )
                               }
                               {
-                                (filedPermissions?.amount?.show) && (
+                                (filedPermissions?.subtotal?.show) && (
                                   <td>₹{d?.subtotal}</td>
                                 )
                               }

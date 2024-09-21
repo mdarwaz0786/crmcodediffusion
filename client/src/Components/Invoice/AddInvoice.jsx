@@ -11,8 +11,8 @@ import Select from "react-select";
 const AddInvoice = () => {
   const [projects, setProjects] = useState([{ project: "", amount: "", projectPrice: "", totalDues: "", totalPaid: "", projectId: "" }]);
   const [allProjects, setAllProjects] = useState([]);
-  const [date, setDate] = useState("");
-  const [tax, setTax] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [tax, setTax] = useState("Exclusive");
   const { validToken, team, isLoading } = useAuth();
   const navigate = useNavigate();
   const permissions = team?.role?.permissions?.invoice;
@@ -69,6 +69,7 @@ const AddInvoice = () => {
         updatedProjects[index].totalDues = response?.data?.project?.totalDues;
         updatedProjects[index].totalPaid = response?.data?.project?.totalPaid;
         updatedProjects[index].projectId = response?.data?.project?.projectId;
+        updatedProjects[index].amount = response?.data?.project?.totalDues;
         setProjects(updatedProjects);
       };
     } catch (error) {
@@ -87,15 +88,15 @@ const AddInvoice = () => {
 
     // Validation
     for (const project of projects) {
-      if (!project.project) {
+      if (!project?.project) {
         return toast.error("Select project for all entries");
       };
 
-      if (parseFloat(project.amount) < 1) {
+      if (parseFloat(project?.amount) < 1) {
         return toast.error("Amount should not be less than 1");
       };
 
-      if (parseFloat(project.amount) > parseFloat(project?.totalDues)) {
+      if (parseFloat(project?.amount) > parseFloat(project?.totalDues)) {
         return toast.error("Amount should not greater than Total Dues");
       };
     };

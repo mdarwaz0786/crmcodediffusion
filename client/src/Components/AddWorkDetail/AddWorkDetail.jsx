@@ -8,14 +8,19 @@ import { useAuth } from "../../context/authContext.jsx";
 import Preloader from "../../Preloader.jsx";
 import Select from "react-select";
 
-const AddWorkLog = () => {
+const AddWorkDetail = () => {
   const [project, setProject] = useState([]);
   const [projectId, setProjectId] = useState("");
   const [totalHour, setTotalHour] = useState("");
   const [totalSpentHour, setTotalSpentHour] = useState("");
   const [totalRemainingHour, setTotalRemainingHour] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState("");
-  const [workDetail, setWorkDetail] = useState([{ startTime: "", endTime: "", workDescription: "", date: "" }]);
+  const [workDetail, setWorkDetail] = useState([{
+    startTime: "10:00",
+    endTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
+    workDescription: "",
+    date: new Date().toISOString().split("T")[0],
+  }]);
   const { validToken, team, isLoading } = useAuth();
   const navigate = useNavigate();
   const permissions = team?.role?.permissions?.project;
@@ -144,8 +149,13 @@ const AddWorkLog = () => {
       if (response?.data?.success) {
         setSelectedProjectId("");
         setProjectId("");
-        setWorkDetail([{ startTime: "", endTime: "", workDescription: "", date: "" }]);
-        toast.success("Added successfully");
+        setWorkDetail([{
+          startTime: "10:00",
+          endTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
+          workDescription: "",
+          date: new Date().toISOString().split("T")[0]
+        }]);
+        toast.success("Submitted Successfully");
         navigate(-1);
       };
     } catch (error) {
@@ -169,7 +179,7 @@ const AddWorkLog = () => {
   };
 
   return (
-    <div className="page-wrapper" style={{ paddingBottom: "1rem" }}>
+    <div className="page-wrapper" style={{ paddingBottom: "2rem" }}>
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <h4>Add Daily Work Summary</h4>
@@ -284,11 +294,11 @@ const AddWorkLog = () => {
         </div>
         <div className="submit-button text-end">
           <Link to="#" onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
-          <Link to="#" className="btn btn-primary" onClick={(e) => handleUpdate(e, selectedProjectId)}>Add</Link>
+          <Link to="#" className="btn btn-primary" onClick={(e) => handleUpdate(e, selectedProjectId)}>Submit</Link>
         </div>
       </div>
     </div>
   );
 };
 
-export default AddWorkLog;
+export default AddWorkDetail;

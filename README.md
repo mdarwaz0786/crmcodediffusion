@@ -6,7 +6,3 @@ In the database customer table represent client table.<br>
 In the database invoice table represent tax invoice table.<br>
 In the database projectPrice represent project cost, totalPaid represent totalReceived and description 
 represent development phase description.<br>
-
-
-
-

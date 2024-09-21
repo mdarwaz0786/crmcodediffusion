@@ -3,17 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from "../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
 import Preloader from "../../Preloader.jsx";
 
 const ProformaInvoiceList = () => {
+  const [data, setData] = useState([]);
+  const [total, setTotal] = useState("");
   const [id, setId] = useState("");
   const [singleProformaInvoice, setSingleProformaInvoice] = useState("");
-  const [proformaInvoice, setProformaInvoice] = useState([]);
-  const [total, setTotal] = useState("");
+  const [tax, setTax] = useState("");
   const [loading, setLoading] = useState(true);
   const { validToken, team, isLoading } = useAuth();
   const [nameData, setNameData] = useState([]);
@@ -27,6 +28,7 @@ const ProformaInvoiceList = () => {
   });
   const permissions = team?.role?.permissions?.proformaInvoice;
   const filedPermissions = team?.role?.permissions?.proformaInvoice?.fields;
+  const navigate = useNavigate();
 
   const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -53,7 +55,7 @@ const ProformaInvoiceList = () => {
   const debouncedSearch = useDebounce(filters.search, 500);
   const debouncedSearchName = useDebounce(nameSearch, 500);
 
-  const fetchAllProformaInvoice = async () => {
+  const fetchAllData = async () => {
     try {
       setLoading(true);
       const response = await axios.get("/api/v1/proformaInvoice/all-proformaInvoice", {
@@ -70,7 +72,7 @@ const ProformaInvoiceList = () => {
       });
 
       if (response?.data?.success) {
-        setProformaInvoice(response?.data?.invoice);
+        setData(response?.data?.invoice);
         setTotal(response?.data?.totalCount);
         setLoading(false);
       };
@@ -80,7 +82,7 @@ const ProformaInvoiceList = () => {
     };
   };
 
-  const fetchAllProformaInvoiceName = async () => {
+  const fetchAllInvoiceName = async () => {
     try {
       const response = await axios.get("/api/v1/proformaInvoice/all-proformaInvoice", {
         headers: {
@@ -101,7 +103,7 @@ const ProformaInvoiceList = () => {
 
   useEffect(() => {
     if (!isLoading && team && permissions?.access) {
-      fetchAllProformaInvoiceName();
+      fetchAllInvoiceName();
     };
   }, [debouncedSearchName, isLoading, team, permissions]);
 
@@ -127,7 +129,7 @@ const ProformaInvoiceList = () => {
 
   useEffect(() => {
     if (!isLoading && team && permissions?.access) {
-      fetchAllProformaInvoice();
+      fetchAllData();
     };
   }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, isLoading, team, permissions]);
 
@@ -144,10 +146,10 @@ const ProformaInvoiceList = () => {
 
         if (response?.data?.success) {
           toast.success("Deleted successfully");
-          fetchAllProformaInvoice();
+          fetchAllData();
         };
       } catch (error) {
-        console.log("Error while deleting proforma invoice:", error.message);
+        console.log("Error while deleting invoice:", error.message);
         toast.error("Error while deleting");
       };
     } else if (isdelete !== "") {
@@ -155,10 +157,10 @@ const ProformaInvoiceList = () => {
     };
   };
 
-  const exportProformaInvoiceListAsExcel = () => {
+  const exportInvoiceListAsExcel = () => {
     const element = document.querySelector("#exportProformaInvoiceList");
     if (!element) return;
-    const workbook = XLSX.utils.table_to_book(element, { sheet: "Proforma Invoice List" });
+    const workbook = XLSX.utils.table_to_book(element, { sheet: "Role List" });
     const excelData = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
     const blob = new Blob([s2ab(excelData)], { type: "application/octet-stream" });
     const url = window.URL.createObjectURL(blob);
@@ -179,7 +181,7 @@ const ProformaInvoiceList = () => {
     return buffer;
   };
 
-  const exportProformaInvoiceListAsPdf = () => {
+  const exportInvoiceListAsPdf = () => {
     const element = document.querySelector("#exportProformaInvoiceList");
     const options = {
       filename: "proforma-invoice-list.pdf",
@@ -213,6 +215,7 @@ const ProformaInvoiceList = () => {
 
       if (response?.data?.success) {
         setSingleProformaInvoice(response?.data?.invoice);
+        setTax(response?.data?.invoice?.tax);
       };
     } catch (error) {
       console.log("Error while fetching single proforma invoice:", error.message);
@@ -227,32 +230,28 @@ const ProformaInvoiceList = () => {
 
   const handleCreateInvoice = async () => {
     try {
-      const response = await axios.post("/api/v1/invoice/create-invoice",
-        {
-          project: singleProformaInvoice?.project?._id,
-          quantity: singleProformaInvoice?.quantity,
-          amount: singleProformaInvoice?.amount,
-          tax: singleProformaInvoice?.tax,
-          CGST: singleProformaInvoice?.CGST,
-          SGST: singleProformaInvoice?.SGST,
-          IGST: singleProformaInvoice?.IGST,
-          totalAmount: singleProformaInvoice?.totalAmount,
-          balanceDue: singleProformaInvoice?.balanceDue,
-          date: singleProformaInvoice?.date,
+      const invoiceData = {
+        projects: singleProformaInvoice?.projects?.map((project) => ({
+          project: project?.project,
+          amount: tax === "Inclusive" ? (parseFloat(project?.amount) * 1.18).toFixed(2) : project?.amount,
+        })),
+        date: singleProformaInvoice?.date,
+        tax: singleProformaInvoice?.tax,
+      };
+
+      const response = await axios.post("/api/v1/invoice/create-invoice", invoiceData, {
+        headers: {
+          Authorization: validToken,
         },
-        {
-          headers: {
-            Authorization: `${validToken}`,
-          },
-        },
-      );
+      });
 
       if (response?.data?.success) {
         toast.success("Moved successfully");
+        navigate("/invoice");
       };
     } catch (error) {
-      console.log("Error while moving to invoice:", error.message);
-      toast.error("Error while moving to invoice");
+      console.log("Error while creating invoices:", error.message);
+      toast.error("Error while moving");
     };
   };
 
@@ -322,13 +321,13 @@ const ProformaInvoiceList = () => {
                                     <div className="dropdown-menu  dropdown-menu-end">
                                       <ul>
                                         <li>
-                                          <Link to="#" onClick={() => setTimeout(() => { exportProformaInvoiceListAsPdf() }, 0)}>
+                                          <Link to="#" onClick={() => setTimeout(() => { exportInvoiceListAsPdf() }, 0)}>
                                             <i className="ti ti-file-type-pdf text-danger" />
                                             Export as PDF
                                           </Link>
                                         </li>
                                         <li>
-                                          <Link to="#" onClick={() => setTimeout(() => { exportProformaInvoiceListAsExcel() }, 0)}>
+                                          <Link to="#" onClick={() => setTimeout(() => { exportInvoiceListAsExcel() }, 0)}>
                                             <i className="ti ti-file-spreadsheet text-success" />
                                             Export as EXCEL
                                           </Link>
@@ -396,32 +395,32 @@ const ProformaInvoiceList = () => {
                                 <div className="accordion" id="accordionExample">
                                   <div className="filter-set-content">
                                     <div className="filter-set-content-head">
-                                      <Link to="#" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Project Name</Link>
+                                      <Link to="#" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Proforma Invoice Id</Link>
                                     </div>
                                     <div className="filter-set-contents accordion-collapse collapse show" id="collapseTwo" data-bs-parent="#accordionExample">
                                       <div className="filter-content-list">
                                         <div className="form-wrap icon-form">
                                           <span className="form-icon"><i className="ti ti-search" /></span>
-                                          <input type="text" className="form-control" placeholder="Search Project Name" onChange={(e) => setNameSearch(e.target.value)} />
+                                          <input type="text" className="form-control" placeholder="Search proforma Invoice Id" onChange={(e) => setNameSearch(e.target.value)} />
                                         </div>
                                         <ul>
                                           {
                                             nameData?.map((n) => (
-                                              <li key={n._id}>
+                                              <li key={n?._id}>
                                                 <div className="filter-checks">
                                                   <label className="checkboxs">
                                                     <input
                                                       type="checkbox"
                                                       name="nameFilter"
-                                                      value={n?.project?.projectName}
-                                                      checked={filters.nameFilter.includes(n?.project?.projectName)}
+                                                      value={n?.proformaInvoiceId}
+                                                      checked={filters.nameFilter.includes(n?.proformaInvoiceId)}
                                                       onChange={handleFilterChange}
                                                     />
                                                     <span className="checkmarks" />
                                                   </label>
                                                 </div>
                                                 <div className="collapse-inside-text">
-                                                  <h5>{n?.project?.projectName}</h5>
+                                                  <h5>{n?.proformaInvoiceId}</h5>
                                                 </div>
                                               </li>
                                             ))
@@ -468,22 +467,22 @@ const ProformaInvoiceList = () => {
                             )
                           }
                           {
-                            (filedPermissions?.project?.show) && (
+                            (filedPermissions?.proformaInvoiceId?.show) && (
                               <th>P. ID</th>
                             )
                           }
                           {
-                            (filedPermissions?.project?.show) && (
+                            (filedPermissions?.projects?.show) && (
                               <th>Project Name</th>
                             )
                           }
                           {
-                            (filedPermissions?.project?.show) && (
+                            (filedPermissions?.projects?.show) && (
                               <th>Client Name</th>
                             )
                           }
                           {
-                            (filedPermissions?.amount?.show) && (
+                            (filedPermissions?.subtotal.show) && (
                               <th>Amount</th>
                             )
                           }
@@ -502,35 +501,35 @@ const ProformaInvoiceList = () => {
                       </thead>
                       <tbody>
                         {
-                          proformaInvoice?.map((d, index) => (
+                          data?.map((d, index) => (
                             <tr key={d?._id}>
                               <td>
                                 <label className="checkboxs"><input type="checkbox" /><span className="checkmarks"></span></label>
                               </td>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
                               {
-                                (permissions?.access) && (
+                                (permissions?.access && permissions?.update) && (
                                   <td><Link to={`/single-proforma-invoice/${d?._id}`}><i className="fas fa-eye"></i></Link></td>
                                 )
                               }
                               {
-                                (filedPermissions?.project?.show) && (
+                                (filedPermissions?.proformaInvoiceId?.show) && (
                                   <td>{d?.proformaInvoiceId}</td>
                                 )
                               }
                               {
-                                (filedPermissions?.project?.show) && (
-                                  <td>{d?.project?.projectName}</td>
+                                (filedPermissions?.projects?.show) && (
+                                  <td>{d?.projects?.map((value) => value?.project?.projectName).join(", ")}</td>
                                 )
                               }
                               {
-                                (filedPermissions?.project?.show) && (
-                                  <td>{d?.project?.customer?.name}</td>
+                                (filedPermissions?.projects?.show) && (
+                                  <td>{d?.projects[0]?.project?.customer?.name}</td>
                                 )
                               }
                               {
-                                (filedPermissions?.amount?.show) && (
-                                  <td>₹{d?.amount}</td>
+                                (filedPermissions?.subtotal?.show) && (
+                                  <td>₹{d?.subtotal}</td>
                                 )
                               }
                               {
@@ -630,7 +629,7 @@ const ProformaInvoiceList = () => {
                         <div className="dataTables_paginate paging_simple_numbers" id="project-list_paginate">
                           <ul className="pagination">
                             <li className={`paginate_button page-item previous ${filters.page === 1 ? "disabled" : ""}`} id="project-list_previous">
-                              <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page - 1 }))} aria-controls="project-list" aria-disabled={filters.page === 1} role="link" data-dt-idx="previous" tabIndex="-1" className="page-link" >
+                              <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page - 1 }))} aria-controls="project-list" aria-disabled={filters.page === 1} role="link" data-dt-idx="previous" tabIndex="-1" className="page-link">
                                 <i className="fa fa-angle-left"></i> Prev
                               </Link>
                             </li>
@@ -656,7 +655,7 @@ const ProformaInvoiceList = () => {
                       </div>
                     </div>
                   </div>
-                  {/* /Proforma Invoice List */}
+                  {/* / Proforma Invoice List */}
                 </div>
               </div>
             </div>

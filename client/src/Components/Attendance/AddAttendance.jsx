@@ -82,7 +82,7 @@ const AddAttendance = () => {
         setDate(new Date().toISOString().split('T')[0]);
         setLocation({ latitude: null, longitude: null });
         setLocationName("");
-        toast.success("Added successfully");
+        toast.success("Submitted Successfully");
         navigate(-1);
       };
     } catch (error) {
@@ -100,7 +100,7 @@ const AddAttendance = () => {
   };
 
   return (
-    <div className="page-wrapper" style={{ paddingBottom: "1rem" }}>
+    <div className="page-wrapper" style={{ paddingBottom: "2rem" }}>
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <h4>Add Attendance</h4>
@@ -140,7 +140,7 @@ const AddAttendance = () => {
         </div>
         <div className="submit-button text-end">
           <Link to="#" onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
-          <Link to="#" className="btn btn-primary" onClick={(e) => handleCreate(e)}>Add</Link>
+          <Link to="#" className="btn btn-primary" onClick={(e) => handleCreate(e)}>Submit</Link>
         </div>
       </div>
     </div>
