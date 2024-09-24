@@ -208,7 +208,7 @@ const ProjectType = () => {
 
   return (
     <>
-      <div className="page-wrapper" style={{ paddingBottom: "1rem" }}>
+      <div className="page-wrapper" style={{ paddingBottom: "2rem" }}>
         <div className="content" id="exportProjectTypeList">
           <div className="row">
             <div className="col-md-12">

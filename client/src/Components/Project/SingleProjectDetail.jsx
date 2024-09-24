@@ -116,7 +116,7 @@ const SingleProjectDetail = () => {
   };
 
   return (
-    <div className="page-wrapper" style={{ paddingBottom: "1rem" }}>
+    <div className="page-wrapper" style={{ paddingBottom: "2rem" }}>
       <div className="content" id="exportProjectDetail">
         <div className="container">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2rem" }}>

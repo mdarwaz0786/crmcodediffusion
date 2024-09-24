@@ -361,7 +361,7 @@ const AddProject = () => {
 
   return (
     <>
-      <div className="page-wrapper" style={{ paddingBottom: "1rem" }}>
+      <div className="page-wrapper" style={{ paddingBottom: "2rem" }}>
         <div className="content">
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <h4>Add Project</h4>
