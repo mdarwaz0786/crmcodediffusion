@@ -52,11 +52,6 @@ const teamSchema = new mongoose.Schema(
 // Hash the password before saving the document
 teamSchema.pre("save", async function (next) {
   try {
-    if (this.isModified("password")) {
-      const salt = await bcrypt.genSalt(10);
-      this.password = await bcrypt.hash(this.password, salt);
-    };
-
     // Helper function to capitalize first letter of each word
     const capitalizeWords = (str) => {
       return str.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");

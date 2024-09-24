@@ -247,14 +247,8 @@ export const fetchSingleTeam = async (req, res) => {
 export const updateTeam = async (req, res) => {
   try {
     const teamId = req.params.id;
-    let { password, ...otherFields } = req.body;
 
-    if (password) {
-      const salt = await bcrypt.genSalt(10);
-      password = await bcrypt.hash(password, salt);
-    };
-
-    const team = await Team.findByIdAndUpdate(teamId, { ...otherFields, ...(password && { password }) }, { new: true });
+    const team = await Team.findByIdAndUpdate(teamId, req.body, { new: true });
 
     if (!team) {
       return res.status(404).json({ success: false, message: "Employee not found" });
