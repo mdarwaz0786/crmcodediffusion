@@ -2,7 +2,6 @@ import Team from "../models/team.model.js";
 import EmployeeId from "../models/employeeId.model.js";
 import generateToken from "../utils/generateToken.js";
 import mongoose from "mongoose";
-import bcrypt from 'bcrypt';
 
 // Helper function to generate the next employeeId
 const getNextEmployeeId = async () => {
@@ -36,9 +35,7 @@ export const loginTeam = async (req, res) => {
       return res.status(404).json({ success: false, message: "Invalid Employee ID" });
     };
 
-    const isMatch = await bcrypt.compare(password, team.password);
-
-    if (!isMatch) {
+    if (password !== team.password) {
       return res.status(401).json({ success: false, message: "Invalid Password" });
     };
 
