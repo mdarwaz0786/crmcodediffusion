@@ -3,17 +3,18 @@
 import { useEffect, useState } from "react";
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from "../../context/authContext.jsx";
 import Preloader from "../../Preloader.jsx";
 import Select from "react-select";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const EditInvoice = () => {
+  const { id } = useParams();
   const [projects, setProjects] = useState([{ project: "", amount: "", projectPrice: "", totalDues: "", totalPaid: "", projectId: "" }]);
   const [allProjects, setAllProjects] = useState([]);
-  const [date, setDate] = useState("");
-  const [tax, setTax] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [tax, setTax] = useState("Exclusive");
   const { validToken, team, isLoading } = useAuth();
   const navigate = useNavigate();
   const permissions = team?.role?.permissions?.invoice;
@@ -34,9 +35,41 @@ const EditInvoice = () => {
     };
   };
 
+  const fetchSingleInvoice = async (id) => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/invoice/single-invoice/${id}`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        const projectsData = response?.data?.invoice?.projects || []; // Ensure it's an array
+
+        // Set the projects state with a properly structured object
+        setProjects(projectsData.map((proj) => ({
+          project: proj?.project?._id || "", // Fallback to empty string if undefined
+          amount: proj?.amount || 0, // Fallback to 0 if undefined
+          projectPrice: proj?.project?.projectPrice || 0,
+          totalDues: proj?.project?.totalDues || 0,
+          totalPaid: proj?.project?.totalPaid || 0,
+          projectId: proj?.project?._id || "", // Ensure this refers to the correct project ID
+        })));
+
+        // Set additional state values
+        setDate(response?.data?.invoice?.date);
+        setTax(response?.data?.invoice?.tax);
+      }
+    } catch (error) {
+      console.log("Error while fetching single invoice:", error.message);
+    }
+  };
+
+
   useEffect(() => {
-    if (permissions?.create) {
+    if (permissions?.update) {
       fetchAllProjects();
+      fetchSingleInvoice(id);
     };
   }, [permissions]);
 
@@ -70,6 +103,7 @@ const EditInvoice = () => {
         updatedProjects[index].totalDues = response?.data?.project?.totalDues;
         updatedProjects[index].totalPaid = response?.data?.project?.totalPaid;
         updatedProjects[index].projectId = response?.data?.project?.projectId;
+        updatedProjects[index].amount = response?.data?.project?.projectPrice;
         setProjects(updatedProjects);
       };
     } catch (error) {
@@ -83,21 +117,17 @@ const EditInvoice = () => {
     setProjects(newProjects);
   };
 
-  const handleCreate = async (e) => {
+  const handleUpdate = async (e, id) => {
     e.preventDefault();
 
     // Validation
     for (const project of projects) {
-      if (!project.project) {
+      if (!project?.project) {
         return toast.error("Select project for all entries");
       };
 
-      if (parseFloat(project.amount) < 1) {
+      if (parseFloat(project?.amount) < 1) {
         return toast.error("Amount should not be less than 1");
-      };
-
-      if (parseFloat(project.amount) > parseFloat(project?.totalDues)) {
-        return toast.error("Amount should not greater than Total Dues");
       };
     };
 
@@ -111,31 +141,31 @@ const EditInvoice = () => {
 
     try {
       const invoiceData = {
-        projects: projects?.map((project) => ({
+        projects: projects.map((project) => ({
           project: project?.project,
-          amount: project?.amount,
+          amount: tax === "Inclusive" ? (parseFloat(project?.amount) * 1.18).toFixed(2) : project?.amount,
         })),
         date,
         tax,
       };
 
-      const response = await axios.post(`${base_url}/api/v1/invoice/create-invoice`, invoiceData, {
+      const response = await axios.put(`${base_url}/api/v1/invoice/update-invoice/${id}`, invoiceData, {
         headers: {
           Authorization: validToken,
         },
       });
 
       if (response?.data?.success) {
-        toast.success("Submitted successfully");
+        toast.success("Updated successfully");
         navigate(-1);
       };
     } catch (error) {
-      console.log("Error while creating invoices:", error.message);
+      console.log("Error while updating invoice:", error.message);
       toast.error("Error while submitting");
     };
   };
 
-  const projectOptions = allProjects?.map((p) => ({
+  const projectOptions = allProjects.map((p) => ({
     value: p?._id,
     label: p?.projectName,
   }));
@@ -144,7 +174,7 @@ const EditInvoice = () => {
     return <Preloader />;
   };
 
-  if (!permissions?.create) {
+  if (!permissions?.update) {
     return <Navigate to="/" />;
   };
 
@@ -152,7 +182,7 @@ const EditInvoice = () => {
     <div className="page-wrapper" style={{ paddingBottom: "2rem" }}>
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: "1rem" }}>
-          <h4>Eit Tax Invoice</h4>
+          <h4>Edit Tax Invoice</h4>
           <Link to="#" onClick={() => navigate(-1)}>
             <button className="btn btn-primary">Back</button>
           </Link>
@@ -183,7 +213,7 @@ const EditInvoice = () => {
             <div key={index} className="row">
               <div className="col-md-4">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="project">Project Name<span className="text-danger">*</span></label>
+                  <label className="col-form-label" htmlFor={`project-${index}`}>Project Name <span className="text-danger">*</span></label>
                   <Select
                     styles={{
                       control: (provided) => ({ ...provided, outline: 'none', border: "none", boxShadow: 'none' }),
@@ -194,7 +224,7 @@ const EditInvoice = () => {
                     name={`project-${index}`}
                     id={`project-${index}`}
                     options={projectOptions}
-                    value={projectOptions?.find((option) => option?.value === project?.project)}
+                    value={projectOptions.find((option) => option?.value === project?.project)}
                     onChange={(selectedOption) => handleProjectChange(index, selectedOption)}
                     isSearchable
                   />
@@ -233,23 +263,13 @@ const EditInvoice = () => {
                 <div className="form-wrap">
                   <label className="col-form-label" htmlFor={`amount-${index}`}>Amount <span className="text-danger">*</span></label>
                   <input
-                    type="text"
+                    type="number"
                     className="form-control"
                     name={`amount-${index}`}
                     id={`amount-${index}`}
-                    value={project?.amount}
-                    onChange={(e) => handleFieldChange(index, "amount", e.target.value)}
+                    value={project.amount}
+                    onChange={(e) => handleFieldChange(index, 'amount', e.target.value)}
                   />
-                  {
-                    (parseFloat(project?.amount) < 1) && (
-                      <div className="col-form-label" style={{ color: "red" }}>Amount should not less than 1. <i className="fas fa-times"></i></div>
-                    )
-                  }
-                  {
-                    (parseFloat(project?.amount) > parseFloat(project?.totalDues)) && (
-                      <div className="col-form-label" style={{ color: "red" }}>Amount should not greater than Total Dues. <i className="fas fa-times"></i></div>
-                    )
-                  }
                 </div>
               </div>
 
@@ -289,8 +309,7 @@ const EditInvoice = () => {
                 }
               </div>
             </div>
-          ))
-        }
+          ))}
 
         <div className="text-center">
           <button className="btn btn-secondary" onClick={handleAddProject}>Add Another Project</button>
@@ -298,7 +317,7 @@ const EditInvoice = () => {
 
         <div className="submit-button text-end">
           <Link to="#" onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
-          <Link className="btn btn-primary" onClick={handleCreate}>Submit</Link>
+          <Link className="btn btn-primary" onClick={(e) => handleUpdate(e, id)}>Submit</Link>
         </div>
       </div>
     </div>
