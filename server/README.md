@@ -1,8 +1,19 @@
-This is a crm web application build using MERN STACK.<br>
-Changes in table name and some input field name in the UI but in the backend it is same.<br>
-In the database team table represent emoloyee table.<br>
-In the database customer table represent client table.<br>
-In the database customer table represent client table.<br>
-In the database invoice table represent tax invoice table.<br>
-In the database inside project table projectPrice represent project cost, totalPaid represent totalReceived and description
-represent development phase description.<br>
+# CRM Web Application
+
+This is a CRM (Customer Relationship Management) web application built using the MERN stack (MongoDB, Express.js, React, and Node.js).
+
+## Notable Changes
+
+- Some table and input field names in the UI differ from those used in the backend, but they represent the same data.
+
+## Database Table Mappings
+
+- **Team Table**: Represents the `Employee` data.
+- **Customer Table**: Represents the `Client` data.
+- **Invoice Table**: Represents the `Tax Invoice` data.
+
+## Field Name Mappings in Project Table
+
+- `projectPrice`: Represents the `Project Cost`.
+- `totalPaid`: Represents the `Total Received`.
+- `description`: Represents the `Development Phase Description`.
