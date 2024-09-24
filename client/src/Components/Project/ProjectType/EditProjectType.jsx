@@ -65,12 +65,12 @@ const EditProjectType = () => {
       if (response?.data?.success) {
         setName("");
         setDescription("");
-        toast.success("Updated successfully");
+        toast.success("Submitted successfully");
         navigate(-1);
       };
     } catch (error) {
       console.log("Error while updating project type:", error.message);
-      toast.error("Error while updating");
+      toast.error("Error while submitting");
     };
   };
 
@@ -113,7 +113,7 @@ const EditProjectType = () => {
         </div>
         <div className="submit-button text-end">
           <Link to="#" onClick={() => navigate(-1)} className="btn btn-light">Cancel</Link>
-          <Link to="#" className="btn btn-primary" onClick={(e) => handleUpdate(e, id)}>Update</Link>
+          <Link to="#" className="btn btn-primary" onClick={(e) => handleUpdate(e, id)}>Submit</Link>
         </div>
       </div>
     </div>

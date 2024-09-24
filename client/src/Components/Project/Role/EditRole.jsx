@@ -578,12 +578,12 @@ const EditRole = () => {
             },
           },
         });
-        toast.success("Updated successfully");
+        toast.success("Submitted successfully");
         navigate(-1);
       }
     } catch (error) {
       console.error('Error while updating role:', error.message);
-      toast.error("Error while updating");
+      toast.error("Error while submitting");
     };
   };
 

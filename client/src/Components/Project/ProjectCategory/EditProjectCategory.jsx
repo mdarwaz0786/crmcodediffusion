@@ -6,6 +6,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from "../../../context/authContext.jsx";
 import Preloader from '../../../Preloader.jsx';
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const EditProjectCategory = () => {
   const [name, setName] = useState("");
@@ -64,12 +65,12 @@ const EditProjectCategory = () => {
       if (response?.data?.success) {
         setName("");
         setDescription("");
-        toast.success("Updated successfully");
+        toast.success("Submitted successfully");
         navigate(-1);
       };
     } catch (error) {
       console.log("Error while updating project category:", error.message);
-      toast.error("Error while updating");
+      toast.error("Error while submitting");
     };
   };
 
@@ -112,7 +113,7 @@ const EditProjectCategory = () => {
         </div>
         <div className="submit-button text-end">
           <Link to="#" onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
-          <Link to="#" className="btn btn-primary" onClick={(e) => handleUpdate(e, id)}>Update</Link>
+          <Link to="#" className="btn btn-primary" onClick={(e) => handleUpdate(e, id)}>Submit</Link>
         </div>
       </div>
     </div>

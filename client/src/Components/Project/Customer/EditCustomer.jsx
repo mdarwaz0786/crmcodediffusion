@@ -118,12 +118,12 @@ const EditCustomer = () => {
       });
 
       if (response?.data?.success) {
-        toast.success("Updated successfully");
+        toast.success("Submitted successfully");
         navigate(-1);
       };
     } catch (error) {
       console.log("Error while updating customer:", error.message);
-      toast.error("Error while updating");
+      toast.error("Error while submitting");
     };
   };
 
@@ -189,7 +189,7 @@ const EditCustomer = () => {
           </div>
           <div className="submit-button text-end">
             <Link to="#" onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
-            <button type="submit" className="btn btn-primary">Update</button>
+            <button type="submit" className="btn btn-primary">Submit</button>
           </div>
         </form>
       </div>
