@@ -1,1 +1,1 @@
-This project is build using Reactjs.<br>
+This project is built using Reactjs.<br>
