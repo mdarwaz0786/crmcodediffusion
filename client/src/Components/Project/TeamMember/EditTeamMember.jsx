@@ -287,7 +287,7 @@ const EditTeamMember = () => {
             (fieldPermissions?.password?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="password">Password<span className="text-danger">*</span></label>
+                  <label className="col-form-label" htmlFor="password">Password <span className="text-danger">*</span></label>
                   <input type="text" className={`form-control ${fieldPermissions?.password?.read ? "readonly-style" : ""}`} name="password" id="password" value={password} onChange={(e) => fieldPermissions?.password?.read ? null : setPassword(e.target.value)} autoComplete="new-password" />
                 </div>
               </div>

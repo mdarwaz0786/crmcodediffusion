@@ -203,7 +203,7 @@ const AddTeamMember = () => {
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="password">Create Password<span className="text-danger">*</span></label>
+              <label className="col-form-label" htmlFor="password">Create Password <span className="text-danger">*</span></label>
               <input type="password" className="form-control" name="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
             </div>
           </div>
