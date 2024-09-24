@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from "../../../context/authContext.jsx";
 import Preloader from "../../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddTeamMember = () => {
   const [name, setName] = useState("");
@@ -26,9 +27,9 @@ const AddTeamMember = () => {
 
   const fetchAllTeamMember = async () => {
     try {
-      const response = await axios.get("/api/v1/team/all-team", {
+      const response = await axios.get(`${base_url}/api/v1/team/all-team`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -42,9 +43,9 @@ const AddTeamMember = () => {
 
   const fetchAllDesignation = async () => {
     try {
-      const response = await axios.get("/api/v1/designation/all-designation", {
+      const response = await axios.get(`${base_url}/api/v1/designation/all-designation`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -58,9 +59,9 @@ const AddTeamMember = () => {
 
   const fetchAllRole = async () => {
     try {
-      const response = await axios.get("/api/v1/role/all-role", {
+      const response = await axios.get(`${base_url}/api/v1/role/all-role`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -117,9 +118,9 @@ const AddTeamMember = () => {
         return toast.error("Select role");
       };
 
-      const response = await axios.post("/api/v1/team/create-team", { name, email, password, mobile, joining, dob, role: selectedRole, designation: selectedDesignation, reportingTo: selectedReportingTo }, {
+      const response = await axios.post(`${base_url}/api/v1/team/create-team`, { name, email, password, mobile, joining, dob, role: selectedRole, designation: selectedDesignation, reportingTo: selectedReportingTo }, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 

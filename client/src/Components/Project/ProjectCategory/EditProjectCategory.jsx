@@ -18,9 +18,9 @@ const EditProjectCategory = () => {
 
   const fetchSingleData = async (id) => {
     try {
-      const response = await axios.get(`/api/v1/projectCategory/single-projectCategory/${id}`, {
+      const response = await axios.get(`${base_url}/api/v1/projectCategory/single-projectCategory/${id}`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -55,9 +55,9 @@ const EditProjectCategory = () => {
     };
 
     try {
-      const response = await axios.put(`/api/v1/projectCategory/update-projectCategory/${id}`, updateData, {
+      const response = await axios.put(`${base_url}/api/v1/projectCategory/update-projectCategory/${id}`, updateData, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 

@@ -6,6 +6,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from "../../../context/authContext.jsx";
 import Preloader from '../../../Preloader.jsx';
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const EditDesignation = () => {
   const [name, setName] = useState("");
@@ -18,9 +19,9 @@ const EditDesignation = () => {
 
   const fetchSingleData = async (id) => {
     try {
-      const response = await axios.get(`/api/v1/designation/single-designation/${id}`, {
+      const response = await axios.get(`${base_url}/api/v1/designation/single-designation/${id}`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -55,9 +56,9 @@ const EditDesignation = () => {
     };
 
     try {
-      const response = await axios.put(`/api/v1/designation/update-designation/${id}`, updateData, {
+      const response = await axios.put(`${base_url}/api/v1/designation/update-designation/${id}`, updateData, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 

@@ -4,7 +4,8 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 export const AuthContext = createContext();
 
@@ -32,7 +33,7 @@ export const AuthProvider = ({ children }) => {
   const loggedInTeam = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get("/api/v1/team/loggedin-team", {
+      const response = await axios.get(`${base_url}/api/v1/team/loggedin-team`, {
         headers: {
           Authorization: validToken,
         },

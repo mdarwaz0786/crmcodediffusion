@@ -6,6 +6,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from "../../../context/authContext.jsx";
 import Preloader from "../../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const EditProjectType = () => {
   const [name, setName] = useState("");
@@ -18,9 +19,9 @@ const EditProjectType = () => {
 
   const fetchSingleData = async (id) => {
     try {
-      const response = await axios.get(`/api/v1/projectType/single-projectType/${id}`, {
+      const response = await axios.get(`${base_url}/api/v1/projectType/single-projectType/${id}`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -55,9 +56,9 @@ const EditProjectType = () => {
     };
 
     try {
-      const response = await axios.put(`/api/v1/projectType/update-projectType/${id}`, updateData, {
+      const response = await axios.put(`${base_url}/api/v1/projectType/update-projectType/${id}`, updateData, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 

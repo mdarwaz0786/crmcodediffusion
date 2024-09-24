@@ -1,1 +1,1 @@
-crms web app build using MERN Stack.
+This project is build using Reactjs.<br>

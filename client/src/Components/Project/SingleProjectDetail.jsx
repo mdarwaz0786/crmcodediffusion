@@ -6,6 +6,7 @@ import { useAuth } from "../../context/authContext.jsx";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import Preloader from "../../Preloader.jsx";
 import html2pdf from "html2pdf.js";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const SingleProjectDetail = () => {
   const { id } = useParams();
@@ -17,9 +18,9 @@ const SingleProjectDetail = () => {
 
   const fetchSingleProject = async (id) => {
     try {
-      const response = await axios.get(`/api/v1/project/single-project/${id}`, {
+      const response = await axios.get(`${base_url}/api/v1/project/single-project/${id}`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 

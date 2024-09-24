@@ -8,6 +8,7 @@ import { useAuth } from "../../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
 import Preloader from "../../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const TeamMember = () => {
   const [data, setData] = useState([]);
@@ -54,9 +55,9 @@ const TeamMember = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("/api/v1/team/all-team", {
+      const response = await axios.get(`${base_url}/api/v1/team/all-team`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
         params: {
           search: filters.search,
@@ -80,9 +81,9 @@ const TeamMember = () => {
 
   const fetchAllTeamName = async () => {
     try {
-      const response = await axios.get("/api/v1/team/all-team", {
+      const response = await axios.get(`${base_url}/api/v1/team/all-team`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
         params: {
           name,
@@ -134,9 +135,9 @@ const TeamMember = () => {
 
     if (isdelete === "yes") {
       try {
-        const response = await axios.delete(`/api/v1/team/delete-team/${id}`, {
+        const response = await axios.delete(`${base_url}/api/v1/team/delete-team/${id}`, {
           headers: {
-            Authorization: `${validToken}`,
+            Authorization: validToken,
           },
         });
 

@@ -7,6 +7,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from "../../context/authContext.jsx";
 import Preloader from "../../Preloader.jsx";
 import Select from "react-select";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddProformaInvoice = () => {
   const [projects, setProjects] = useState([{ project: "", amount: "", projectPrice: "", totalDues: "", totalPaid: "", projectId: "" }]);
@@ -19,7 +20,7 @@ const AddProformaInvoice = () => {
 
   const fetchAllProjects = async () => {
     try {
-      const response = await axios.get("/api/v1/project/all-project", {
+      const response = await axios.get(`${base_url}/api/v1/project/all-project`, {
         headers: {
           Authorization: validToken,
         },
@@ -57,7 +58,7 @@ const AddProformaInvoice = () => {
 
   const fetchProjectDetails = async (projectId, index) => {
     try {
-      const response = await axios.get(`/api/v1/project/single-project/${projectId}`, {
+      const response = await axios.get(`${base_url}/api/v1/project/single-project/${projectId}`, {
         headers: {
           Authorization: validToken,
         },
@@ -119,7 +120,7 @@ const AddProformaInvoice = () => {
         tax,
       };
 
-      const response = await axios.post("/api/v1/proformaInvoice/create-proformaInvoice", invoiceData, {
+      const response = await axios.post(`${base_url}/api/v1/proformaInvoice/create-proformaInvoice`, invoiceData, {
         headers: {
           Authorization: validToken,
         },

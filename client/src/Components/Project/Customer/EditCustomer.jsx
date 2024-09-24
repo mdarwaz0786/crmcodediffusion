@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from "../../../context/authContext.jsx";
 import Preloader from "../../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const statesOfIndia = [
   { value: 'Delhi', label: 'Delhi' },
@@ -76,8 +77,10 @@ const EditCustomer = () => {
 
   const fetchSingleData = async (id) => {
     try {
-      const response = await axios.get(`/api/v1/customer/single-customer/${id}`, {
-        headers: { Authorization: `${validToken}` },
+      const response = await axios.get(`${base_url}/api/v1/customer/single-customer/${id}`, {
+        headers: {
+          Authorization: validToken,
+        },
       });
 
       if (response?.data?.success) {
@@ -108,8 +111,10 @@ const EditCustomer = () => {
     const updateData = Object.fromEntries(Object.entries(formData).filter(([key]) => fieldPermissions[key]?.show && !fieldPermissions[key]?.read));
 
     try {
-      const response = await axios.put(`/api/v1/customer/update-customer/${id}`, updateData, {
-        headers: { Authorization: `${validToken}` },
+      const response = await axios.put(`${base_url}/api/v1/customer/update-customer/${id}`, updateData, {
+        headers: {
+          Authorization: validToken,
+        },
       });
 
       if (response?.data?.success) {

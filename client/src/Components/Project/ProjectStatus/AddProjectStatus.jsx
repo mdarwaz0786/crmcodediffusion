@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from "../../../context/authContext.jsx";
 import Preloader from "../../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddProjectStatus = () => {
   const [status, setStatus] = useState("");
@@ -22,9 +23,9 @@ const AddProjectStatus = () => {
         return toast.error("Enter status");
       };
 
-      const response = await axios.post("/api/v1/projectStatus/create-projectStatus", { status, description }, {
+      const response = await axios.post(`${base_url}/api/v1/projectStatus/create-projectStatus`, { status, description }, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 

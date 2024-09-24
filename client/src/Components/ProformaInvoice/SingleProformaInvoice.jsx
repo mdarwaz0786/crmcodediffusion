@@ -7,6 +7,7 @@ import { useAuth } from "../../context/authContext.jsx";
 import Preloader from "../../Preloader.jsx";
 import logo from '../../Assets/logo.png';
 import html2pdf from "html2pdf.js";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const SingleProformaInvoice = () => {
   const [data, setData] = useState("");
@@ -17,9 +18,9 @@ const SingleProformaInvoice = () => {
 
   const fetchSingleInvoicve = async (id) => {
     try {
-      const response = await axios.get(`/api/v1/proformaInvoice/single-proformaInvoice/${id}`, {
+      const response = await axios.get(`${base_url}/api/v1/proformaInvoice/single-proformaInvoice/${id}`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 

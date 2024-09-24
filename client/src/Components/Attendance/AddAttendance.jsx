@@ -6,6 +6,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from "../../context/authContext.jsx";
 import Preloader from "../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddAttendance = () => {
   const [selectedAttendance, setSelectedAttendance] = useState("Present");
@@ -34,7 +35,7 @@ const AddAttendance = () => {
         };
       },
       (error) => {
-        console.error('Error while getting location:', error.message);
+        console.error("Error while getting location:", error.message);
         toast.error("Failed to detect location. Please check your browser settings.");
       },
       {
@@ -69,7 +70,7 @@ const AddAttendance = () => {
         return toast.error("Location not available. Please allow location access.");
       };
 
-      const response = await axios.post("/api/v1/attendance/create-attendance", { attendance: selectedAttendance, date, checkInTime, checkOutTime, location: { ...location, name: locationName } }, {
+      const response = await axios.post(`${base_url}/api/v1/attendance/create-attendance`, { attendance: selectedAttendance, date, checkInTime, checkOutTime, location: { ...location, name: locationName } }, {
         headers: {
           Authorization: validToken,
         },

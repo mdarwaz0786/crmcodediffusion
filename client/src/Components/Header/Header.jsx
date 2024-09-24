@@ -7,6 +7,7 @@ import Search from "./Search.jsx";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import logo from "../../Assets/logo.png";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const Header = () => {
   const [total, setTotal] = useState("");
@@ -18,9 +19,9 @@ const Header = () => {
   useEffect(() => {
     const fetchAllProject = async () => {
       try {
-        const response = await axios.get("/api/v1/project/all-project", {
+        const response = await axios.get(`${base_url}/api/v1/project/all-project`, {
           headers: {
-            Authorization: `${validToken}`,
+            Authorization: validToken,
           },
         });
 

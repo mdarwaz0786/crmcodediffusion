@@ -8,6 +8,7 @@ import { useAuth } from "../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
 import Preloader from "../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const ProformaInvoiceList = () => {
   const [data, setData] = useState([]);
@@ -58,9 +59,9 @@ const ProformaInvoiceList = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("/api/v1/proformaInvoice/all-proformaInvoice", {
+      const response = await axios.get(`${base_url}/api/v1/proformaInvoice/all-proformaInvoice`, {
         headers: {
-          Authorization: `${validToken}`
+          Authorization: validToken,
         },
         params: {
           search: filters.search,
@@ -84,9 +85,9 @@ const ProformaInvoiceList = () => {
 
   const fetchAllInvoiceName = async () => {
     try {
-      const response = await axios.get("/api/v1/proformaInvoice/all-proformaInvoice", {
+      const response = await axios.get(`${base_url}/api/v1/proformaInvoice/all-proformaInvoice`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
         params: {
           nameSearch,
@@ -138,9 +139,9 @@ const ProformaInvoiceList = () => {
 
     if (isdelete === "yes") {
       try {
-        const response = await axios.delete(`/api/v1/proformaInvoice/delete-proformaInvoice/${id}`, {
+        const response = await axios.delete(`${base_url}/api/v1/proformaInvoice/delete-proformaInvoice/${id}`, {
           headers: {
-            Authorization: `${validToken}`,
+            Authorization: validToken,
           },
         });
 
@@ -207,9 +208,9 @@ const ProformaInvoiceList = () => {
 
   const fetchSingleProformaInvoicve = async (id) => {
     try {
-      const response = await axios.get(`/api/v1/proformaInvoice/single-proformaInvoice/${id}`, {
+      const response = await axios.get(`${base_url}/api/v1/proformaInvoice/single-proformaInvoice/${id}`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -239,7 +240,7 @@ const ProformaInvoiceList = () => {
         tax: singleProformaInvoice?.tax,
       };
 
-      const response = await axios.post("/api/v1/invoice/create-invoice", invoiceData, {
+      const response = await axios.post(`${base_url}/api/v1/invoice/create-invoice`, invoiceData, {
         headers: {
           Authorization: validToken,
         },

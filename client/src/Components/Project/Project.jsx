@@ -10,6 +10,7 @@ import * as XLSX from 'xlsx';
 import Preloader from "../../Preloader.jsx";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const Project = () => {
   const [project, setProject] = useState([]);
@@ -86,9 +87,9 @@ const Project = () => {
   const fetchAllProject = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("/api/v1/project/all-project", {
+      const response = await axios.get(`${base_url}/api/v1/project/all-project`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
         params: {
           search: filters.search,
@@ -126,9 +127,9 @@ const Project = () => {
 
   const fetchAllProjectName = async () => {
     try {
-      const response = await axios.get("/api/v1/project/all-project", {
+      const response = await axios.get(`${base_url}/api/v1/project/all-project`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
         params: {
           projectName,
@@ -160,9 +161,9 @@ const Project = () => {
 
   const fetchAllProjectId = async () => {
     try {
-      const response = await axios.get("/api/v1/project/all-project", {
+      const response = await axios.get(`${base_url}/api/v1/project/all-project`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
         params: {
           projectId,
@@ -223,10 +224,10 @@ const Project = () => {
 
     if (isdelete === "yes") {
       try {
-        const response = await axios.delete(`/api/v1/project/delete-project/${id}`, {
+        const response = await axios.delete(`${base_url}/api/v1/project/delete-project/${id}`, {
           headers: {
-            Authorization: `${validToken}`,
-          },
+            Authorization: validToken,
+          }
         });
 
         if (response?.data?.success) {

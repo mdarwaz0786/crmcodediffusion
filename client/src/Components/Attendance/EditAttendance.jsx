@@ -6,6 +6,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from "../../context/authContext.jsx";
 import Preloader from "../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const EditAttendance = () => {
   const [selectedAttendance, setSelectedAttendance] = useState("");
@@ -49,7 +50,7 @@ const EditAttendance = () => {
 
   const fetchSingleAttendance = async (id) => {
     try {
-      const response = await axios.get(`/api/v1/attendance/single-attendance/${id}`, {
+      const response = await axios.get(`${base_url}/api/v1/attendance/single-attendance/${id}`, {
         headers: {
           Authorization: validToken,
         },
@@ -77,7 +78,7 @@ const EditAttendance = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.put(`/api/v1/attendance/update-attendance/${id}`, { attendance: selectedAttendance, date, checkInTime, checkOutTime, location: { ...location, name: locationName } }, {
+      const response = await axios.put(`${base_url}/api/v1/attendance/update-attendance/${id}`, { attendance: selectedAttendance, date, checkInTime, checkOutTime, location: { ...location, name: locationName } }, {
         headers: {
           Authorization: validToken,
         },

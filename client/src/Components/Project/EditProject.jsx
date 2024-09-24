@@ -8,6 +8,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useAuth } from "../../context/authContext.jsx";
 import Preloader from "../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const EditProject = () => {
   const [customer, setCustomer] = useState([]);
@@ -47,9 +48,9 @@ const EditProject = () => {
 
   const fetchAllCustomer = async () => {
     try {
-      const response = await axios.get("/api/v1/customer/all-customer", {
+      const response = await axios.get(`${base_url}/api/v1/customer/all-customer`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -63,9 +64,9 @@ const EditProject = () => {
 
   const fetchAllProjectCatgory = async () => {
     try {
-      const response = await axios.get("/api/v1/projectCategory/all-projectCategory", {
+      const response = await axios.get(`/api/v1/projectCategory/all-projectCategory`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -79,9 +80,9 @@ const EditProject = () => {
 
   const fetchAllProjectTiming = async () => {
     try {
-      const response = await axios.get("/api/v1/projectTiming/all-projectTiming", {
+      const response = await axios.get(`${base_url}/api/v1/projectTiming/all-projectTiming`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -95,9 +96,9 @@ const EditProject = () => {
 
   const fetchAllTeamMember = async () => {
     try {
-      const response = await axios.get("/api/v1/team/all-team", {
+      const response = await axios.get(`${base_url}/api/v1/team/all-team`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -111,9 +112,9 @@ const EditProject = () => {
 
   const fetchAllTechnology = async () => {
     try {
-      const response = await axios.get("/api/v1/technology/all-technology", {
+      const response = await axios.get(`${base_url}/api/v1/technology/all-technology`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -127,9 +128,9 @@ const EditProject = () => {
 
   const fetchAllProjectStatus = async () => {
     try {
-      const response = await axios.get("/api/v1/projectStatus/all-projectStatus", {
+      const response = await axios.get(`${base_url}/api/v1/projectStatus/all-projectStatus`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -143,9 +144,9 @@ const EditProject = () => {
 
   const fetchAllProjectType = async () => {
     try {
-      const response = await axios.get("/api/v1/projectType/all-projectType", {
+      const response = await axios.get(`${base_url}/api/v1/projectType/all-projectType`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -159,9 +160,9 @@ const EditProject = () => {
 
   const fetchAllProjectPriority = async () => {
     try {
-      const response = await axios.get("/api/v1/projectPriority/all-projectPriority", {
+      const response = await axios.get(`${base_url}/api/v1/projectPriority/all-projectPriority`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -188,9 +189,9 @@ const EditProject = () => {
 
   const fetchSingleProject = async (id) => {
     try {
-      const response = await axios.get(`/api/v1/project/single-project/${id}`, {
+      const response = await axios.get(`${base_url}/api/v1/project/single-project/${id}`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -295,9 +296,9 @@ const EditProject = () => {
     };
 
     try {
-      const response = await axios.put(`/api/v1/project/update-project/${id}`, updateData, {
+      const response = await axios.put(`${base_url}/api/v1/project/update-project/${id}`, updateData, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 

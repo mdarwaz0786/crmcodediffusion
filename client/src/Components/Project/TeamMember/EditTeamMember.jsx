@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from "../../../context/authContext.jsx";
 import Preloader from "../../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const EditTeamMember = () => {
   const [employeeId, setEmployeeId] = useState("");
@@ -29,9 +30,9 @@ const EditTeamMember = () => {
 
   const fetchAllTeamMember = async () => {
     try {
-      const response = await axios.get("/api/v1/team/all-team", {
+      const response = await axios.get(`${base_url}/api/v1/team/all-team`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -45,9 +46,9 @@ const EditTeamMember = () => {
 
   const fetchAllDesignation = async () => {
     try {
-      const response = await axios.get("/api/v1/designation/all-designation", {
+      const response = await axios.get(`${base_url}/api/v1/designation/all-designation`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -61,9 +62,9 @@ const EditTeamMember = () => {
 
   const fetchAllRole = async () => {
     try {
-      const response = await axios.get("/api/v1/role/all-role", {
+      const response = await axios.get(`${base_url}/api/v1/role/all-role`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -85,9 +86,9 @@ const EditTeamMember = () => {
 
   const fetchSingleData = async (id) => {
     try {
-      const response = await axios.get(`/api/v1/team/single-team/${id}`, {
+      const response = await axios.get(`${base_url}/api/v1/team/single-team/${id}`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -154,9 +155,9 @@ const EditTeamMember = () => {
     };
 
     try {
-      const response = await axios.put(`/api/v1/team/update-team/${id}`, updateData, {
+      const response = await axios.put(`${base_url}/api/v1/team/update-team/${id}`, updateData, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 

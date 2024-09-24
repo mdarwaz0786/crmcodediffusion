@@ -7,6 +7,7 @@ import { useAuth } from "../../../context/authContext.jsx";
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Preloader from "../../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddRole = () => {
   const { validToken, team, isLoading } = useAuth();
@@ -309,9 +310,9 @@ const AddRole = () => {
     };
 
     try {
-      const response = await axios.post("/api/v1/role/create-role", { name, permissions }, {
+      const response = await axios.post(`${base_url}/api/v1/role/create-role`, { name, permissions }, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 

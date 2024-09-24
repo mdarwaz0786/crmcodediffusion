@@ -11,6 +11,7 @@ import { Bar, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import Search from "../Header/Search.jsx";
 import Preloader from "../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 // Register required components for Chart.js
 ChartJS.register(
@@ -84,9 +85,9 @@ const ProjectDashboard = () => {
   const fetchAllProject = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("/api/v1/project/all-project", {
+      const response = await axios.get(`${base_url}/api/v1/project/all-project`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
         params: {
           search: filters.search,
@@ -129,9 +130,9 @@ const ProjectDashboard = () => {
 
   const fetchAllProjectForDashboard = async () => {
     try {
-      const response = await axios.get("/api/v1/project/all-project", {
+      const response = await axios.get(`${base_url}/api/v1/project/all-project`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
         params: {
           dateRange: filters.dateRange,
@@ -280,9 +281,9 @@ const ProjectDashboard = () => {
 
     if (isdelete === "yes") {
       try {
-        const response = await axios.delete(`/api/v1/project/delete-project/${id}`, {
+        const response = await axios.delete(`${base_url}/api/v1/project/delete-project/${id}`, {
           headers: {
-            Authorization: `${validToken}`,
+            Authorization: validToken,
           },
         });
 

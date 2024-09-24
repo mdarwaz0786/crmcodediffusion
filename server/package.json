@@ -5,11 +5,11 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "client": "npm run dev --prefix ./client",
-    "server": "nodemon ./server/app.js",
+    "client": "npm run dev --prefix ../client",
+    "server": "nodemon app.js",
     "dev": "concurrently \"npm run client\" \"npm run server\"",
-    "start": "node ./server/app.js",
-    "build": "npm install && npm install --prefix client && npm run build --prefix client"
+    "start": "node app.js",
+    "build": "npm install && npm install --prefix ../client && npm run build --prefix ../client"
   },
   "keywords": [
     "crm",

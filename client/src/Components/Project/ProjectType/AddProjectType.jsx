@@ -5,6 +5,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from "../../../context/authContext.jsx";
 import Preloader from "../../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddProjectType = () => {
   const [name, setName] = useState("");
@@ -22,9 +23,9 @@ const AddProjectType = () => {
         return toast.error("Enter type");
       };
 
-      const response = await axios.post("/api/v1/projectType/create-projectType", { name, description }, {
+      const response = await axios.post(`${base_url}/api/v1/projectType/create-projectType`, { name, description }, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 

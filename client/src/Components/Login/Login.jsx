@@ -5,6 +5,7 @@ import { useAuth } from "../../context/authContext.jsx";
 import axios from "axios";
 import { toast } from 'react-toastify';
 import logo from "../../Assets/logo.png";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const Login = () => {
   const [employeeId, setEmployeeId] = useState("");
@@ -19,7 +20,7 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post("/api/v1/team/login-team", { employeeId: transformedEmployeeId, password });
+      const response = await axios.post(`${base_url}/api/v1/team/login-team`, { employeeId: transformedEmployeeId, password });
       if (response?.data?.success) {
         storeToken(response?.data?.token);
         setEmployeeId("");

@@ -7,6 +7,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from "../../context/authContext.jsx";
 import Preloader from "../../Preloader.jsx";
 import Select from "react-select";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddPayment = () => {
   const [project, setProject] = useState([]);
@@ -23,9 +24,9 @@ const AddPayment = () => {
 
   const fetchAllProject = async () => {
     try {
-      const response = await axios.get("/api/v1/project/all-project", {
+      const response = await axios.get(`${base_url}/api/v1/project/all-project`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -54,9 +55,9 @@ const AddPayment = () => {
 
   const fetchSingleProject = async (selectedProjectId) => {
     try {
-      const response = await axios.get(`/api/v1/project/single-project/${selectedProjectId}`, {
+      const response = await axios.get(`${base_url}/api/v1/project/single-project/${selectedProjectId}`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -128,9 +129,9 @@ const AddPayment = () => {
     };
 
     try {
-      const response = await axios.put(`/api/v1/project/update-project/${selectedProjectId}`, updateData, {
+      const response = await axios.put(`${base_url}/api/v1/project/update-project/${selectedProjectId}`, updateData, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 

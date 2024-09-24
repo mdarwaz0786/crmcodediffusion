@@ -8,6 +8,7 @@ import { useAuth } from "../../../context/authContext.jsx";
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Preloader from "../../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const EditRole = () => {
   const [selectAll, setSelectAll] = useState(false);
@@ -320,9 +321,9 @@ const EditRole = () => {
 
   const fetchSingleRole = async (id) => {
     try {
-      const response = await axios.get(`/api/v1/role/single-role/${id}`, {
+      const response = await axios.get(`${base_url}/api/v1/role/single-role/${id}`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -357,9 +358,9 @@ const EditRole = () => {
     };
 
     try {
-      const response = await axios.put(`/api/v1/role/update-role/${id}`, updateData, {
+      const response = await axios.put(`${base_url}/api/v1/role/update-role/${id}`, updateData, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 

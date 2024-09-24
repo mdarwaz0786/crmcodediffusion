@@ -8,6 +8,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { useAuth } from "../../context/authContext.jsx";
 import Preloader from "../../Preloader.jsx";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddProject = () => {
   const { team, validToken, isLoading } = useAuth();
@@ -40,9 +41,9 @@ const AddProject = () => {
 
   const fetchAllCustomer = async () => {
     try {
-      const response = await axios.get("/api/v1/customer/all-customer", {
+      const response = await axios.get(`${base_url}/api/v1/customer/all-customer`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -56,9 +57,9 @@ const AddProject = () => {
 
   const fetchAllProjectCatgory = async () => {
     try {
-      const response = await axios.get("/api/v1/projectCategory/all-projectCategory", {
+      const response = await axios.get(`${base_url}/api/v1/projectCategory/all-projectCategory`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -72,9 +73,9 @@ const AddProject = () => {
 
   const fetchAllProjectTiming = async () => {
     try {
-      const response = await axios.get("/api/v1/projectTiming/all-projectTiming", {
+      const response = await axios.get(`${base_url}/api/v1/projectTiming/all-projectTiming`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -88,9 +89,9 @@ const AddProject = () => {
 
   const fetchAllTeamMember = async () => {
     try {
-      const response = await axios.get("/api/v1/team/all-team", {
+      const response = await axios.get(`${base_url}/api/v1/team/all-team`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -104,9 +105,9 @@ const AddProject = () => {
 
   const fetchAllTechnology = async () => {
     try {
-      const response = await axios.get("/api/v1/technology/all-technology", {
+      const response = await axios.get(`${base_url}/api/v1/technology/all-technology`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -120,9 +121,9 @@ const AddProject = () => {
 
   const fetchAllProjectStatus = async () => {
     try {
-      const response = await axios.get("/api/v1/projectStatus/all-projectStatus", {
+      const response = await axios.get(`${base_url}/api/v1/projectStatus/all-projectStatus`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -136,9 +137,9 @@ const AddProject = () => {
 
   const fetchAllProjectType = async () => {
     try {
-      const response = await axios.get("/api/v1/projectType/all-projectType", {
+      const response = await axios.get(`${base_url}/api/v1/projectType/all-projectType`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -152,9 +153,9 @@ const AddProject = () => {
 
   const fetchAllProjectPriority = async () => {
     try {
-      const response = await axios.get("/api/v1/projectPriority/all-projectPriority", {
+      const response = await axios.get(`${base_url}/api/v1/projectPriority/all-projectPriority`, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
@@ -245,7 +246,7 @@ const AddProject = () => {
         return toast.error("Enter project phase description");
       };
 
-      const response = await axios.post("/api/v1/project/create-project",
+      const response = await axios.post(`${base_url}/api/v1/project/create-project`,
         {
           projectName,
           customer: selectedCustomer,
@@ -265,7 +266,7 @@ const AddProject = () => {
         },
         {
           headers: {
-            Authorization: `${validToken}`,
+            Authorization: validToken,
           },
         },
       );

@@ -5,6 +5,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from "../../../context/authContext.jsx";
 import Preloader from '../../../Preloader.jsx';
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddProjectTiming = () => {
   const [name, setName] = useState("");
@@ -22,9 +23,9 @@ const AddProjectTiming = () => {
         return toast.error("Enter name");
       };
 
-      const response = await axios.post("/api/v1/projectTiming/create-projectTiming", { name, description }, {
+      const response = await axios.post(`${base_url}/api/v1/projectTiming/create-projectTiming`, { name, description }, {
         headers: {
-          Authorization: `${validToken}`,
+          Authorization: validToken,
         },
       });
 
