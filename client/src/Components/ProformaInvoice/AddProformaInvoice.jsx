@@ -70,7 +70,7 @@ const AddProformaInvoice = () => {
         updatedProjects[index].totalDues = response?.data?.project?.totalDues;
         updatedProjects[index].totalPaid = response?.data?.project?.totalPaid;
         updatedProjects[index].projectId = response?.data?.project?.projectId;
-        updatedProjects[index].amount = response?.data?.project?.totalDues;
+        updatedProjects[index].amount = response?.data?.project?.projectPrice;
         setProjects(updatedProjects);
       };
     } catch (error) {
@@ -95,10 +95,6 @@ const AddProformaInvoice = () => {
 
       if (parseFloat(project?.amount) < 1) {
         return toast.error("Amount should not be less than 1");
-      };
-
-      if (parseFloat(project?.amount) > parseFloat(project?.totalDues)) {
-        return toast.error("Amount should not greater than Total Dues");
       };
     };
 
@@ -244,11 +240,6 @@ const AddProformaInvoice = () => {
                   {
                     (parseFloat(project?.amount) < 1) && (
                       <div className="col-form-label" style={{ color: "red" }}>Amount should not less than 1. <i className="fas fa-times"></i></div>
-                    )
-                  }
-                  {
-                    (parseFloat(project?.amount) > parseFloat(project?.totalDues)) && (
-                      <div className="col-form-label" style={{ color: "red" }}>Amount should not greater than Total Dues. <i className="fas fa-times"></i></div>
                     )
                   }
                 </div>

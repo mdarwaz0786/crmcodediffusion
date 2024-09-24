@@ -554,7 +554,7 @@ const AddProject = () => {
           </div>
           <div className="submit-button text-end">
             <Link to="#" onClick={() => navigate(-1)} className="btn btn-light">Cancel</Link>
-            <Link to="#" className="btn btn-primary" onClick={(e) => handleCreate(e)}>Add</Link>
+            <Link to="#" className="btn btn-primary" onClick={(e) => handleCreate(e)}>Submit</Link>
           </div>
         </div>
       </div>
