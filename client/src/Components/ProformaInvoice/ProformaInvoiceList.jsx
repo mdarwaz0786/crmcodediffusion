@@ -535,7 +535,7 @@ const ProformaInvoiceList = () => {
                               }
                               {
                                 (filedPermissions?.tax?.show) && (
-                                  <td>{d?.tax}</td>
+                                  d?.tax === "Inclusive" ? <td>₹{d?.total}</td> : <td>₹{d?.subtotal}</td>
                                 )
                               }
                               {

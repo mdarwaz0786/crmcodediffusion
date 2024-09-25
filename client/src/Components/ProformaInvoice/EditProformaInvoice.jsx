@@ -10,23 +10,17 @@ import Select from "react-select";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const EditProformaInvoice = () => {
-  const [project, setProject] = useState([]);
-  const [projectId, setProjectId] = useState("");
-  const [customer, setCustomer] = useState("");
-  const [projectPrice, setProjectPrice] = useState("");
-  const [totalPaid, setTotalPaid] = useState("");
-  const [totalDues, setTotalDues] = useState("");
-  const [selectedProjectId, setSelectedProjectId] = useState("");
-  const [amount, setAmount] = useState("");
-  const [tax, setTax] = useState("Inclusive");
-  const [date, setDate] = useState("");
+  const { id } = useParams();
+  const [projects, setProjects] = useState([{ project: "", amount: "", projectPrice: "", totalDues: "", totalPaid: "", projectId: "" }]);
+  const [allProjects, setAllProjects] = useState([]);
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [tax, setTax] = useState("Exclusive");
   const { validToken, team, isLoading } = useAuth();
   const navigate = useNavigate();
-  const { id } = useParams();
-  const permissions = team?.role?.permissions?.proformaInvoice;
+  const permissions = team?.role?.permissions?.invoice;
   const fieldPermissions = team?.role?.permissions?.proformaInvoice?.fields;
 
-  const fetchAllProject = async () => {
+  const fetchAllProjects = async () => {
     try {
       const response = await axios.get(`${base_url}/api/v1/project/all-project`, {
         headers: {
@@ -35,55 +29,14 @@ const EditProformaInvoice = () => {
       });
 
       if (response?.data?.success) {
-        const filteredProject = response?.data?.project?.filter((p) => {
-          const isLeader = p?.teamLeader?.some((l) => l?._id === team?._id);
-          const isResponsible = p?.responsiblePerson?.some((r) => r?._id === team?._id);
-          return isLeader || isResponsible;
-        });
-        if (team?.role?.name.toLowerCase() === "coordinator" || team?.role?.name.toLowerCase() === "admin") {
-          setProject(response?.data?.project);
-        } else {
-          setProject(filteredProject);
-        };
+        setAllProjects(response?.data?.project);
       };
     } catch (error) {
-      console.log("Error while fetching all project:", error.message);
+      console.log("Error while fetching all projects:", error.message);
     };
   };
 
-  useEffect(() => {
-    if (!isLoading && team && permissions?.update) {
-      fetchAllProject();
-    };
-  }, [isLoading, team, permissions]);
-
-  const fetchSingleProject = async (selectedProjectId) => {
-    try {
-      const response = await axios.get(`${base_url}/api/v1/project/single-project/${selectedProjectId}`, {
-        headers: {
-          Authorization: validToken,
-        },
-      });
-
-      if (response?.data?.success) {
-        setProjectId(response?.data?.project?.projectId);
-        setProjectPrice(response?.data?.project?.projectPrice);
-        setTotalPaid(response?.data?.project?.totalPaid);
-        setTotalDues(response?.data?.project?.totalDues);
-        setCustomer(response?.data?.project?.customer?.name);
-      };
-    } catch (error) {
-      console.log("Error while fetching single project:", error.message);
-    };
-  };
-
-  useEffect(() => {
-    if (!isLoading && team && permissions?.update && selectedProjectId) {
-      fetchSingleProject(selectedProjectId);
-    };
-  }, [isLoading, team, permissions, selectedProjectId]);
-
-  const fetchSingleInvoicve = async (id) => {
+  const fetchSingleInvoice = async (id) => {
     try {
       const response = await axios.get(`${base_url}/api/v1/proformaInvoice/single-proformaInvoice/${id}`, {
         headers: {
@@ -92,68 +45,119 @@ const EditProformaInvoice = () => {
       });
 
       if (response?.data?.success) {
-        setAmount(response?.data?.invoice?.amount);
-        setSelectedProjectId(response?.data?.invoice?.project?._id);
-        setTax(response?.data?.invoice?.tax);
+        const invoiceData = response?.data?.invoice?.projects;
+
+        setProjects(invoiceData?.map((d) => ({
+          project: d?.project?._id,
+          amount: d?.project?.projectPrice,
+          projectName: d?.project?.projectName,
+          projectId: d?.project?.projectId,
+          projectPrice: d?.project?.projectPrice,
+          totalPaid: d?.project?.totalPaid,
+          totalDues: d?.project?.totalDues,
+        })));
+
         setDate(response?.data?.invoice?.date);
+        setTax(response?.data?.invoice?.tax);
       };
     } catch (error) {
-      console.log("Error while fetching single proforma invoice:", error.message);
+      console.log("Error while fetching single invoice:", error.message);
     };
   };
 
   useEffect(() => {
-    if (!isLoading && team && permissions?.update && id) {
-      fetchSingleInvoicve(id);
+    if (permissions?.update && !isLoading && team && id) {
+      fetchAllProjects();
+      fetchSingleInvoice(id);
     };
-  }, [id, isLoading, team, permissions]);
+  }, [permissions, isLoading, team, id]);
 
-  // Handle project change
-  const handleProjectChange = (selectedOption) => {
-    setSelectedProjectId(selectedOption?.value || "");
+  const handleAddProject = () => {
+    setProjects([...projects, { project: "", amount: "", projectPrice: "", totalDues: "", totalPaid: "", projectId: "" }]);
   };
 
-  // Project options
-  const projectOptions = project?.map((p) => ({
-    value: p?._id,
-    label: p?.projectName,
-  }));
+  const handleRemoveProject = (index) => {
+    const newProjects = projects?.filter((_, i) => i !== index);
+    setProjects(newProjects);
+    toast.success("Project removed");
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  };
+
+  const handleProjectChange = (index, selectedOption) => {
+    const newProjects = [...projects];
+    newProjects[index].project = selectedOption.value;
+    setProjects(newProjects);
+    fetchProjectDetails(selectedOption.value, index);
+  };
+
+  const fetchProjectDetails = async (projectId, index) => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/project/single-project/${projectId}`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        const updatedProjects = [...projects];
+        updatedProjects[index].projectPrice = response?.data?.project?.projectPrice;
+        updatedProjects[index].totalDues = response?.data?.project?.totalDues;
+        updatedProjects[index].totalPaid = response?.data?.project?.totalPaid;
+        updatedProjects[index].projectId = response?.data?.project?.projectId;
+        updatedProjects[index].amount = response?.data?.project?.projectPrice;
+        setProjects(updatedProjects);
+      };
+    } catch (error) {
+      console.log("Error while fetching single project:", error.message);
+    };
+  };
+
+  const handleFieldChange = (index, field, value) => {
+    const newProjects = [...projects];
+    newProjects[index][field] = value;
+    setProjects(newProjects);
+  };
 
   const handleUpdate = async (e, id) => {
     e.preventDefault();
+
+    if (fieldPermissions?.projects?.read || fieldPermissions?.tax?.read || fieldPermissions?.date?.read) {
+      e.preventDefault();
+      return toast.error("Permission denied");
+    };
+
+    // Validation
+    for (const project of projects) {
+      if (!project?.project) {
+        return toast.error("Select project for all entries");
+      }
+      if (parseFloat(project?.amount) < 1) {
+        return toast.error("Amount should not be less than 1");
+      };
+    };
+
+    if (!date) {
+      return toast.error("Enter date");
+    };
+
+    if (!tax) {
+      return toast.error("Select tax");
+    };
+
     try {
-      const invoiceData = {
-        project: selectedProjectId,
-        amount: parseFloat(amount),
-        tax: tax,
+      const formData = {
+        projects: projects?.map((proj) => ({
+          project: proj?.project,
+          amount: proj?.amount,
+        })),
         date,
+        tax,
       };
 
-      if (!selectedProjectId) {
-        return toast.error("Select project name");
-      };
-
-      if (parseFloat(amount) < 1) {
-        return toast.error("Amount should not less than 1.");
-      };
-
-      if (parseFloat(amount) > parseFloat(totalDues)) {
-        return toast.error("Amount should not greater than Total Dues.");
-      };
-
-      if (!tax) {
-        return toast.error("Select tax");
-      };
-
-      if (!tax) {
-        return toast.error("Select tax");
-      };
-
-      if (!date) {
-        return toast.error("Enter date");
-      };
-
-      const response = await axios.put(`${base_url}/api/v1/proformaInvoice/update-proformaInvoice/${id}`, invoiceData, {
+      const response = await axios.put(`${base_url}/api/v1/proformaInvoice/update-proformaInvoice/${id}`, formData, {
         headers: {
           Authorization: validToken,
         },
@@ -164,10 +168,15 @@ const EditProformaInvoice = () => {
         navigate(-1);
       };
     } catch (error) {
-      console.log("Error while updationg proforma invoice:", error.message);
+      console.log("Error while updating invoice:", error.message);
       toast.error("Error while submitting");
     };
   };
+
+  const projectOptions = allProjects?.map((p) => ({
+    value: p?._id,
+    label: p?.projectName,
+  }));
 
   if (isLoading) {
     return <Preloader />;
@@ -180,16 +189,39 @@ const EditProformaInvoice = () => {
   return (
     <div className="page-wrapper" style={{ paddingBottom: "2rem" }}>
       <div className="content">
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <h4>Update Proforma Invoice</h4>
-          <Link to="#" onClick={() => navigate(-1)}><button className="btn btn-primary">Back</button></Link>
+        <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: "1rem" }}>
+          <h4>Edit Proforma Invoice</h4>
+          <Link to="#" onClick={() => navigate(-1)}>
+            <button className="btn btn-primary">Back</button>
+          </Link>
         </div>
+
         <div className="row">
-          {
-            (fieldPermissions?.project?.show) && (
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="tax">Tax <span className="text-danger">*</span></label>
+              <select className="form-select" name="tax" id="tax" value={tax} onChange={(e) => setTax(e.target.value)}>
+                <option value="">Select</option>
+                <option value="Inclusive">Inclusive</option>
+                <option value="Exclusive">Exclusive</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="date">Date <span className="text-danger">*</span></label>
+              <input type="date" className="form-control" id="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </div>
+          </div>
+        </div>
+
+        {
+          projects?.map((project, index) => (
+            <div key={index} className="row">
               <div className="col-md-4">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="project">Project Name<span className="text-danger">*</span></label>
+                  <label className="col-form-label" htmlFor={`project-${index}`}>Project Name <span className="text-danger">*</span></label>
                   <Select
                     styles={{
                       control: (provided) => ({ ...provided, outline: 'none', border: "none", boxShadow: 'none' }),
@@ -197,115 +229,103 @@ const EditProformaInvoice = () => {
                       option: (provided, state) => ({ ...provided, backgroundColor: state.isSelected ? "#f0f0f0" : state.isFocused ? "#e0e0e0" : "#fff", color: "#333" }),
                     }}
                     className="form-select p-0"
-                    name="project"
-                    id="project"
+                    name={`project-${index}`}
+                    id={`project-${index}`}
                     options={projectOptions}
-                    value={projectOptions?.find((option) => option?.value === selectedProjectId)}
-                    onChange={handleProjectChange}
+                    value={projectOptions.find((option) => option?.value === project?.project)}
+                    onChange={(selectedOption) => handleProjectChange(index, selectedOption)}
                     isSearchable
                   />
                 </div>
               </div>
-            )
-          }
-          {
-            (fieldPermissions?.project?.show) && (
-              <div className="col-md-4">
-                <div className="form-wrap" htmlFor="projectId">
-                  <label className="col-form-label" htmlFor="projectId">Project ID <span className="text-danger"></span></label>
-                  <input type="text" className="form-control" name="projectId" id="projectId" value={projectId} disabled />
-                </div>
-              </div>
-            )
-          }
-          {
-            (fieldPermissions?.project?.show) && (
-              <div className="col-md-4">
-                <div className="form-wrap" htmlFor="customer">
-                  <label className="col-form-label" htmlFor="customer">Client Name<span className="text-danger"></span></label>
-                  <input type="text" className="form-control" name="customer" id="customer" value={customer} disabled />
-                </div>
-              </div>
-            )
-          }
-          {
-            (fieldPermissions?.project?.show) && (
+
               <div className="col-md-4">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="projectPrice">Project Cost <span className="text-danger"></span></label>
-                  <input type="text" className="form-control" name="projectPrice" id="projectPrice" value={`₹${projectPrice}`} disabled />
+                  <label className="col-form-label" htmlFor={`projectId-${index}`}>Project Id</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name={`projectId-${index}`}
+                    id={`projectId-${index}`}
+                    value={project?.projectId}
+                    readOnly
+                  />
                 </div>
               </div>
-            )
-          }
-          {
-            (fieldPermissions?.project?.show) && (
+
               <div className="col-md-4">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="totalPaid">Total Received <span className="text-danger"></span></label>
-                  <input type="text" className="form-control" name="totalPaid" id="totalPaid" value={`₹${totalPaid}`} disabled />
+                  <label className="col-form-label" htmlFor={`projectPrice-${index}`}>Project Cost</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name={`projectPrice-${index}`}
+                    id={`projectPrice-${index}`}
+                    value={project?.projectPrice}
+                    readOnly
+                  />
                 </div>
               </div>
-            )
-          }
-          {
-            (fieldPermissions?.project?.show) && (
+
               <div className="col-md-4">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="totalDues">Total Dues <span className="text-danger"></span></label>
-                  <input type="text" className="form-control" name="totalDues" id="totalDues" value={`₹${totalDues}`} disabled />
+                  <label className="col-form-label" htmlFor={`amount-${index}`}>Amount <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name={`amount-${index}`}
+                    id={`amount-${index}`}
+                    value={project?.amount}
+                    onChange={(e) => handleFieldChange(index, 'amount', e.target.value)}
+                  />
                 </div>
               </div>
-            )
-          }
-          {
-            (fieldPermissions?.amount?.show) && (
+
               <div className="col-md-4">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="amount">Amount <span className="text-danger">*</span></label>
-                  <input type="text" className="form-control" name="amount" id="amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
-                  {
-                    (parseFloat(amount) < 1) && (
-                      <div className="col-form-label" style={{ color: "red" }}>Amount should not less than 1. <i className="fas fa-times"></i></div>
-                    )
-                  }
-                  {
-                    (parseFloat(amount) > parseFloat(totalDues)) && (
-                      <div className="col-form-label" style={{ color: "red" }}>Amount should not greater than Total Dues. <i className="fas fa-times"></i></div>
-                    )
-                  }
+                  <label className="col-form-label" htmlFor={`totalDues-${index}`}>Total Dues</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name={`totalDues-${index}`}
+                    id={`totalDues-${index}`}
+                    value={project?.totalDues}
+                    readOnly
+                  />
                 </div>
               </div>
-            )
-          }
-          {
-            (fieldPermissions?.tax?.show) && (
+
               <div className="col-md-4">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="tax">Tax <span className="text-danger">*</span></label>
-                  <select className="form-select" name="tax" id="tax" value={tax} onChange={(e) => setTax(e.target.value)}>
-                    <option value="">Select</option>
-                    <option value="Inclusive">Inclusive</option>
-                    <option value="Exclusive">Exclusive</option>
-                  </select>
+                  <label className="col-form-label" htmlFor={`totalPaid-${index}`}>Total Received</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name={`totalPaid-${index}`}
+                    id={`totalPaid-${index}`}
+                    value={project?.totalPaid}
+                    readOnly
+                  />
                 </div>
               </div>
-            )
-          }
-          {
-            (fieldPermissions?.date?.show) && (
-              <div className="col-md-4">
-                <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="date">Date <span className="text-danger">*</span></label>
-                  <input type="date" className="form-control" name="date" id="date" value={date} onChange={(e) => setDate(e.target.value)} />
-                </div>
+
+              <div className="col-md-12 mb-5 mt-0">
+                {
+                  projects?.length > 1 && (
+                    <button className="btn btn-danger" onClick={() => handleRemoveProject(index)}>Remove Project</button>
+                  )
+                }
               </div>
-            )
-          }
+            </div>
+          ))}
+
+        <div className="text-center">
+          <button className="btn btn-secondary" onClick={handleAddProject}>Add Another Project</button>
         </div>
+
         <div className="submit-button text-end">
           <Link to="#" onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
-          <Link to="#" className="btn btn-primary" onClick={(e) => handleUpdate(e, id)}>Submit</Link>
+          <Link className="btn btn-primary" onClick={(e) => handleUpdate(e, id)}>Submit</Link>
         </div>
       </div>
     </div>

@@ -4,8 +4,7 @@ import { isLoggedIn } from './../middleware/auth.middleware.js';
 import checkMasterActionPermission from "../middleware/masterActionPermission.middleware.js";
 import checkFieldUpdatePermission from "../middleware/checkFieldUpdatePermission.middleware.js";
 
-
-const fields = ['proformaInvoiceId', 'project', 'quantity', 'amount', 'tax', 'CGST', 'SGST', 'IGST', 'totalAmount', 'balanceDue', 'date'];
+const fields = ['proformaInvoiceId', 'projects', 'quantity', 'tax', 'date', 'CGST', 'SGST', 'IGST', 'total', 'subtotal', 'balanceDue'];
 
 // router object
 const router = express.Router();

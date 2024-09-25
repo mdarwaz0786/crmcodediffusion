@@ -18,6 +18,7 @@ const EditInvoice = () => {
   const { validToken, team, isLoading } = useAuth();
   const navigate = useNavigate();
   const permissions = team?.role?.permissions?.invoice;
+  const fieldPermissions = team?.role?.permissions?.invoice?.fields;
 
   const fetchAllProjects = async () => {
     try {
@@ -31,7 +32,7 @@ const EditInvoice = () => {
         setAllProjects(response?.data?.project);
       };
     } catch (error) {
-      console.log("Error while fetching projects:", error.message);
+      console.log("Error while fetching all projects:", error.message);
     };
   };
 
@@ -44,34 +45,32 @@ const EditInvoice = () => {
       });
 
       if (response?.data?.success) {
-        const projectsData = response?.data?.invoice?.projects || []; // Ensure it's an array
+        const invoiceData = response?.data?.invoice?.projects;
 
-        // Set the projects state with a properly structured object
-        setProjects(projectsData.map((proj) => ({
-          project: proj?.project?._id || "", // Fallback to empty string if undefined
-          amount: proj?.amount || 0, // Fallback to 0 if undefined
-          projectPrice: proj?.project?.projectPrice || 0,
-          totalDues: proj?.project?.totalDues || 0,
-          totalPaid: proj?.project?.totalPaid || 0,
-          projectId: proj?.project?._id || "", // Ensure this refers to the correct project ID
+        setProjects(invoiceData?.map((d) => ({
+          project: d?.project?._id,
+          amount: d?.project?.projectPrice,
+          projectName: d?.project?.projectName,
+          projectId: d?.project?.projectId,
+          projectPrice: d?.project?.projectPrice,
+          totalPaid: d?.project?.totalPaid,
+          totalDues: d?.project?.totalDues,
         })));
 
-        // Set additional state values
         setDate(response?.data?.invoice?.date);
         setTax(response?.data?.invoice?.tax);
-      }
+      };
     } catch (error) {
       console.log("Error while fetching single invoice:", error.message);
-    }
+    };
   };
 
-
   useEffect(() => {
-    if (permissions?.update) {
+    if (permissions?.update && !isLoading && team && id) {
       fetchAllProjects();
       fetchSingleInvoice(id);
     };
-  }, [permissions]);
+  }, [permissions, team, isLoading, id]);
 
   const handleAddProject = () => {
     setProjects([...projects, { project: "", amount: "", projectPrice: "", totalDues: "", totalPaid: "", projectId: "" }]);
@@ -80,6 +79,11 @@ const EditInvoice = () => {
   const handleRemoveProject = (index) => {
     const newProjects = projects?.filter((_, i) => i !== index);
     setProjects(newProjects);
+    toast.success("Project removed");
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
   };
 
   const handleProjectChange = (index, selectedOption) => {
@@ -120,6 +124,11 @@ const EditInvoice = () => {
   const handleUpdate = async (e, id) => {
     e.preventDefault();
 
+    if (fieldPermissions?.projects?.read || fieldPermissions?.tax?.read || fieldPermissions?.date?.read) {
+      e.preventDefault();
+      return toast.error("Permission denied");
+    };
+
     // Validation
     for (const project of projects) {
       if (!project?.project) {
@@ -140,23 +149,23 @@ const EditInvoice = () => {
     };
 
     try {
-      const invoiceData = {
-        projects: projects.map((project) => ({
-          project: project?.project,
-          amount: tax === "Inclusive" ? (parseFloat(project?.amount) * 1.18).toFixed(2) : project?.amount,
+      const formData = {
+        projects: projects?.map((proj) => ({
+          project: proj?.project,
+          amount: proj?.amount,
         })),
         date,
         tax,
       };
 
-      const response = await axios.put(`${base_url}/api/v1/invoice/update-invoice/${id}`, invoiceData, {
+      const response = await axios.put(`${base_url}/api/v1/invoice/update-invoice/${id}`, formData, {
         headers: {
           Authorization: validToken,
         },
       });
 
       if (response?.data?.success) {
-        toast.success("Updated successfully");
+        toast.success("Submitted successfully");
         navigate(-1);
       };
     } catch (error) {
@@ -165,7 +174,7 @@ const EditInvoice = () => {
     };
   };
 
-  const projectOptions = allProjects.map((p) => ({
+  const projectOptions = allProjects?.map((p) => ({
     value: p?._id,
     label: p?.projectName,
   }));
@@ -209,7 +218,7 @@ const EditInvoice = () => {
         </div>
 
         {
-          projects.map((project, index) => (
+          projects?.map((project, index) => (
             <div key={index} className="row">
               <div className="col-md-4">
                 <div className="form-wrap">
@@ -263,11 +272,11 @@ const EditInvoice = () => {
                 <div className="form-wrap">
                   <label className="col-form-label" htmlFor={`amount-${index}`}>Amount <span className="text-danger">*</span></label>
                   <input
-                    type="number"
+                    type="text"
                     className="form-control"
                     name={`amount-${index}`}
                     id={`amount-${index}`}
-                    value={project.amount}
+                    value={project?.amount}
                     onChange={(e) => handleFieldChange(index, 'amount', e.target.value)}
                   />
                 </div>
@@ -303,7 +312,7 @@ const EditInvoice = () => {
 
               <div className="col-md-12 mb-5 mt-0">
                 {
-                  projects.length > 1 && (
+                  projects?.length > 1 && (
                     <button className="btn btn-danger" onClick={() => handleRemoveProject(index)}>Remove Project</button>
                   )
                 }

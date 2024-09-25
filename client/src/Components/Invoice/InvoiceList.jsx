@@ -470,7 +470,7 @@ const InvoiceList = () => {
                               }
                               {
                                 (filedPermissions?.subtotal?.show) && (
-                                  <td>₹{d?.subtotal}</td>
+                                  d?.tax === "Inclusive" ? <td>₹{d?.total}</td> : <td>₹{d?.subtotal}</td>
                                 )
                               }
                               {

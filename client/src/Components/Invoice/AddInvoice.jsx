@@ -35,10 +35,10 @@ const AddInvoice = () => {
   };
 
   useEffect(() => {
-    if (permissions?.create) {
+    if (permissions?.create && !isLoading && team) {
       fetchAllProjects();
     };
-  }, [permissions]);
+  }, [permissions, isLoading, team]);
 
   const handleAddProject = () => {
     setProjects([...projects, { project: "", amount: "", projectPrice: "", totalDues: "", totalPaid: "", projectId: "" }]);
@@ -47,6 +47,11 @@ const AddInvoice = () => {
   const handleRemoveProject = (index) => {
     const newProjects = projects?.filter((_, i) => i !== index);
     setProjects(newProjects);
+    toast.success("Project removed");
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
   };
 
   const handleProjectChange = (index, selectedOption) => {

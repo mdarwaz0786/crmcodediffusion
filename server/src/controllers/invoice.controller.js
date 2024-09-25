@@ -26,24 +26,24 @@ export const createInvoice = async (req, res) => {
       projects.map(async (projectData) => {
         const { project, amount } = projectData;
 
-        let adjustedAmount = parseFloat(amount);
+        let originalAmount = parseFloat(amount);
 
         // Adjust amount for inclusive tax
         if (tax === "Inclusive") {
-          adjustedAmount = parseFloat(amount) / 1.18;
+          originalAmount = parseFloat(amount) / 1.18;
         };
 
-        subtotal += adjustedAmount;
+        subtotal += originalAmount;
 
         return {
           project,
-          amount: adjustedAmount.toFixed(2),
+          amount: originalAmount.toFixed(2),
         };
       })
     );
 
     // Determine whether to apply CGST/SGST or IGST based on customer's state
-    const firstProjectDetails = await Project.findById(projects[0].project).populate("customer");
+    const firstProjectDetails = await Project.findById(projects[0].project).populate({ path: "customer", select: "state" });
     const customerState = firstProjectDetails.customer.state;
 
     if (customerState === "Delhi") {
@@ -191,7 +191,7 @@ export const fetchAllInvoice = async (req, res) => {
       .limit(limit)
       .populate({
         path: "projects.project",
-        select: "customer projectName projectId",
+        select: "customer projectName projectId projectPrice totalPaid totalDues",
         populate: [
           {
             path: "customer",
@@ -223,7 +223,7 @@ export const fetchSingleInvoice = async (req, res) => {
     const invoice = await Invoice.findById(invoiceId)
       .populate({
         path: "projects.project",
-        select: "customer projectName projectId",
+        select: "customer projectName projectId projectPrice totalPaid totalDues",
         populate: [
           {
             path: "customer",
@@ -247,13 +247,13 @@ export const fetchSingleInvoice = async (req, res) => {
   };
 };
 
-// Controller for updating an invoice by ID
+// Controller for update an invoice by ID
 export const updateInvoice = async (req, res) => {
   try {
     const invoiceId = req.params.id;
     const { projects, date, tax } = req.body;
 
-    const invoice = await Invoice.findById(invoiceId).populate('projects.project');
+    const invoice = await Invoice.findById(invoiceId).populate("projects.project");
 
     if (!invoice) {
       return res.status(404).json({ success: false, message: "Invoice not found" });
@@ -270,18 +270,18 @@ export const updateInvoice = async (req, res) => {
       projects.map(async (projectData) => {
         const { project, amount } = projectData;
 
-        let adjustedAmount = parseFloat(amount);
+        let originalAmount = parseFloat(amount);
 
         // Adjust amount for inclusive tax
         if (tax === "Inclusive") {
-          adjustedAmount = parseFloat(amount) / 1.18;
+          originalAmount = parseFloat(amount) / 1.18;
         };
 
-        subtotal += adjustedAmount;
+        subtotal += originalAmount;
 
         return {
           project,
-          amount: adjustedAmount.toFixed(2),
+          amount: originalAmount.toFixed(2),
         };
       })
     );
@@ -318,7 +318,6 @@ export const updateInvoice = async (req, res) => {
     return res.status(500).json({ success: false, message: "Error while updating invoice", error: error.message });
   };
 };
-
 
 // Controller for deleting an invoice by ID
 export const deleteInvoice = async (req, res) => {
