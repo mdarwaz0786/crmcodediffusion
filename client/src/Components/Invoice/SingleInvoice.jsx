@@ -56,12 +56,15 @@ const SingleInvoice = () => {
     const element = document.querySelector("#exportInvoice");
     const options = {
       filename: `${data?.invoiceId}-${data?.projects[0]?.project?.customer?.companyName}.pdf`,
+      margin: [0, 0, 10, 0],
       html2canvas: {
         useCORS: true,
+        scale: 4,
       },
       jsPDF: {
         orientation: 'portrait',
         format: 'a4',
+        unit: 'pt',
       },
     };
     html2pdf().set(options).from(element).save();
@@ -121,7 +124,7 @@ const SingleInvoice = () => {
               </div>
             </div>
             <div className="row">
-              <div className="col-md-8 p-5" style={{ display: "flex", columnGap: "0", }}>
+              <div className="col-md-8 p-5" style={{ display: "flex", columnGap: "1rem", }}>
                 <div className="content w-100">
                   <div className="pera">
                     <h5 style={{ color: "#262a2a7a" }}>Bill To:</h5>

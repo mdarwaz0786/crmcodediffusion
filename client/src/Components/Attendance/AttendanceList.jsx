@@ -155,7 +155,7 @@ const AttendanceList = () => {
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
-        scale: 2,
+        scale: 4,
       },
       jsPDF: {
         orientation: 'portrait',
