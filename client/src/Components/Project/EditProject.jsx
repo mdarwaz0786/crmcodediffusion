@@ -64,7 +64,7 @@ const EditProject = () => {
 
   const fetchAllProjectCatgory = async () => {
     try {
-      const response = await axios.get(`/api/v1/projectCategory/all-projectCategory`, {
+      const response = await axios.get(`${base_url}/api/v1/projectCategory/all-projectCategory`, {
         headers: {
           Authorization: validToken,
         },
