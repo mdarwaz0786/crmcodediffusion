@@ -109,6 +109,11 @@ const Sidebar = () => {
                       }
                     </ul>
                   </li>
+                  {
+                    (permissions?.purchaseInvoice?.access) && (
+                      <li><Link to="/purchase-invoice" className={currentPath === "/purchase-invoice" ? "active" : ""} id={isMobile && active === "purchaseInvoice" ? "mobile_btn" : ""} onClick={() => handleActive("purchaseInvoice")}><i style={{ color: currentPath === "/purchase-invoice" ? "" : "#FFA201" }} className="ti ti-wallet"></i><span>Purchase Invoice</span></Link></li>
+                    )
+                  }
                 </ul>
               </li>
               <li>

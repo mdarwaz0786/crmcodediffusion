@@ -199,6 +199,22 @@ const Header = () => {
                               </li>
                             )
                           }
+                          {
+                            (team?.role?.permissions?.purchaseInvoice?.create) && (
+                              <li>
+                                <Link to="/add-purchase-invoice">
+                                  <div className="menu-details">
+                                    <span className="menu-list-icon" style={{ background: "#643546" }}>
+                                      <i className="ti ti-wallet" />
+                                    </span>
+                                    <div className="menu-details-content">
+                                      <p>Add New Purchase Invoice</p>
+                                    </div>
+                                  </div>
+                                </Link>
+                              </li>
+                            )
+                          }
                           {/* {
                             (team?.role?.permissions?.attendance?.create) && (
                               <li>

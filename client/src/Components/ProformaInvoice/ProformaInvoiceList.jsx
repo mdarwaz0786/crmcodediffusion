@@ -7,7 +7,10 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from "../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
+import JSZip from "jszip";
+import FileSaver from "file-saver";
 import Preloader from "../../Preloader.jsx";
+import logo from '../../Assets/logo.png';
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const ProformaInvoiceList = () => {
@@ -26,6 +29,8 @@ const ProformaInvoiceList = () => {
     sort: "Descending",
     page: 1,
     limit: 10,
+    year: "",
+    month: "",
   });
   const permissions = team?.role?.permissions?.proformaInvoice;
   const filedPermissions = team?.role?.permissions?.proformaInvoice?.fields;
@@ -69,6 +74,8 @@ const ProformaInvoiceList = () => {
           page: filters.page,
           limit: filters.limit,
           nameFilter: filters.nameFilter.map(String),
+          year: filters.year,
+          month: filters.month,
         },
       });
 
@@ -108,6 +115,22 @@ const ProformaInvoiceList = () => {
     };
   }, [debouncedSearchName, isLoading, team, permissions]);
 
+  const handleYearChange = (e) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      year: e.target.value,
+      page: 1,
+    }));
+  };
+
+  const handleMonthChange = (e) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      month: e.target.value,
+      page: 1,
+    }));
+  };
+
   const handleFilterChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -132,7 +155,7 @@ const ProformaInvoiceList = () => {
     if (!isLoading && team && permissions?.access) {
       fetchAllData();
     };
-  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, isLoading, team, permissions]);
+  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, filters.year, filters.month, isLoading, team, permissions]);
 
   const handleDelete = async (id) => {
     let isdelete = prompt("If you want to delete, type \"yes\".");
@@ -198,6 +221,36 @@ const ProformaInvoiceList = () => {
       },
     };
     html2pdf().set(options).from(element).save();
+  };
+
+  const generatePDFsAndZip = async () => {
+    const zip = new JSZip();
+
+    // Generate PDFs for each proforma invoice
+    for (const invoice of data) {
+      const element = document.querySelector(`#invoice-${invoice?._id}`);
+      const pdfOptions = {
+        filename: `${invoice?.proformaInvoiceId}-${invoice?.projects[0]?.project?.customer?.companyName}.pdf`,
+        margin: [0, 0, 10, 0],
+        html2canvas: {
+          useCORS: true,
+          scale: 2,
+        },
+        jsPDF: {
+          orientation: 'portrait',
+          format: 'a4',
+          unit: 'pt',
+        },
+      };
+
+      // Pass pdfOptions to html2pdf
+      const pdfBlob = await html2pdf().from(element).set(pdfOptions).output('blob');
+      zip.file(`${invoice?.proformaInvoiceId}-${invoice?.projects[0]?.project?.customer?.companyName}.pdf`, pdfBlob);
+    };
+
+    // Generate the ZIP file and save it
+    const content = await zip.generateAsync({ type: "blob" });
+    FileSaver.saveAs(content, "proforma-invoices.zip");
   };
 
   function formatDate(isoDate) {
@@ -283,7 +336,14 @@ const ProformaInvoiceList = () => {
                   <div className="col-4">
                     <h4 className="page-title">Proforma Invoices<span className="count-title">{total}</span></h4>
                   </div>
-                  <div className="col-8 text-end">
+                  <div className="col-4">
+                    {
+                      permissions?.export && (
+                        <button className="btn btn-secondary" onClick={generatePDFsAndZip}>Download Zip</button>
+                      )
+                    }
+                  </div>
+                  <div className="col-4 text-end">
                     <div className="head-icons">
                       <Link to="#" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Refresh" onClick={() => window.location.reload()}>
                         <i className="ti ti-refresh-dot" />
@@ -376,6 +436,59 @@ const ProformaInvoiceList = () => {
                                     <i className="ti ti-circle-chevron-right" />
                                     Descending
                                   </Link>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </li>
+                        <li>
+                          <div className="sort-dropdown drop-down">
+                            <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown">
+                              <i className="ti ti-calendar" />
+                              Month & Year
+                            </Link>
+                            <div className="dropdown-menu dropdown-menu-start">
+                              <ul>
+                                <li className="dropdown-item">
+                                  <label htmlFor="year" className="form-label">Year:</label>
+                                  <select
+                                    id="year"
+                                    value={filters.year || new Date().getFullYear()}
+                                    onChange={handleYearChange}
+                                    className="form-select"
+                                  >
+                                    <option value="">All</option>
+                                    {
+                                      // Generate the years dynamically, starting from the current year and going backwards 10 year
+                                      Array.from({ length: 10 }, (_, i) => {
+                                        const year = new Date().getFullYear() - i;
+                                        return <option key={year} value={year}>{year}</option>;
+                                      })
+                                    }
+                                  </select>
+                                </li>
+                                <li className="dropdown-item">
+                                  <label htmlFor="month" className="form-label">Month:</label>
+                                  <select
+                                    id="month"
+                                    value={filters.month}
+                                    onChange={handleMonthChange}
+                                    className="form-select"
+                                  >
+                                    <option value="">All</option>
+                                    <option value="01">January</option>
+                                    <option value="02">February</option>
+                                    <option value="03">March</option>
+                                    <option value="04">April</option>
+                                    <option value="05">May</option>
+                                    <option value="06">June</option>
+                                    <option value="07">July</option>
+                                    <option value="08">August</option>
+                                    <option value="09">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                  </select>
                                 </li>
                               </ul>
                             </div>
@@ -488,11 +601,6 @@ const ProformaInvoiceList = () => {
                             )
                           }
                           {
-                            (filedPermissions?.tax?.show) && (
-                              <th>Tax</th>
-                            )
-                          }
-                          {
                             (filedPermissions?.date?.show) && (
                               <th>Date</th>
                             )
@@ -531,12 +639,7 @@ const ProformaInvoiceList = () => {
                               {
                                 (filedPermissions?.subtotal?.show) && (
                                   d?.tax === "Inclusive" ? <td>₹{d?.total}</td> : <td>₹{d?.subtotal}</td>
-                                  
-                                )
-                              }
-                              {
-                                (filedPermissions?.tax?.show) && (
-                                  <td>₹{d?.tax}</td>
+
                                 )
                               }
                               {
@@ -662,6 +765,161 @@ const ProformaInvoiceList = () => {
               </div>
             </div>
           </div>
+
+          {/* All Invoice in zip file */}
+          <section className="zip-invoice">
+            {
+              data?.map((invoice) => (
+                <div key={invoice?._id} id={`invoice-${invoice?._id}`} className="bg-white" style={{ margin: '20px auto' }}>
+                  {/* Invoice Header */}
+                  <div className="invoice-heading">
+                    <div className="col-md-6">
+                      <div className="logo mt-4">
+                        <img src={logo} width="250px" alt="logo" />
+                      </div>
+                    </div>
+                    <div className="col-md-6 px-4">
+                      <div className="name d-flex mt-4 justify-content-end">
+                        <h4>TAX INVOICE</h4>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Invoice Details */}
+                  <div className="invoice row">
+                    <div className="col-md-6 p-5 pt-0">
+                      <div className="p-0 m-0"><strong>Code Diffusion Technologies</strong></div>
+                      <div>Address :</div>
+                      <div>1020 , Kirti Sikhar Tower,</div>
+                      <div>District Centre, Janakpuri,</div>
+                      <div>New Delhi.</div>
+                      <div><strong>GST No: O7FRWPS7288J3Z</strong></div>
+                    </div>
+                    <div className="col-md-6 p-5 pt-0">
+                      <div className="ubic-code d-flex justify-content-end">
+                        <p>{invoice?.proformaInvoiceId}</p><br />
+                      </div>
+                      <div className="date-box d-flex justify-content-end mt-5 pt-3">
+                        <div className="date px-2">
+                          <strong>Date:</strong>
+                        </div>
+                        <div className="date text-end">
+                          <p>{invoice?.date}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="col-md-8 p-5" style={{ display: "flex", columnGap: "1rem" }}>
+                      <div className="content w-100">
+                        <div className="pera">
+                          <h5 style={{ color: "#262a2a7a" }}>Bill To:</h5>
+                          <div>
+                            <strong style={{ color: "#000" }}>
+                              {invoice?.projects[0]?.project?.customer?.companyName}
+                            </strong>
+                          </div>
+                          <div><strong>GST No: {invoice?.projects[0]?.project?.customer?.GSTNumber}</strong></div>
+                        </div>
+                      </div>
+                      <div className="content w-100">
+                        <div className="pera">
+                          <h5 style={{ color: "#262a2a7a" }}>Ship To:</h5>
+                          <p>
+                            <strong style={{ color: "#000" }}>
+                              {invoice?.projects[0]?.project?.customer?.address}
+                            </strong>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-4 d-flex justify-content-end align-items-baseline" style={{ padding: "0 45px 0 0" }}>
+                      <div style={{ borderRadius: "5px", display: "inline-block", fontWeight: "bold" }}><p>Balance Due: ₹{invoice?.total}</p></div>
+                    </div>
+                  </div>
+                  <div className="row px-3">
+                    <div className="col-md-12">
+                      <table className="table mt-3" style={{ border: "0px solid white" }}>
+                        <thead className='invoice-custom-table-header'>
+                          <tr className="text-start">
+                            <th scope="col">Item</th>
+                            <th scope="col">Quantity</th>
+                            <th scope="col">Rate</th>
+                            <th scope="col" className="text-end">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {
+                            invoice?.projects?.map((d) => (
+                              <tr className="text-start" key={d?._id}>
+                                <th scope="col">{d?.project?.projectName}</th>
+                                <th scope="col" className="ps-5">1</th>
+                                <th scope="col">₹{d?.amount}</th>
+                                <th scope="col" className="text-end">₹{d?.amount}</th>
+                              </tr>
+                            ))
+                          }
+                        </tbody>
+                        <tbody className="text-end mt-5 pt-5">
+                          <tr>
+                            <th scope="col" />
+                            <th scope="col" />
+                            <th scope="col-1">Subtotal :</th>
+                            <th scope="col-2">₹{invoice?.subtotal}</th>
+                          </tr>
+                          {
+                            (invoice?.CGST > 0) && (
+                              <tr>
+                                <th scope="col" />
+                                <th scope="col" />
+                                <th scope="col-1">CGST (9%) :</th>
+                                <th scope="col-2">₹{invoice?.CGST}</th>
+                              </tr>
+                            )
+                          }
+                          {
+                            (invoice?.SGST > 0) && (
+                              <tr>
+                                <th scope="col" />
+                                <th scope="col" />
+                                <th scope="col-1">SGST (9%) :</th>
+                                <th scope="col-2">₹{invoice?.SGST}</th>
+                              </tr>
+                            )
+                          }
+                          {
+                            (invoice?.IGST > 0) && (
+                              <tr>
+                                <th scope="col" />
+                                <th scope="col" />
+                                <th scope="col-1">IGST (18%) :</th>
+                                <th scope="col-2">₹{invoice?.IGST}</th>
+                              </tr>
+                            )
+                          }
+                          <tr>
+                            <th scope="col" />
+                            <th scope="col" />
+                            <th scope="col-1">Total :</th>
+                            <th scope="col-2">₹{invoice?.total}</th>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <div className="col-md-6 ps-4 m-0">
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>Notes:</strong></div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Name: </strong>Code Diffusion Technologies </div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Type: </strong>Current Account</div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Number: </strong>60374584640</div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>Bank Name: </strong>Bank of Maharashtra</div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>IFSC Code: </strong>mahb0001247</div>
+                  </div>
+                  <div className="col-md-6" />
+                </div>
+              ))
+            }
+          </section>
+          {/* /All Invoice in zip file */}
         </div>
       </div>
       {/* /Page Wrapper */}

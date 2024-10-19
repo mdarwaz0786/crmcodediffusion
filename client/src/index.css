@@ -207,6 +207,36 @@
   background: #F6F6F6;
 }
 
+.sort-dropdown .dropdown-menu {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  min-width: 13rem;
+}
+
+.sort-dropdown .form-select {
+  width: 100%;
+  height: 100%;
+  margin-bottom: 0.625rem;
+  padding: 0.5rem;
+  border-radius: 0.3rem;
+  border: 1px solid #ced4da;
+  box-shadow: none;
+}
+
+.sort-dropdown .form-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+.sort-dropdown select:focus {
+  border-color: #80bdff;
+}
+
+.zip-invoice {
+  display: none;
+}
+
 @media screen and (max-width: 767px) {
   .filter-reset-btns a {
     font-size: 0.8rem !important;

@@ -20,6 +20,7 @@ import proformaInvoiceRoute from "./src/routes/proformaInvoice.route.js";
 import attendanceRoute from "./src/routes/attendance.route.js";
 import holidayRoute from "./src/routes/holiday.route.js";
 import technologyRoute from "./src/routes/technology.route.js";
+import purchaseInvoiceRoute from "./src/routes/purchaseInvoice.route.js";
 
 // Directory name for serving index.html file
 const __dirname = path.resolve();
@@ -70,6 +71,8 @@ server.use("/api/v1/attendance", attendanceRoute);
 server.use("/api/v1/holiday", holidayRoute);
 // Technology route
 server.use("/api/v1/technology", technologyRoute);
+// Purchase invoice route
+server.use("/api/v1/purchaseInvoice", purchaseInvoiceRoute);
 
 // Middleware for serving client index,html file
 server.use(express.static(path.join(__dirname, "../client/dist")), (req, res, next) => next());

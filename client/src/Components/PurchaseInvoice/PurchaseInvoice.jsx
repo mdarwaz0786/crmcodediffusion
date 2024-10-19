@@ -7,30 +7,25 @@ import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from "../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
-import JSZip from "jszip";
-import FileSaver from "file-saver";
 import Preloader from "../../Preloader.jsx";
-import logo from '../../Assets/logo.png';
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-const InvoiceList = () => {
+const PurchaseInvoice = () => {
   const [data, setData] = useState([]);
-  const [total, setTotal] = useState("");
+  const [total, setTotal] = useState([]);
   const [loading, setLoading] = useState(true);
   const { validToken, team, isLoading } = useAuth();
   const [nameData, setNameData] = useState([]);
-  const [nameSearch, setNameSearch] = useState("");
+  const [name, setName] = useState("");
   const [filters, setFilters] = useState({
     search: "",
     nameFilter: [],
     sort: "Descending",
     page: 1,
-    limit: 10,
-    year: "",
-    month: "",
+    limit: 5,
   });
-  const permissions = team?.role?.permissions?.invoice;
-  const filedPermissions = team?.role?.permissions?.invoice?.fields;
+  const permissions = team?.role?.permissions?.purchaseInvoice;
+  const filedPermissions = team?.role?.permissions?.purchaseInvoice?.fields;
 
   const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -55,12 +50,12 @@ const InvoiceList = () => {
   };
 
   const debouncedSearch = useDebounce(filters.search, 500);
-  const debouncedSearchName = useDebounce(nameSearch, 500);
+  const debouncedSearchName = useDebounce(name, 500);
 
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${base_url}/api/v1/invoice/all-invoice`, {
+      const response = await axios.get(`${base_url}/api/v1/purchaseInvoice/all-purchaseInvoice`, {
         headers: {
           Authorization: validToken,
         },
@@ -70,13 +65,11 @@ const InvoiceList = () => {
           page: filters.page,
           limit: filters.limit,
           nameFilter: filters.nameFilter.map(String),
-          year: filters.year,
-          month: filters.month,
         },
       });
 
       if (response?.data?.success) {
-        setData(response?.data?.invoice);
+        setData(response?.data?.purchaseInvoice);
         setTotal(response?.data?.totalCount);
         setLoading(false);
       };
@@ -86,19 +79,19 @@ const InvoiceList = () => {
     };
   };
 
-  const fetchAllInvoiceName = async () => {
+  const fetchAllPurchaseInvoiceName = async () => {
     try {
-      const response = await axios.get(`${base_url}/api/v1/invoice/all-invoice`, {
+      const response = await axios.get(`${base_url}/api/v1/purchaseInvoice/all-purchaseInvoice`, {
         headers: {
           Authorization: validToken,
         },
         params: {
-          nameSearch,
+          name,
         },
       });
 
       if (response?.data?.success) {
-        setNameData(response?.data?.invoice);
+        setNameData(response?.data?.purchaseInvoice);
       };
     } catch (error) {
       console.log(error.message);
@@ -107,25 +100,9 @@ const InvoiceList = () => {
 
   useEffect(() => {
     if (!isLoading && team && permissions?.access) {
-      fetchAllInvoiceName();
+      fetchAllPurchaseInvoiceName();
     };
   }, [debouncedSearchName, isLoading, team, permissions]);
-
-  const handleYearChange = (e) => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      year: e.target.value,
-      page: 1,
-    }));
-  };
-
-  const handleMonthChange = (e) => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      month: e.target.value,
-      page: 1,
-    }));
-  };
 
   const handleFilterChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -151,14 +128,14 @@ const InvoiceList = () => {
     if (!isLoading && team && permissions?.access) {
       fetchAllData();
     };
-  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, filters.year, filters.month, isLoading, team, permissions]);
+  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, isLoading, team, permissions]);
 
   const handleDelete = async (id) => {
     let isdelete = prompt("If you want to delete, type \"yes\".");
 
     if (isdelete === "yes") {
       try {
-        const response = await axios.delete(`${base_url}/api/v1/invoice/delete-invoice/${id}`, {
+        const response = await axios.delete(`${base_url}/api/v1/purchaseInvoice/delete-purchaseInvoice/${id}`, {
           headers: {
             Authorization: validToken,
           },
@@ -169,7 +146,7 @@ const InvoiceList = () => {
           fetchAllData();
         };
       } catch (error) {
-        console.log("Error while deleting invoice:", error.message);
+        console.log("Error while deleting purchase invoice:", error.message);
         toast.error("Error while deleting");
       };
     } else if (isdelete !== "") {
@@ -177,16 +154,16 @@ const InvoiceList = () => {
     };
   };
 
-  const exportInvoiceListAsExcel = () => {
-    const element = document.querySelector("#exportInvoiceList");
+  const exportPurchaseInvoiceListAsExcel = () => {
+    const element = document.querySelector("#exportPurchaseInvoiceList");
     if (!element) return;
-    const workbook = XLSX.utils.table_to_book(element, { sheet: "Role List" });
+    const workbook = XLSX.utils.table_to_book(element, { sheet: "Purchase Invoice List" });
     const excelData = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
     const blob = new Blob([s2ab(excelData)], { type: "application/octet-stream" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'invoice-list.xlsx';
+    a.download = 'purchase-invoice-list.xlsx';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -201,10 +178,10 @@ const InvoiceList = () => {
     return buffer;
   };
 
-  const exportInvoiceListAsPdf = () => {
-    const element = document.querySelector("#exportInvoiceList");
+  const exportPurchaseInvoiceListAsPdf = () => {
+    const element = document.querySelector("#exportPurchaseInvoiceList");
     const options = {
-      filename: "invoice-list.pdf",
+      filename: "purchase-invoice-list.pdf",
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
@@ -216,43 +193,9 @@ const InvoiceList = () => {
         format: 'a3',
       },
     };
-    html2pdf().set(options).from(element).save();
-  };
-
-  const generatePDFsAndZip = async () => {
-    const zip = new JSZip();
-
-    // Generate PDFs for each invoice
-    for (const invoice of data) {
-      const element = document.querySelector(`#invoice-${invoice?._id}`);
-      const pdfOptions = {
-        filename: `${invoice?.invoiceId}-${invoice?.projects[0]?.project?.customer?.companyName}.pdf`,
-        margin: [0, 0, 10, 0],
-        html2canvas: {
-          useCORS: true,
-          scale: 2,
-        },
-        jsPDF: {
-          orientation: 'portrait',
-          format: 'a4',
-          unit: 'pt',
-        },
-      };
-
-      // Pass pdfOptions to html2pdf
-      const pdfBlob = await html2pdf().from(element).set(pdfOptions).output('blob');
-      zip.file(`${invoice?.invoiceId}-${invoice?.projects[0]?.project?.customer?.companyName}.pdf`, pdfBlob);
+    if (element) {
+      html2pdf().set(options).from(element).save();
     };
-
-    // Generate the ZIP file and save it
-    const content = await zip.generateAsync({ type: "blob" });
-    FileSaver.saveAs(content, "tax-invoices.zip");
-  };
-
-  function formatDate(isoDate) {
-    const date = new Date(isoDate);
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    return date.toLocaleDateString('en-GB', options);
   };
 
   if (isLoading) {
@@ -265,25 +208,17 @@ const InvoiceList = () => {
 
   return (
     <>
-      {/* Page Wrapper */}
-      <div className="page-wrapper">
-        <div className="content" id="exportInvoiceList">
+      <div className="page-wrapper" style={{ paddingBottom: "2rem" }}>
+        <div className="content" id="exportPurchaseInvoiceList">
           <div className="row">
             <div className="col-md-12">
               {/* Page Header */}
               <div className="page-header">
                 <div className="row align-items-center">
                   <div className="col-4">
-                    <h4 className="page-title">Tax Invoices<span className="count-title">{total}</span></h4>
+                    <h4 className="page-title">Purchase Invoices<span className="count-title">{total}</span></h4>
                   </div>
-                  <div className="col-4">
-                    {
-                      permissions?.export && (
-                        <button className="btn btn-secondary" onClick={generatePDFsAndZip}>Download Zip</button>
-                      )
-                    }
-                  </div>
-                  <div className="col-4 text-end">
+                  <div className="col-8 text-end">
                     <div className="head-icons">
                       <Link to="#" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Refresh" onClick={() => window.location.reload()}>
                         <i className="ti ti-refresh-dot" />
@@ -305,7 +240,7 @@ const InvoiceList = () => {
                       <div className="col-md-5 col-sm-4">
                         <div className="form-wrap icon-form">
                           <span className="form-icon"><i className="ti ti-search" /></span>
-                          <input type="text" className="form-control" placeholder="Search Invoice" value={filters.search} onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value, page: 1 }))} />
+                          <input type="text" className="form-control" placeholder="Search Purchase Invoice" value={filters.search} onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value, page: 1 }))} />
                         </div>
                       </div>
                       <div className="col-md-7 col-sm-8">
@@ -322,13 +257,13 @@ const InvoiceList = () => {
                                     <div className="dropdown-menu  dropdown-menu-end">
                                       <ul>
                                         <li>
-                                          <Link to="#" onClick={() => setTimeout(() => { exportInvoiceListAsPdf() }, 0)}>
+                                          <Link to="#" onClick={() => setTimeout(() => { exportPurchaseInvoiceListAsPdf() }, 0)}>
                                             <i className="ti ti-file-type-pdf text-danger" />
                                             Export as PDF
                                           </Link>
                                         </li>
                                         <li>
-                                          <Link to="#" onClick={() => setTimeout(() => { exportInvoiceListAsExcel() }, 0)}>
+                                          <Link to="#" onClick={() => setTimeout(() => { exportPurchaseInvoiceListAsExcel() }, 0)}>
                                             <i className="ti ti-file-spreadsheet text-success" />
                                             Export as EXCEL
                                           </Link>
@@ -342,9 +277,9 @@ const InvoiceList = () => {
                             {
                               (permissions?.create) && (
                                 <li>
-                                  <Link to="/add-invoice" className="btn btn-primary">
+                                  <Link to="/add-purchase-invoice" className="btn btn-primary">
                                     <i className="ti ti-square-rounded-plus" />
-                                    Add New Tax Invoice
+                                    Add New Purchase Invoice
                                   </Link>
                                 </li>
                               )
@@ -366,69 +301,16 @@ const InvoiceList = () => {
                             <div className="dropdown-menu  dropdown-menu-start">
                               <ul>
                                 <li>
-                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, sort: "Ascending", page: 1 }))} >
+                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, sort: "Ascending", page: 1 }))}>
                                     <i className="ti ti-circle-chevron-right" />
                                     Ascending
                                   </Link>
                                 </li>
                                 <li>
-                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, sort: "Descending", page: 1 }))} >
+                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, sort: "Descending", page: 1 }))}>
                                     <i className="ti ti-circle-chevron-right" />
                                     Descending
                                   </Link>
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                        </li>
-                        <li>
-                          <div className="sort-dropdown drop-down">
-                            <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown">
-                              <i className="ti ti-calendar" />
-                              Month & Year
-                            </Link>
-                            <div className="dropdown-menu dropdown-menu-start">
-                              <ul>
-                                <li className="dropdown-item">
-                                  <label htmlFor="year" className="form-label">Year:</label>
-                                  <select
-                                    id="year"
-                                    value={filters.year || new Date().getFullYear()}
-                                    onChange={handleYearChange}
-                                    className="form-select"
-                                  >
-                                    <option value="">All</option>
-                                    {
-                                      // Generate the years dynamically, starting from the current year and going backwards 10 year
-                                      Array.from({ length: 10 }, (_, i) => {
-                                        const year = new Date().getFullYear() - i;
-                                        return <option key={year} value={year}>{year}</option>;
-                                      })
-                                    }
-                                  </select>
-                                </li>
-                                <li className="dropdown-item">
-                                  <label htmlFor="month" className="form-label">Month:</label>
-                                  <select
-                                    id="month"
-                                    value={filters.month}
-                                    onChange={handleMonthChange}
-                                    className="form-select"
-                                  >
-                                    <option value="">All</option>
-                                    <option value="01">January</option>
-                                    <option value="02">February</option>
-                                    <option value="03">March</option>
-                                    <option value="04">April</option>
-                                    <option value="05">May</option>
-                                    <option value="06">June</option>
-                                    <option value="07">July</option>
-                                    <option value="08">August</option>
-                                    <option value="09">September</option>
-                                    <option value="10">October</option>
-                                    <option value="11">November</option>
-                                    <option value="12">December</option>
-                                  </select>
                                 </li>
                               </ul>
                             </div>
@@ -449,32 +331,32 @@ const InvoiceList = () => {
                                 <div className="accordion" id="accordionExample">
                                   <div className="filter-set-content">
                                     <div className="filter-set-content-head">
-                                      <Link to="#" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Invoice Id</Link>
+                                      <Link to="#" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Purchase Invoice Name</Link>
                                     </div>
                                     <div className="filter-set-contents accordion-collapse collapse show" id="collapseTwo" data-bs-parent="#accordionExample">
                                       <div className="filter-content-list">
                                         <div className="form-wrap icon-form">
                                           <span className="form-icon"><i className="ti ti-search" /></span>
-                                          <input type="text" className="form-control" placeholder="Search Invoice Id" onChange={(e) => setNameSearch(e.target.value)} />
+                                          <input type="text" className="form-control" placeholder="Search Purchase Invoice Name" onChange={(e) => setName(e.target.value)} />
                                         </div>
                                         <ul>
                                           {
                                             nameData?.map((n) => (
-                                              <li key={n?._id}>
+                                              <li key={n._id}>
                                                 <div className="filter-checks">
                                                   <label className="checkboxs">
                                                     <input
                                                       type="checkbox"
                                                       name="nameFilter"
-                                                      value={n?.invoiceId}
-                                                      checked={filters.nameFilter.includes(n?.invoiceId)}
+                                                      value={n?.name}
+                                                      checked={filters.nameFilter.includes(n?.name)}
                                                       onChange={handleFilterChange}
                                                     />
                                                     <span className="checkmarks" />
                                                   </label>
                                                 </div>
                                                 <div className="collapse-inside-text">
-                                                  <h5>{n?.invoiceId}</h5>
+                                                  <h5>{n?.name}</h5>
                                                 </div>
                                               </li>
                                             ))
@@ -506,7 +388,7 @@ const InvoiceList = () => {
                   </div>
                   {/* /Filter */}
 
-                  {/* Invoice List */}
+                  {/* Purchase Invoice List */}
                   <div className="table-responsive custom-table">
                     <table className="table table-bordered table-striped custom-border">
                       <thead className="thead-light">
@@ -516,33 +398,13 @@ const InvoiceList = () => {
                           </th>
                           <th>#</th>
                           {
-                            (permissions?.access) && (
-                              <th>View</th>
+                            (filedPermissions?.name?.show) && (
+                              <th>Invoice Name</th>
                             )
                           }
                           {
-                            (filedPermissions?.invoiceId?.show) && (
-                              <th>Invoice ID</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.projects?.show) && (
-                              <th>Project Name</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.projects?.show) && (
-                              <th>Client Name</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.subtotal.show) && (
-                              <th>Amount</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.date?.show) && (
-                              <th>Date</th>
+                            (filedPermissions?.amount?.show) && (
+                              <th>Invoice Amount</th>
                             )
                           }
                           <th>Action</th>
@@ -557,33 +419,13 @@ const InvoiceList = () => {
                               </td>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
                               {
-                                (permissions?.access && permissions?.update) && (
-                                  <td><Link to={`/single-invoice/${d?._id}`}><i className="fas fa-eye"></i></Link></td>
+                                (filedPermissions?.name?.show) && (
+                                  <td>{d?.name}</td>
                                 )
                               }
                               {
-                                (filedPermissions?.invoiceId?.show) && (
-                                  <td>{d?.invoiceId}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.projects?.show) && (
-                                  <td>{d?.projects?.map((value) => value?.project?.projectName).join(", ")}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.projects?.show) && (
-                                  <td>{d?.projects[0]?.project?.customer?.name}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.subtotal?.show) && (
-                                  d?.tax === "Inclusive" ? <td>₹{d?.total}</td> : <td>₹{d?.subtotal}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.date?.show) && (
-                                  <td>{formatDate(d?.date)}</td>
+                                (filedPermissions?.amount?.show) && (
+                                  <td>{d?.amount}</td>
                                 )
                               }
                               <td>
@@ -594,7 +436,7 @@ const InvoiceList = () => {
                                   <div className="dropdown-menu dropdown-menu-right">
                                     {
                                       (permissions?.update) && (
-                                        <Link to={`/edit-invoice/${d?._id}`} className="dropdown-item">
+                                        <Link to={`/edit-purchase-invoice/${d?._id}`} className="dropdown-item">
                                           <i className="ti ti-edit text-blue"></i>
                                           Update
                                         </Link>
@@ -607,7 +449,7 @@ const InvoiceList = () => {
                                     }
                                     {
                                       (permissions?.delete) && (
-                                        <Link to="#" className="dropdown-item" onClick={() => handleDelete(d?._id)}>
+                                        <Link to="#" className="dropdown-item" onClick={() => { handleDelete(d?._id) }}>
                                           <i className="ti ti-trash text-danger"></i>
                                           Delete
                                         </Link>
@@ -686,171 +528,15 @@ const InvoiceList = () => {
                       </div>
                     </div>
                   </div>
-                  {/* /Invoice List */}
+                  {/* /Purchase Invoice List */}
                 </div>
               </div>
             </div>
           </div>
-
-          {/* All Invoice in zip file */}
-          <section className="zip-invoice">
-            {
-              data?.map((invoice) => (
-                <div key={invoice?._id} id={`invoice-${invoice?._id}`} className="bg-white" style={{ margin: '20px auto' }}>
-                  {/* Invoice Header */}
-                  <div className="invoice-heading">
-                    <div className="col-md-6">
-                      <div className="logo mt-4">
-                        <img src={logo} width="250px" alt="logo" />
-                      </div>
-                    </div>
-                    <div className="col-md-6 px-4">
-                      <div className="name d-flex mt-4 justify-content-end">
-                        <h4>TAX INVOICE</h4>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Invoice Details */}
-                  <div className="invoice row">
-                    <div className="col-md-6 p-5 pt-0">
-                      <div className="p-0 m-0"><strong>Code Diffusion Technologies</strong></div>
-                      <div>Address :</div>
-                      <div>1020 , Kirti Sikhar Tower,</div>
-                      <div>District Centre, Janakpuri,</div>
-                      <div>New Delhi.</div>
-                      <div><strong>GST No: O7FRWPS7288J3Z</strong></div>
-                    </div>
-                    <div className="col-md-6 p-5 pt-0">
-                      <div className="ubic-code d-flex justify-content-end">
-                        <p>{invoice?.invoiceId}</p><br />
-                      </div>
-                      <div className="date-box d-flex justify-content-end mt-5 pt-3">
-                        <div className="date px-2">
-                          <strong>Date:</strong>
-                        </div>
-                        <div className="date text-end">
-                          <p>{invoice?.date}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="col-md-8 p-5" style={{ display: "flex", columnGap: "1rem" }}>
-                      <div className="content w-100">
-                        <div className="pera">
-                          <h5 style={{ color: "#262a2a7a" }}>Bill To:</h5>
-                          <div>
-                            <strong style={{ color: "#000" }}>
-                              {invoice?.projects[0]?.project?.customer?.companyName}
-                            </strong>
-                          </div>
-                          <div><strong>GST No: {invoice?.projects[0]?.project?.customer?.GSTNumber}</strong></div>
-                        </div>
-                      </div>
-                      <div className="content w-100">
-                        <div className="pera">
-                          <h5 style={{ color: "#262a2a7a" }}>Ship To:</h5>
-                          <p>
-                            <strong style={{ color: "#000" }}>
-                              {invoice?.projects[0]?.project?.customer?.address}
-                            </strong>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-4 d-flex justify-content-end align-items-baseline" style={{ padding: "0 45px 0 0" }}>
-                      <div style={{ borderRadius: "5px", display: "inline-block", fontWeight: "bold" }}><p>Balance Due: ₹{invoice?.total}</p></div>
-                    </div>
-                  </div>
-                  <div className="row px-3">
-                    <div className="col-md-12">
-                      <table className="table mt-3" style={{ border: "0px solid white" }}>
-                        <thead className='invoice-custom-table-header'>
-                          <tr className="text-start">
-                            <th scope="col">Item</th>
-                            <th scope="col">Quantity</th>
-                            <th scope="col">Rate</th>
-                            <th scope="col" className="text-end">Amount</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {
-                            invoice?.projects?.map((d) => (
-                              <tr className="text-start" key={d?._id}>
-                                <th scope="col">{d?.project?.projectName}</th>
-                                <th scope="col" className="ps-5">1</th>
-                                <th scope="col">₹{d?.amount}</th>
-                                <th scope="col" className="text-end">₹{d?.amount}</th>
-                              </tr>
-                            ))
-                          }
-                        </tbody>
-                        <tbody className="text-end mt-5 pt-5">
-                          <tr>
-                            <th scope="col" />
-                            <th scope="col" />
-                            <th scope="col-1">Subtotal :</th>
-                            <th scope="col-2">₹{invoice?.subtotal}</th>
-                          </tr>
-                          {
-                            (invoice?.CGST > 0) && (
-                              <tr>
-                                <th scope="col" />
-                                <th scope="col" />
-                                <th scope="col-1">CGST (9%) :</th>
-                                <th scope="col-2">₹{invoice?.CGST}</th>
-                              </tr>
-                            )
-                          }
-                          {
-                            (invoice?.SGST > 0) && (
-                              <tr>
-                                <th scope="col" />
-                                <th scope="col" />
-                                <th scope="col-1">SGST (9%) :</th>
-                                <th scope="col-2">₹{invoice?.SGST}</th>
-                              </tr>
-                            )
-                          }
-                          {
-                            (invoice?.IGST > 0) && (
-                              <tr>
-                                <th scope="col" />
-                                <th scope="col" />
-                                <th scope="col-1">IGST (18%) :</th>
-                                <th scope="col-2">₹{invoice?.IGST}</th>
-                              </tr>
-                            )
-                          }
-                          <tr>
-                            <th scope="col" />
-                            <th scope="col" />
-                            <th scope="col-1">Total :</th>
-                            <th scope="col-2">₹{invoice?.total}</th>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  <div className="col-md-6 ps-4 m-0">
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Notes:</strong></div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Name: </strong>Code Diffusion Technologies </div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Type: </strong>Current Account</div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Number: </strong>60374584640</div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Bank Name: </strong>Bank of Maharashtra</div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>IFSC Code: </strong>mahb0001247</div>
-                  </div>
-                  <div className="col-md-6" />
-                </div>
-              ))
-            }
-          </section>
-          {/* /All Invoice in zip file */}
         </div>
       </div>
-      {/* /Page Wrapper */}
     </>
   );
 };
 
-export default InvoiceList;
+export default PurchaseInvoice;

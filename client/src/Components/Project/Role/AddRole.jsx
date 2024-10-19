@@ -89,6 +89,17 @@ const AddRole = () => {
         date: { read: true, show: true },
       },
     },
+    purchaseInvoice: {
+      access: false,
+      export: false,
+      create: false,
+      update: false,
+      delete: false,
+      fields: {
+        name: { read: true, show: true },
+        description: { read: true, show: true },
+      },
+    },
     // attendance: {
     //   access: false,
     //   export: false,
@@ -390,6 +401,17 @@ const AddRole = () => {
               date: { read: true, show: true },
             },
           },
+          purchaseInvoice: {
+            access: false,
+            export: false,
+            create: false,
+            update: false,
+            delete: false,
+            fields: {
+              name: { read: true, show: true },
+              description: { read: true, show: true },
+            },
+          },
           // attendance: {
           //   access: false,
           //   export: false,
@@ -543,6 +565,7 @@ const AddRole = () => {
     project: "Projects",
     invoice: "Tax Invoice",
     proformaInvoice: "Proforma Invoice",
+    purchaseInvoice: "Purchase Invoice",
     // attendance: "Attendance",
     customer: "Client",
     team: "Employee",
@@ -594,7 +617,7 @@ const AddRole = () => {
   };
 
   return (
-    <div className="page-wrapper custom-role" style={{ paddingBottom: "1rem" }}>
+    <div className="page-wrapper custom-role" style={{ paddingBottom: "2rem" }}>
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <h4>Add Role</h4>
@@ -674,7 +697,7 @@ const AddRole = () => {
               Cancel
             </Link>
             <button className="btn btn-primary" type="submit">
-              Add
+              Submit
             </button>
           </div>
         </form>

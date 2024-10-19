@@ -92,6 +92,17 @@ const EditRole = () => {
         date: { read: true, show: true },
       },
     },
+    purchaseInvoice: {
+      access: false,
+      export: false,
+      create: false,
+      update: false,
+      delete: false,
+      fields: {
+        name: { read: true, show: true },
+        description: { read: true, show: true },
+      },
+    },
     // attendance: {
     //   access: false,
     //   export: false,
@@ -438,6 +449,17 @@ const EditRole = () => {
               date: { read: true, show: true },
             },
           },
+          purchaseInvoice: {
+            access: false,
+            export: false,
+            create: false,
+            update: false,
+            delete: false,
+            fields: {
+              name: { read: true, show: true },
+              description: { read: true, show: true },
+            },
+          },
           // attendance: {
           //   access: false,
           //   export: false,
@@ -591,6 +613,7 @@ const EditRole = () => {
     project: "Projects",
     invoice: "Tax Invoice",
     proformaInvoice: "Proforma Invoice",
+    purchaseInvoice: "Purchase Invoice",
     // attendance: "Attendance",
     customer: "Client",
     team: "Employee",
@@ -642,7 +665,7 @@ const EditRole = () => {
   };
 
   return (
-    <div className="page-wrapper custom-role" style={{ paddingBottom: "1rem" }}>
+    <div className="page-wrapper custom-role" style={{ paddingBottom: "2rem" }}>
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <h4>Update Role</h4>
@@ -730,7 +753,7 @@ const EditRole = () => {
               Cancel
             </Link>
             <button className="btn btn-primary" type="submit">
-              Update
+              Submit
             </button>
           </div>
         </form>

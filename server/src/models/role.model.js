@@ -178,6 +178,36 @@ const AttendancePermissionSchema = new mongoose.Schema(
   },
 );
 
+// Purchase invoice permission Schema
+const PurchaseInvoicePermissionSchema = new mongoose.Schema(
+  {
+    access: {
+      type: Boolean,
+      default: false,
+    },
+    export: {
+      type: Boolean,
+      default: false,
+    },
+    create: {
+      type: Boolean,
+      default: false,
+    },
+    update: {
+      type: Boolean,
+      default: false,
+    },
+    delete: {
+      type: Boolean,
+      default: false,
+    },
+    fields: {
+      name: { type: FieldPermissionSchema, default: () => ({}) },
+      amount: { type: FieldPermissionSchema, default: () => ({}) },
+    },
+  },
+);
+
 // Customer permission Schema
 const CustomerPermissionSchema = new mongoose.Schema(
   {
@@ -503,6 +533,7 @@ const RoleSchema = new mongoose.Schema(
       project: { type: ProjectPermissionSchema, default: () => ({}) },
       invoice: { type: InvoicePermissionSchema, default: () => ({}) },
       proformaInvoice: { type: ProformaInvoicePermissionSchema, default: () => ({}) },
+      purchaseInvoice: { type: PurchaseInvoicePermissionSchema, default: () => ({}) },
       attendance: { type: AttendancePermissionSchema, default: () => ({}) },
       customer: { type: CustomerPermissionSchema, default: () => ({}) },
       team: { type: TeamPermissionSchema, default: () => ({}) },

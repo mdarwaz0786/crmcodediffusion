@@ -51,6 +51,10 @@ import Profile from "./Components/Profile/Profile.jsx";
 import AttendanceList from "./Components/Attendance/AttendanceList.jsx";
 import AddAttendance from "./Components/Attendance/AddAttendance.jsx";
 import EditAttendance from "./Components/Attendance/EditAttendance.jsx";
+import PurchaseInvoice from "./Components/PurchaseInvoice/PurchaseInvoice.jsx";
+import AddPurchaseInvoice from "./Components/PurchaseInvoice/AddPurchaseInvoice.jsx";
+import EditPurchaseInvoice from "./Components/PurchaseInvoice/EditPurchaseInvoice.jsx";
+import InvoiceZip from "./Components/Invoice/InvoiceZip.jsx";
 
 const App = () => {
   return (
@@ -95,6 +99,7 @@ const App = () => {
           <Route path="add-project-priority" element={<AddProjectPriority />} />
           <Route path="edit-project-priority/:id" element={<EditProjectPriority />} />
           <Route path="invoice" element={<InvoiceList />} />
+          <Route path="invoiceZip" element={<InvoiceZip />} />
           <Route path="add-invoice" element={<AddInvoice />} />
           <Route path="edit-invoice/:id" element={<EditInvoice />} />
           <Route path="single-invoice/:id" element={<SingleInvoice />} />
@@ -102,6 +107,9 @@ const App = () => {
           <Route path="add-proforma-invoice" element={<AddProformaInvoice />} />
           <Route path="edit-proforma-invoice/:id" element={<EditProformaInvoice />} />
           <Route path="single-proforma-invoice/:id" element={<SingleProformaInvoice />} />
+          <Route path="purchase-invoice" element={<PurchaseInvoice />} />
+          <Route path="add-purchase-invoice" element={<AddPurchaseInvoice />} />
+          <Route path="edit-purchase-invoice/:id" element={<EditPurchaseInvoice />} />
           <Route path="profile" element={<Profile />} />
           <Route path="attendance" element={<AttendanceList />} />
           <Route path="add-attendance" element={<AddAttendance />} />
