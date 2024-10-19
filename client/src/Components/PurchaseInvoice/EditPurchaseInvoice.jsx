@@ -94,7 +94,7 @@ const EditPurchaseInvoice = () => {
             (fieldPermissions?.name?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="name">Invoice Name <span className="text-danger">*</span></label>
+                  <label className="col-form-label" htmlFor="name">Name <span className="text-danger">*</span></label>
                   <input type="text" className={`form-control ${fieldPermissions?.name?.read ? "readonly-style" : ""}`} name="name" id="name" value={name} onChange={(e) => fieldPermissions?.name?.read ? null : setName(e.target.value)} />
                 </div>
               </div>
@@ -104,7 +104,7 @@ const EditPurchaseInvoice = () => {
             (fieldPermissions?.amount?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="amount">Invoice Amount <span className="text-danger">*</span></label>
+                  <label className="col-form-label" htmlFor="amount">Amount <span className="text-danger">*</span></label>
                   <input className={`form-control ${fieldPermissions?.amount?.read ? "readonly-style" : ""}`} name="amount" id="amount" value={amount} onChange={(e) => fieldPermissions?.amount?.read ? null : setAmount(e.target.value)} />
                 </div>
               </div>

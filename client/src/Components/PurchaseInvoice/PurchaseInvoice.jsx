@@ -399,12 +399,12 @@ const PurchaseInvoice = () => {
                           <th>#</th>
                           {
                             (filedPermissions?.name?.show) && (
-                              <th>Invoice Name</th>
+                              <th>Name</th>
                             )
                           }
                           {
                             (filedPermissions?.amount?.show) && (
-                              <th>Invoice Amount</th>
+                              <th>Amount</th>
                             )
                           }
                           <th>Action</th>

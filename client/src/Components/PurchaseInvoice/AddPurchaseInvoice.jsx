@@ -59,13 +59,13 @@ const AddPurchaseInvoice = () => {
         <div className="row">
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="name">Invoice Name <span className="text-danger">*</span></label>
+              <label className="col-form-label" htmlFor="name">Name <span className="text-danger">*</span></label>
               <input type="text" className="form-control" name="name" id="name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="amount">Invoice Amount <span className="text-danger">*</span></label>
+              <label className="col-form-label" htmlFor="amount">Amount <span className="text-danger">*</span></label>
               <input type="text" className="form-control" name="amount" id="amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
             </div>
           </div>

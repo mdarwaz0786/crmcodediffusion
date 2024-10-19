@@ -339,7 +339,7 @@ const ProformaInvoiceList = () => {
                   <div className="col-4">
                     {
                       permissions?.export && (
-                        <button className="btn btn-secondary" onClick={generatePDFsAndZip}>Download Zip</button>
+                        <button className="btn btn-secondary" onClick={generatePDFsAndZip}>Download All</button>
                       )
                     }
                   </div>
@@ -423,7 +423,7 @@ const ProformaInvoiceList = () => {
                         <li>
                           <div className="sort-dropdown drop-down">
                             <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown"><i className="ti ti-sort-ascending-2" />{filters.sort}</Link>
-                            <div className="dropdown-menu  dropdown-menu-start">
+                            <div className="dropdown-menu dropdown-menu-start">
                               <ul>
                                 <li>
                                   <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, sort: "Ascending", page: 1 }))} >
@@ -442,57 +442,43 @@ const ProformaInvoiceList = () => {
                           </div>
                         </li>
                         <li>
-                          <div className="sort-dropdown drop-down">
-                            <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown">
-                              <i className="ti ti-calendar" />
-                              Month & Year
-                            </Link>
-                            <div className="dropdown-menu dropdown-menu-start">
-                              <ul>
-                                <li className="dropdown-item">
-                                  <label htmlFor="year" className="form-label">Year:</label>
-                                  <select
-                                    id="year"
-                                    value={filters.year || new Date().getFullYear()}
-                                    onChange={handleYearChange}
-                                    className="form-select"
-                                  >
-                                    <option value="">All</option>
-                                    {
-                                      // Generate the years dynamically, starting from the current year and going backwards 10 year
-                                      Array.from({ length: 10 }, (_, i) => {
-                                        const year = new Date().getFullYear() - i;
-                                        return <option key={year} value={year}>{year}</option>;
-                                      })
-                                    }
-                                  </select>
-                                </li>
-                                <li className="dropdown-item">
-                                  <label htmlFor="month" className="form-label">Month:</label>
-                                  <select
-                                    id="month"
-                                    value={filters.month}
-                                    onChange={handleMonthChange}
-                                    className="form-select"
-                                  >
-                                    <option value="">All</option>
-                                    <option value="01">January</option>
-                                    <option value="02">February</option>
-                                    <option value="03">March</option>
-                                    <option value="04">April</option>
-                                    <option value="05">May</option>
-                                    <option value="06">June</option>
-                                    <option value="07">July</option>
-                                    <option value="08">August</option>
-                                    <option value="09">September</option>
-                                    <option value="10">October</option>
-                                    <option value="11">November</option>
-                                    <option value="12">December</option>
-                                  </select>
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
+                          <select
+                            id="year"
+                            value={filters.year}
+                            onChange={handleYearChange}
+                            className="form-select"
+                          >
+                            <option value="">Year</option>
+                            {
+                              // Generate the years dynamically, starting from the current year and going backwards 10 year
+                              Array.from({ length: 10 }, (_, i) => {
+                                const year = new Date().getFullYear() - i;
+                                return <option key={year} value={year}>{year}</option>;
+                              })
+                            }
+                          </select>
+                        </li>
+                        <li>
+                          <select
+                            id="month"
+                            value={filters.month}
+                            onChange={handleMonthChange}
+                            className="form-select"
+                          >
+                            <option value="">Month</option>
+                            <option value="01">January</option>
+                            <option value="02">February</option>
+                            <option value="03">March</option>
+                            <option value="04">April</option>
+                            <option value="05">May</option>
+                            <option value="06">June</option>
+                            <option value="07">July</option>
+                            <option value="08">August</option>
+                            <option value="09">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                          </select>
                         </li>
                       </ul>
                     </div>
