@@ -121,9 +121,9 @@ const AddPayment = () => {
     const updateData = {};
 
     if (fieldPermissions?.payment?.show && !fieldPermissions?.payment?.read) {
-      const validPayments = payment.filter((pay) => pay.amount && pay.date);
+      const validPayments = payment?.filter((pay) => pay?.amount && pay?.date);
 
-      if (validPayments.length > 0) {
+      if (validPayments?.length > 0) {
         updateData.payment = validPayments;
       };
     };

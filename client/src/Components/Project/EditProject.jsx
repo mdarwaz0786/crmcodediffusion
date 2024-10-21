@@ -533,7 +533,6 @@ const EditProject = () => {
                 </div>
               )
             }
-
             {
               (fieldPermissions?.startDate?.show) && (
                 <div className="col-md-6">

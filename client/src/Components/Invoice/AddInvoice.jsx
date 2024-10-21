@@ -181,7 +181,7 @@ const AddInvoice = () => {
         </div>
 
         {
-          projects.map((project, index) => (
+          projects?.map((project, index) => (
             <div key={index} className="row">
               <div className="col-md-4">
                 <div className="form-wrap">
@@ -212,7 +212,7 @@ const AddInvoice = () => {
                     name={`projectId-${index}`}
                     id={`projectId-${index}`}
                     value={project?.projectId}
-                    readOnly
+                    disabled
                   />
                 </div>
               </div>
@@ -226,7 +226,7 @@ const AddInvoice = () => {
                     name={`projectPrice-${index}`}
                     id={`projectPrice-${index}`}
                     value={project?.projectPrice}
-                    readOnly
+                    disabled
                   />
                 </div>
               </div>
@@ -259,7 +259,7 @@ const AddInvoice = () => {
                     name={`totalDues-${index}`}
                     id={`totalDues-${index}`}
                     value={project?.totalDues}
-                    readOnly
+                    disabled
                   />
                 </div>
               </div>
@@ -273,14 +273,14 @@ const AddInvoice = () => {
                     name={`totalPaid-${index}`}
                     id={`totalPaid-${index}`}
                     value={project?.totalPaid}
-                    readOnly
+                    disabled
                   />
                 </div>
               </div>
 
               <div className="col-md-12 mb-5 mt-0">
                 {
-                  projects.length > 1 && (
+                  projects?.length > 1 && (
                     <button className="btn btn-danger" onClick={() => handleRemoveProject(index)}>Remove Project</button>
                   )
                 }
@@ -290,7 +290,7 @@ const AddInvoice = () => {
         }
 
         <div className="text-center">
-          <button className="btn btn-secondary" onClick={handleAddProject}>Add Another Project</button>
+          <button className="btn btn-secondary" onClick={handleAddProject}>Add Project</button>
         </div>
 
         <div className="submit-button text-end">

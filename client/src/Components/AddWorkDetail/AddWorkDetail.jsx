@@ -116,14 +116,14 @@ const AddWorkDetail = () => {
       return;
     };
 
-    const validWorkDetails = workDetail.filter((detail) =>
-      detail.startTime.trim() !== "" &&
-      detail.endTime.trim() !== "" &&
-      detail.workDescription.trim() !== "" &&
-      detail.date.trim() !== ""
+    const validWorkDetails = workDetail?.filter((detail) =>
+      detail?.startTime.trim() !== "" &&
+      detail?.endTime.trim() !== "" &&
+      detail?.workDescription.trim() !== "" &&
+      detail?.date.trim() !== ""
     );
 
-    if (validWorkDetails.length === 0) {
+    if (validWorkDetails?.length === 0) {
       return toast.error("All required fields must be filled.");
     };
 
@@ -131,11 +131,11 @@ const AddWorkDetail = () => {
     const updateData = {};
 
     if (fieldPermissions?.workDetail?.show && !fieldPermissions?.workDetail?.read) {
-      const validWorkDetails = workDetail.filter((detail) =>
-        detail.startTime && detail.endTime && detail.workDescription && detail.date
+      const validWorkDetails = workDetail?.filter((detail) =>
+        detail?.startTime && detail?.endTime && detail?.workDescription && detail?.date
       );
 
-      if (validWorkDetails.length > 0) {
+      if (validWorkDetails?.length > 0) {
         updateData.workDetail = validWorkDetails;
       };
     };
@@ -161,7 +161,7 @@ const AddWorkDetail = () => {
       };
     } catch (error) {
       console.log("Error while adding work log:", error.message);
-      toast.error("Error while adding");
+      toast.error("Error while submitting");
     };
   };
 
@@ -255,7 +255,7 @@ const AddWorkDetail = () => {
               <div className="col-md-4">
                 <div className="form-wrap">
                   <label className="col-form-label" htmlFor="startTime">Start Time <span className="text-danger">*</span></label>
-                  <input type="time" className={`form-control ${fieldPermissions?.workDetail?.read ? "readonly-style" : ""}`} name="startTime" id="startTime" value={workDetail[0].startTime} onChange={handleWorkDetailChange} />
+                  <input type="time" className="form-control" name="startTime" id="startTime" value={workDetail[0]?.startTime} onChange={handleWorkDetailChange} />
                 </div>
               </div>
             )
@@ -265,7 +265,7 @@ const AddWorkDetail = () => {
               <div className="col-md-4">
                 <div className="form-wrap">
                   <label className="col-form-label" htmlFor="endTime">End Time <span className="text-danger">*</span></label>
-                  <input type="time" className={`form-control ${fieldPermissions?.workDetail?.read ? "readonly-style" : ""}`} name="endTime" id="endTime" value={workDetail[0].endTime} onChange={handleWorkDetailChange} />
+                  <input type="time" className="form-control" name="endTime" id="endTime" value={workDetail[0]?.endTime} onChange={handleWorkDetailChange} />
                 </div>
               </div>
             )
@@ -275,7 +275,7 @@ const AddWorkDetail = () => {
               <div className="col-md-4">
                 <div className="form-wrap">
                   <label className="col-form-label" htmlFor="date">Date <span className="text-danger">*</span></label>
-                  <input type="date" className={`form-control ${fieldPermissions?.workDetail?.read ? "readonly-style" : ""}`} name="date" id="date" value={workDetail[0].date} onChange={handleWorkDetailChange} />
+                  <input type="date" className="form-control" name="date" id="date" value={workDetail[0]?.date} onChange={handleWorkDetailChange} />
                 </div>
               </div>
             )
@@ -287,7 +287,7 @@ const AddWorkDetail = () => {
                   <label className="col-form-label" htmlFor="workDescription">
                     Work Description <span className="text-danger">*</span>
                   </label>
-                  <textarea type="text" rows={6} className={`form-control ${fieldPermissions?.workDetail?.read ? "readonly-style" : ""}`} name="workDescription" id="workDescription" value={workDetail[0].workDescription} onChange={handleWorkDetailChange} />
+                  <textarea type="text" rows={6} className="form-control" name="workDescription" id="workDescription" value={workDetail[0]?.workDescription} onChange={handleWorkDetailChange} />
                 </div>
               </div>
             )

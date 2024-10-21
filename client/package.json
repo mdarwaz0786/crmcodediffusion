@@ -13,6 +13,7 @@
     "axios": "^1.7.2",
     "bootstrap": "^5.3.3",
     "chart.js": "^4.4.3",
+    "crm": "file:../server",
     "date-fns": "^3.6.0",
     "file-saver": "^2.0.5",
     "html2pdf.js": "^0.10.2",

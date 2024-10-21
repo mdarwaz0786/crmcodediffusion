@@ -154,7 +154,7 @@ const AddProformaInvoice = () => {
     <div className="page-wrapper" style={{ paddingBottom: "2rem" }}>
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: "1rem" }}>
-          <h4>Add Proforma Tax Invoice</h4>
+          <h4>Add Proforma Invoice</h4>
           <Link to="#" onClick={() => navigate(-1)}>
             <button className="btn btn-primary">Back</button>
           </Link>
@@ -212,7 +212,7 @@ const AddProformaInvoice = () => {
                     name={`projectId-${index}`}
                     id={`projectId-${index}`}
                     value={project?.projectId}
-                    readOnly
+                    disabled
                   />
                 </div>
               </div>
@@ -226,7 +226,7 @@ const AddProformaInvoice = () => {
                     name={`projectPrice-${index}`}
                     id={`projectPrice-${index}`}
                     value={project?.projectPrice}
-                    readOnly
+                    disabled
                   />
                 </div>
               </div>
@@ -259,7 +259,7 @@ const AddProformaInvoice = () => {
                     name={`totalDues-${index}`}
                     id={`totalDues-${index}`}
                     value={project?.totalDues}
-                    readOnly
+                    disabled
                   />
                 </div>
               </div>
@@ -273,14 +273,14 @@ const AddProformaInvoice = () => {
                     name={`totalPaid-${index}`}
                     id={`totalPaid-${index}`}
                     value={project?.totalPaid}
-                    readOnly
+                    disabled
                   />
                 </div>
               </div>
 
               <div className="col-md-12 mb-5 mt-0">
                 {
-                  projects.length > 1 && (
+                  projects?.length > 1 && (
                     <button className="btn btn-danger" onClick={() => handleRemoveProject(index)}>Remove Project</button>
                   )
                 }
@@ -290,7 +290,7 @@ const AddProformaInvoice = () => {
         }
 
         <div className="text-center">
-          <button className="btn btn-secondary" onClick={handleAddProject}>Add Another Project</button>
+          <button className="btn btn-secondary" onClick={handleAddProject}>Add Project</button>
         </div>
 
         <div className="submit-button text-end">

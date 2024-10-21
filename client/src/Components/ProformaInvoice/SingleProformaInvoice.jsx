@@ -75,7 +75,7 @@ const SingleProformaInvoice = () => {
   };
 
   return (
-    <div className="page-wrapper">
+    <div className="page-wrapper" style={{ marginBottom: "2rem" }}>
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h4>Proforma Invoice</h4>
@@ -87,7 +87,7 @@ const SingleProformaInvoice = () => {
           <Link to="#" onClick={() => navigate(-1)}><button className="btn btn-primary">Back</button></Link>
         </div>
         <section id="exportProformaInvoice">
-          <div className="bg-white" style={{ margin: '20px auto' }}>
+          <div className="bg-white" style={{ margin: '20px auto', paddingBottom: "32px" }}>
             <div className="invoice-heading">
               <div className="col-md-6">
                 <div className="logo mt-4">

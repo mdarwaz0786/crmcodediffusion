@@ -68,7 +68,7 @@ const SingleProjectDetail = () => {
   // Group work detail by team member
   const groupByTeamMember = (workDetail) => {
     return workDetail.reduce((accumulator, work) => {
-      const teamMemberName = work.teamMember?.name;
+      const teamMemberName = work?.teamMember?.name;
 
       if (!accumulator[teamMemberName]) {
         accumulator[teamMemberName] = {
@@ -78,7 +78,7 @@ const SingleProjectDetail = () => {
       };
 
       const spentHours = calculateHourDifference(work?.startTime, work?.endTime);
-      accumulator[teamMemberName].workDetails.push(work);
+      accumulator[teamMemberName]?.workDetails?.push(work);
       accumulator[teamMemberName].totalSpentHours += spentHours;
 
       return accumulator;
@@ -174,34 +174,34 @@ const SingleProjectDetail = () => {
               <div className="row">
                 <div className="col-md-6 mb-3">
                   {
-                    (fieldPermissions?.projectStatus.show) && (
+                    (fieldPermissions?.projectStatus?.show) && (
                       <p><strong>Project Status:</strong> {data?.projectStatus?.status}</p>
                     )
                   }
                   {
-                    (fieldPermissions?.startDate.show) && (
+                    (fieldPermissions?.startDate?.show) && (
                       <p><strong>Start Date:</strong> {formatDate(data?.startDate)}</p>
                     )
                   }
                   {
-                    (fieldPermissions?.endDate.show) && (
+                    (fieldPermissions?.endDate?.show) && (
                       <p><strong>End Date:</strong> {formatDate(data?.endDate)}</p>
                     )
                   }
                 </div>
                 <div className="col-md-6 mb-3">
                   {
-                    (fieldPermissions?.projectPriority.show) && (
+                    (fieldPermissions?.projectPriority?.show) && (
                       <p><strong>Project Priority:</strong> {data?.projectPriority?.name}</p>
                     )
                   }
                   {
-                    (fieldPermissions?.responsiblePerson.show) && (
+                    (fieldPermissions?.responsiblePerson?.show) && (
                       <p><strong>Responsible Person:</strong> {data?.responsiblePerson?.map((member) => member?.name).join(', ')}</p>
                     )
                   }
                   {
-                    (fieldPermissions?.teamLeader.show) && (
+                    (fieldPermissions?.teamLeader?.show) && (
                       <p><strong>Team Leader:</strong> {data?.teamLeader?.map((member) => member?.name).join(', ')}</p>
                     )
                   }
@@ -210,34 +210,34 @@ const SingleProjectDetail = () => {
               <div className="row">
                 <div className="col-md-6 mb-3">
                   {
-                    (fieldPermissions?.totalHour.show) && (
+                    (fieldPermissions?.totalHour?.show) && (
                       <p><strong>Total Hour:</strong> {convertToHoursAndMinutes(data?.totalHour)}</p>
                     )
                   }
                   {
-                    (fieldPermissions?.totalSpentHour.show) && (
+                    (fieldPermissions?.totalSpentHour?.show) && (
                       <p><strong>Total Spent Hour:</strong> {convertToHoursAndMinutes(data?.totalSpentHour)}</p>
                     )
                   }
                   {
-                    (fieldPermissions?.totalRemainingHour.show) && (
+                    (fieldPermissions?.totalRemainingHour?.show) && (
                       <p><strong>Total Remaining Hour:</strong> {convertToHoursAndMinutes(data?.totalRemainingHour)}</p>
                     )
                   }
                 </div>
                 <div className="col-md-6 mb-3">
                   {
-                    (fieldPermissions?.projectPrice.show) && (
+                    (fieldPermissions?.projectPrice?.show) && (
                       <p><strong>Project Cost:</strong> ₹{data?.projectPrice}</p>
                     )
                   }
                   {
-                    (fieldPermissions?.totalPaid.show) && (
+                    (fieldPermissions?.totalPaid?.show) && (
                       <p><strong>Total Received:</strong> ₹{data?.totalPaid}</p>
                     )
                   }
                   {
-                    (fieldPermissions?.totalDues.show) && (
+                    (fieldPermissions?.totalDues?.show) && (
                       <p><strong>Total Dues:</strong> ₹{data?.totalDues}</p>
                     )
                   }
@@ -245,7 +245,7 @@ const SingleProjectDetail = () => {
               </div>
               <div className="row">
                 {
-                  (fieldPermissions?.technology.show) && (
+                  (fieldPermissions?.technology?.show) && (
                     <p><strong>Technology Used:</strong> {data?.technology?.map((t) => t?.name).join(', ')}</p>
                   )
                 }
@@ -254,9 +254,9 @@ const SingleProjectDetail = () => {
           </div>
           {/* Payment Detail */}
           {
-            (fieldPermissions?.payment.show) && (
+            (fieldPermissions?.payment?.show) && (
               <>
-                <h4 style={{ marginTop: "5rem", marginBottom: "1rem", textAlign: "center" }}>Payment History</h4>
+                <h4 style={{ marginTop: "5rem", marginBottom: "1rem", textAlign: "center" }}>History of Received Payment</h4>
                 <div style={{ display: "flex", columnGap: "1rem" }}>
                   <div style={{ fontSize: "0.95rem", marginBottom: "0.5rem" }}><strong style={{ color: "#6F6F6F" }}>Project Cost: </strong>₹{data?.projectPrice},</div>
                   <div style={{ fontSize: "0.95rem", marginBottom: "0.5rem" }}><strong style={{ color: "#6F6F6F" }}>Total Dues: </strong>₹{data?.totalDues}</div>
@@ -267,7 +267,7 @@ const SingleProjectDetail = () => {
                       <tr>
                         <th>#</th>
                         <th>Received By</th>
-                        <th>Payments</th>
+                        <th>Received Payments</th>
                         <th>Date</th>
                       </tr>
                     </thead>
@@ -283,7 +283,7 @@ const SingleProjectDetail = () => {
                         ))
                       }
                       <tr className="table-secondary">
-                        <td colSpan="2"><strong>Total Received</strong></td>
+                        <td colSpan="2"><strong>Total Received Payment</strong></td>
                         <td><strong>₹{data?.totalPaid}</strong></td>
                         <td></td>
                       </tr>
@@ -297,11 +297,11 @@ const SingleProjectDetail = () => {
 
           {/* Work history */}
           {
-            (fieldPermissions?.workDetail.show) && (
+            (fieldPermissions?.workDetail?.show) && (
               <>
-                <h4 style={{ marginTop: "5rem", marginBottom: "1rem", textAlign: "center" }}>Work History</h4>
+                <h4 style={{ marginTop: "5rem", marginBottom: "1rem", textAlign: "center" }}>History of Daily Work Summary</h4>
                 {
-                  Object.keys(groupedWorkDetail).map((memberName) => (
+                  Object.keys(groupedWorkDetail)?.map((memberName) => (
                     <div key={memberName} className="mb-5">
                       <h5 style={{ color: "#6F6F6F", marginBottom: "0.5rem" }}>{memberName}</h5>
                       <div className="table-responsive custom-table">
@@ -309,7 +309,7 @@ const SingleProjectDetail = () => {
                           <thead className="thead-light">
                             <tr>
                               <th>#</th>
-                              <th>Work Description</th>
+                              <th>Work Summary</th>
                               <th>Start Time</th>
                               <th>End Time</th>
                               <th>Spent Hour</th>
@@ -318,7 +318,7 @@ const SingleProjectDetail = () => {
                           </thead>
                           <tbody>
                             {
-                              groupedWorkDetail[memberName].workDetails.map((w, i) => (
+                              groupedWorkDetail[memberName]?.workDetails?.map((w, i) => (
                                 <tr key={w?._id}>
                                   <td>{i + 1}</td>
                                   <td>{w?.workDescription}</td>
@@ -331,7 +331,7 @@ const SingleProjectDetail = () => {
                             }
                             <tr className="table-secondary">
                               <td colSpan="4"><strong>Total Spent Hours</strong></td>
-                              <td colSpan="2"><strong>{convertToHoursAndMinutes(groupedWorkDetail[memberName].totalSpentHours.toFixed(2))}</strong></td>
+                              <td colSpan="2"><strong>{convertToHoursAndMinutes(groupedWorkDetail[memberName]?.totalSpentHours?.toFixed(2))}</strong></td>
                             </tr>
                           </tbody>
                         </table>
