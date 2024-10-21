@@ -28,9 +28,10 @@ const buildProjection = (permissions) => {
     };
   };
 
-  if (projection._id === undefined) {
-    projection._id = 1;
-  };
+  // Ensure _id, createdAt and updatedAt are included by default unless explicitly excluded
+  projection._id = 1;
+  projection.createdAt = 1;
+  projection.updatedAt = 1;
 
   return projection;
 };
@@ -45,8 +46,17 @@ const filterFields = (designation, projection) => {
     };
   };
 
-  if (projection._id !== undefined && !filteredDesignation._id) {
+  // Include _id, createdAt, and updatedAt if they were not excluded
+  if (projection._id !== 0) {  // only exclude if explicitly set to 0
     filteredDesignation._id = designation._id;
+  };
+
+  if (projection.createdAt !== 0) {
+    filteredDesignation.createdAt = designation.createdAt;
+  };
+
+  if (projection.updatedAt !== 0) {
+    filteredDesignation.updatedAt = designation.updatedAt;
   };
 
   return filteredDesignation;

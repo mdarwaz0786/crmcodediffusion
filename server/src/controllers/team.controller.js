@@ -106,9 +106,10 @@ const buildProjection = (permissions) => {
     };
   };
 
-  if (projection._id === undefined) {
-    projection._id = 1;
-  };
+  // Ensure _id, createdAt and updatedAt are included by default unless explicitly excluded
+  projection._id = 1;
+  projection.createdAt = 1;
+  projection.updatedAt = 1;
 
   return projection;
 };
@@ -118,13 +119,22 @@ const filterFields = (team, projection) => {
   const filteredTeam = {};
 
   for (const key in team._doc) {
-    if (projection[key]) {
+    if (projection[key] !== 0) {  // only exclude if explicitly set to 0
       filteredTeam[key] = team[key];
     };
   };
 
-  if (projection._id !== undefined && !filteredTeam._id) {
+  // Include _id, createdAt, and updatedAt if they were not excluded
+  if (projection._id !== 0) {
     filteredTeam._id = team._id;
+  };
+
+  if (projection.createdAt !== 0) {
+    filteredTeam.createdAt = team.createdAt;
+  };
+
+  if (projection.updatedAt !== 0) {
+    filteredTeam.updatedAt = team.updatedAt;
   };
 
   return filteredTeam;

@@ -28,9 +28,10 @@ const buildProjection = (permissions) => {
     };
   };
 
-  if (projection._id === undefined) {
-    projection._id = 1;
-  };
+  // Ensure _id, createdAt and updatedAt are included by default unless explicitly excluded
+  projection._id = 1;
+  projection.createdAt = 1;
+  projection.updatedAt = 1;
 
   return projection;
 };
@@ -40,13 +41,22 @@ const filterFields = (purchaseInvoice, projection) => {
   const filteredPurchaseInvoice = {};
 
   for (const key in purchaseInvoice._doc) {
-    if (projection[key]) {
+    if (projection[key] !== 0) {  // only exclude if explicitly set to 0
       filteredPurchaseInvoice[key] = purchaseInvoice[key];
     };
   };
 
-  if (projection._id !== undefined && !filteredPurchaseInvoice._id) {
+  // Include _id, createdAt, and updatedAt if they were not excluded
+  if (projection._id !== 0) {
     filteredPurchaseInvoice._id = purchaseInvoice._id;
+  };
+
+  if (projection.createdAt !== 0) {
+    filteredPurchaseInvoice.createdAt = purchaseInvoice.createdAt;
+  };
+
+  if (projection.updatedAt !== 0) {
+    filteredPurchaseInvoice.updatedAt = purchaseInvoice.updatedAt;
   };
 
   return filteredPurchaseInvoice;

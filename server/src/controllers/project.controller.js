@@ -36,10 +36,10 @@ const buildProjection = (permissions) => {
     };
   };
 
-  // Ensure _id is included by default unless explicitly excluded
-  if (projection._id === undefined) {
-    projection._id = 1;
-  };
+  // Ensure _id, createdAt and updatedAt are included by default unless explicitly excluded
+  projection._id = 1;
+  projection.createdAt = 1;
+  projection.updatedAt = 1;
 
   return projection;
 };
@@ -49,14 +49,22 @@ const filterFields = (project, projection) => {
   const filteredProject = {};
 
   for (const key in project._doc) {
-    if (projection[key]) {
+    if (projection[key] !== 0) {   // only exclude if explicitly set to 0
       filteredProject[key] = project[key];
     };
   };
 
-  // Ensure _id is included in the filtered project
-  if (projection._id !== undefined && !filteredProject._id) {
+  // Include _id, createdAt, and updatedAt if they were not excluded
+  if (projection._id !== 0) {
     filteredProject._id = project._id;
+  };
+
+  if (projection.createdAt !== 0) {
+    filteredProject.createdAt = project.createdAt;
+  };
+
+  if (projection.updatedAt !== 0) {
+    filteredProject.updatedAt = project.updatedAt;
   };
 
   return filteredProject;

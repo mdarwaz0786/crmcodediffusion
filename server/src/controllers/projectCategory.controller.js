@@ -28,28 +28,38 @@ const buildProjection = (permissions) => {
     };
   };
 
-  if (projection._id === undefined) {
-    projection._id = 1;
-  };
+  // Ensure _id, createdAt and updatedAt are included by default unless explicitly excluded
+  projection._id = 1;
+  projection.createdAt = 1;
+  projection.updatedAt = 1;
 
   return projection;
 };
 
 // Helper function to filter fields based on projection
 const filterFields = (projectCategory, projection) => {
-  const filteredProjectStatus = {};
+  const filteredProjectCategory = {};
 
   for (const key in projectCategory._doc) {
-    if (projection[key]) {
-      filteredProjectStatus[key] = projectCategory[key];
+    if (projection[key] !== 0) {  // only exclude if explicitly set to 0
+      filteredProjectCategory[key] = projectCategory[key];
     };
   };
 
-  if (projection._id !== undefined && !filteredProjectStatus._id) {
-    filteredProjectStatus._id = projectCategory._id;
+  // Include _id, createdAt, and updatedAt if they were not excluded
+  if (projection._id !== 0) {
+    filteredProjectCategory._id = projectCategory._id;
   };
 
-  return filteredProjectStatus;
+  if (projection.createdAt !== 0) {
+    filteredProjectCategory.createdAt = projectCategory.createdAt;
+  };
+
+  if (projection.updatedAt !== 0) {
+    filteredProjectCategory.updatedAt = projectCategory.updatedAt;
+  };
+
+  return filteredProjectCategory;
 };
 
 // Controller for fetching all project category
