@@ -101,6 +101,8 @@ const EditRole = () => {
       fields: {
         name: { read: true, show: true },
         amount: { read: true, show: true },
+        date: { read: true, show: true },
+        bill: { read: true, show: true },
       },
     },
     // attendance: {
@@ -458,6 +460,8 @@ const EditRole = () => {
             fields: {
               name: { read: true, show: true },
               amount: { read: true, show: true },
+              date: { read: true, show: true },
+              bill: { read: true, show: true },
             },
           },
           // attendance: {

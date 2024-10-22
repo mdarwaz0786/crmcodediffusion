@@ -1,18 +1,36 @@
 import PurchaseInvoice from "../models/purchaseInvoice.model.js";
+import upload from "../middleware/multer.middleware.js";
 
-// Controller for creating a purchase invoice
-export const createPurchaseInvoice = async (req, res) => {
-  try {
-    const { name, amount } = req.body;
+// Controller for creating a purchase invoice with files uploaded as Base64
+export const createPurchaseInvoice = (req, res) => {
+  upload(req, res, async (error) => {
+    if (error) {
+      return res.status(500).json({ success: false, message: `Error while uploading files: ${error.message}` });
+    };
 
-    const purchaseInvoice = new PurchaseInvoice({ name, amount });
-    await purchaseInvoice.save();
+    try {
+      const { name, amount, date } = req.body;
 
-    return res.status(200).json({ success: true, message: "Purchase invoice created successfully", purchaseInvoice });
-  } catch (error) {
-    console.log("Error while creating purchase invoice:", error.message);
-    return res.status(500).json({ success: false, message: `Error while creating purchase invoice: ${error.message}` });
-  };
+      // Convert files to Base64
+      const bills = req.files.map((file) => {
+        return file.buffer.toString("base64");
+      });
+
+      const purchaseInvoice = new PurchaseInvoice({
+        name,
+        amount,
+        date,
+        bill: bills,
+      });
+
+      await purchaseInvoice.save();
+
+      return res.status(200).json({ success: true, message: "Purchase invoice created successfully", purchaseInvoice });
+    } catch (error) {
+      console.log("Error while creating purchase invoice:", error.message);
+      return res.status(500).json({ success: false, message: `Error while creating purchase invoice: ${error.message}` });
+    };
+  });
 };
 
 // Helper function to build the projection object based on user permissions

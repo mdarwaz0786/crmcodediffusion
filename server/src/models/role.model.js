@@ -204,6 +204,8 @@ const PurchaseInvoicePermissionSchema = new mongoose.Schema(
     fields: {
       name: { type: FieldPermissionSchema, default: () => ({}) },
       amount: { type: FieldPermissionSchema, default: () => ({}) },
+      date: { type: FieldPermissionSchema, default: () => ({}) },
+      bill: { type: FieldPermissionSchema, default: () => ({}) },
     },
   },
 );

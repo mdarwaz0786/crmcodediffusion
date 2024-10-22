@@ -10,6 +10,12 @@ const purchaseInvoiceSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    bill: {
+      type: [String],
+    },
+    date: {
+      type: String,
+    },
   },
   {
     timestamps: true,

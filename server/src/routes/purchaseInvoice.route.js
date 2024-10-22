@@ -4,7 +4,7 @@ import { isLoggedIn } from './../middleware/auth.middleware.js';
 import checkMasterActionPermission from "../middleware/masterActionPermission.middleware.js";
 import checkFieldUpdatePermission from "../middleware/checkFieldUpdatePermission.middleware.js";
 
-const fields = ['name', 'amount'];
+const fields = ['name', 'amount', 'date', 'bill'];
 
 // router object
 const router = express.Router();
