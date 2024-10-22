@@ -198,6 +198,12 @@ const PurchaseInvoice = () => {
     };
   };
 
+  function formatDate(isoDate) {
+    const date = new Date(isoDate);
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return date.toLocaleDateString('en-GB', options);
+  };
+
   if (isLoading) {
     return <Preloader />;
   };
@@ -398,8 +404,8 @@ const PurchaseInvoice = () => {
                           </th>
                           <th>#</th>
                           {
-                            (filedPermissions?.bill?.show) && (
-                              <th>Bill</th>
+                            (permissions?.access) && (
+                              <th>View</th>
                             )
                           }
                           {
@@ -429,55 +435,8 @@ const PurchaseInvoice = () => {
                               </td>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
                               {
-                                (filedPermissions?.bill?.show) && (
-                                  <td>
-                                    {
-                                      d?.bill && d?.bill?.length > 0 ? (
-                                        <div>
-                                          {
-                                            d?.bill?.map((file, fileIndex) => {
-                                              let fileType;
-
-                                              // Determine file type based on base64 prefix
-                                              if (file.startsWith('/9j/')) {
-                                                fileType = 'image/jpeg';
-                                              } else if (file.startsWith('iVBORw0KGgo')) {
-                                                fileType = 'image/png';
-                                              } else if (file.startsWith('JVBERi0x')) {
-                                                fileType = 'application/pdf';
-                                              };
-
-                                              return (
-                                                <div key={fileIndex} className="file-preview">
-                                                  {
-                                                    fileType === 'image/jpeg' || fileType === 'image/png' ? (
-                                                      <img
-                                                        src={`data:${fileType};base64,${file}`}
-                                                        alt={`File ${fileIndex}`}
-                                                        style={{ width: "100px", height: "100px", objectFit: "cover" }}
-                                                      />
-                                                    ) : fileType === 'application/pdf' ? (
-                                                      <div style={{ width: "100px", height: "130px", overflow: "hidden" }}>
-                                                        <iframe
-                                                          src={`data:${fileType};base64,${file}#toolbar=0&navpanes=0&scrollbar=0`}
-                                                          width="100px"
-                                                          height="auto"
-                                                        />
-                                                      </div>
-                                                    ) : (
-                                                      <span>Unsupported file type</span>
-                                                    )
-                                                  }
-                                                </div>
-                                              )
-                                            })
-                                          }
-                                        </div>
-                                      ) : (
-                                        <span>No files uploaded</span>
-                                      )
-                                    }
-                                  </td>
+                                (permissions?.access && permissions?.update) && (
+                                  <td><Link to={`/single-purchase-invoice/${d?._id}`}><i className="fas fa-eye"></i></Link></td>
                                 )
                               }
                               {
@@ -492,7 +451,7 @@ const PurchaseInvoice = () => {
                               }
                               {
                                 (filedPermissions?.date?.show) && (
-                                  <td>{d?.date}</td>
+                                  <td>{formatDate(d?.date)}</td>
                                 )
                               }
                               <td>

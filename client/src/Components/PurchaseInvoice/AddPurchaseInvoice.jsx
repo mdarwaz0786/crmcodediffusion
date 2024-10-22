@@ -56,6 +56,7 @@ const AddPurchaseInvoice = () => {
         formData.append("bills", files[i]);
       };
 
+      console.log(formData);
       const response = await axios.post(`${base_url}/api/v1/purchaseInvoice/create-purchaseInvoice`, formData, {
         headers: {
           Authorization: validToken,
@@ -101,20 +102,20 @@ const AddPurchaseInvoice = () => {
           </Link>
         </div>
         <div className="row">
-          <div className="col-md-6 mb-3">
+          <div className="col-md-6">
             <div className="form-wrap">
               <label className="col-form-label" htmlFor="name">Name</label>
               <input type="text" className="form-control" name="name" id="name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
           </div>
-          <div className="col-md-6 mb-3">
+          <div className="col-md-6">
             <div className="form-wrap">
               <label className="col-form-label" htmlFor="amount">Amount</label>
               <input type="text" className="form-control" name="amount" id="amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
             </div>
           </div>
         </div>
-        <div className="row mb-3">
+        <div className="row">
           <div className="col-md-6">
             <div className="form-wrap">
               <label className="col-form-label" htmlFor="bill">Upload File</label>
@@ -129,7 +130,6 @@ const AddPurchaseInvoice = () => {
             </div>
           </div>
         </div>
-
         {/* Display the previews of selected files */}
         <div className="row">
           <div className="col-md-12">
@@ -138,23 +138,23 @@ const AddPurchaseInvoice = () => {
                 <div className="d-flex flex-wrap">
                   {
                     files.map((file, index) => (
-                      <div key={index} className="position-relative me-5 mb-2">
+                      <div key={index} className="position-relative me-5 mb-3">
                         {
                           file.type.startsWith("image/") ? (
                             // Display image preview
                             <div className="position-relative">
-                              <img src={filePreviews[index]} alt={file.name} style={{ width: "100px", height: "auto", borderRadius: "4px" }} />
+                              <img src={filePreviews[index]} alt={file.name} style={{ width: "143px", height: "200.5px", borderRadius: "4px", objectFit: "fill" }} />
                               {/* Remove button*/}
-                              <button className="btn btn-danger btn-sm position-absolute top-0 end-0 translate-middle" onClick={() => removeFile(index)} style={{ zIndex: 1 }}>
+                              <button className="btn btn-danger btn-sm position-absolute top-0" onClick={() => removeFile(index)} style={{ right: "0", zIndex: 1 }}>
                                 <i className="fas fa-trash-alt"></i>
                               </button>
                             </div>
                           ) : file.type === "application/pdf" ? (
                             // Display PDF preview
                             <div className="position-relative">
-                              <embed src={filePreviews[index]} type="application/pdf" width="100px" height="auto" style={{ borderRadius: "4px" }} />
+                              <embed src={filePreviews[index]} type="application/pdf" width="143px" height="200.5px" style={{ borderRadius: "4px", objectFit: "fill" }} />
                               {/* Remove button */}
-                              <button className="btn btn-danger btn-sm position-absolute top-0 end-0 translate-middle" onClick={() => removeFile(index)} style={{ zIndex: 1 }}>
+                              <button className="btn btn-danger btn-sm position-absolute top-0" onClick={() => removeFile(index)} style={{ right: "0", zIndex: 1 }}>
                                 <i className="fas fa-trash-alt"></i>
                               </button>
                             </div>
@@ -163,7 +163,7 @@ const AddPurchaseInvoice = () => {
                             <div className="position-relative">
                               <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer" className="text-decoration-none">{file.name}</a>
                               {/* Remove button*/}
-                              <button className="btn btn-danger btn-sm position-absolute top-0 end-0 translate-middle" onClick={() => removeFile(index)} title="Remove file" style={{ zIndex: 1 }}>
+                              <button className="btn btn-danger btn-sm position-absolute top-0" onClick={() => removeFile(index)} title="Remove file" style={{ right: "0", zIndex: 1 }}>
                                 <i className="fas fa-trash-alt"></i>
                               </button>
                             </div>

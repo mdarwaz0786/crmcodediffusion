@@ -55,6 +55,7 @@ import PurchaseInvoice from "./Components/PurchaseInvoice/PurchaseInvoice.jsx";
 import AddPurchaseInvoice from "./Components/PurchaseInvoice/AddPurchaseInvoice.jsx";
 import EditPurchaseInvoice from "./Components/PurchaseInvoice/EditPurchaseInvoice.jsx";
 import InvoiceZip from "./Components/Invoice/InvoiceZip.jsx";
+import SinglePurchaseInvoice from "./Components/PurchaseInvoice/SinglePurchaseInvoice.jsx";
 
 const App = () => {
   return (
@@ -110,6 +111,7 @@ const App = () => {
           <Route path="purchase-invoice" element={<PurchaseInvoice />} />
           <Route path="add-purchase-invoice" element={<AddPurchaseInvoice />} />
           <Route path="edit-purchase-invoice/:id" element={<EditPurchaseInvoice />} />
+          <Route path="single-purchase-invoice/:id" element={<SinglePurchaseInvoice />} />
           <Route path="profile" element={<Profile />} />
           <Route path="attendance" element={<AttendanceList />} />
           <Route path="add-attendance" element={<AddAttendance />} />

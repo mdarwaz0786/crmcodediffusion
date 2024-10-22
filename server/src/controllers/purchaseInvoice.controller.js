@@ -11,7 +11,6 @@ export const createPurchaseInvoice = (req, res) => {
     try {
       const { name, amount, date } = req.body;
 
-      // Convert files to Base64
       const bills = req.files.map((file) => {
         return file.buffer.toString("base64");
       });
@@ -160,23 +159,39 @@ export const fetchSinglePurchaseInvoice = async (req, res) => {
   };
 };
 
-// Controller for updating a purchase invoice
-export const updatePurchaseInvoice = async (req, res) => {
-  try {
-    const purchaseInvoiceId = req.params.id;
-    const { name, amount } = req.body;
-
-    const purchaseInvoice = await PurchaseInvoice.findByIdAndUpdate(purchaseInvoiceId, { name, amount }, { new: true });
-
-    if (!purchaseInvoice) {
-      return res.status(404).json({ success: false, message: "Purchase invoice not found" });
+// Controller for updating a purchase invoice with files uploaded as Base64
+export const updatePurchaseInvoice = (req, res) => {
+  upload(req, res, async (error) => {
+    if (error) {
+      return res.status(500).json({ success: false, message: `Error while uploading files: ${error.message}` });
     };
 
-    return res.status(200).json({ success: true, message: "Purchase invoice updated successfully", purchaseInvoice });
-  } catch (error) {
-    console.log("Error while updating purchase invoice:", error.message);
-    return res.status(500).json({ success: false, message: `Error while updating purchase invoice: ${error.message}` });
-  };
+    try {
+      const purchaseInvoiceId = req.params.id;
+      const { name, amount, date } = req.body;
+
+      const existingBill = await PurchaseInvoice.findById(purchaseInvoiceId);
+
+      if (!existingBill) {
+        return res.status(404).json({ success: false, message: "Purchase invoice not found" });
+      };
+
+      const bills = req.files ? req.files.map((file) => file.buffer.toString("base64")) : [];
+
+      const finalBills = [...existingBill.bill, ...bills];
+
+      const updatedInvoice = await PurchaseInvoice.findByIdAndUpdate(
+        purchaseInvoiceId,
+        { name, amount, date, bill: finalBills },
+        { new: true }
+      );
+
+      return res.status(200).json({ success: true, message: "Purchase invoice updated successfully", purchaseInvoice: updatedInvoice });
+    } catch (error) {
+      console.log("Error while updating purchase invoice:", error.message);
+      return res.status(500).json({ success: false, message: `Error while updating purchase invoice: ${error.message}` });
+    };
+  });
 };
 
 // Controller for deleting a purchase invoice
