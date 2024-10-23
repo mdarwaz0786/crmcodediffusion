@@ -7,6 +7,9 @@ import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from "../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import JSZip from 'jszip';
+import FileSaver from 'file-saver';
 import Preloader from "../../Preloader.jsx";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -22,10 +25,18 @@ const PurchaseInvoice = () => {
     nameFilter: [],
     sort: "Descending",
     page: 1,
-    limit: 5,
+    limit: 10,
+    year: "",
+    month: "",
   });
   const permissions = team?.role?.permissions?.purchaseInvoice;
   const filedPermissions = team?.role?.permissions?.purchaseInvoice?.fields;
+
+  function formatDate(isoDate) {
+    const date = new Date(isoDate);
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return date.toLocaleDateString('en-GB', options);
+  };
 
   const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -65,6 +76,8 @@ const PurchaseInvoice = () => {
           page: filters.page,
           limit: filters.limit,
           nameFilter: filters.nameFilter.map(String),
+          year: filters.year,
+          month: filters.month,
         },
       });
 
@@ -124,11 +137,27 @@ const PurchaseInvoice = () => {
     };
   };
 
+  const handleYearChange = (e) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      year: e.target.value,
+      page: 1,
+    }));
+  };
+
+  const handleMonthChange = (e) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      month: e.target.value,
+      page: 1,
+    }));
+  };
+
   useEffect(() => {
     if (!isLoading && team && permissions?.access) {
       fetchAllData();
     };
-  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, isLoading, team, permissions]);
+  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, filters.year, filters.month, isLoading, team, permissions]);
 
   const handleDelete = async (id) => {
     let isdelete = prompt("If you want to delete, type \"yes\".");
@@ -198,10 +227,83 @@ const PurchaseInvoice = () => {
     };
   };
 
-  function formatDate(isoDate) {
-    const date = new Date(isoDate);
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    return date.toLocaleDateString('en-GB', options);
+  const downloadAllPurchaseInvoicePDFsAsZip = async () => {
+    const zip = new JSZip();
+    const pdfPromises = data?.map((invoice) => generatePDF(invoice));
+    const pdfFiles = await Promise.all(pdfPromises);
+
+    // Add each generated PDF to the ZIP file
+    pdfFiles.forEach((pdfFile, index) => {
+      zip.file(`${filters.month}-${filters.year}-Purchase-Invoice-${index + 1}.pdf`, pdfFile);
+    });
+
+    // Generate the ZIP file and trigger download
+    zip.generateAsync({ type: "blob" }).then((content) => {
+      FileSaver.saveAs(content, `${filters.month}-${filters.year}-Purchase-Invoice.zip`);
+    });
+  };
+
+  const generatePDF = (invoice) => {
+    return new Promise((resolve, reject) => {
+      const doc = new jsPDF();
+      let yPos = 10;
+
+      // Add invoice details with horizontal center alignment for "Purchase Invoice"
+      const title = 'Purchase Invoice';
+      const titleWidth = doc.getStringUnitWidth(title) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const xPos = (pageWidth - titleWidth) / 2; // Center position for title
+      doc.text(title, xPos, yPos); // Add title centered
+      yPos += 10;
+
+      // Add invoice details
+      doc.text(`Name: ${invoice.name}`, 10, yPos);
+      yPos += 10;
+      doc.text(`Amount: ${invoice.amount}`, 10, yPos);
+      yPos += 10;
+      doc.text(`Date: ${formatDate(invoice.date)}`, 10, yPos);
+      yPos += 20;
+
+      // Handle the bill images (base64)
+      const base64Files = invoice.bill || [];
+      base64Files.forEach((file, index) => {
+        let fileType;
+
+        if (file.startsWith('/9j/')) {
+          fileType = 'image/jpeg';
+        } else if (file.startsWith('iVBORw0KGgo')) {
+          fileType = 'image/png';
+        } else if (file.startsWith('JVBERi0x')) {
+          fileType = 'application/pdf';
+        };
+
+        const preview = `data:${fileType};base64,${file}`;
+
+        if (preview.startsWith("data:image/jpeg") || preview.startsWith("data:image/png")) {
+          const img = new Image();
+          img.src = preview;
+          img.onload = () => {
+            doc.addImage(img, 'JPEG', 10, yPos, 100, 100);
+            yPos += 110; // Adjust yPos for the next image
+            if (index === base64Files.length - 1) {
+              resolve(doc.output("blob"));
+            };
+          };
+          img.onerror = (err) => reject(err);
+        } else {
+          doc.text(`File ${index + 1}: Unsupported file type`, 10, yPos);
+          yPos += 10;
+          if (index === base64Files.length - 1) {
+            resolve(doc.output("blob"));
+          };
+        };
+      });
+
+      // If there are no images, resolve immediately
+      if (base64Files.length === 0) {
+        resolve(doc.output("blob"));
+      };
+    });
   };
 
   if (isLoading) {
@@ -222,9 +324,16 @@ const PurchaseInvoice = () => {
               <div className="page-header">
                 <div className="row align-items-center">
                   <div className="col-4">
-                    <h4 className="page-title">Purchase Invoices<span className="count-title">{total}</span></h4>
+                    <h4 className="page-title">Purchase Invoice<span className="count-title">{total}</span></h4>
                   </div>
-                  <div className="col-8 text-end">
+                  <div className="col-4">
+                    {
+                      permissions?.export && (
+                        <button className="btn btn-secondary" onClick={downloadAllPurchaseInvoicePDFsAsZip}>Download All</button>
+                      )
+                    }
+                  </div>
+                  <div className="col-4 text-end">
                     <div className="head-icons">
                       <Link to="#" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Refresh" onClick={() => window.location.reload()}>
                         <i className="ti ti-refresh-dot" />
@@ -321,6 +430,45 @@ const PurchaseInvoice = () => {
                               </ul>
                             </div>
                           </div>
+                        </li>
+                        <li>
+                          <select
+                            id="year"
+                            value={filters.year}
+                            onChange={handleYearChange}
+                            className="form-select"
+                          >
+                            <option value="">Year</option>
+                            {
+                              // Generate the years dynamically, starting from the current year and going backwards 10 year
+                              Array.from({ length: 10 }, (_, i) => {
+                                const year = new Date().getFullYear() - i;
+                                return <option key={year} value={year}>{year}</option>;
+                              })
+                            }
+                          </select>
+                        </li>
+                        <li>
+                          <select
+                            id="month"
+                            value={filters.month}
+                            onChange={handleMonthChange}
+                            className="form-select"
+                          >
+                            <option value="">Month</option>
+                            <option value="01">January</option>
+                            <option value="02">February</option>
+                            <option value="03">March</option>
+                            <option value="04">April</option>
+                            <option value="05">May</option>
+                            <option value="06">June</option>
+                            <option value="07">July</option>
+                            <option value="08">August</option>
+                            <option value="09">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                          </select>
                         </li>
                       </ul>
                     </div>

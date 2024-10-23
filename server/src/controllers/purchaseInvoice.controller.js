@@ -104,6 +104,38 @@ export const fetchAllPurchaseInvoice = async (req, res) => {
       filter.name = { $in: Array.isArray(req.query.nameFilter) ? req.query.nameFilter : [req.query.nameFilter] };
     };
 
+    // Handle year-wise filtering
+    if (req.query.year && !req.query.month) {
+      const year = req.query.year;
+
+      filter.date = {
+        $gte: `${year}-01-01`,
+        $lte: `${year}-12-31`,
+      };
+    };
+
+    // Handle month-wise filtering
+    if (req.query.month && !req.query.year) {
+      const month = req.query.month.padStart(2, "0");
+      const currentYear = new Date().getFullYear();  // Default to current year if only month is provided
+
+      filter.date = {
+        $gte: `${currentYear}-${month}-01`,
+        $lte: `${currentYear}-${month}-31`,
+      };
+    };
+
+    // Handle both year and month filtering
+    if (req.query.year && req.query.month) {
+      const year = req.query.year;
+      const month = req.query.month.padStart(2, "0");
+
+      filter.date = {
+        $gte: `${year}-${month}-01`,
+        $lte: `${year}-${month}-31`,
+      };
+    };
+
     // Handle sorting
     if (req.query.sort === 'Ascending') {
       sort = { createdAt: 1 };

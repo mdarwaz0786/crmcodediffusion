@@ -18,6 +18,12 @@ const SinglePurchaseInvoice = () => {
   const { validToken, team, isLoading } = useAuth();
   const permissions = team?.role?.permissions?.purchaseInvoice;
 
+  function formatDate(isoDate) {
+    const date = new Date(isoDate);
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return date.toLocaleDateString('en-GB', options);
+  };
+
   const fetchSinglePurchaseInvoice = async (id) => {
     try {
       const response = await axios.get(`${base_url}/api/v1/purchaseInvoice/single-purchaseInvoice/${id}`, {
@@ -81,7 +87,7 @@ const SinglePurchaseInvoice = () => {
       yPos += 10;
       doc.text(`Amount: ${amount}`, 10, yPos);
       yPos += 10;
-      doc.text(`Date: ${date}`, 10, yPos);
+      doc.text(`Date: ${formatDate(date)}`, 10, yPos);
       yPos += 20; // Add space for file previews
     };
 
