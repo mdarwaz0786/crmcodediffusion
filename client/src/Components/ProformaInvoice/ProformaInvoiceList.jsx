@@ -444,7 +444,7 @@ const ProformaInvoiceList = () => {
                         <li>
                           <select
                             id="year"
-                            value={filters.year}
+                            value={filters.year || new Date().getFullYear()}
                             onChange={handleYearChange}
                             className="form-select"
                           >
