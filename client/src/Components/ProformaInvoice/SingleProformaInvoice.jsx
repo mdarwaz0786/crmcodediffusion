@@ -55,7 +55,7 @@ const SingleProformaInvoice = () => {
   const exportInvoiceAsPdf = () => {
     const element = document.querySelector("#exportProformaInvoice");
     const options = {
-      filename: `${data?.proformaInvoiceId}-${data?.projects[0]?.project?.customer?.companyName}.pdf`,
+      filename: `${data?.proformaInvoiceId}-${data?.projects[0]?.project?.customer?.companyName}-Proforma-Invoice.pdf`,
       margin: [0, 0, 10, 0],
       html2canvas: {
         useCORS: true,

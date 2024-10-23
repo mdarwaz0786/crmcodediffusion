@@ -245,12 +245,12 @@ const ProformaInvoiceList = () => {
 
       // Pass pdfOptions to html2pdf
       const pdfBlob = await html2pdf().from(element).set(pdfOptions).output('blob');
-      zip.file(`${invoice?.proformaInvoiceId}-${invoice?.projects[0]?.project?.customer?.companyName}.pdf`, pdfBlob);
+      zip.file(`${invoice?.proformaInvoiceId}-${invoice?.projects[0]?.project?.customer?.companyName}-Proforma-Invoice.pdf`, pdfBlob);
     };
 
     // Generate the ZIP file and save it
     const content = await zip.generateAsync({ type: "blob" });
-    FileSaver.saveAs(content, `${filters.month}-${filters.year}.zip`);
+    FileSaver.saveAs(content, `${filters.month}-${filters.year}-Proforma-Invoice.zip`);
   };
 
   function formatDate(isoDate) {

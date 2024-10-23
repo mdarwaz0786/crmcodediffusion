@@ -226,7 +226,7 @@ const InvoiceList = () => {
     for (const invoice of data) {
       const element = document.querySelector(`#invoice-${invoice?._id}`);
       const pdfOptions = {
-        filename: `${invoice?.invoiceId}-${invoice?.projects[0]?.project?.customer?.companyName}.pdf`,
+        filename: `${invoice?.invoiceId}-${invoice?.projects[0]?.project?.customer?.companyName}-Tax-Invoice.pdf`,
         margin: [0, 0, 10, 0],
         html2canvas: {
           useCORS: true,
@@ -241,12 +241,12 @@ const InvoiceList = () => {
 
       // Pass pdfOptions to html2pdf
       const pdfBlob = await html2pdf().from(element).set(pdfOptions).output('blob');
-      zip.file(`${invoice?.invoiceId}-${invoice?.projects[0]?.project?.customer?.companyName}.pdf`, pdfBlob);
+      zip.file(`${invoice?.invoiceId}-${invoice?.projects[0]?.project?.customer?.companyName}-Tax-Invoice.pdf`, pdfBlob);
     };
 
     // Generate the ZIP file and save it
     const content = await zip.generateAsync({ type: "blob" });
-    FileSaver.saveAs(content, `${filters.month}-${filters.year}.zip`);
+    FileSaver.saveAs(content, `${filters.month}-${filters.year}-Tax-Invoice.zip`);
   };
 
   function formatDate(isoDate) {
