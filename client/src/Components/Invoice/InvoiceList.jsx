@@ -246,7 +246,7 @@ const InvoiceList = () => {
 
     // Generate the ZIP file and save it
     const content = await zip.generateAsync({ type: "blob" });
-    FileSaver.saveAs(content, "tax-invoices.zip");
+    FileSaver.saveAs(content, `${filters.month}-${filters.year}.zip`);
   };
 
   function formatDate(isoDate) {
