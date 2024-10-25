@@ -21,6 +21,7 @@ import attendanceRoute from "./src/routes/attendance.route.js";
 import holidayRoute from "./src/routes/holiday.route.js";
 import technologyRoute from "./src/routes/technology.route.js";
 import purchaseInvoiceRoute from "./src/routes/purchaseInvoice.route.js";
+import projectDeploymentRoute from "./src/routes/projectDeployment.route.js";
 
 // Directory name for serving index.html file
 const __dirname = path.resolve();
@@ -73,8 +74,10 @@ server.use("/api/v1/holiday", holidayRoute);
 server.use("/api/v1/technology", technologyRoute);
 // Purchase invoice route
 server.use("/api/v1/purchaseInvoice", purchaseInvoiceRoute);
+// Project deployment route
+server.use("/api/v1/projectDeployment", projectDeploymentRoute);
 
-// Middleware for serving client index,html file
+// Middleware for serving client index.html file
 server.use(express.static(path.join(__dirname, "../client/dist")), (req, res, next) => next());
 
 // Route for serving client index.html file
@@ -84,5 +87,5 @@ server.get("*", (req, res) => res.sendFile(path.join(__dirname, "../client/dist"
 const port = process.env.PORT;
 const mode = process.env.NODE_MODE;
 
-// Server listen 
-server.listen(port, () => console.log(`Server is successfully running in ${mode} on port number ${port} at base url http://localhost:${port}`));
+// Server listen
+server.listen(port, () => console.log(`Server is successfully running in ${mode} mode on port number ${port} at base url http://localhost:${port}`));

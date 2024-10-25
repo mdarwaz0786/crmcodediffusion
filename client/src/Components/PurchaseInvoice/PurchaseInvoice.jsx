@@ -578,9 +578,9 @@ const PurchaseInvoice = () => {
                         {
                           data?.map((d, index) => (
                             <tr key={d?._id}>
-                              <td>
-                                <label className="checkboxs"><input type="checkbox" /><span className="checkmarks"></span></label>
-                              </td>
+                              <th className="no-sort">
+                                <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
+                              </th>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
                               {
                                 (permissions?.access && permissions?.update) && (

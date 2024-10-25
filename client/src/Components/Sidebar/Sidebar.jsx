@@ -73,6 +73,11 @@ const Sidebar = () => {
                     )
                   }
                   {
+                    (permissions?.projectDeployment?.access) && (
+                      <li><Link to="/project-deployment" className={currentPath === "/project-deployment" ? "active" : ""} id={isMobile && active === "projectDeploymenet" ? "mobile_btn" : ""} onClick={() => handleActive("projectDeployment")}><i style={{ color: currentPath === "/project-deployment" ? "" : "#FFA201" }} className="ti ti-briefcase"></i><span>Project Deployment</span></Link></li>
+                    )
+                  }
+                  {
                     (permissions?.project?.fields?.workDetail?.show) && (
                       <li><Link to="/add-work-detail" className={currentPath === "/add-work-detail" ? "active" : ""} id={isMobile && active === "addWorkDetail" ? "mobile_btn" : ""} onClick={() => handleActive("addWorkDetail")}><i style={{ color: currentPath === "/add-work-detail" ? "" : "#FFA201" }} className="ti ti-clipboard"></i><span>Add Daily Work Summary</span></Link></li>
                     )

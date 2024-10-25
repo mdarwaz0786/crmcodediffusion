@@ -608,7 +608,7 @@ const Project = () => {
                         {
                           project?.map((p, index) => (
                             <tr key={p?._id}>
-                              <td>
+                              <td className="no-sort">
                                 <label className="checkboxs"><input type="checkbox" /><span className="checkmarks"></span></label>
                               </td>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>

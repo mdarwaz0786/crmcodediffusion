@@ -54,8 +54,10 @@ import EditAttendance from "./Components/Attendance/EditAttendance.jsx";
 import PurchaseInvoice from "./Components/PurchaseInvoice/PurchaseInvoice.jsx";
 import AddPurchaseInvoice from "./Components/PurchaseInvoice/AddPurchaseInvoice.jsx";
 import EditPurchaseInvoice from "./Components/PurchaseInvoice/EditPurchaseInvoice.jsx";
-import InvoiceZip from "./Components/Invoice/InvoiceZip.jsx";
 import SinglePurchaseInvoice from "./Components/PurchaseInvoice/SinglePurchaseInvoice.jsx";
+import ProjectDeployment from "./Components/Project Deployment/ProjectDeployment.jsx";
+import AddProjectDeployment from "./Components/Project Deployment/AddProjectDeployment.jsx";
+import EditProjectDeployment from "./Components/Project Deployment/EditProjectDeployment.jsx";
 
 const App = () => {
   return (
@@ -70,6 +72,9 @@ const App = () => {
           <Route path="add-project" element={<AddProject />} />
           <Route path="edit-project/:id" element={<EditProject />} />
           <Route path="single-project-detail/:id" element={<SingleProjectDetail />} />
+          <Route path="project-deployment" element={<ProjectDeployment />} />
+          <Route path="add-project-deployment" element={<AddProjectDeployment />} />
+          <Route path="edit-project-deployment/:id" element={<EditProjectDeployment />} />
           <Route path="add-work-detail" element={<AddWorkDetail />} />
           <Route path="add-payment" element={<AddPayment />} />
           <Route path="project-type" element={<ProjectType />} />
@@ -100,7 +105,6 @@ const App = () => {
           <Route path="add-project-priority" element={<AddProjectPriority />} />
           <Route path="edit-project-priority/:id" element={<EditProjectPriority />} />
           <Route path="invoice" element={<InvoiceList />} />
-          <Route path="invoiceZip" element={<InvoiceZip />} />
           <Route path="add-invoice" element={<AddInvoice />} />
           <Route path="edit-invoice/:id" element={<EditInvoice />} />
           <Route path="single-invoice/:id" element={<SingleInvoice />} />

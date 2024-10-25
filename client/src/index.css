@@ -3,6 +3,20 @@
   font-size: 1rem;
 }
 
+.sidebar-contact .toggle-theme {
+  top: 10px !important;
+  right: 530px !important;
+  border-radius: 5px !important;
+}
+
+.custom-dashboard-heading {
+  padding-bottom: 1rem !important;
+}
+
+.custom-table .no-sort {
+  display: none !important;
+}
+
 .custom-border {
   border: 1px solid #e3e3e3;
 }
@@ -10,6 +24,11 @@
 .custom-border th,
 .custom-border td {
   border: 1px solid #e3e3e3;
+}
+
+.custom-border th {
+  padding: 8px 10px 8px 10px !important;
+  font-size: 14.5px !important;
 }
 
 .selected-container {
@@ -314,6 +333,12 @@
     width: 75% !important;
     height: 75% !important;
   }
+
+  .sidebar-contact .toggle-theme {
+    top: 15px !important;
+    right: 410px !important;
+    border-radius: 5px !important;
+  }
 }
 
 @media screen and (max-width: 575px) {
@@ -380,6 +405,12 @@
   .login-logo-custom img {
     width: 75% !important;
     height: 75% !important;
+  }
+
+  .sidebar-contact .toggle-theme {
+    top: 15px !important;
+    right: 410px !important;
+    border-radius: 5px !important;
   }
 }
 
@@ -451,5 +482,11 @@
   .login-logo-custom img {
     width: 75% !important;
     height: 75% !important;
+  }
+
+  .sidebar-contact .toggle-theme {
+    top: 15px !important;
+    right: 410px !important;
+    border-radius: 5px !important;
   }
 }

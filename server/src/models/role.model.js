@@ -210,6 +210,40 @@ const PurchaseInvoicePermissionSchema = new mongoose.Schema(
   },
 );
 
+// Project deployment permission Schema
+const ProjectDeploymentPermissionSchema = new mongoose.Schema(
+  {
+    access: {
+      type: Boolean,
+      default: false,
+    },
+    export: {
+      type: Boolean,
+      default: false,
+    },
+    create: {
+      type: Boolean,
+      default: false,
+    },
+    update: {
+      type: Boolean,
+      default: false,
+    },
+    delete: {
+      type: Boolean,
+      default: false,
+    },
+    fields: {
+      websiteName: { type: FieldPermissionSchema, default: () => ({}) },
+      websiteLink: { type: FieldPermissionSchema, default: () => ({}) },
+      client: { type: FieldPermissionSchema, default: () => ({}) },
+      domainExpiryDate: { type: FieldPermissionSchema, default: () => ({}) },
+      domainExpireIn: { type: FieldPermissionSchema, default: () => ({}) },
+      domainExpireStatus: { type: FieldPermissionSchema, default: () => ({}) },
+    },
+  },
+);
+
 // Customer permission Schema
 const CustomerPermissionSchema = new mongoose.Schema(
   {
@@ -536,6 +570,7 @@ const RoleSchema = new mongoose.Schema(
       invoice: { type: InvoicePermissionSchema, default: () => ({}) },
       proformaInvoice: { type: ProformaInvoicePermissionSchema, default: () => ({}) },
       purchaseInvoice: { type: PurchaseInvoicePermissionSchema, default: () => ({}) },
+      projectDeployment: { type: ProjectDeploymentPermissionSchema, default: () => ({}) },
       attendance: { type: AttendancePermissionSchema, default: () => ({}) },
       customer: { type: CustomerPermissionSchema, default: () => ({}) },
       team: { type: TeamPermissionSchema, default: () => ({}) },

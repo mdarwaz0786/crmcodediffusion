@@ -326,7 +326,7 @@ const ProjectDashboard = () => {
                         <Search />
                       </div>
                     </div>
-                    <div className="col-md-8 float-end ms-auto">
+                    <div className="col-md-8 float-end ms-auto custom-dashboard-heading">
                       <div className="d-flex title-head">
                         <div className="daterange-picker d-flex align-items-center justify-content-center">
                           <div className="form-sort me-2">

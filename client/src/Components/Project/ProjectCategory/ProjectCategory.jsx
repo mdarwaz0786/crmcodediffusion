@@ -22,7 +22,7 @@ const ProjectCategory = () => {
     nameFilter: [],
     sort: "Descending",
     page: 1,
-    limit: 5,
+    limit: 10,
   });
   const permissions = team?.role?.permissions?.projectType;
   const filedPermissions = team?.role?.permissions?.projectType?.fields;
@@ -410,9 +410,9 @@ const ProjectCategory = () => {
                         {
                           data?.map((d, index) => (
                             <tr key={d?._id}>
-                              <td>
-                                <label className="checkboxs"><input type="checkbox" /><span className="checkmarks"></span></label>
-                              </td>
+                              <th className="no-sort">
+                                <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
+                              </th>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
                               {
                                 (filedPermissions?.name?.show) && (
