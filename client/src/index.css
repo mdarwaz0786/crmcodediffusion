@@ -9,6 +9,14 @@
   border-radius: 5px !important;
 }
 
+.modal-no-shadow .modal-content {
+  box-shadow: none !important;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
 .custom-dashboard-heading {
   padding-bottom: 1rem !important;
 }

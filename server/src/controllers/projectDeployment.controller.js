@@ -3,32 +3,42 @@ import mongoose from "mongoose";
 import moment from "moment";
 
 // Helper function to calculate expiry days and status
-const calculateDomainExpiry = (expiryDate) => {
+const calculateExpiry = (expiryDate) => {
   const currentDate = moment();
   const expirationDate = moment(expiryDate, "YYYY-MM-DD");
   const daysRemaining = expirationDate.diff(currentDate, "days");
 
   return {
-    domainExpireIn: daysRemaining > 0 ? `${daysRemaining} Days` : "Expired",
-    domainExpireStatus: daysRemaining > 0 ? "Live" : "Expired",
+    expireIn: daysRemaining > 0 ? `${daysRemaining} Days` : "Expired",
+    expiryStatus: daysRemaining > 0 ? "Live" : "Expired",
   };
 };
 
 // CREATE Project Deployment
 export const createProjectDeployment = async (req, res) => {
   try {
-    const { websiteName, websiteLink, client, domainExpiryDate } = req.body;
+    const { websiteName, websiteLink, client, domainPurchaseDate, domainExpiryDate, hostingPurchaseDate, hostingExpiryDate, sslPurchaseDate, sslExpiryDate } = req.body;
 
-    // Calculate domain expiry fields
-    const { domainExpireIn, domainExpireStatus } = calculateDomainExpiry(domainExpiryDate);
+    const { expireIn: domainExpireIn, expiryStatus: domainExpiryStatus } = calculateExpiry(domainExpiryDate);
+    const { expireIn: hostingExpireIn, expiryStatus: hostingExpiryStatus } = calculateExpiry(hostingExpiryDate);
+    const { expireIn: sslExpireIn, expiryStatus: sslExpiryStatus } = calculateExpiry(sslExpiryDate);
 
     const newProjectDeployment = new ProjectDeployment({
       websiteName,
       websiteLink,
       client,
+      domainPurchaseDate,
       domainExpiryDate,
       domainExpireIn,
-      domainExpireStatus,
+      domainExpiryStatus,
+      hostingPurchaseDate,
+      hostingExpiryDate,
+      hostingExpireIn,
+      hostingExpiryStatus,
+      sslPurchaseDate,
+      sslExpiryDate,
+      sslExpireIn,
+      sslExpiryStatus,
     });
 
     await newProjectDeployment.save();
@@ -105,9 +115,18 @@ export const fetchAllProjectDeployment = async (req, res) => {
       filter.$or = [
         { websiteName: { $regex: searchRegex } },
         { websiteLink: { $regex: searchRegex } },
+        { domainPurchaseDate: { $regex: searchRegex } },
         { domainExpiryDate: { $regex: searchRegex } },
         { domainExpireIn: { $regex: searchRegex } },
-        { domainExpireStatus: { $regex: searchRegex } },
+        { domainExpiryStatus: { $regex: searchRegex } },
+        { hostingPurchaseDate: { $regex: searchRegex } },
+        { hostingExpiryDate: { $regex: searchRegex } },
+        { hostingExpireIn: { $regex: searchRegex } },
+        { hostingExpiryStatus: { $regex: searchRegex } },
+        { sslPurchaseDate: { $regex: searchRegex } },
+        { sslExpiryDate: { $regex: searchRegex } },
+        { sslExpireIn: { $regex: searchRegex } },
+        { sslExpiryStatus: { $regex: searchRegex } },
         { client: await findObjectIdByString('Customer', 'name', req.query.search) },
       ];
     };
@@ -189,17 +208,35 @@ export const fetchSingleProjectDeployment = async (req, res) => {
 export const updateProjectDeployment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { websiteName, websiteLink, client, domainExpiryDate } = req.body;
+    const { websiteName, websiteLink, client, domainPurchaseDate, domainExpiryDate, hostingPurchaseDate, hostingExpiryDate, sslPurchaseDate, sslExpiryDate } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: "Invalid project deployment ID" });
     };
 
-    const { domainExpireIn, domainExpireStatus } = calculateDomainExpiry(domainExpiryDate);
+    const { expireIn: domainExpireIn, expiryStatus: domainExpiryStatus } = calculateExpiry(domainExpiryDate);
+    const { expireIn: hostingExpireIn, expiryStatus: hostingExpiryStatus } = calculateExpiry(hostingExpiryDate);
+    const { expireIn: sslExpireIn, expiryStatus: sslExpiryStatus } = calculateExpiry(sslExpiryDate);
 
     const updatedProjectDeployment = await ProjectDeployment.findByIdAndUpdate(
       id,
-      { websiteName, websiteLink, client, domainExpiryDate, domainExpireIn, domainExpireStatus },
+      {
+        websiteName,
+        websiteLink,
+        client,
+        domainPurchaseDate,
+        domainExpiryDate,
+        domainExpireIn,
+        domainExpiryStatus,
+        hostingPurchaseDate,
+        hostingExpiryDate,
+        hostingExpireIn,
+        hostingExpiryStatus,
+        sslPurchaseDate,
+        sslExpiryDate,
+        sslExpireIn,
+        sslExpiryStatus,
+      },
       { new: true },
     );
 

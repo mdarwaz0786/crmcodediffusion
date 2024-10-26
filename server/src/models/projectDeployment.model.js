@@ -14,13 +14,42 @@ const projectDeploymentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
     },
+    domainPurchaseDate: {
+      type: String,
+    },
     domainExpiryDate: {
       type: String,
     },
     domainExpireIn: {
       type: String,
     },
-    domainExpireStatus: {
+    domainExpiryStatus: {
+      type: String,
+      enum: ["Live", "Expired"],
+    },
+    hostingPurchaseDate: {
+      type: String,
+    },
+    hostingExpiryDate: {
+      type: String,
+    },
+    hostingExpireIn: {
+      type: String,
+    },
+    hostingExpiryStatus: {
+      type: String,
+      enum: ["Live", "Expired"],
+    },
+    sslPurchaseDate: {
+      type: String,
+    },
+    sslExpiryDate: {
+      type: String,
+    },
+    sslExpireIn: {
+      type: String,
+    },
+    sslExpiryStatus: {
       type: String,
       enum: ["Live", "Expired"],
     },

@@ -381,6 +381,22 @@ const Header = () => {
                               </li>
                             )
                           }
+                          {
+                            (team?.role?.permissions?.projectDeployment?.create) && (
+                              <li>
+                                <Link to="/add-project-deployment">
+                                  <div className="menu-details">
+                                    <span className="menu-list-icon" style={{ background: "#893465" }}>
+                                      <i className="ti ti-cloud-upload"></i>
+                                    </span>
+                                    <div className="menu-details-content">
+                                      <p>Add New Project Deployment</p>
+                                    </div>
+                                  </div>
+                                </Link>
+                              </li>
+                            )
+                          }
                         </ul>
                       </div>
                     </div>

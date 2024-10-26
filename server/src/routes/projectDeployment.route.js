@@ -4,7 +4,7 @@ import { isLoggedIn } from './../middleware/auth.middleware.js';
 import checkMasterActionPermission from "../middleware/masterActionPermission.middleware.js";
 import checkFieldUpdatePermission from "../middleware/checkFieldUpdatePermission.middleware.js";
 
-const fields = ['websiteName', 'websiteLink', 'client', 'domainExpiryDate', 'domainExpireIn', 'domainExpireStatus'];
+const fields = ['websiteName', 'websiteLink', 'client', 'domainPurchaseDate', 'domainExpiryDate', 'domainExpireIn', 'domainExpiryStatus', 'hostingPurchaseDate', 'hostingExpiryDate', 'hostingExpireIn', 'hostingExpiryStatus', 'sslPurchaseDate', 'sslExpiryDate', 'sslExpireIn', 'sslExpiryStatus'];
 
 // router object
 const router = express.Router();

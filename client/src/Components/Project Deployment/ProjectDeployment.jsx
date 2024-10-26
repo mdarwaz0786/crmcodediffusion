@@ -7,10 +7,17 @@ import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from "../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
+import { Modal, Button, Card } from 'react-bootstrap';
 import Preloader from "../../Preloader.jsx";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const ProjectDeployment = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [clientId, setClientId] = useState("");
+  const [client, setClient] = useState("");
+  const [isInfoOpen, setInfoIsOpen] = useState(false);
+  const [id, setId] = useState("");
+  const [deploymentData, setDeploymentData] = useState("");
   const [data, setData] = useState([]);
   const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(true);
@@ -26,6 +33,28 @@ const ProjectDeployment = () => {
   });
   const permissions = team?.role?.permissions?.projectDeployment;
   const filedPermissions = team?.role?.permissions?.projectDeployment?.fields;
+
+  const openModal = (clientId) => {
+    setIsOpen(true);
+    setClientId(clientId);
+  };
+
+  const closeModal = () => {
+    setIsOpen(false);
+    setClientId("");
+    setClient("");
+  };
+
+  const openInfoModal = (id) => {
+    setInfoIsOpen(true);
+    setId(id);
+  };
+
+  const closeInfoModal = () => {
+    setInfoIsOpen(false);
+    setId("");
+    setDeploymentData("");
+  };
 
   const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -52,7 +81,7 @@ const ProjectDeployment = () => {
   const debouncedSearch = useDebounce(filters.search, 500);
   const debouncedSearchName = useDebounce(name, 500);
 
-  const fetchAllData = async () => {
+  const fetchAllProjectDeploymentData = async () => {
     try {
       setLoading(true);
       const response = await axios.get(`${base_url}/api/v1/projectDeployment/all-projectDeployment`, {
@@ -126,7 +155,7 @@ const ProjectDeployment = () => {
 
   useEffect(() => {
     if (!isLoading && team && permissions?.access) {
-      fetchAllData();
+      fetchAllProjectDeploymentData();
     };
   }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, isLoading, team, permissions]);
 
@@ -143,7 +172,7 @@ const ProjectDeployment = () => {
 
         if (response?.data?.success) {
           toast.success("Deleted successfully");
-          fetchAllData();
+          fetchAllProjectDeploymentData();
         };
       } catch (error) {
         console.log("Error while deleting project timing:", error.message);
@@ -198,11 +227,49 @@ const ProjectDeployment = () => {
     };
   };
 
-  function formatDate(isoDate) {
-    const date = new Date(isoDate);
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    return date.toLocaleDateString('en-GB', options);
+  const fetchSingleClientData = async (clientId) => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/customer/single-customer/${clientId}`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        setClient(response?.data?.customer);
+      };
+    } catch (error) {
+      console.log("Error while fetching single customer:", error.message);
+    };
   };
+
+  const fetchSingleProjectDeploymentData = async (id) => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/projectDeployment/single-projectDeployment/${id}`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        setDeploymentData(response?.data?.projectDeployment);
+      };
+    } catch (error) {
+      console.log("Error while fetching single project deployment:", error.message);
+    };
+  };
+
+  useEffect(() => {
+    if (!isLoading && team && permissions?.access && id) {
+      fetchSingleProjectDeploymentData(id);
+    };
+  }, [id, isLoading, team, permissions]);
+
+  useEffect(() => {
+    if (!isLoading && team && permissions?.access && clientId) {
+      fetchSingleClientData(clientId);
+    };
+  }, [clientId, isLoading, team, permissions]);
 
   if (isLoading) {
     return <Preloader />;
@@ -405,8 +472,8 @@ const ProjectDeployment = () => {
                           </th>
                           <th>#</th>
                           {
-                            (filedPermissions?.client?.show) && (
-                              <th>Client Name</th>
+                            (permissions?.access) && (
+                              <th>View</th>
                             )
                           }
                           {
@@ -414,7 +481,7 @@ const ProjectDeployment = () => {
                               <th>Website Name</th>
                             )
                           }
-                          {
+                          {/* {
                             (filedPermissions?.domainExpiryDate?.show) && (
                               <th>Domain Expiry Date</th>
                             )
@@ -423,10 +490,20 @@ const ProjectDeployment = () => {
                             (filedPermissions?.domainExpireIn?.show) && (
                               <th>Domain Expire In</th>
                             )
+                          } */}
+                          {
+                            (filedPermissions?.domainExpiryStatus?.show) && (
+                              <th>Domain Status</th>
+                            )
                           }
                           {
-                            (filedPermissions?.domainExpireStatus?.show) && (
-                              <th>Domain Status</th>
+                            (filedPermissions?.hostingExpiryStatus?.show) && (
+                              <th>Hosting Status</th>
+                            )
+                          }
+                          {
+                            (filedPermissions?.sslExpiryStatus?.show) && (
+                              <th>SSL Status</th>
                             )
                           }
                           <th>Action</th>
@@ -441,16 +518,26 @@ const ProjectDeployment = () => {
                               </th>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
                               {
-                                (filedPermissions?.client?.show) && (
-                                  <td>{d?.client?.name}</td>
+                                (permissions?.access) && (
+                                  <td><Link to="#" onClick={() => openInfoModal(d?._id)}><i className="fas fa-eye"></i></Link></td>
                                 )
                               }
                               {
                                 (filedPermissions?.websiteName?.show) && (
-                                  <td>{d?.websiteName}</td>
+                                  <td>
+                                    <span>{d?.websiteName}</span>
+                                    {" "}
+                                    <a href={d?.websiteLink} target="_blank">
+                                      <i className="ti ti-external-link" style={{ color: "blue" }}></i>
+                                    </a>
+                                    {" "}
+                                    <span onClick={() => openModal(d?.client?._id)} style={{ color: '#fff', cursor: 'pointer', fontSize: '0.75rem', padding: '0.1rem 0.3rem', borderRadius: '0.25rem', display: 'inline-block', background: "#FFA201" }}>
+                                      Client Info
+                                    </span>
+                                  </td>
                                 )
                               }
-                              {
+                              {/* {
                                 (filedPermissions?.domainExpiryDate?.show) && (
                                   <td>{formatDate(d?.domainExpiryDate)}</td>
                                 )
@@ -459,24 +546,24 @@ const ProjectDeployment = () => {
                                 filedPermissions?.domainExpireIn?.show && (
                                   <td>
                                     <div style={{
-                                      backgroundColor: d?.domainExpireStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "#e57373" : "transparent", // Red if expired or 30 days or fewer, otherwise transparent
-                                      color: d?.domainExpireStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "white" : "inherit",
-                                      textAlign: d?.domainExpireStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "center" : "inherit",
-                                      fontWeight: d?.domainExpireStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "bold" : "normal",
-                                      borderRadius: d?.domainExpireStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "4px" : "none",
-                                      padding: d?.domainExpireStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "4px 0px" : "inherit",
-                                      width: d?.domainExpireStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "70px" : "auto",
+                                      backgroundColor: d?.domainExpiryStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "#e57373" : "transparent",
+                                      color: d?.domainExpiryStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "white" : "inherit",
+                                      textAlign: d?.domainExpiryStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "center" : "inherit",
+                                      fontWeight: d?.domainExpiryStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "bold" : "normal",
+                                      borderRadius: d?.domainExpiryStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "4px" : "none",
+                                      padding: d?.domainExpiryStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "4px 0px" : "inherit",
+                                      width: d?.domainExpiryStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "70px" : "auto",
                                     }}>
                                       {d?.domainExpireIn}
                                     </div>
                                   </td>
                                 )
-                              }
+                              } */}
                               {
-                                (filedPermissions?.domainExpireStatus?.show) && (
+                                (filedPermissions?.domainExpiryStatus?.show) && (
                                   <td>
                                     <div style={{
-                                      backgroundColor: d?.domainExpireStatus === "Expired" ? "#e57373" : "#81c784", // Medium red for expired, medium green for live
+                                      backgroundColor: d?.domainExpiryStatus === "Expired" ? "#e57373" : "#81c784",
                                       color: "white",
                                       textAlign: "center",
                                       fontWeight: "bold",
@@ -484,7 +571,41 @@ const ProjectDeployment = () => {
                                       padding: "4px 0px",
                                       width: "70px",
                                     }}>
-                                      {d?.domainExpireStatus}
+                                      {d?.domainExpiryStatus}
+                                    </div>
+                                  </td>
+                                )
+                              }
+                              {
+                                (filedPermissions?.hostingExpiryStatus?.show) && (
+                                  <td>
+                                    <div style={{
+                                      backgroundColor: d?.hostingExpiryStatus === "Expired" ? "#e57373" : "#81c784",
+                                      color: "white",
+                                      textAlign: "center",
+                                      fontWeight: "bold",
+                                      borderRadius: "4px",
+                                      padding: "4px 0px",
+                                      width: "70px",
+                                    }}>
+                                      {d?.hostingExpiryStatus}
+                                    </div>
+                                  </td>
+                                )
+                              }
+                              {
+                                (filedPermissions?.sslExpiryStatus?.show) && (
+                                  <td>
+                                    <div style={{
+                                      backgroundColor: d?.sslExpiryStatus === "Expired" ? "#e57373" : "#81c784",
+                                      color: "white",
+                                      textAlign: "center",
+                                      fontWeight: "bold",
+                                      borderRadius: "4px",
+                                      padding: "4px 0px",
+                                      width: "70px",
+                                    }}>
+                                      {d?.sslExpiryStatus}
                                     </div>
                                   </td>
                                 )
@@ -597,6 +718,103 @@ const ProjectDeployment = () => {
         </div>
       </div>
       {/* /Page Wrapper */}
+
+      {/* Client Info Modal */}
+      <Modal show={isOpen} onHide={closeModal} size="lg" dialogClassName="modal-no-shadow">
+        <Modal.Header closeButton>
+          <h5>Client Information</h5>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="container">
+            <Card className="mt-0 mb-0">
+              <Card.Body>
+                <Card.Text className="mb-2"><strong>Name: </strong>{client?.name}</Card.Text>
+                <Card.Text className="mb-2"><strong>Email: </strong>{client?.email}</Card.Text>
+                <Card.Text className="mb-2"><strong>Mobile: </strong> {client?.mobile}</Card.Text>
+                <Card.Text className="mb-2"><strong>Company Name: </strong>{client?.companyName}</Card.Text>
+                <Card.Text className="mb-2"><strong>GST Number:</strong>{client?.GSTNumber}</Card.Text>
+                <Card.Text className="mb-2"><strong>State: </strong>{client?.state}</Card.Text>
+                <Card.Text className="mb-2"><strong>Address: </strong>{client?.address}</Card.Text>
+              </Card.Body>
+            </Card>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeModal}>Close</Button>
+        </Modal.Footer>
+      </Modal>
+      {/* /Client Info Modal */}
+
+      {/* More info Modal */}
+      <Modal show={isInfoOpen} onHide={closeInfoModal} size="lg" dialogClassName="modal-no-shadow">
+        <Modal.Header closeButton>
+          <h5>Project Deployment Information</h5>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="container">
+            {/* Client Information */}
+            <Card className="mt-0 mb-3">
+              <Card.Header><strong>Client Information</strong></Card.Header>
+              <Card.Body>
+                <Card.Text className="mb-2"><strong>Name:</strong> {deploymentData?.client?.name}</Card.Text>
+                <Card.Text className="mb-2"><strong>Email:</strong> {deploymentData?.client?.email}</Card.Text>
+                <Card.Text className="mb-2"><strong>Mobile:</strong> {deploymentData?.client?.mobile}</Card.Text>
+                <Card.Text className="mb-2"><strong>Company Name:</strong> {deploymentData?.client?.companyName}</Card.Text>
+                <Card.Text className="mb-2"><strong>GST Number:</strong> {deploymentData?.client?.GSTNumber}</Card.Text>
+                <Card.Text className="mb-2"><strong>State:</strong> {deploymentData?.client?.state}</Card.Text>
+                <Card.Text className="mb-2"><strong>Address:</strong> {deploymentData?.client?.address}</Card.Text>
+              </Card.Body>
+            </Card>
+            {/* Project Information */}
+            <Card className="mb-3">
+              <Card.Header><strong>Project Information</strong></Card.Header>
+              <Card.Body>
+                <Card.Text className="mb-2"><strong>Website Name:</strong> {deploymentData?.websiteName}</Card.Text>
+                <Card.Text className="mb-2">
+                  <strong>Website Link:</strong>{" "}
+                  <a href={deploymentData?.websiteLink} style={{ color: "blue" }} target="_blank" rel="noopener noreferrer">
+                    {deploymentData?.websiteLink}
+                  </a>
+                </Card.Text>
+              </Card.Body>
+            </Card>
+            {/* Domain Information */}
+            <Card className="mb-3">
+              <Card.Header><strong>Domain Information</strong></Card.Header>
+              <Card.Body>
+                <Card.Text className="mb-2"><strong>Purchase Date:</strong> {deploymentData?.domainPurchaseDate}</Card.Text>
+                <Card.Text className="mb-2"><strong>Expiry Date:</strong> {deploymentData?.domainExpiryDate}</Card.Text>
+                <Card.Text className="mb-2"><strong>Expire In:</strong> {deploymentData?.domainExpireIn}</Card.Text>
+                <Card.Text className="mb-2"><strong>Status:</strong> {deploymentData?.domainExpiryStatus}</Card.Text>
+              </Card.Body>
+            </Card>
+            {/* Hosting Information */}
+            <Card className="mb-3">
+              <Card.Header><strong>Hosting Information</strong></Card.Header>
+              <Card.Body>
+                <Card.Text className="mb-2"><strong>Purchase Date:</strong> {deploymentData?.hostingPurchaseDate}</Card.Text>
+                <Card.Text className="mb-2"><strong>Expiry Date:</strong> {deploymentData?.hostingExpiryDate}</Card.Text>
+                <Card.Text className="mb-2"><strong>Expire In:</strong> {deploymentData?.hostingExpireIn}</Card.Text>
+                <Card.Text className="mb-2"><strong>Status:</strong> {deploymentData?.hostingExpiryStatus}</Card.Text>
+              </Card.Body>
+            </Card>
+            {/* SSL Information */}
+            <Card className="mb-3">
+              <Card.Header><strong>SSL Information</strong></Card.Header>
+              <Card.Body>
+                <Card.Text className="mb-2"><strong>Purchase Date:</strong> {deploymentData?.sslPurchaseDate}</Card.Text>
+                <Card.Text className="mb-2"><strong>Expiry Date:</strong> {deploymentData?.sslExpiryDate}</Card.Text>
+                <Card.Text className="mb-2"><strong>Expire In:</strong> {deploymentData?.sslExpireIn}</Card.Text>
+                <Card.Text className="mb-2"><strong>Status:</strong> {deploymentData?.sslExpiryStatus}</Card.Text>
+              </Card.Body>
+            </Card>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeInfoModal}>Close</Button>
+        </Modal.Footer>
+      </Modal>
+      {/* /More info Modal */}
     </>
   );
 };

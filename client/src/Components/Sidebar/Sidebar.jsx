@@ -62,6 +62,7 @@ const Sidebar = () => {
                     permissions?.project?.fields?.workDetail?.show ||
                     permissions?.project?.fields?.payment?.show ||
                     permissions?.purchaseInvoice?.access ||
+                    permissions?.projectDeployment?.access ||
                     permissions?.attendance?.access) && (
                     <h6 className="submenu-hdr">CRM</h6>
                   )
@@ -74,7 +75,7 @@ const Sidebar = () => {
                   }
                   {
                     (permissions?.projectDeployment?.access) && (
-                      <li><Link to="/project-deployment" className={currentPath === "/project-deployment" ? "active" : ""} id={isMobile && active === "projectDeploymenet" ? "mobile_btn" : ""} onClick={() => handleActive("projectDeployment")}><i style={{ color: currentPath === "/project-deployment" ? "" : "#FFA201" }} className="ti ti-briefcase"></i><span>Project Deployment</span></Link></li>
+                      <li><Link to="/project-deployment" className={currentPath === "/project-deployment" ? "active" : ""} id={isMobile && active === "projectDeployment" ? "mobile_btn" : ""} onClick={() => handleActive("projectDeployment")}><i style={{ color: currentPath === "/project-deployment" ? "" : "#FFA201" }} className="ti ti-cloud-upload"></i><span>Project Deployment</span></Link></li>
                     )
                   }
                   {
