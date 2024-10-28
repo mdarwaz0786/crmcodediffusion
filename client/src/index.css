@@ -483,8 +483,8 @@
   }
 
   .header-left img {
-    width: 60% !important;
-    height: 60% !important;
+    width: 30% !important;
+    height: auto !important;
   }
 
   .login-logo-custom img {
