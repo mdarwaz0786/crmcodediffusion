@@ -103,6 +103,31 @@ const findObjectIdByString = async (modelName, fieldName, searchString) => {
   return result ? result._id : null;
 };
 
+// Helper function to generate expiry date filters
+const createExpiryFilter = (field, filterType) => {
+  const currentDate = moment();
+  let startDate, endDate;
+
+  switch (filterType) {
+    case 'week':
+      startDate = currentDate.startOf('week');
+      endDate = currentDate.endOf('week');
+      break;
+    case 'month':
+      startDate = currentDate.startOf('month');
+      endDate = currentDate.endOf('month');
+      break;
+    case '15days':
+      startDate = currentDate;
+      endDate = currentDate.clone().add(15, 'days');
+      break;
+    default:
+      return null;
+  };
+
+  return { [field]: { $gte: startDate.toDate(), $lte: endDate.toDate() } };
+};
+
 // READ all Project Deployment
 export const fetchAllProjectDeployment = async (req, res) => {
   try {
@@ -129,6 +154,28 @@ export const fetchAllProjectDeployment = async (req, res) => {
         { sslExpiryStatus: { $regex: searchRegex } },
         { client: await findObjectIdByString('Customer', 'name', req.query.search) },
       ];
+    };
+
+    // Apply filters for domain, SSL, and hosting expiries
+    if (req.query.domainFilter) {
+      const domainExpiryFilter = createExpiryFilter('domainExpiryDate', req.query.domainFilter);
+      if (domainExpiryFilter) {
+        filter = { ...filter, ...domainExpiryFilter };
+      };
+    };
+
+    if (req.query.sslFilter) {
+      const sslExpiryFilter = createExpiryFilter('sslExpiryDate', req.query.sslFilter);
+      if (sslExpiryFilter) {
+        filter = { ...filter, ...sslExpiryFilter };
+      };
+    };
+
+    if (req.query.hostingFilter) {
+      const hostingExpiryFilter = createExpiryFilter('hostingExpiryDate', req.query.hostingFilter);
+      if (hostingExpiryFilter) {
+        filter = { ...filter, ...hostingExpiryFilter };
+      };
     };
 
     // Handle website name search

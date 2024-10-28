@@ -271,6 +271,12 @@ const ProjectDeployment = () => {
     };
   }, [clientId, isLoading, team, permissions]);
 
+  function formatDate(isoDate) {
+    const date = new Date(isoDate);
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return date.toLocaleDateString('en-GB', options);
+  };
+
   if (isLoading) {
     return <Preloader />;
   };
@@ -290,7 +296,7 @@ const ProjectDeployment = () => {
               <div className="page-header">
                 <div className="row align-items-center">
                   <div className="col-4">
-                    <h4 className="page-title">Project Deployment<span className="count-title">{total}</span></h4>
+                    <h4 className="page-title">Project Deployments<span className="count-title">{total}</span></h4>
                   </div>
                   <div className="col-8 text-end">
                     <div className="head-icons">
@@ -481,16 +487,6 @@ const ProjectDeployment = () => {
                               <th>Website Name</th>
                             )
                           }
-                          {/* {
-                            (filedPermissions?.domainExpiryDate?.show) && (
-                              <th>Domain Expiry Date</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.domainExpireIn?.show) && (
-                              <th>Domain Expire In</th>
-                            )
-                          } */}
                           {
                             (filedPermissions?.domainExpiryStatus?.show) && (
                               <th>Domain Status</th>
@@ -537,76 +533,96 @@ const ProjectDeployment = () => {
                                   </td>
                                 )
                               }
-                              {/* {
-                                (filedPermissions?.domainExpiryDate?.show) && (
-                                  <td>{formatDate(d?.domainExpiryDate)}</td>
-                                )
-                              }
-                              {
-                                filedPermissions?.domainExpireIn?.show && (
-                                  <td>
-                                    <div style={{
-                                      backgroundColor: d?.domainExpiryStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "#e57373" : "transparent",
-                                      color: d?.domainExpiryStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "white" : "inherit",
-                                      textAlign: d?.domainExpiryStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "center" : "inherit",
-                                      fontWeight: d?.domainExpiryStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "bold" : "normal",
-                                      borderRadius: d?.domainExpiryStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "4px" : "none",
-                                      padding: d?.domainExpiryStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "4px 0px" : "inherit",
-                                      width: d?.domainExpiryStatus === "Expired" || parseInt(d?.domainExpireIn) <= 30 ? "70px" : "auto",
-                                    }}>
-                                      {d?.domainExpireIn}
-                                    </div>
-                                  </td>
-                                )
-                              } */}
                               {
                                 (filedPermissions?.domainExpiryStatus?.show) && (
                                   <td>
-                                    <div style={{
-                                      backgroundColor: d?.domainExpiryStatus === "Expired" ? "#e57373" : "#81c784",
-                                      color: "white",
-                                      textAlign: "center",
-                                      fontWeight: "bold",
-                                      borderRadius: "4px",
-                                      padding: "4px 0px",
-                                      width: "70px",
-                                    }}>
-                                      {d?.domainExpiryStatus}
-                                    </div>
+                                    {
+                                      (parseInt(d?.domainExpireIn) <= 30) ? (
+                                        <div style={{
+                                          backgroundColor: parseInt(d?.domainExpireIn) <= 30 ? "#e57373" : "#81c784",
+                                          color: "white",
+                                          textAlign: "center",
+                                          borderRadius: "4px",
+                                          padding: "4px 0px",
+                                          width: "130px",
+                                        }}>
+                                          Expire in {d?.domainExpireIn}
+                                        </div>
+                                      ) : (
+                                        <div style={{
+                                          backgroundColor: d?.domainExpiryStatus === "Expired" ? "#e57373" : "#81c784",
+                                          color: "white",
+                                          textAlign: "center",
+                                          borderRadius: "4px",
+                                          padding: "4px 0px",
+                                          width: "130px",
+                                        }}>
+                                          {d?.domainExpiryStatus}
+                                        </div>
+                                      )
+                                    }
                                   </td>
                                 )
                               }
                               {
                                 (filedPermissions?.hostingExpiryStatus?.show) && (
                                   <td>
-                                    <div style={{
-                                      backgroundColor: d?.hostingExpiryStatus === "Expired" ? "#e57373" : "#81c784",
-                                      color: "white",
-                                      textAlign: "center",
-                                      fontWeight: "bold",
-                                      borderRadius: "4px",
-                                      padding: "4px 0px",
-                                      width: "70px",
-                                    }}>
-                                      {d?.hostingExpiryStatus}
-                                    </div>
+                                    {
+                                      (parseInt(d?.hostingExpireIn) <= 30) ? (
+                                        <div style={{
+                                          backgroundColor: parseInt(d?.hostingExpireIn) <= 30 ? "#e57373" : "#81c784",
+                                          color: "white",
+                                          textAlign: "center",
+                                          borderRadius: "4px",
+                                          padding: "4px 0px",
+                                          width: "130px",
+                                        }}>
+                                          Expire in {d?.hostingExpireIn}
+                                        </div>
+                                      ) : (
+                                        <div style={{
+                                          backgroundColor: d?.hostingExpiryStatus === "Expired" ? "#e57373" : "#81c784",
+                                          color: "white",
+                                          textAlign: "center",
+                                          borderRadius: "4px",
+                                          padding: "4px 0px",
+                                          width: "130px",
+                                        }}>
+                                          {d?.hostingExpiryStatus}
+                                        </div>
+                                      )
+                                    }
                                   </td>
                                 )
                               }
                               {
                                 (filedPermissions?.sslExpiryStatus?.show) && (
                                   <td>
-                                    <div style={{
-                                      backgroundColor: d?.sslExpiryStatus === "Expired" ? "#e57373" : "#81c784",
-                                      color: "white",
-                                      textAlign: "center",
-                                      fontWeight: "bold",
-                                      borderRadius: "4px",
-                                      padding: "4px 0px",
-                                      width: "70px",
-                                    }}>
-                                      {d?.sslExpiryStatus}
-                                    </div>
+                                    {
+                                      (parseInt(d?.sslExpireIn) <= 30) ? (
+                                        <div style={{
+                                          backgroundColor: parseInt(d?.sslExpireIn) <= 30 ? "#e57373" : "#81c784",
+                                          color: "white",
+                                          textAlign: "center",
+                                          borderRadius: "4px",
+                                          padding: "4px 0px",
+                                          width: "130px",
+                                        }}>
+                                          Expire in {d?.sslExpireIn}
+                                        </div>
+                                      ) : (
+                                        <div style={{
+                                          backgroundColor: d?.sslExpiryStatus === "Expired" ? "#e57373" : "#81c784",
+                                          color: "white",
+                                          textAlign: "center",
+                                          borderRadius: "4px",
+                                          padding: "4px 0px",
+                                          width: "130px",
+                                        }}>
+                                          {d?.sslExpiryStatus}
+                                        </div>
+                                      )
+                                    }
                                   </td>
                                 )
                               }
@@ -727,14 +743,14 @@ const ProjectDeployment = () => {
         <Modal.Body>
           <div className="container">
             <Card className="mt-0 mb-0">
-              <Card.Body>
-                <Card.Text className="mb-2"><strong>Name: </strong>{client?.name}</Card.Text>
-                <Card.Text className="mb-2"><strong>Email: </strong>{client?.email}</Card.Text>
-                <Card.Text className="mb-2"><strong>Mobile: </strong> {client?.mobile}</Card.Text>
-                <Card.Text className="mb-2"><strong>Company Name: </strong>{client?.companyName}</Card.Text>
-                <Card.Text className="mb-2"><strong>GST Number:</strong>{client?.GSTNumber}</Card.Text>
-                <Card.Text className="mb-2"><strong>State: </strong>{client?.state}</Card.Text>
-                <Card.Text className="mb-2"><strong>Address: </strong>{client?.address}</Card.Text>
+              <Card.Body className="p-2 ps-3">
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Name: </strong><span>{client?.name}</span></Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Email: </strong><span>{client?.email}</span></Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Mobile: </strong><span>{client?.mobile}</span></Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Company Name: </strong><span>{client?.companyName}</span></Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>GST Number: </strong><span>{client?.GSTNumber}</span></Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>State: </strong><span>{client?.state}</span></Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Address: </strong><span>{client?.address}</span></Card.Text>
               </Card.Body>
             </Card>
           </div>
@@ -753,24 +769,24 @@ const ProjectDeployment = () => {
         <Modal.Body>
           <div className="container">
             {/* Client Information */}
-            <Card className="mt-0 mb-3">
-              <Card.Header><strong>Client Information</strong></Card.Header>
-              <Card.Body>
-                <Card.Text className="mb-2"><strong>Name:</strong> {deploymentData?.client?.name}</Card.Text>
-                <Card.Text className="mb-2"><strong>Email:</strong> {deploymentData?.client?.email}</Card.Text>
-                <Card.Text className="mb-2"><strong>Mobile:</strong> {deploymentData?.client?.mobile}</Card.Text>
-                <Card.Text className="mb-2"><strong>Company Name:</strong> {deploymentData?.client?.companyName}</Card.Text>
-                <Card.Text className="mb-2"><strong>GST Number:</strong> {deploymentData?.client?.GSTNumber}</Card.Text>
-                <Card.Text className="mb-2"><strong>State:</strong> {deploymentData?.client?.state}</Card.Text>
-                <Card.Text className="mb-2"><strong>Address:</strong> {deploymentData?.client?.address}</Card.Text>
+            <Card>
+              <Card.Header className="p-2 ps-3" style={{ fontSize: "1rem" }}><strong>Client Information</strong></Card.Header>
+              <Card.Body className="p-2 ps-3">
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Name:</strong> {deploymentData?.client?.name}</Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Email:</strong> {deploymentData?.client?.email}</Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Mobile:</strong> {deploymentData?.client?.mobile}</Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Company Name:</strong> {deploymentData?.client?.companyName}</Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>GST Number:</strong> {deploymentData?.client?.GSTNumber}</Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>State:</strong> {deploymentData?.client?.state}</Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Address:</strong> {deploymentData?.client?.address}</Card.Text>
               </Card.Body>
             </Card>
             {/* Project Information */}
-            <Card className="mb-3">
-              <Card.Header><strong>Project Information</strong></Card.Header>
-              <Card.Body>
-                <Card.Text className="mb-2"><strong>Website Name:</strong> {deploymentData?.websiteName}</Card.Text>
-                <Card.Text className="mb-2">
+            <Card>
+              <Card.Header className="p-2 ps-3" style={{ fontSize: "1rem" }}><strong>Project Information</strong></Card.Header>
+              <Card.Body className="p-2 ps-3">
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Website Name:</strong> {deploymentData?.websiteName}</Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}>
                   <strong>Website Link:</strong>{" "}
                   <a href={deploymentData?.websiteLink} style={{ color: "blue" }} target="_blank" rel="noopener noreferrer">
                     {deploymentData?.websiteLink}
@@ -779,33 +795,90 @@ const ProjectDeployment = () => {
               </Card.Body>
             </Card>
             {/* Domain Information */}
-            <Card className="mb-3">
-              <Card.Header><strong>Domain Information</strong></Card.Header>
-              <Card.Body>
-                <Card.Text className="mb-2"><strong>Purchase Date:</strong> {deploymentData?.domainPurchaseDate}</Card.Text>
-                <Card.Text className="mb-2"><strong>Expiry Date:</strong> {deploymentData?.domainExpiryDate}</Card.Text>
-                <Card.Text className="mb-2"><strong>Expire In:</strong> {deploymentData?.domainExpireIn}</Card.Text>
-                <Card.Text className="mb-2"><strong>Status:</strong> {deploymentData?.domainExpiryStatus}</Card.Text>
+            <Card>
+              <Card.Header className="p-2 ps-3" style={{ fontSize: "1rem" }}><strong>Domain Information</strong></Card.Header>
+              <Card.Body className="p-2 ps-3">
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Purchase Date: </strong><span>{formatDate(deploymentData?.domainPurchaseDate)}</span></Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Expiry Date: </strong><span>{formatDate(deploymentData?.domainExpiryDate)}</span></Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Expire In: </strong>
+                  <span
+                    style={{
+                      ...(parseInt(deploymentData?.domainExpireIn) <= 30 || deploymentData?.domainExpireIn === "Expired"
+                        ? { backgroundColor: "#e57373", color: "white", padding: "0px 5px", borderRadius: "3px" }
+                        : { backgroundColor: "#81c784", color: "white", padding: "0px 5px", borderRadius: "3px" })
+                    }}>
+                    {deploymentData?.domainExpireIn}
+                  </span>
+                </Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Status: </strong>
+                  <span
+                    style={{
+                      ...(deploymentData?.domainExpiryStatus === "Expired"
+                        ? { backgroundColor: "#e57373", color: "white", padding: "0px 5px", borderRadius: "3px" }
+                        : { backgroundColor: "#81c784", color: "white", padding: "0px 5px", borderRadius: "3px" })
+                    }}
+                  >
+                    {deploymentData?.domainExpiryStatus}
+                  </span>
+                </Card.Text>
               </Card.Body>
             </Card>
             {/* Hosting Information */}
-            <Card className="mb-3">
-              <Card.Header><strong>Hosting Information</strong></Card.Header>
-              <Card.Body>
-                <Card.Text className="mb-2"><strong>Purchase Date:</strong> {deploymentData?.hostingPurchaseDate}</Card.Text>
-                <Card.Text className="mb-2"><strong>Expiry Date:</strong> {deploymentData?.hostingExpiryDate}</Card.Text>
-                <Card.Text className="mb-2"><strong>Expire In:</strong> {deploymentData?.hostingExpireIn}</Card.Text>
-                <Card.Text className="mb-2"><strong>Status:</strong> {deploymentData?.hostingExpiryStatus}</Card.Text>
+            <Card>
+              <Card.Header className="p-2 ps-3" style={{ fontSize: "1rem" }}><strong>Hosting Information</strong></Card.Header>
+              <Card.Body className="p-2 ps-3">
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Purchase Date: </strong><span>{formatDate(deploymentData?.hostingPurchaseDate)}</span></Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Expiry Date: </strong><span>{formatDate(deploymentData?.hostingExpiryDate)}</span></Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Expire In: </strong>
+                  <span
+                    style={{
+                      ...(parseInt(deploymentData?.hostingExpireIn) <= 30 || deploymentData?.hostingExpireIn === "Expired"
+                        ? { backgroundColor: "#e57373", color: "white", padding: "0px 5px", borderRadius: "3px" }
+                        : { backgroundColor: "#81c784", color: "white", padding: "0px 5px", borderRadius: "3px" })
+                    }}>
+                    {deploymentData?.hostingExpireIn}
+                  </span>
+                </Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Status: </strong>
+                  <span
+                    style={{
+                      ...(deploymentData?.hostingExpiryStatus === "Expired"
+                        ? { backgroundColor: "#e57373", color: "white", padding: "0px 5px", borderRadius: "3px" }
+                        : { backgroundColor: "#81c784", color: "white", padding: "0px 5px", borderRadius: "3px" })
+                    }}
+                  >
+                    {deploymentData?.hostingExpiryStatus}
+                  </span>
+                </Card.Text>
               </Card.Body>
             </Card>
             {/* SSL Information */}
-            <Card className="mb-3">
-              <Card.Header><strong>SSL Information</strong></Card.Header>
-              <Card.Body>
-                <Card.Text className="mb-2"><strong>Purchase Date:</strong> {deploymentData?.sslPurchaseDate}</Card.Text>
-                <Card.Text className="mb-2"><strong>Expiry Date:</strong> {deploymentData?.sslExpiryDate}</Card.Text>
-                <Card.Text className="mb-2"><strong>Expire In:</strong> {deploymentData?.sslExpireIn}</Card.Text>
-                <Card.Text className="mb-2"><strong>Status:</strong> {deploymentData?.sslExpiryStatus}</Card.Text>
+            <Card className="mb-0">
+              <Card.Header className="p-2 ps-3" style={{ fontSize: "1rem" }}><strong>SSL Information</strong></Card.Header>
+              <Card.Body className="p-2 ps-3">
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Purchase Date: </strong><span>{formatDate(deploymentData?.sslPurchaseDate)}</span></Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Expiry Date: </strong><span>{formatDate(deploymentData?.sslExpiryDate)}</span></Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Expire In: </strong>
+                  <span
+                    style={{
+                      ...(parseInt(deploymentData?.sslExpireIn) <= 30 || deploymentData?.sslExpireIn === "Expired"
+                        ? { backgroundColor: "#e57373", color: "white", padding: "0px 5px", borderRadius: "3px" }
+                        : { backgroundColor: "#81c784", color: "white", padding: "0px 5px", borderRadius: "3px" })
+                    }}>
+                    {deploymentData?.sslExpireIn}
+                  </span>
+                </Card.Text>
+                <Card.Text className="mb-1" style={{ fontSize: "0.9rem" }}><strong>Status: </strong>
+                  <span
+                    style={{
+                      ...(deploymentData?.sslExpiryStatus === "Expired"
+                        ? { backgroundColor: "#e57373", color: "white", padding: "0px 5px", borderRadius: "3px" }
+                        : { backgroundColor: "#81c784", color: "white", padding: "0px 5px", borderRadius: "3px" })
+                    }}
+                  >
+                    {deploymentData?.sslExpiryStatus}
+                  </span>
+                </Card.Text>
               </Card.Body>
             </Card>
           </div>
