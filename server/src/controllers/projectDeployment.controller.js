@@ -110,12 +110,12 @@ const createExpiryFilter = (field, filterType) => {
 
   switch (filterType) {
     case 'week':
-      startDate = currentDate.startOf('week');
-      endDate = currentDate.endOf('week');
+      startDate = currentDate;
+      endDate = currentDate.clone().add(7, 'days');;
       break;
     case 'month':
-      startDate = currentDate.startOf('month');
-      endDate = currentDate.endOf('month');
+      startDate = currentDate;
+      endDate = currentDate.clone().add(30, 'days');;
       break;
     case '15days':
       startDate = currentDate;
@@ -125,7 +125,7 @@ const createExpiryFilter = (field, filterType) => {
       return null;
   };
 
-  return { [field]: { $gte: startDate.toDate(), $lte: endDate.toDate() } };
+  return { [field]: { $gte: startDate.format('YYYY-MM-DD'), $lte: endDate.format('YYYY-MM-DD') } };
 };
 
 // READ all Project Deployment
@@ -156,6 +156,16 @@ export const fetchAllProjectDeployment = async (req, res) => {
       ];
     };
 
+    // Handle website name search
+    if (req.query.name) {
+      filter.websiteName = { $regex: new RegExp(req.query.name, 'i') };
+    };
+
+    // Handle website name filter
+    if (req.query.nameFilter) {
+      filter.websiteName = { $in: Array.isArray(req.query.nameFilter) ? req.query.nameFilter : [req.query.nameFilter] };
+    };
+
     // Apply filters for domain, SSL, and hosting expiries
     if (req.query.domainFilter) {
       const domainExpiryFilter = createExpiryFilter('domainExpiryDate', req.query.domainFilter);
@@ -176,16 +186,6 @@ export const fetchAllProjectDeployment = async (req, res) => {
       if (hostingExpiryFilter) {
         filter = { ...filter, ...hostingExpiryFilter };
       };
-    };
-
-    // Handle website name search
-    if (req.query.name) {
-      filter.websiteName = { $regex: new RegExp(req.query.name, 'i') };
-    };
-
-    // Handle website name filter
-    if (req.query.nameFilter) {
-      filter.websiteName = { $in: Array.isArray(req.query.nameFilter) ? req.query.nameFilter : [req.query.nameFilter] };
     };
 
     // Handle sorting

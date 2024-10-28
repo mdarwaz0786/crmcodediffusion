@@ -30,6 +30,9 @@ const ProjectDeployment = () => {
     sort: "Descending",
     page: 1,
     limit: 10,
+    domainFilter: "",
+    sslFilter: "",
+    hostingFilter: "",
   });
   const permissions = team?.role?.permissions?.projectDeployment;
   const filedPermissions = team?.role?.permissions?.projectDeployment?.fields;
@@ -94,6 +97,9 @@ const ProjectDeployment = () => {
           page: filters.page,
           limit: filters.limit,
           nameFilter: filters.nameFilter.map(String),
+          domainFilter: filters.domainFilter,
+          sslFilter: filters.sslFilter,
+          hostingFilter: filters.hostingFilter,
         },
       });
 
@@ -157,7 +163,7 @@ const ProjectDeployment = () => {
     if (!isLoading && team && permissions?.access) {
       fetchAllProjectDeploymentData();
     };
-  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, isLoading, team, permissions]);
+  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, filters.domainFilter, filters.sslFilter, filters.hostingFilter, isLoading, team, permissions]);
 
   const handleDelete = async (id) => {
     let isdelete = prompt("If you want to delete, type \"yes\".");
@@ -376,6 +382,7 @@ const ProjectDeployment = () => {
                     <div className="sortby-list">
                       <ul>
                         <li>
+                          <label className="pb-1">Sort:</label>
                           <div className="sort-dropdown drop-down">
                             <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown"><i className="ti ti-sort-ascending-2" />{filters.sort}</Link>
                             <div className="dropdown-menu  dropdown-menu-start">
@@ -395,6 +402,45 @@ const ProjectDeployment = () => {
                               </ul>
                             </div>
                           </div>
+                        </li>
+                        <li>
+                          <label className="pb-1">Domain:</label>
+                          <select
+                            className="form-select"
+                            value={filters.domainFilter}
+                            onChange={(e) => setFilters({ ...filters, domainFilter: e.target.value, page: 1 })}
+                          >
+                            <option value="">All</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="15days">Next 15 Days</option>
+                          </select>
+                        </li>
+                        <li>
+                          <label className="pb-1">Hosting:</label>
+                          <select
+                            className="form-select"
+                            value={filters.hostingFilter}
+                            onChange={(e) => setFilters({ ...filters, hostingFilter: e.target.value, page: 1 })}
+                          >
+                            <option value="">All</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="15days">Next 15 Days</option>
+                          </select>
+                        </li>
+                        <li>
+                          <label className="pb-1">SSL:</label>
+                          <select
+                            className="form-select"
+                            value={filters.sslFilter}
+                            onChange={(e) => setFilters({ ...filters, sslFilter: e.target.value, page: 1 })}
+                          >
+                            <option value="">All</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="15days">Next 15 Days</option>
+                          </select>
                         </li>
                       </ul>
                     </div>
@@ -539,23 +585,13 @@ const ProjectDeployment = () => {
                                     {
                                       (parseInt(d?.domainExpireIn) <= 30) ? (
                                         <div style={{
-                                          backgroundColor: parseInt(d?.domainExpireIn) <= 30 ? "#e57373" : "#81c784",
-                                          color: "white",
-                                          textAlign: "center",
-                                          borderRadius: "4px",
-                                          padding: "4px 0px",
-                                          width: "130px",
+                                          color: parseInt(d?.domainExpireIn) <= 30 ? "red" : "green",
                                         }}>
                                           Expire in {d?.domainExpireIn}
                                         </div>
                                       ) : (
                                         <div style={{
-                                          backgroundColor: d?.domainExpiryStatus === "Expired" ? "#e57373" : "#81c784",
-                                          color: "white",
-                                          textAlign: "center",
-                                          borderRadius: "4px",
-                                          padding: "4px 0px",
-                                          width: "130px",
+                                          color: d?.domainExpiryStatus === "Expired" ? "red" : "green",
                                         }}>
                                           {d?.domainExpiryStatus}
                                         </div>
@@ -570,23 +606,13 @@ const ProjectDeployment = () => {
                                     {
                                       (parseInt(d?.hostingExpireIn) <= 30) ? (
                                         <div style={{
-                                          backgroundColor: parseInt(d?.hostingExpireIn) <= 30 ? "#e57373" : "#81c784",
-                                          color: "white",
-                                          textAlign: "center",
-                                          borderRadius: "4px",
-                                          padding: "4px 0px",
-                                          width: "130px",
+                                          color: parseInt(d?.hostingExpireIn) <= 30 ? "red" : "green",
                                         }}>
                                           Expire in {d?.hostingExpireIn}
                                         </div>
                                       ) : (
                                         <div style={{
-                                          backgroundColor: d?.hostingExpiryStatus === "Expired" ? "#e57373" : "#81c784",
-                                          color: "white",
-                                          textAlign: "center",
-                                          borderRadius: "4px",
-                                          padding: "4px 0px",
-                                          width: "130px",
+                                          color: d?.hostingExpiryStatus === "Expired" ? "red" : "green",
                                         }}>
                                           {d?.hostingExpiryStatus}
                                         </div>
@@ -601,23 +627,13 @@ const ProjectDeployment = () => {
                                     {
                                       (parseInt(d?.sslExpireIn) <= 30) ? (
                                         <div style={{
-                                          backgroundColor: parseInt(d?.sslExpireIn) <= 30 ? "#e57373" : "#81c784",
-                                          color: "white",
-                                          textAlign: "center",
-                                          borderRadius: "4px",
-                                          padding: "4px 0px",
-                                          width: "130px",
+                                          color: parseInt(d?.sslExpireIn) <= 30 ? "red" : "green",
                                         }}>
                                           Expire in {d?.sslExpireIn}
                                         </div>
                                       ) : (
                                         <div style={{
-                                          backgroundColor: d?.sslExpiryStatus === "Expired" ? "#e57373" : "#81c784",
-                                          color: "white",
-                                          textAlign: "center",
-                                          borderRadius: "4px",
-                                          padding: "4px 0px",
-                                          width: "130px",
+                                          color: d?.sslExpiryStatus === "Expired" ? "red" : "green",
                                         }}>
                                           {d?.sslExpiryStatus}
                                         </div>
@@ -804,8 +820,8 @@ const ProjectDeployment = () => {
                   <span
                     style={{
                       ...(parseInt(deploymentData?.domainExpireIn) <= 30 || deploymentData?.domainExpireIn === "Expired"
-                        ? { backgroundColor: "#e57373", color: "white", padding: "0px 5px", borderRadius: "3px" }
-                        : { backgroundColor: "#81c784", color: "white", padding: "0px 5px", borderRadius: "3px" })
+                        ? { color: "red" }
+                        : { color: "green" })
                     }}>
                     {deploymentData?.domainExpireIn}
                   </span>
@@ -814,8 +830,8 @@ const ProjectDeployment = () => {
                   <span
                     style={{
                       ...(deploymentData?.domainExpiryStatus === "Expired"
-                        ? { backgroundColor: "#e57373", color: "white", padding: "0px 5px", borderRadius: "3px" }
-                        : { backgroundColor: "#81c784", color: "white", padding: "0px 5px", borderRadius: "3px" })
+                        ? { color: "red" }
+                        : { color: "green" })
                     }}
                   >
                     {deploymentData?.domainExpiryStatus}
@@ -833,8 +849,8 @@ const ProjectDeployment = () => {
                   <span
                     style={{
                       ...(parseInt(deploymentData?.hostingExpireIn) <= 30 || deploymentData?.hostingExpireIn === "Expired"
-                        ? { backgroundColor: "#e57373", color: "white", padding: "0px 5px", borderRadius: "3px" }
-                        : { backgroundColor: "#81c784", color: "white", padding: "0px 5px", borderRadius: "3px" })
+                        ? { color: "red" }
+                        : { color: "green" })
                     }}>
                     {deploymentData?.hostingExpireIn}
                   </span>
@@ -843,8 +859,8 @@ const ProjectDeployment = () => {
                   <span
                     style={{
                       ...(deploymentData?.hostingExpiryStatus === "Expired"
-                        ? { backgroundColor: "#e57373", color: "white", padding: "0px 5px", borderRadius: "3px" }
-                        : { backgroundColor: "#81c784", color: "white", padding: "0px 5px", borderRadius: "3px" })
+                        ? { color: "red" }
+                        : { color: "green" })
                     }}
                   >
                     {deploymentData?.hostingExpiryStatus}
@@ -862,8 +878,8 @@ const ProjectDeployment = () => {
                   <span
                     style={{
                       ...(parseInt(deploymentData?.sslExpireIn) <= 30 || deploymentData?.sslExpireIn === "Expired"
-                        ? { backgroundColor: "#e57373", color: "white", padding: "0px 5px", borderRadius: "3px" }
-                        : { backgroundColor: "#81c784", color: "white", padding: "0px 5px", borderRadius: "3px" })
+                        ? { color: "red" }
+                        : { color: "green" })
                     }}>
                     {deploymentData?.sslExpireIn}
                   </span>
@@ -872,8 +888,8 @@ const ProjectDeployment = () => {
                   <span
                     style={{
                       ...(deploymentData?.sslExpiryStatus === "Expired"
-                        ? { backgroundColor: "#e57373", color: "white", padding: "0px 5px", borderRadius: "3px" }
-                        : { backgroundColor: "#81c784", color: "white", padding: "0px 5px", borderRadius: "3px" })
+                        ? { color: "red" }
+                        : { color: "green" })
                     }}
                   >
                     {deploymentData?.sslExpiryStatus}
