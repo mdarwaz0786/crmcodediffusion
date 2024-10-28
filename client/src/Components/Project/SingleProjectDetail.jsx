@@ -132,113 +132,113 @@ const SingleProjectDetail = () => {
             <div>
               {
                 (fieldPermissions?.projectName?.show) && (
-                  <h3 className="card-title mb-4">{data?.projectName}</h3>
+                  <h4 className="card-title mb-3">{data?.projectName}</h4>
                 )
               }
               <div className="row">
-                <div className="col-md-6 mb-3">
+                <div className="col-md-6 mb-0">
                   {
                     (fieldPermissions?.projectName?.show) && (
-                      <p><strong>Project Name:</strong> {data?.projectName}</p>
+                      <p className="mb-2"><strong>Project Name:</strong> {data?.projectName}</p>
                     )
                   }
                   {
                     (fieldPermissions?.projectId?.show) && (
-                      <p><strong>Project ID:</strong> {data?.projectId}</p>
+                      <p className="mb-2"><strong>Project ID:</strong> {data?.projectId}</p>
                     )
                   }
                   {
                     (fieldPermissions?.customer?.show) && (
-                      <p><strong>Client Name:</strong> {data?.customer?.name}</p>
+                      <p className="mb-2"><strong>Client Name:</strong> {data?.customer?.name}</p>
                     )
                   }
                 </div>
-                <div className="col-md-6 mb-3">
+                <div className="col-md-6 mb-0">
                   {
                     (fieldPermissions?.projectType?.show) && (
-                      <p><strong>Project Type:</strong> {data?.projectType?.name}</p>
+                      <p className="mb-2"><strong>Project Type:</strong> {data?.projectType?.name}</p>
                     )
                   }
                   {
                     (fieldPermissions?.projectCategory?.show) && (
-                      <p><strong>Project Category:</strong> {data?.projectCategory?.name}</p>
+                      <p className="mb-2"><strong>Project Category:</strong> {data?.projectCategory?.name}</p>
                     )
                   }
                   {
                     (fieldPermissions?.projectTiming?.show) && (
-                      <p><strong>Project Timeline:</strong> {data?.projectTiming?.name}</p>
+                      <p className="mb-2"><strong>Project Timeline:</strong> {data?.projectTiming?.name}</p>
                     )
                   }
                 </div>
               </div>
               <div className="row">
-                <div className="col-md-6 mb-3">
+                <div className="col-md-6 mb-0">
                   {
                     (fieldPermissions?.projectStatus?.show) && (
-                      <p><strong>Project Status:</strong> {data?.projectStatus?.status}</p>
+                      <p className="mb-2"><strong>Project Status:</strong> {data?.projectStatus?.status}</p>
                     )
                   }
                   {
                     (fieldPermissions?.startDate?.show) && (
-                      <p><strong>Start Date:</strong> {formatDate(data?.startDate)}</p>
+                      <p className="mb-2"><strong>Start Date:</strong> {formatDate(data?.startDate)}</p>
                     )
                   }
                   {
                     (fieldPermissions?.endDate?.show) && (
-                      <p><strong>End Date:</strong> {formatDate(data?.endDate)}</p>
+                      <p className="mb-2"><strong>End Date:</strong> {formatDate(data?.endDate)}</p>
                     )
                   }
                 </div>
-                <div className="col-md-6 mb-3">
+                <div className="col-md-6 mb-0">
                   {
                     (fieldPermissions?.projectPriority?.show) && (
-                      <p><strong>Project Priority:</strong> {data?.projectPriority?.name}</p>
+                      <p className="mb-2"><strong>Project Priority:</strong> {data?.projectPriority?.name}</p>
                     )
                   }
                   {
                     (fieldPermissions?.responsiblePerson?.show) && (
-                      <p><strong>Responsible Person:</strong> {data?.responsiblePerson?.map((member) => member?.name).join(', ')}</p>
+                      <p className="mb-2"><strong>Responsible Person:</strong> {data?.responsiblePerson?.map((member) => member?.name).join(', ')}</p>
                     )
                   }
                   {
                     (fieldPermissions?.teamLeader?.show) && (
-                      <p><strong>Team Leader:</strong> {data?.teamLeader?.map((member) => member?.name).join(', ')}</p>
+                      <p className="mb-2"><strong>Team Leader:</strong> {data?.teamLeader?.map((member) => member?.name).join(', ')}</p>
                     )
                   }
                 </div>
               </div>
               <div className="row">
-                <div className="col-md-6 mb-3">
+                <div className="col-md-6 mb-0">
                   {
                     (fieldPermissions?.totalHour?.show) && (
-                      <p><strong>Total Hour:</strong> {convertToHoursAndMinutes(data?.totalHour)}</p>
+                      <p className="mb-2"><strong>Total Hour:</strong> {convertToHoursAndMinutes(data?.totalHour)}</p>
                     )
                   }
                   {
                     (fieldPermissions?.totalSpentHour?.show) && (
-                      <p><strong>Total Spent Hour:</strong> {convertToHoursAndMinutes(data?.totalSpentHour)}</p>
+                      <p className="mb-2"><strong>Total Spent Hour:</strong> {convertToHoursAndMinutes(data?.totalSpentHour)}</p>
                     )
                   }
                   {
                     (fieldPermissions?.totalRemainingHour?.show) && (
-                      <p><strong>Total Remaining Hour:</strong> {convertToHoursAndMinutes(data?.totalRemainingHour)}</p>
+                      <p className="mb-2"><strong>Total Remaining Hour:</strong> {convertToHoursAndMinutes(data?.totalRemainingHour)}</p>
                     )
                   }
                 </div>
-                <div className="col-md-6 mb-3">
+                <div className="col-md-6 mb-0">
                   {
                     (fieldPermissions?.projectPrice?.show) && (
-                      <p><strong>Project Cost:</strong> ₹{data?.projectPrice}</p>
+                      <p className="mb-2"><strong>Project Cost:</strong> ₹{data?.projectPrice}</p>
                     )
                   }
                   {
                     (fieldPermissions?.totalPaid?.show) && (
-                      <p><strong>Total Received:</strong> ₹{data?.totalPaid}</p>
+                      <p className="mb-2"><strong>Total Received:</strong> ₹{data?.totalPaid}</p>
                     )
                   }
                   {
                     (fieldPermissions?.totalDues?.show) && (
-                      <p><strong>Total Dues:</strong> ₹{data?.totalDues}</p>
+                      <p className="mb-2"><strong>Total Dues:</strong> ₹{data?.totalDues}</p>
                     )
                   }
                 </div>
@@ -246,7 +246,7 @@ const SingleProjectDetail = () => {
               <div className="row">
                 {
                   (fieldPermissions?.technology?.show) && (
-                    <p><strong>Technology Used:</strong> {data?.technology?.map((t) => t?.name).join(', ')}</p>
+                    <p className="mb-0"><strong>Technology Used:</strong> {data?.technology?.map((t) => t?.name).join(', ')}</p>
                   )
                 }
               </div>
@@ -256,7 +256,7 @@ const SingleProjectDetail = () => {
           {
             (fieldPermissions?.payment?.show) && (
               <>
-                <h4 style={{ marginTop: "5rem", marginBottom: "1rem", textAlign: "center" }}>History of Received Payment</h4>
+                <h5 style={{ marginTop: "5rem", fontSize: "1.15rem", marginBottom: "1rem", textAlign: "center" }}>History of Received Payment</h5>
                 <div style={{ display: "flex", columnGap: "1rem" }}>
                   <div style={{ fontSize: "0.95rem", marginBottom: "0.5rem" }}><strong style={{ color: "#6F6F6F" }}>Project Cost: </strong>₹{data?.projectPrice},</div>
                   <div style={{ fontSize: "0.95rem", marginBottom: "0.5rem" }}><strong style={{ color: "#6F6F6F" }}>Total Dues: </strong>₹{data?.totalDues}</div>
@@ -299,7 +299,7 @@ const SingleProjectDetail = () => {
           {
             (fieldPermissions?.workDetail?.show) && (
               <>
-                <h4 style={{ marginTop: "5rem", marginBottom: "1rem", textAlign: "center" }}>History of Daily Work Summary</h4>
+                <h5 style={{ marginTop: "5rem", fontSize: "1.15rem", marginBottom: "1rem", textAlign: "center" }}>History of Daily Work Summary</h5>
                 {
                   Object.keys(groupedWorkDetail)?.map((memberName) => (
                     <div key={memberName} className="mb-5">

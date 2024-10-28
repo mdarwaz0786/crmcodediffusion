@@ -336,7 +336,7 @@ const ProformaInvoiceList = () => {
                   <div className="col-4">
                     <h4 className="page-title">Proforma Invoices<span className="count-title">{total}</span></h4>
                   </div>
-                  <div className="col-4">
+                  <div className="col-4 mb-3">
                     {
                       permissions?.export && (
                         <button className="btn btn-secondary" onClick={generatePDFsAndZip}>Download All</button>
