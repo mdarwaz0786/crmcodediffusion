@@ -326,7 +326,7 @@ const PurchaseInvoice = () => {
                   <div className="col-4">
                     <h4 className="page-title">Purchase Invoice<span className="count-title">{total}</span></h4>
                   </div>
-                  <div className="col-4">
+                  <div className="col-4 mb-3">
                     {
                       permissions?.export && (
                         <button className="btn btn-secondary" onClick={downloadAllPurchaseInvoicePDFsAsZip}>Download All</button>
@@ -411,6 +411,7 @@ const PurchaseInvoice = () => {
                     <div className="sortby-list">
                       <ul>
                         <li>
+                          <label className="pb-1">Sort:</label>
                           <div className="sort-dropdown drop-down">
                             <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown"><i className="ti ti-sort-ascending-2" />{filters.sort}</Link>
                             <div className="dropdown-menu  dropdown-menu-start">
@@ -432,13 +433,14 @@ const PurchaseInvoice = () => {
                           </div>
                         </li>
                         <li>
+                          <label className="pb-1">Year:</label>
                           <select
                             id="year"
-                            value={filters.year || new Date().getFullYear()}
+                            value={filters.year}
                             onChange={handleYearChange}
                             className="form-select"
                           >
-                            <option value="">Year</option>
+                            <option value="">All</option>
                             {
                               // Generate the years dynamically, starting from the current year and going backwards 10 year
                               Array.from({ length: 10 }, (_, i) => {
@@ -449,13 +451,14 @@ const PurchaseInvoice = () => {
                           </select>
                         </li>
                         <li>
+                          <label className="pb-1">Month:</label>
                           <select
                             id="month"
                             value={filters.month}
                             onChange={handleMonthChange}
                             className="form-select"
                           >
-                            <option value="">Month</option>
+                            <option value="">All</option>
                             <option value="01">January</option>
                             <option value="02">February</option>
                             <option value="03">March</option>
@@ -472,7 +475,7 @@ const PurchaseInvoice = () => {
                         </li>
                       </ul>
                     </div>
-                    <div className="filter-list">
+                    <div className="filter-list pt-4">
                       <ul>
                         <li>
                           <div className="form-sorts dropdown">
@@ -708,7 +711,7 @@ const PurchaseInvoice = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div >
     </>
   );
 };

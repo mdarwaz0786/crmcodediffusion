@@ -24,8 +24,10 @@ const EditPurchaseInvoice = () => {
     const selectedFiles = Array.from(e.target.files);
     setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
 
-    const previewUrls = selectedFiles.map((file) => URL.createObjectURL(file));
-    setFilePreviews((prevPreviews) => [...prevPreviews, ...previewUrls]);
+    // Reset file input field
+    if (fileInputRef.current) {
+      fileInputRef.current.value = null;
+    };
   };
 
   const fetchSinglePurchaseInvoice = async (id) => {
@@ -43,19 +45,19 @@ const EditPurchaseInvoice = () => {
 
         // Handle Base64 files from the response
         const base64Files = response?.data?.purchaseInvoice?.bill || [];
-        const base64Previews = base64Files.map(file => {
+        const base64Previews = base64Files?.map((file) => {
           let fileType;
-          if (file.startsWith('/9j/')) {
+
+          if (file?.startsWith('/9j/')) {
             fileType = 'image/jpeg';
-          } else if (file.startsWith('iVBORw0KGgo')) {
+          } else if (file?.startsWith('iVBORw0KGgo')) {
             fileType = 'image/png';
-          } else if (file.startsWith('JVBERi0x')) {
+          } else if (file?.startsWith('JVBERi0x')) {
             fileType = 'application/pdf';
           };
           return `data:${fileType};base64,${file}`;
         });
 
-        setFiles(base64Files);
         setFilePreviews(base64Previews);
       };
     } catch (error) {
@@ -70,10 +72,8 @@ const EditPurchaseInvoice = () => {
   }, [isLoading, team, permissions, id]);
 
   const removeFile = (index) => {
-    const updatedFiles = files.filter((_, i) => i !== index);
-    const updatedPreviews = filePreviews.filter((_, i) => i !== index);
+    const updatedFiles = files?.filter((_, i) => i !== index);
     setFiles(updatedFiles);
-    setFilePreviews(updatedPreviews);
   };
 
   const handleUpdate = async (e, id) => {
@@ -84,7 +84,7 @@ const EditPurchaseInvoice = () => {
       formData.append("amount", amount);
       formData.append("date", date);
 
-      for (let i = 0; i < files.length; i++) {
+      for (let i = 0; i < files?.length; i++) {
         formData.append("bills", files[i]);
       };
 
@@ -159,42 +159,30 @@ const EditPurchaseInvoice = () => {
             </div>
           </div>
         </div>
-        {/* Display the previews of selected files */}
+        {/* Display the previews of existing files */}
         <div className="row">
           <div className="col-md-12">
             {
-              filePreviews.length > 0 && (
+              filePreviews?.length > 0 && (
                 <div className="d-flex flex-wrap">
                   {
-                    filePreviews.map((preview, index) => (
+                    filePreviews?.map((preview, index) => (
                       <div key={index} className="position-relative me-5 mb-3">
                         {
-                          preview.startsWith('data:image/') ? (
+                          preview?.startsWith('data:image/') ? (
                             // Display image preview
                             <div className="position-relative">
                               <img src={preview} alt={`File ${index}`} style={{ width: "143px", height: "200.5px", borderRadius: "4px", objectFit: "fill" }} />
-                              {/* Remove button */}
-                              <button className="btn btn-danger btn-sm position-absolute top-0" onClick={() => removeFile(index)} style={{ right: "0", zIndex: 1 }}>
-                                <i className="fas fa-trash-alt"></i>
-                              </button>
                             </div>
-                          ) : preview.startsWith('data:application/pdf') ? (
+                          ) : preview?.startsWith('data:application/pdf') ? (
                             // Display PDF preview
                             <div className="position-relative">
                               <embed src={preview} type="application/pdf" width="143px" height="200.5px" style={{ borderRadius: "4px", objectFit: "fill" }} />
-                              {/* Remove button */}
-                              <button className="btn btn-danger btn-sm position-absolute top-0" onClick={() => removeFile(index)} style={{ right: "0", zIndex: 1 }}>
-                                <i className="fas fa-trash-alt"></i>
-                              </button>
                             </div>
                           ) : (
-                            // For other files, show as a downloadable link
+                            // For other files type, show as a downloadable link
                             <div className="position-relative">
-                              <a href={preview} target="_blank" rel="noopener noreferrer" className="text-decoration-none">Download File</a>
-                              {/* Remove button */}
-                              <button className="btn btn-danger btn-sm position-absolute top-0" onClick={() => removeFile(index)} title="Remove file" style={{ right: "0", zIndex: 1 }}>
-                                <i className="fas fa-trash-alt"></i>
-                              </button>
+                              <a href={preview} target="_blank" rel="noopener noreferrer" className="text-decoration-none">{preview?.name}</a>
                             </div>
                           )
                         }
@@ -202,6 +190,49 @@ const EditPurchaseInvoice = () => {
                     ))
                   }
                 </div>
+              )
+            }
+            {/* Display the previews of new selected files */}
+            {
+              files?.length > 0 && (
+                <>
+                  <h4 className="mb-3 mt-3">New File</h4>
+                  <div className="d-flex flex-wrap">
+                    {
+                      files?.map((file, index) => (
+                        <div key={index} className="position-relative me-5 mb-3">
+                          {
+                            file?.type?.startsWith("image/") ? (
+                              // Display image preview
+                              <div className="position-relative">
+                                <img src={filePreviews[index]} alt={file?.name} style={{ width: "143px", height: "200.5px", borderRadius: "4px", objectFit: "fill" }} />
+                                <button className="btn btn-danger btn-sm position-absolute top-0" onClick={() => removeFile(index)} style={{ right: "0", zIndex: 1 }}>
+                                  <i className="fas fa-trash-alt"></i>
+                                </button>
+                              </div>
+                            ) : file?.type === "application/pdf" ? (
+                              // Display PDF preview
+                              <div className="position-relative">
+                                <embed src={filePreviews[index]} type="application/pdf" width="143px" height="200.5px" style={{ borderRadius: "4px", objectFit: "fill" }} />
+                                <button className="btn btn-danger btn-sm position-absolute top-0" onClick={() => removeFile(index)} style={{ right: "0", zIndex: 1 }}>
+                                  <i className="fas fa-trash-alt"></i>
+                                </button>
+                              </div>
+                            ) : (
+                              // For other files type, show as a downloadable link
+                              <div className="position-relative">
+                                <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer" className="text-decoration-none">{file?.name}</a>
+                                <button className="btn btn-danger btn-sm position-absolute top-0" onClick={() => removeFile(index)} title="Remove file" style={{ right: "0", zIndex: 1 }}>
+                                  <i className="fas fa-trash-alt"></i>
+                                </button>
+                              </div>
+                            )
+                          }
+                        </div>
+                      ))
+                    }
+                  </div>
+                </>
               )
             }
           </div>

@@ -22,23 +22,29 @@ const AddPurchaseInvoice = () => {
     const selectedFiles = Array.from(e.target.files); // Convert FileList to an array
     setFiles((prevFiles) => [...prevFiles, ...selectedFiles]); // Append new files
 
+    // Reset file input field
+    if (fileInputRef.current) {
+      fileInputRef.current.value = null;
+    };
+
     // Generate file preview URLs for images and PDFs
-    const previewUrls = selectedFiles.map((file) => {
-      if (file.type.startsWith("image/")) {
+    const previewUrls = selectedFiles?.map((file) => {
+      if (file?.type?.startsWith("image/")) {
         return URL.createObjectURL(file);
-      } else if (file.type === "application/pdf") {
+      } else if (file?.type === "application/pdf") {
         return URL.createObjectURL(file);
       } else {
         return null;
       };
     });
+
     setFilePreviews((prevPreviews) => [...prevPreviews, ...previewUrls]); // Append new preview URLs
   };
 
   // Remove file and corresponding preview
   const removeFile = (index) => {
-    const updatedFiles = files.filter((_, i) => i !== index); // Remove the file from files array
-    const updatedPreviews = filePreviews.filter((_, i) => i !== index); // Remove the preview from previews array
+    const updatedFiles = files?.filter((_, i) => i !== index); // Remove the file from files array
+    const updatedPreviews = filePreviews?.filter((_, i) => i !== index); // Remove the preview from previews array
     setFiles(updatedFiles);
     setFilePreviews(updatedPreviews);
   };
@@ -52,11 +58,10 @@ const AddPurchaseInvoice = () => {
       formData.append("date", date);
 
       // Append each file to FormData
-      for (let i = 0; i < files.length; i++) {
+      for (let i = 0; i < files?.length; i++) {
         formData.append("bills", files[i]);
       };
 
-      console.log(formData);
       const response = await axios.post(`${base_url}/api/v1/purchaseInvoice/create-purchaseInvoice`, formData, {
         headers: {
           Authorization: validToken,
@@ -122,7 +127,6 @@ const AddPurchaseInvoice = () => {
               <input type="file" className="form-control" name="bill" id="bill" multiple onChange={handleFileChange} ref={fileInputRef} />
             </div>
           </div>
-
           <div className="col-md-6">
             <div className="form-wrap">
               <label className="col-form-label" htmlFor="date">Date</label>
@@ -134,35 +138,32 @@ const AddPurchaseInvoice = () => {
         <div className="row">
           <div className="col-md-12">
             {
-              files.length > 0 && (
+              files?.length > 0 && (
                 <div className="d-flex flex-wrap">
                   {
-                    files.map((file, index) => (
+                    files?.map((file, index) => (
                       <div key={index} className="position-relative me-5 mb-3">
                         {
-                          file.type.startsWith("image/") ? (
+                          file?.type?.startsWith("image/") ? (
                             // Display image preview
                             <div className="position-relative">
                               <img src={filePreviews[index]} alt={file.name} style={{ width: "143px", height: "200.5px", borderRadius: "4px", objectFit: "fill" }} />
-                              {/* Remove button*/}
                               <button className="btn btn-danger btn-sm position-absolute top-0" onClick={() => removeFile(index)} style={{ right: "0", zIndex: 1 }}>
                                 <i className="fas fa-trash-alt"></i>
                               </button>
                             </div>
-                          ) : file.type === "application/pdf" ? (
+                          ) : file?.type === "application/pdf" ? (
                             // Display PDF preview
                             <div className="position-relative">
                               <embed src={filePreviews[index]} type="application/pdf" width="143px" height="200.5px" style={{ borderRadius: "4px", objectFit: "fill" }} />
-                              {/* Remove button */}
                               <button className="btn btn-danger btn-sm position-absolute top-0" onClick={() => removeFile(index)} style={{ right: "0", zIndex: 1 }}>
                                 <i className="fas fa-trash-alt"></i>
                               </button>
                             </div>
                           ) : (
-                            // For other files, show as a downloadable link
+                            // For other files type, show as a downloadable link
                             <div className="position-relative">
-                              <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer" className="text-decoration-none">{file.name}</a>
-                              {/* Remove button*/}
+                              <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer" className="text-decoration-none">{file?.name}</a>
                               <button className="btn btn-danger btn-sm position-absolute top-0" onClick={() => removeFile(index)} title="Remove file" style={{ right: "0", zIndex: 1 }}>
                                 <i className="fas fa-trash-alt"></i>
                               </button>

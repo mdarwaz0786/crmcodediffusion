@@ -421,6 +421,7 @@ const ProformaInvoiceList = () => {
                     <div className="sortby-list">
                       <ul>
                         <li>
+                          <label className="pb-1">Sort:</label>
                           <div className="sort-dropdown drop-down">
                             <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown"><i className="ti ti-sort-ascending-2" />{filters.sort}</Link>
                             <div className="dropdown-menu dropdown-menu-start">
@@ -442,13 +443,14 @@ const ProformaInvoiceList = () => {
                           </div>
                         </li>
                         <li>
+                          <label className="pb-1">Year:</label>
                           <select
                             id="year"
-                            value={filters.year || new Date().getFullYear()}
+                            value={filters.year}
                             onChange={handleYearChange}
                             className="form-select"
                           >
-                            <option value="">Year</option>
+                            <option value="">All</option>
                             {
                               // Generate the years dynamically, starting from the current year and going backwards 10 year
                               Array.from({ length: 10 }, (_, i) => {
@@ -459,13 +461,14 @@ const ProformaInvoiceList = () => {
                           </select>
                         </li>
                         <li>
+                          <label className="pb-1">Month:</label>
                           <select
                             id="month"
                             value={filters.month}
                             onChange={handleMonthChange}
                             className="form-select"
                           >
-                            <option value="">Month</option>
+                            <option value="">All</option>
                             <option value="01">January</option>
                             <option value="02">February</option>
                             <option value="03">March</option>
@@ -482,7 +485,7 @@ const ProformaInvoiceList = () => {
                         </li>
                       </ul>
                     </div>
-                    <div className="filter-list">
+                    <div className="filter-list pt-4">
                       <ul>
                         <li>
                           <div className="form-sorts dropdown">

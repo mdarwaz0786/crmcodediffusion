@@ -38,14 +38,14 @@ const SinglePurchaseInvoice = () => {
         setDate(response?.data?.purchaseInvoice?.date);
 
         const base64Files = response?.data?.purchaseInvoice?.bill || [];
-        const base64Previews = base64Files.map((file) => {
+        const base64Previews = base64Files?.map((file) => {
           let fileType;
 
-          if (file.startsWith('/9j/')) {
+          if (file?.startsWith('/9j/')) {
             fileType = 'image/jpeg';
-          } else if (file.startsWith('iVBORw0KGgo')) {
+          } else if (file?.startsWith('iVBORw0KGgo')) {
             fileType = 'image/png';
-          } else if (file.startsWith('JVBERi0x')) {
+          } else if (file?.startsWith('JVBERi0x')) {
             fileType = 'application/pdf';
           };
           return `data:${fileType};base64,${file}`;
@@ -249,8 +249,8 @@ const SinglePurchaseInvoice = () => {
                                   src={preview}
                                   type="application/pdf"
                                   width="286px"
-                                  height="401px"
-                                  style={{ borderRadius: "4px", objectFit: "fill" }}
+                                  height="435px"
+                                  style={{ borderRadius: "4px", objectFit: "cover" }}
                                 />
                               </div>
                               <div className="position-relative" style={{ marginTop: "0.3rem" }}>
@@ -266,7 +266,7 @@ const SinglePurchaseInvoice = () => {
                               </div>
                             </>
                           ) : (
-                            // For other files, show as a downloadable link
+                            // For other files type, show as a downloadable link
                             <div className="position-relative" style={{ marginTop: "0.3rem" }}>
                               <a
                                 href={preview}
@@ -275,7 +275,7 @@ const SinglePurchaseInvoice = () => {
                                 download={`File_${index}`}
                                 className="text-decoration-none"
                               >
-                                Download File
+                                Download
                               </a>
                             </div>
                           )
