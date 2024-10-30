@@ -4,6 +4,7 @@ import cors from "cors";
 import path from "path";
 import compression from "compression";
 import connectDatabase from "./src/database/connectDatabase.js";
+import "./src/utils/emailScheduler.js";
 import testRoute from "./src/routes/test.route.js";
 import customerRoute from "./src/routes/customer.route.js";
 import projectTypeRoute from "./src/routes/projectType.route.js";

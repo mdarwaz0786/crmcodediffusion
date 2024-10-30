@@ -711,7 +711,7 @@ const PurchaseInvoice = () => {
             </div>
           </div>
         </div>
-      </div >
+      </div>
     </>
   );
 };
