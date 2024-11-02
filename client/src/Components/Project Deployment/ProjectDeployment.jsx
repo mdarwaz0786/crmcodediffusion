@@ -444,7 +444,7 @@ const ProjectDeployment = () => {
                         </li>
                       </ul>
                     </div>
-                    <div className="filter-list">
+                    <div className="filter-list pt-4">
                       <ul>
                         <li>
                           <div className="form-sorts dropdown">
