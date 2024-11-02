@@ -404,42 +404,42 @@ const ProjectDeployment = () => {
                           </div>
                         </li>
                         <li>
-                          <label className="pb-1">Domain:</label>
+                          <label className="pb-1">Domain Expiry:</label>
                           <select
                             className="form-select"
                             value={filters.domainFilter}
                             onChange={(e) => setFilters({ ...filters, domainFilter: e.target.value, page: 1 })}
                           >
                             <option value="">All</option>
-                            <option value="week">This Week</option>
-                            <option value="month">This Month</option>
+                            <option value="week">Next 7 Days</option>
                             <option value="15days">Next 15 Days</option>
+                            <option value="month">Next 30 Days</option>
                           </select>
                         </li>
                         <li>
-                          <label className="pb-1">Hosting:</label>
+                          <label className="pb-1">Hosting Expiry:</label>
                           <select
                             className="form-select"
                             value={filters.hostingFilter}
                             onChange={(e) => setFilters({ ...filters, hostingFilter: e.target.value, page: 1 })}
                           >
                             <option value="">All</option>
-                            <option value="week">This Week</option>
-                            <option value="month">This Month</option>
+                            <option value="week">Next 7 Days</option>
                             <option value="15days">Next 15 Days</option>
+                            <option value="month">Next 30 Days</option>
                           </select>
                         </li>
                         <li>
-                          <label className="pb-1">SSL:</label>
+                          <label className="pb-1">SSL Expiry:</label>
                           <select
                             className="form-select"
                             value={filters.sslFilter}
                             onChange={(e) => setFilters({ ...filters, sslFilter: e.target.value, page: 1 })}
                           >
                             <option value="">All</option>
-                            <option value="week">This Week</option>
-                            <option value="month">This Month</option>
+                            <option value="week">Next 7 Days</option>
                             <option value="15days">Next 15 Days</option>
+                            <option value="month">Next 30 Days</option>
                           </select>
                         </li>
                       </ul>

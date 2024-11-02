@@ -8,7 +8,7 @@ import { sendEmail } from '../../services/emailService.js';
 dotenv.config();
 
 // Schedule a task to run every day at 9 AM
-cron.schedule('0 9 * * *', async () => {
+cron.schedule('30 12 * * *', async () => {
   try {
     const notifications = await ProjectDeployment.find({
       $or: [
