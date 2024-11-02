@@ -1,8 +1,8 @@
 // scheduler.js
 import cron from 'node-cron';
 import dotenv from "dotenv";
-import ProjectDeployment from '../models/projectDeployment.model.js';
-import { sendEmail } from './emailService.js';
+import ProjectDeployment from '../../models/projectDeployment.model.js';
+import { sendEmail } from '../../services/emailService.js';
 
 // Dotenv configuration
 dotenv.config();
@@ -32,8 +32,8 @@ cron.schedule('0 9 * * *', async () => {
       };
 
       // Send email to two receivers
-      await sendEmail("mdarwaznew2023@gmail.com", subject, htmlContent);
-      await sendEmail("info@codediffusion.in", subject, htmlContent);
+      await sendEmail(process.env.FIRST_RECEIVER_EMAIL_ID, subject, htmlContent);
+      await sendEmail(process.env.SECOND_RECEIVER_EMAIL_ID, subject, htmlContent);
     });
   } catch (error) {
     console.error('Error during schedulingtask:', error.message);
