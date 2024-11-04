@@ -28,6 +28,14 @@ const teamSchema = new mongoose.Schema(
     dob: {
       type: String,
     },
+    monthlySalary: {
+      type: String,
+      required: true,
+    },
+    requiredHoursPerDay: {
+      type: String,
+      default: "8:30",
+    },
     designation: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Designation",

@@ -13,9 +13,9 @@ const getNextEmployeeId = async () => {
 export const createTeam = async (req, res) => {
   try {
     const employeeId = await getNextEmployeeId();
-    const { name, email, password, mobile, joining, dob, designation, role, reportingTo } = req.body;
+    const { name, email, password, mobile, joining, dob, monthlySalary, requiredHoursPerDay, designation, role, reportingTo } = req.body;
 
-    const team = new Team({ employeeId, name, email, password, mobile, joining, dob, designation, role, reportingTo });
+    const team = new Team({ employeeId, name, email, password, mobile, joining, dob, monthlySalary, requiredHoursPerDay, designation, role, reportingTo });
     await team.save();
 
     return res.status(200).json({ success: true, message: "Employee created successfully", team });
@@ -50,6 +50,8 @@ export const loginTeam = async (req, res) => {
       password: team.password,
       joining: team.joining,
       dob: team.dob,
+      monthlySalary: team.monthlySalary,
+      requiredHoursPerDay: team.requiredHoursPerDay,
       designation: team.designation._id,
       role: team.role._id,
       reportingTo: team.reportingTo._id,
@@ -62,6 +64,8 @@ export const loginTeam = async (req, res) => {
         team.password,
         team.joining,
         team.dob,
+        team.monthlySalary,
+        team.requiredHoursPerDay,
         team.designation._id,
         team.role._id,
         team.reportingTo._id,
@@ -169,6 +173,8 @@ export const fetchAllTeam = async (req, res) => {
         { email: { $regex: searchRegex } },
         { mobile: { $regex: searchRegex } },
         { password: { $regex: searchRegex } },
+        { monthlySalary: { $regex: searchRegex } },
+        { requiredHoursPerDay: { $regex: searchRegex } },
         { joining: { $regex: searchRegex } },
         { dob: { $regex: searchRegex } },
         { designation: await findObjectIdByString('Designation', 'name', req.query.search) },

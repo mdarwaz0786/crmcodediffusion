@@ -15,6 +15,7 @@ const EditTeamMember = () => {
   const [mobile, setMobile] = useState("");
   const [joining, setJoining] = useState("");
   const [dob, setDob] = useState("");
+  const [monthlySalary, setMonthlySalary] = useState("");
   const [designation, setDesignation] = useState([]);
   const [selectedDesignation, setSelectedDesignation] = useState("");
   const [role, setRole] = useState([]);
@@ -99,6 +100,7 @@ const EditTeamMember = () => {
         setMobile(response?.data?.team?.mobile);
         setJoining(response?.data?.team?.joining);
         setDob(response?.data?.team?.dob);
+        setMonthlySalary(response?.data?.team?.monthlySalary);
         setSelectedDesignation(response?.data?.team?.designation?._id);
         setPassword(response?.data?.team?.password);
         setSelectedRole(response?.data?.team?.role?._id);
@@ -138,6 +140,14 @@ const EditTeamMember = () => {
       updateData.dob = dob;
     };
 
+    if (fieldPermissions?.dob?.show && !fieldPermissions?.dob?.read) {
+      updateData.monthlySalary = monthlySalary;
+    };
+
+    if (fieldPermissions?.requiredHoursPerDay?.show && !fieldPermissions?.requiredHoursPerDay?.read) {
+      updateData.requiredHoursPerDay = "8:30";
+    };
+
     if (fieldPermissions?.designation?.show && !fieldPermissions?.designation?.read) {
       updateData.designation = selectedDesignation;
     };
@@ -167,6 +177,7 @@ const EditTeamMember = () => {
         setMobile("");
         setJoining("");
         setDob("");
+        setMonthlySalary("");
         setSelectedRole("");
         setSelectedDesignation("");
         setSelectedReportingTo([]);
@@ -237,6 +248,16 @@ const EditTeamMember = () => {
             )
           }
           {
+            (fieldPermissions?.password?.show) && (
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label" htmlFor="password">Password <span className="text-danger">*</span></label>
+                  <input type="text" className={`form-control ${fieldPermissions?.password?.read ? "readonly-style" : ""}`} name="password" id="password" value={password} onChange={(e) => fieldPermissions?.password?.read ? null : setPassword(e.target.value)} autoComplete="new-password" />
+                </div>
+              </div>
+            )
+          }
+          {
             (fieldPermissions?.mobile?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
@@ -267,6 +288,16 @@ const EditTeamMember = () => {
             )
           }
           {
+            (fieldPermissions?.monthlySalary?.show) && (
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label" htmlFor="dob">monthlySalary <span className="text-danger">*</span></label>
+                  <input type="text" className={`form-control ${fieldPermissions?.monthlySalary?.read ? "readonly-style" : ""}`} name="monthlySalary" id="monthlySalary" value={monthlySalary} onChange={(e) => fieldPermissions?.monthlySalary?.read ? null : setMonthlySalary(e.target.value)} />
+                </div>
+              </div>
+            )
+          }
+          {
             (fieldPermissions?.designation?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
@@ -284,18 +315,25 @@ const EditTeamMember = () => {
             )
           }
           {
-            (fieldPermissions?.password?.show) && (
+            (fieldPermissions?.role?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="password">Password <span className="text-danger">*</span></label>
-                  <input type="text" className={`form-control ${fieldPermissions?.password?.read ? "readonly-style" : ""}`} name="password" id="password" value={password} onChange={(e) => fieldPermissions?.password?.read ? null : setPassword(e.target.value)} autoComplete="new-password" />
+                  <label className="col-form-label">Role <span className="text-danger">*</span></label>
+                  <select className={`form-select ${fieldPermissions?.role?.read ? "readonly-style" : ""}`} name="role" value={selectedRole} onChange={(e) => fieldPermissions?.role?.read ? null : setSelectedRole(e.target.value)} >
+                    <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
+                    {
+                      role?.map((r) => (
+                        <option key={r?._id} value={r?._id}>{r?.name}</option>
+                      ))
+                    }
+                  </select>
                 </div>
               </div>
             )
           }
           {
             (fieldPermissions?.reportingTo?.show) && (
-              <div className="col-md-6">
+              <div className="col-md-12">
                 <div className="form-wrap">
                   <label className="col-form-label">Reporting To <span className="text-danger"></span></label>
                   <select className={`form-select ${fieldPermissions?.reportingTo?.read ? "readonly-style" : ""}`} name="leader" value="" onChange={(e) => fieldPermissions?.reportingTo?.read ? null : handleSelectChange(e)} >
@@ -316,23 +354,6 @@ const EditTeamMember = () => {
                       ))
                     }
                   </div>
-                </div>
-              </div>
-            )
-          }
-          {
-            (fieldPermissions?.role?.show) && (
-              <div className="col-md-6">
-                <div className="form-wrap">
-                  <label className="col-form-label">Role <span className="text-danger">*</span></label>
-                  <select className={`form-select ${fieldPermissions?.role?.read ? "readonly-style" : ""}`} name="role" value={selectedRole} onChange={(e) => fieldPermissions?.role?.read ? null : setSelectedRole(e.target.value)} >
-                    <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
-                    {
-                      role?.map((r) => (
-                        <option key={r?._id} value={r?._id}>{r?.name}</option>
-                      ))
-                    }
-                  </select>
                 </div>
               </div>
             )

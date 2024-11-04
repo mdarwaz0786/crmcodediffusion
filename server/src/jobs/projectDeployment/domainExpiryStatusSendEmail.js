@@ -33,7 +33,7 @@ cron.schedule('30 12 * * *', async () => {
 
       // Send email to two receivers
       await sendEmail(process.env.FIRST_RECEIVER_EMAIL_ID, subject, htmlContent);
-      await sendEmail(process.env.SECOND_RECEIVER_EMAIL_ID, subject, htmlContent);
+      // await sendEmail(process.env.SECOND_RECEIVER_EMAIL_ID, subject, htmlContent);
     });
   } catch (error) {
     console.error('Error during schedulingtask:', error.message);

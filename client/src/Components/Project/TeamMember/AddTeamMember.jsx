@@ -15,6 +15,7 @@ const AddTeamMember = () => {
   const [mobile, setMobile] = useState("");
   const [joining, setJoining] = useState("");
   const [dob, setDob] = useState("");
+  const [monthlySalary, setMonthlySalary] = useState("");
   const [designation, setDesignation] = useState([]);
   const [selectedDesignation, setSelectedDesignation] = useState("");
   const [role, setRole] = useState([]);
@@ -106,6 +107,10 @@ const AddTeamMember = () => {
         return toast.error("Enter joining date");
       };
 
+      if (!monthlySalary) {
+        return toast.error("Enter monthlySalary");
+      };
+
       if (!dob) {
         return toast.error("Enter date of birth");
       };
@@ -118,7 +123,7 @@ const AddTeamMember = () => {
         return toast.error("Select role");
       };
 
-      const response = await axios.post(`${base_url}/api/v1/team/create-team`, { name, email, password, mobile, joining, dob, role: selectedRole, designation: selectedDesignation, reportingTo: selectedReportingTo }, {
+      const response = await axios.post(`${base_url}/api/v1/team/create-team`, { name, email, password, mobile, joining, dob, monthlySalary, role: selectedRole, designation: selectedDesignation, reportingTo: selectedReportingTo }, {
         headers: {
           Authorization: validToken,
         },
@@ -131,6 +136,7 @@ const AddTeamMember = () => {
         setMobile("");
         setJoining("");
         setDob("");
+        setMonthlySalary("");
         setSelectedDesignation("");
         setSelectedRole("");
         setSelectedReportingTo([]);
@@ -184,6 +190,12 @@ const AddTeamMember = () => {
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
+              <label className="col-form-label" htmlFor="password">Create Password <span className="text-danger">*</span></label>
+              <input type="password" className="form-control" name="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="form-wrap">
               <label className="col-form-label" htmlFor="mobile">Mobile No. <span className="text-danger">*</span></label>
               <input type="text" className="form-control" name="mobile" id="mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} />
             </div>
@@ -203,12 +215,6 @@ const AddTeamMember = () => {
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="password">Create Password <span className="text-danger">*</span></label>
-              <input type="password" className="form-control" name="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
-            </div>
-          </div>
-          <div className="col-md-6">
-            <div className="form-wrap">
               <label className="col-form-label" htmlFor="joining">Joining Date <span className="text-danger">*</span></label>
               <input type="date" className="form-control" name="joining" id="joining" value={joining} onChange={(e) => setJoining(e.target.value)} />
             </div>
@@ -217,6 +223,12 @@ const AddTeamMember = () => {
             <div className="form-wrap">
               <label className="col-form-label" htmlFor="dob">Date of Birth <span className="text-danger">*</span></label>
               <input type="date" className="form-control" name="dob" id="dob" value={dob} onChange={(e) => setDob(e.target.value)} />
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="monthlySalary">Monthly Salary <span className="text-danger">*</span></label>
+              <input type="text" className="form-control" name="monthlySalary" id="monthlySalary" value={monthlySalary} onChange={(e) => setMonthlySalary(e.target.value)} />
             </div>
           </div>
           <div className="col-md-6">
@@ -232,7 +244,7 @@ const AddTeamMember = () => {
               </select>
             </div>
           </div>
-          <div className="col-md-12">
+          <div className="col-md-6">
             <div className="form-wrap">
               <label className="col-form-label">Reporting To <span className="text-danger"></span></label>
               <select className="form-select" name="leader" value="" onChange={handleSelectChange}>

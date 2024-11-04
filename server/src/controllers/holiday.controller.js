@@ -1,98 +1,78 @@
-import Holiday from "../models/holiday.model.js";
-import Attendance from "../models/attendance.model.js";
-import Team from "../models/team.model.js";
-import moment from "moment";
+import Holiday from "../models/holiday.model.js"; // Adjust the import path as per your project structure
 
-// Add a new holiday and mark attendance as holiday with name for all employees
+// Create a new holiday
 export const createHoliday = async (req, res) => {
   try {
-    const { name, date } = req.body;
+    const { reason, date } = req.body;
 
-    // Check if the holiday already exists
-    const existingHoliday = await Holiday.findOne({ date });
+    const newHoliday = new Holiday({
+      reason,
+      date,
+    });
 
-    if (existingHoliday) {
-      return res.status(400).json({ success: false, message: "Holiday already exists on this date." });
-    };
-
-    // Create new holiday
-    const newHoliday = new Holiday({ name, date });
     await newHoliday.save();
-
-    // Fetch all employees
-    const employees = await Team.find();
-
-    // Iterate over each employee and mark attendance as holiday with name
-    for (const employee of employees) {
-      const attendance = await Attendance.findOne({ employee: employee._id, date });
-
-      if (attendance) {
-        // Update existing attendance to holiday
-        attendance.attendance = name;
-        attendance.checkInTime = null;
-        attendance.checkOutTime = null;
-        attendance.totalHoursWorked = null;
-        await attendance.save();
-      } else {
-        // Create a new attendance with holiday name
-        const newAttendance = new Attendance({
-          employee: employee._id,
-          markedBy: req.teamId,
-          attendance: name,
-          date,
-          checkInTime: null,
-          checkOutTime: null,
-          totalHoursWorked: null,
-        });
-        await newAttendance.save();
-      };
-    };
-
-    res.status(201).json({ success: true, message: "Holiday created and attendance marked for all employees." });
+    res.status(201).json({ message: "Holiday created successfully", data: newHoliday });
   } catch (error) {
-    console.log("Error while creating holiday:", error.message);
-    res.status(500).json({ success: false, message: "Error while creating holiday.", error: error.message });
-  };
+    res.status(500).json({ message: "Error creating holiday", error: error.message });
+  }
 };
 
-// Automatically mark Sundays as holiday
-export const markSundaysAsHoliday = async () => {
+// Get all holidays
+export const fetchAllHoliday = async (req, res) => {
   try {
-    // Get the current date
-    const today = moment().format("YYYY-MM-DD");
-
-    // Check if today is Sunday
-    if (moment().day() === 0) { // 0 is Sunday in moment.js
-
-      // Check if the holiday already exists
-      const existingHoliday = await Holiday.findOne({ date: today });
-      if (!existingHoliday) {
-
-        // Create new holiday for Sunday
-        const newHoliday = new Holiday({ name: "Sunday", date: today });
-        await newHoliday.save();
-
-        // Fetch all employees
-        const employees = await Team.find();
-
-        // Mark attendance as Holiday for all employees
-        for (const employee of employees) {
-          const newAttendance = new Attendance({
-            employee: employee._id,
-            markedBy: null,
-            attendance: "Sunday",
-            date: today,
-            checkInTime: null,
-            checkOutTime: null,
-            totalHoursWorked: null,
-          });
-          await newAttendance.save();
-        };
-      };
-    };
+    const holidays = await Holiday.find();
+    res.status(200).json({ data: holidays });
   } catch (error) {
-    console.log("Error while marking Sundays as holiday:", error.message);
-    res.status(500).json({ success: false, message: "Error while marking Sundays as holiday.", error: error.message });
-  };
+    res.status(500).json({ message: "Error fetching holidays", error: error.message });
+  }
 };
 
+// Get a single holiday by ID
+export const fetchSingleHoliday = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const holiday = await Holiday.findById(id);
+
+    if (!holiday) {
+      return res.status(404).json({ message: "Holiday not found" });
+    }
+    res.status(200).json({ data: holiday });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching holiday", error: error.message });
+  }
+};
+
+// Update a holiday
+export const updateHoliday = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason, date } = req.body;
+
+    const updatedHoliday = await Holiday.findByIdAndUpdate(
+      id,
+      { reason, date },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedHoliday) {
+      return res.status(404).json({ message: "Holiday not found" });
+    }
+    res.status(200).json({ message: "Holiday updated successfully", data: updatedHoliday });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating holiday", error: error.message });
+  }
+};
+
+// Delete a holiday
+export const deleteHoliday = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedHoliday = await Holiday.findByIdAndDelete(id);
+    if (!deletedHoliday) {
+      return res.status(404).json({ message: "Holiday not found" });
+    }
+    res.status(200).json({ message: "Holiday deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting holiday", error: error.message });
+  }
+};
