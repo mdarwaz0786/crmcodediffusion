@@ -14,9 +14,10 @@ const calculateExpiry = (expiryDate) => {
   };
 };
 
-// Running daily at midnight to update expiration fields
-cron.schedule('0 0 * * *', async () => {
+// Running daily at 8 AM to update expiration fields
+cron.schedule('0 8 * * *', async () => {
   try {
+    console.log("expiry status update runs");
     const projectDeployments = await ProjectDeployment.find();
 
     for (const project of projectDeployments) {
@@ -38,7 +39,6 @@ cron.schedule('0 0 * * *', async () => {
       });
     };
 
-    console.log("Expiration fields updated successfully.");
   } catch (error) {
     console.error("Error while updating expiration fields:", error.message);
   };

@@ -27,6 +27,10 @@ const projectDeploymentSchema = new mongoose.Schema(
       type: String,
       enum: ["Live", "Expired"],
     },
+    domainExpiryNotified: {
+      type: Boolean,
+      default: false,
+    },
     hostingPurchaseDate: {
       type: String,
     },
@@ -39,6 +43,10 @@ const projectDeploymentSchema = new mongoose.Schema(
     hostingExpiryStatus: {
       type: String,
       enum: ["Live", "Expired"],
+    },
+    hostingExpiryNotified: {
+      type: Boolean,
+      default: false,
     },
     sslPurchaseDate: {
       type: String,
@@ -53,16 +61,23 @@ const projectDeploymentSchema = new mongoose.Schema(
       type: String,
       enum: ["Live", "Expired"],
     },
+    sslExpiryNotified: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
   },
 );
 
+// Capitalize words in websiteName before saving
 projectDeploymentSchema.pre("save", function (next) {
-  // Helper function to capitalize first letter of each word
   const capitalizeWords = (str) => {
-    return str.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
+    return str
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
   };
 
   if (this.websiteName) {
