@@ -62,30 +62,6 @@ const AddProjectDeployment = () => {
         return toast.error("Select client");
       };
 
-      if (!domainPurchaseDate) {
-        return toast.error("Enter domain purchase date");
-      };
-
-      if (!domainExpiryDate) {
-        return toast.error("Enter domain expiry date");
-      };
-
-      if (!hostingPurchaseDate) {
-        return toast.error("Enter hosting purchase date");
-      };
-
-      if (!hostingExpiryDate) {
-        return toast.error("Enter hosting expiry date");
-      };
-
-      if (!sslPurchaseDate) {
-        return toast.error("Enter ssl purchase date");
-      };
-
-      if (!sslExpiryDate) {
-        return toast.error("Enter ssl expiry date");
-      };
-
       const response = await axios.post(`${base_url}/api/v1/projectDeployment/create-projectDeployment`, { websiteName, websiteLink, client: selectedClient, domainPurchaseDate, domainExpiryDate, hostingPurchaseDate, hostingExpiryDate, sslPurchaseDate, sslExpiryDate }, {
         headers: {
           Authorization: validToken,
@@ -165,13 +141,13 @@ const AddProjectDeployment = () => {
           }}>Domain</h6>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="domainPurchaseDate">Domain Purchase Date <span className="text-danger">*</span></label>
+              <label className="col-form-label" htmlFor="domainPurchaseDate">Domain Purchase Date <span className="text-danger"></span></label>
               <input type="date" className="form-control" name="domainPurchaseDate" id="domainPurchaseDate" value={domainPurchaseDate} onChange={(e) => setDomainPurchaseDate(e.target.value)} />
             </div>
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="domainExpiryDate">Domain Expiry Date <span className="text-danger">*</span></label>
+              <label className="col-form-label" htmlFor="domainExpiryDate">Domain Expiry Date <span className="text-danger"></span></label>
               <input type="date" className="form-control" name="domainExpiryDate" id="domainExpiryDate" value={domainExpiryDate} onChange={(e) => setDomainExpiryDate(e.target.value)} />
             </div>
           </div>
@@ -190,13 +166,13 @@ const AddProjectDeployment = () => {
           }}>Hosting</h6>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="hostingPurchaseDate">Hosting Purchase Date <span className="text-danger">*</span></label>
+              <label className="col-form-label" htmlFor="hostingPurchaseDate">Hosting Purchase Date <span className="text-danger"></span></label>
               <input type="date" className="form-control" name="hostingPurchaseDate" id="hostingPurchaseDate" value={hostingPurchaseDate} onChange={(e) => setHostingPurchaseDate(e.target.value)} />
             </div>
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="hostingExpiryDate">Hosting Expiry Date <span className="text-danger">*</span></label>
+              <label className="col-form-label" htmlFor="hostingExpiryDate">Hosting Expiry Date <span className="text-danger"></span></label>
               <input type="date" className="form-control" name="hostingExpiryDate" id="hostingExpiryDate" value={hostingExpiryDate} onChange={(e) => setHostingExpiryDate(e.target.value)} />
             </div>
           </div>
@@ -215,7 +191,7 @@ const AddProjectDeployment = () => {
           }}>SSl</h6>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="sslPurchaseDate">SSL Purchase Date <span className="text-danger">*</span></label>
+              <label className="col-form-label" htmlFor="sslPurchaseDate">SSL Purchase Date <span className="text-danger"></span></label>
               <input type="date" className="form-control" name="sslPurchaseDate" id="sslPurchaseDate" value={sslPurchaseDate} onChange={(e) => setSslPurchaseDate(e.target.value)} />
             </div>
           </div>

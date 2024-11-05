@@ -175,7 +175,7 @@ const EditProjectDeployment = () => {
             (fieldPermissions?.domainPurchaseDate?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="domainPurchaseDate">Domain Purchase Date <span className="text-danger">*</span></label>
+                  <label className="col-form-label" htmlFor="domainPurchaseDate">Domain Purchase Date <span className="text-danger"></span></label>
                   <input type="date" className="form-control" name="domainPurchaseDate" id="domainPurchaseDate" value={domainPurchaseDate} onChange={(e) => setDomainPurchaseDate(e.target.value)} />
                 </div>
               </div>
@@ -185,7 +185,7 @@ const EditProjectDeployment = () => {
             (fieldPermissions?.domainExpiryDate?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="domainExpiryDate">Domain Expiry Date <span className="text-danger">*</span></label>
+                  <label className="col-form-label" htmlFor="domainExpiryDate">Domain Expiry Date <span className="text-danger"></span></label>
                   <input type="date" className="form-control" name="domainExpiryDate" id="domainExpiryDate" value={domainExpiryDate} onChange={(e) => setDomainExpiryDate(e.target.value)} />
                 </div>
               </div>
@@ -208,7 +208,7 @@ const EditProjectDeployment = () => {
             (fieldPermissions?.hostingPurchaseDate?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="hostingPurchaseDate">Hosting Purchase Date <span className="text-danger">*</span></label>
+                  <label className="col-form-label" htmlFor="hostingPurchaseDate">Hosting Purchase Date <span className="text-danger"></span></label>
                   <input type="date" className="form-control" name="hostingPurchaseDate" id="hostingPurchaseDate" value={hostingPurchaseDate} onChange={(e) => setHostingPurchaseDate(e.target.value)} />
                 </div>
               </div>
@@ -218,7 +218,7 @@ const EditProjectDeployment = () => {
             (fieldPermissions?.hostingExpiryDate?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="hostingExpiryDate">Hosting Expiry Date <span className="text-danger">*</span></label>
+                  <label className="col-form-label" htmlFor="hostingExpiryDate">Hosting Expiry Date <span className="text-danger"></span></label>
                   <input type="date" className="form-control" name="hostingExpiryDate" id="hostingExpiryDate" value={hostingExpiryDate} onChange={(e) => setHostingExpiryDate(e.target.value)} />
                 </div>
               </div>
@@ -241,7 +241,7 @@ const EditProjectDeployment = () => {
             (fieldPermissions?.sslPurchaseDate?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="sslPurchaseDate">SSL Purchase Date <span className="text-danger">*</span></label>
+                  <label className="col-form-label" htmlFor="sslPurchaseDate">SSL Purchase Date <span className="text-danger"></span></label>
                   <input type="date" className="form-control" name="sslPurchaseDate" id="sslPurchaseDate" value={sslPurchaseDate} onChange={(e) => setSslPurchaseDate(e.target.value)} />
                 </div>
               </div>
@@ -251,7 +251,7 @@ const EditProjectDeployment = () => {
             (fieldPermissions?.sslExpiryDate?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="sslExpiryDate">SSL Expiry Date <span className="text-danger">*</span></label>
+                  <label className="col-form-label" htmlFor="sslExpiryDate">SSL Expiry Date <span className="text-danger"></span></label>
                   <input type="date" className="form-control" name="sslExpiryDate" id="sslExpiryDate" value={sslExpiryDate} onChange={(e) => setSslExpiryDate(e.target.value)} />
                 </div>
               </div>
