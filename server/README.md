@@ -1,4 +1,4 @@
-# CRM Web Application
+# CRM Code Diffusion Web Application
 
 This is a CRM (Customer Relationship Management) web application built using the MERN stack (MongoDB, Express.js, React, and Node.js).
 
