@@ -144,8 +144,8 @@ const EditTeamMember = () => {
       updateData.monthlySalary = monthlySalary;
     };
 
-    if (fieldPermissions?.requiredHoursPerDay?.show && !fieldPermissions?.requiredHoursPerDay?.read) {
-      updateData.requiredHoursPerDay = "8:30";
+    if (fieldPermissions?.workingHoursPerDay?.show && !fieldPermissions?.workingHoursPerDay?.read) {
+      updateData.workingHoursPerDay = "8:30";
     };
 
     if (fieldPermissions?.designation?.show && !fieldPermissions?.designation?.read) {

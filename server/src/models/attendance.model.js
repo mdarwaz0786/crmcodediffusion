@@ -1,44 +1,28 @@
 import mongoose from "mongoose";
-import Employee from "../models/team.model.js";
 
 const attendanceSchema = new mongoose.Schema(
   {
     employee: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Employee",
-      required: true,
+      ref: "Team",
     },
-    date: {
+    attendanceDate: {
       type: String,
-      required: true,
     },
-    attendanceStatus: {
+    status: {
       type: String,
       enum: ["Present", "Absent", "Holiday", "Sunday"],
       default: "Absent",
     },
-    checkInTime: {
-      type: String,
+    punchInTime: {
+      type: String, // Format "HH:MM"
     },
-    checkOutTime: {
-      type: String,
+    punchOutTime: {
+      type: String, // Format "HH:MM"
     },
-    totalHoursWorked: {
-      type: String,
-    },
-    requiredHoursForDay: {
-      type: String,
-      default: function () {
-        return this.employee?.requiredHoursPerDay || 8;
-      },
-    },
-    halfDayLeaveApproved: {
-      type: Boolean,
-      default: false,
-    },
-    salaryDeductionForDay: {
-      type: String,
-      default: 0,
+    hoursWorked: {
+      type: String, // Format "HH:MM"
+      default: "00:00",
     },
   },
   {
@@ -46,30 +30,38 @@ const attendanceSchema = new mongoose.Schema(
   },
 );
 
-// Pre-save middleware to calculate total hours worked and salary deduction
-attendanceSchema.pre("save", async function (next) {
-  if (this.checkInTime && this.checkOutTime) {
-    const [checkInH, checkInM] = this.checkInTime.split(":").map(Number);
-    const [checkOutH, checkOutM] = this.checkOutTime.split(":").map(Number);
-    const totalMinutesWorked = (checkOutH * 60 + checkOutM) - (checkInH * 60 + checkInM);
-    const hoursWorked = Math.floor(totalMinutesWorked / 60);
-    const minutesWorked = totalMinutesWorked % 60;
-    this.totalHoursWorked = parseFloat((hoursWorked + minutesWorked / 60).toFixed(2));
-  };
+// Helper function to calculate hours worked in HH:MM format based on punch times
+function calculateHoursWorked(punchIn, punchOut) {
+  const [inHours, inMinutes] = punchIn.split(":").map(Number);
+  const [outHours, outMinutes] = punchOut.split(":").map(Number);
 
-  const employee = await Employee.findById(this.employee);
-  const dailyRate = employee.monthlySalary / 30;
+  const inTotalMinutes = inHours * 60 + inMinutes;
+  const outTotalMinutes = outHours * 60 + outMinutes;
+  const totalMinutesWorked = Math.max(outTotalMinutes - inTotalMinutes, 0); // Ensure no negative values
 
-  // No deduction for certain attendance statuses
-  if (["On Leave", "Present", "Holiday", "Sunday"].includes(this.attendanceStatus)) {
-    this.salaryDeductionForDay = 0;
-  } else if (this.attendanceStatus === "Half Day" && !this.halfDayLeaveApproved) {
-    this.salaryDeductionForDay = dailyRate / 2;
-  } else if (this.attendanceStatus === "Absent") {
-    this.salaryDeductionForDay = dailyRate;
-  } else if (this.totalHoursWorked < this.requiredHoursForDay && this.attendanceStatus === "Present") {
-    const deduction = ((this.requiredHoursForDay - this.totalHoursWorked) / this.requiredHoursForDay) * dailyRate;
-    this.salaryDeductionForDay = deduction > 0 ? deduction : 0;
+  // Convert total minutes worked to HH:MM format
+  const hours = Math.floor(totalMinutesWorked / 60);
+  const minutes = totalMinutesWorked % 60;
+
+  // Format hours and minutes as "HH:MM"
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+};
+
+// Middleware to set `status` and calculate `hoursWorked`
+attendanceSchema.pre("save", function (next) {
+  // If it's a Holiday or Sunday, reset punch times and hours worked
+  if (this.status === "Holiday" || this.status === "Sunday") {
+    this.punchInTime = "";
+    this.punchOutTime = "";
+    this.hoursWorked = "00:00";
+  } else if (this.punchInTime && this.punchOutTime) {
+    // If both punchInTime and punchOutTime are filled, mark status as Present
+    this.status = "Present";
+    this.hoursWorked = calculateHoursWorked(this.punchInTime, this.punchOutTime);
+  } else {
+    // If punch times are missing, mark as Absent and set hours worked to 00:00
+    this.status = "Absent";
+    this.hoursWorked = "00:00";
   };
 
   next();

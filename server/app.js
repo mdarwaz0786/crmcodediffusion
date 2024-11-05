@@ -21,6 +21,7 @@ import invoiceRoute from "./src/routes/invoice.route.js";
 import proformaInvoiceRoute from "./src/routes/proformaInvoice.route.js";
 import attendanceRoute from "./src/routes/attendance.route.js";
 import holidayRoute from "./src/routes/holiday.route.js";
+import salaryRoute from "./src/routes/salary.route.js";
 import leaveApprovalRoute from "./src/routes/leaveApproval.route.js";
 import technologyRoute from "./src/routes/technology.route.js";
 import purchaseInvoiceRoute from "./src/routes/purchaseInvoice.route.js";
@@ -73,6 +74,8 @@ server.use("/api/v1/proformaInvoice", proformaInvoiceRoute);
 server.use("/api/v1/attendance", attendanceRoute);
 // Holiday route
 server.use("/api/v1/holiday", holidayRoute);
+// Salary route
+server.use("/api/v1/salary", salaryRoute);
 // Leave approval route
 server.use("/api/v1/leaveApproval", leaveApprovalRoute);
 // Technology route

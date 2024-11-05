@@ -32,7 +32,7 @@ const teamSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    requiredHoursPerDay: {
+    workingHoursPerDay: {
       type: String,
       default: "8:30",
     },
