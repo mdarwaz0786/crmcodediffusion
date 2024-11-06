@@ -11,17 +11,21 @@ const salarySchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        employeeWorkingHours: {
-            type: String,
-            default: "00:00",
+        employeeWorkingDays: {
+            type: Number,
+            default: 0,
         },
-        companyWorkingHours: {
+        employeeWorkingHours: {
             type: String,
             default: "00:00",
         },
         companyWorkingDays: {
             type: Number,
             default: 0,
+        },
+        companyWorkingHours: {
+            type: String,
+            default: "00:00",
         },
         totalSalary: {
             type: Number,
@@ -94,6 +98,7 @@ salarySchema.pre("save", async function (next) {
 
         // Convert total minutes worked to "HH:MM" format for storage
         this.employeeWorkingHours = minutesToTime(totalMinutesWorked);
+        this.employeeWorkingDays = attendanceRecords.length;
 
         // Calculate deduction days based on hours shortfall
         const hoursShortfall = totalCompanyMinutes - totalMinutesWorked;

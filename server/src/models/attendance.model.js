@@ -49,19 +49,21 @@ function calculateHoursWorked(punchIn, punchOut) {
 
 // Middleware to set `status` and calculate `hoursWorked`
 attendanceSchema.pre("save", function (next) {
-  // If it's a Holiday or Sunday, reset punch times and hours worked
+  // If it is a Holiday or Sunday, reset punch times and hours worked
   if (this.status === "Holiday" || this.status === "Sunday") {
     this.punchInTime = "";
     this.punchOutTime = "";
-    this.hoursWorked = "00:00";
+    this.hoursWorked = "";
   } else if (this.punchInTime && this.punchOutTime) {
     // If both punchInTime and punchOutTime are filled, mark status as Present
     this.status = "Present";
     this.hoursWorked = calculateHoursWorked(this.punchInTime, this.punchOutTime);
   } else {
-    // If punch times are missing, mark as Absent and set hours worked to 00:00
+    // If punch times are missing, mark as status Absent
     this.status = "Absent";
-    this.hoursWorked = "00:00";
+    this.punchInTime = "";
+    this.punchOutTime = "";
+    this.hoursWorked = "";
   };
 
   next();
