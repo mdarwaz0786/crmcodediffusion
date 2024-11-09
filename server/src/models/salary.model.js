@@ -17,7 +17,6 @@ const salarySchema = new mongoose.Schema(
         },
         employeeWorkingHours: {
             type: String,
-            default: "00:00",
         },
         companyWorkingDays: {
             type: Number,
@@ -25,7 +24,6 @@ const salarySchema = new mongoose.Schema(
         },
         companyWorkingHours: {
             type: String,
-            default: "00:00",
         },
         totalSalary: {
             type: Number,

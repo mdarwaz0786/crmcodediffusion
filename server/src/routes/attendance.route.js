@@ -9,7 +9,7 @@ const router = express.Router();
 router.post("/create-attendance", isLoggedIn, createAttendance);
 router.get("/all-attendance", isLoggedIn, fetchAllAttendance);
 router.get("/single-attendance/:id", isLoggedIn, fetchSingleAttendance);
-router.put("/update-attendance/:id", isLoggedIn, updateAttendance);
+router.put("/update-attendance", isLoggedIn, updateAttendance);
 router.delete("/delete-attendance/:id", isLoggedIn, deleteAttendance);
 
 export default router;

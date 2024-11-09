@@ -3,47 +3,110 @@ import Attendance from '../models/attendance.model.js';
 // Create a new attendance record
 export const createAttendance = async (req, res) => {
     try {
-        const attendance = new Attendance(req.body);
+        const { employee, attendanceDate, punchInTime } = req.body;
+
+        const existingAttendance = await Attendance.findOne({ employee, attendanceDate, punchIn: true });
+
+        if (existingAttendance) {
+            return res.status(400).json({ success: false, message: 'Already punched in' });
+        };
+
+        const attendance = new Attendance({
+            employee,
+            attendanceDate,
+            status: "Absent",
+            punchInTime,
+            punchIn: true,
+            punchOutTime: "",
+            punchOut: false,
+            hoursWorked: "",
+        });
+
         await attendance.save();
-        res.status(201).json(attendance);
+        return res.status(201).json({ success: true, attendance });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.log(error.message);
+        return res.status(500).json({ success: false, message: error.message });
     };
 };
 
 // Fetch all attendance records
 export const fetchAllAttendance = async (req, res) => {
     try {
-        const attendanceRecords = await Attendance.find().populate('employee');
-        res.status(200).json(attendanceRecords);
+        const attendance = await Attendance.find().populate('employee');
+
+        if (!attendance) {
+            return res.status(404).json({ success: false, message: 'Attendance not found' });
+        };
+
+        res.status(200).json({ success: true, attendance });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.log(error.message);
+        return res.status(500).json({ success: false, message: error.message });
     };
 };
 
 // Get a single attendance record by ID
 export const fetchSingleAttendance = async (req, res) => {
     try {
-        const attendance = await Attendance.findById(req.params.id).populate('employee', 'name');
+        const attendance = await Attendance.findById(req.params.id).populate('employee');
+
         if (!attendance) {
-            return res.status(404).json({ message: 'Attendance record not found' });
-        }
-        res.status(200).json(attendance);
+            return res.status(404).json({ success: false, message: 'Attendance not found' });
+        };
+
+        return res.status(200).json({ success: true, attendance });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.log(error.message);
+        return res.status(500).json({ success: false, message: error.message });
     };
+};
+
+// Helper function to calculate hours worked
+function calculateHoursWorked(punchInTime, punchOutTime) {
+    const [inHours, inMinutes] = punchInTime.split(":").map(Number);
+    const [outHours, outMinutes] = punchOutTime.split(":").map(Number);
+
+    const inTotalMinutes = inHours * 60 + inMinutes;
+    const outTotalMinutes = outHours * 60 + outMinutes;
+    const totalMinutesWorked = Math.max(outTotalMinutes - inTotalMinutes, 0);
+
+    const hours = Math.floor(totalMinutesWorked / 60);
+    const minutes = totalMinutesWorked % 60;
+
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 };
 
 // Update an attendance record by ID
 export const updateAttendance = async (req, res) => {
     try {
-        const attendance = await Attendance.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!attendance) {
-            return res.status(404).json({ message: 'Attendance record not found' });
+        const { employee, attendanceDate, punchOutTime } = req.body;
+
+        const existingAttendance = await Attendance.findOne({ employee, attendanceDate, punchOut: true });
+
+        if (existingAttendance) {
+            return res.status(400).json({ success: false, message: 'Already punched out' });
         };
-        res.status(200).json(attendance);
+
+        const attendance = await Attendance.findOne({ employee, attendanceDate, punchOut: false });
+
+        if (!attendance) {
+            return res.status(404).json({ success: false, message: 'Attendance not found' });
+        };
+
+        if (punchOutTime) {
+            attendance.status = "Present";
+            attendance.punchOutTime = punchOutTime;
+            attendance.punchOut = true;
+            attendance.hoursWorked = calculateHoursWorked(attendance.punchInTime, punchOutTime);
+        };
+
+        await attendance.save();
+
+        return res.status(200).json({ success: true, attendance });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.log(error.message);
+        return res.status(500).json({ success: false, message: error.message });
     };
 };
 
@@ -51,11 +114,14 @@ export const updateAttendance = async (req, res) => {
 export const deleteAttendance = async (req, res) => {
     try {
         const attendance = await Attendance.findByIdAndDelete(req.params.id);
+
         if (!attendance) {
-            return res.status(404).json({ message: 'Attendance record not found' });
+            return res.status(404).json({ message: 'Attendance not found' });
         };
-        res.status(204).send();
+
+        return res.status(204).json({ success: true });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.log(error.message);
+        return res.status(500).json({ success: false, message: error.message });
     };
 };
