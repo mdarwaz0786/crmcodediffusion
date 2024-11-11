@@ -1,4 +1,5 @@
 import Attendance from '../models/attendance.model.js';
+import mongoose from 'mongoose';
 
 // Create a new attendance record
 export const createAttendance = async (req, res) => {
@@ -30,16 +31,45 @@ export const createAttendance = async (req, res) => {
     };
 };
 
-// Fetch all attendance records
+// Get all attendance
 export const fetchAllAttendance = async (req, res) => {
     try {
-        const attendance = await Attendance.find().populate('employee');
+        const { date, month, year, employeeId } = req.query;
+        const query = {};
 
-        if (!attendance) {
+        // Filter by exact date if provided (yyyy-mm-dd)
+        if (date) {
+            query.attendanceDate = date;
+        } else {
+            // Filter by month and year if provided (yyyy-mm)
+            if (month && year) {
+                query.attendanceDate = {
+                    $regex: new RegExp(`^${year}-${month.padStart(2, '0')}-`)
+                };
+            } else if (year) { // Filter by year only (yyyy)
+                query.attendanceDate = {
+                    $regex: new RegExp(`^${year}-`)
+                };
+            };
+        };
+
+        // Filter by employee ID if provided
+        if (employeeId) {
+            if (mongoose.Types.ObjectId.isValid(employeeId)) {
+                query.employee = employeeId;
+            } else {
+                return res.status(400).json({ success: false, message: 'Invalid employee ID' });
+            };
+        };
+
+        // Fetch attendance with the constructed query
+        const attendance = await Attendance.find(query).populate('employee');
+
+        if (attendance.length === 0) {
             return res.status(404).json({ success: false, message: 'Attendance not found' });
         };
 
-        res.status(200).json({ success: true, attendance });
+        return res.status(200).json({ success: true, attendance });
     } catch (error) {
         console.log(error.message);
         return res.status(500).json({ success: false, message: error.message });
