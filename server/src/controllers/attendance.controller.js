@@ -1,6 +1,21 @@
 import Attendance from '../models/attendance.model.js';
 import mongoose from 'mongoose';
 
+// Helper function to calculate hours difference
+function calculateHoursDifference(punchInTime, punchOutTime) {
+    const [inHours, inMinutes] = punchInTime.split(":").map(Number);
+    const [outHours, outMinutes] = punchOutTime.split(":").map(Number);
+
+    const inTotalMinutes = inHours * 60 + inMinutes;
+    const outTotalMinutes = outHours * 60 + outMinutes;
+    const totalMinutesWorked = Math.max(outTotalMinutes - inTotalMinutes, 0);
+
+    const hours = Math.floor(totalMinutesWorked / 60);
+    const minutes = totalMinutesWorked % 60;
+
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+};
+
 // Create a new attendance record
 export const createAttendance = async (req, res) => {
     try {
@@ -21,6 +36,7 @@ export const createAttendance = async (req, res) => {
             punchOutTime: "",
             punchOut: false,
             hoursWorked: "",
+            lateIn: calculateHoursDifference("10:00", punchInTime),
         });
 
         await attendance.save();
@@ -34,22 +50,22 @@ export const createAttendance = async (req, res) => {
 // Get all attendance
 export const fetchAllAttendance = async (req, res) => {
     try {
-        const { date, month, year, employeeId } = req.query;
+        const { date, employeeId } = req.query;
         const query = {};
 
-        // Filter by exact date if provided (yyyy-mm-dd)
+        // Filter by exact date if provided
         if (date) {
             query.attendanceDate = date;
-        } else {
-            // Filter by month and year if provided (yyyy-mm)
-            if (month && year) {
-                query.attendanceDate = {
-                    $regex: new RegExp(`^${year}-${month.padStart(2, '0')}-`)
-                };
-            } else if (year) { // Filter by year only (yyyy)
-                query.attendanceDate = {
-                    $regex: new RegExp(`^${year}-`)
-                };
+        };
+
+        // Filter by both year and month
+        if (req.query.year && req.query.month) {
+            const year = req.query.year;
+            const month = req.query.month;
+
+            query.attendanceDate = {
+                $gte: `${year}-${month}-01`,
+                $lte: `${year}-${month}-31`,
             };
         };
 
@@ -63,9 +79,9 @@ export const fetchAllAttendance = async (req, res) => {
         };
 
         // Fetch attendance with the constructed query
-        const attendance = await Attendance.find(query).populate('employee');
+        const attendance = await Attendance.find(query).populate('employee').exec();
 
-        if (attendance.length === 0) {
+        if (!attendance) {
             return res.status(404).json({ success: false, message: 'Attendance not found' });
         };
 
@@ -92,21 +108,6 @@ export const fetchSingleAttendance = async (req, res) => {
     };
 };
 
-// Helper function to calculate hours worked
-function calculateHoursWorked(punchInTime, punchOutTime) {
-    const [inHours, inMinutes] = punchInTime.split(":").map(Number);
-    const [outHours, outMinutes] = punchOutTime.split(":").map(Number);
-
-    const inTotalMinutes = inHours * 60 + inMinutes;
-    const outTotalMinutes = outHours * 60 + outMinutes;
-    const totalMinutesWorked = Math.max(outTotalMinutes - inTotalMinutes, 0);
-
-    const hours = Math.floor(totalMinutesWorked / 60);
-    const minutes = totalMinutesWorked % 60;
-
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-};
-
 // Update an attendance record by ID
 export const updateAttendance = async (req, res) => {
     try {
@@ -128,7 +129,7 @@ export const updateAttendance = async (req, res) => {
             attendance.status = "Present";
             attendance.punchOutTime = punchOutTime;
             attendance.punchOut = true;
-            attendance.hoursWorked = calculateHoursWorked(attendance.punchInTime, punchOutTime);
+            attendance.hoursWorked = calculateHoursDifference(attendance.punchInTime, punchOutTime);
         };
 
         await attendance.save();

@@ -33,6 +33,9 @@ const attendanceSchema = new mongoose.Schema(
     hoursWorked: {
       type: String,
     },
+    lateIn: {
+      type: String,
+    },
   },
   {
     timestamps: true,
