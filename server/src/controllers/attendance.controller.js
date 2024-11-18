@@ -30,12 +30,12 @@ export const createAttendance = async (req, res) => {
         const attendance = new Attendance({
             employee,
             attendanceDate,
-            status: "Absent",
+            status: "Present",
             punchInTime,
             punchIn: true,
             punchOutTime: "",
             punchOut: false,
-            hoursWorked: "",
+            hoursWorked: "00:00",
             lateIn: calculateHoursDifference("10:00", punchInTime),
         });
 
@@ -126,7 +126,6 @@ export const updateAttendance = async (req, res) => {
         };
 
         if (punchOutTime) {
-            attendance.status = "Present";
             attendance.punchOutTime = punchOutTime;
             attendance.punchOut = true;
             attendance.hoursWorked = calculateHoursDifference(attendance.punchInTime, punchOutTime);

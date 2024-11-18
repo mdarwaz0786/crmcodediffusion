@@ -34,7 +34,7 @@ const teamSchema = new mongoose.Schema(
     },
     workingHoursPerDay: {
       type: String,
-      default: "8:30",
+      default: "08:30",
     },
     designation: {
       type: mongoose.Schema.Types.ObjectId,
