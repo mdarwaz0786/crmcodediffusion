@@ -20,8 +20,8 @@ import projectPriorityRoute from "./src/routes/projectPriority.route.js";
 import invoiceRoute from "./src/routes/invoice.route.js";
 import proformaInvoiceRoute from "./src/routes/proformaInvoice.route.js";
 import attendanceRoute from "./src/routes/attendance.route.js";
-import holidayRoute from "./src/routes/holiday.route.js";
 import salaryRoute from "./src/routes/salary.route.js";
+import holidayRoute from "./src/routes/holiday.route.js";
 import leaveApprovalRoute from "./src/routes/leaveApproval.route.js";
 import technologyRoute from "./src/routes/technology.route.js";
 import purchaseInvoiceRoute from "./src/routes/purchaseInvoice.route.js";
@@ -46,7 +46,7 @@ server.use(cors());
 
 // Test route
 server.use("/api/v1", testRoute);
-// Client route
+// Customer route
 server.use("/api/v1/customer", customerRoute);
 // Project type route
 server.use("/api/v1/projectType", projectTypeRoute);
@@ -54,11 +54,11 @@ server.use("/api/v1/projectType", projectTypeRoute);
 server.use("/api/v1/projectCategory", projectCategoryRoute);
 // Project Status route
 server.use("/api/v1/projectStatus", projectStatusRoute);
-// Employee route
+// Team route
 server.use("/api/v1/team", teamRoute);
 // Project route
 server.use("/api/v1/project", projectRoute);
-// Project timeline route
+// Project timing route
 server.use("/api/v1/projectTiming", projectTimingRoute);
 // Role route
 server.use("/api/v1/role", roleRoute);
@@ -72,10 +72,10 @@ server.use("/api/v1/invoice", invoiceRoute);
 server.use("/api/v1/proformaInvoice", proformaInvoiceRoute);
 // Attendance route
 server.use("/api/v1/attendance", attendanceRoute);
-// Holiday route
-server.use("/api/v1/holiday", holidayRoute);
 // Salary route
 server.use("/api/v1/salary", salaryRoute);
+// Holiday route
+server.use("/api/v1/holiday", holidayRoute);
 // Leave approval route
 server.use("/api/v1/leaveApproval", leaveApprovalRoute);
 // Technology route

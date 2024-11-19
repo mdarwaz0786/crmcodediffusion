@@ -145,7 +145,7 @@ const EditTeamMember = () => {
     };
 
     if (fieldPermissions?.workingHoursPerDay?.show && !fieldPermissions?.workingHoursPerDay?.read) {
-      updateData.workingHoursPerDay = "8:30";
+      updateData.workingHoursPerDay = "08:30";
     };
 
     if (fieldPermissions?.designation?.show && !fieldPermissions?.designation?.read) {

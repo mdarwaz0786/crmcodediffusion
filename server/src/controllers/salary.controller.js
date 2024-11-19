@@ -1,55 +1,94 @@
-import Salary from '../models/salary.model.js'; 
+import Team from "../models/team.model.js";
+import Attendance from "../models/attendance.model.js";
 
-// Create a new salary record
-export const createSalary = async (req, res) => {
-    try {
-        const salary = new Salary(req.body);
-        await salary.save();
-        res.status(201).json(salary);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    };
+// Helper function to convert time into minutes
+function timeToMinutes(time) {
+    const [hours, minutes] = time.split(":").map(Number);
+    return hours * 60 + minutes;
 };
 
-// Fetch all salary records
-export const fetchAllSalary = async (req, res) => {
-    try {
-        const salaries = await Salary.find().populate('employee');
-        res.status(200).json(salaries);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    };
+// Helper function to convert minutes into time
+function minutesToTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 };
 
-// Fetch a salary record by ID
-export const fetchSingleSalary = async (req, res) => {
+// Fetch monthly salary for employee
+export const fetchMonthlySalary = async (req, res) => {
     try {
-        const salary = await Salary.findById(req.params.id).populate('employee');
-        if (!salary) return res.status(404).json({ message: 'Salary record not found' });
-        res.status(200).json(salary);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    };
-};
+        const { employeeId, month } = req.query;
 
-// Update a salary record by ID
-export const updateSalary = async (req, res) => {
-    try {
-        const salary = await Salary.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!salary) return res.status(404).json({ message: 'Salary record not found' });
-        res.status(200).json(salary);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    };
-};
+        if (!employeeId || !month) {
+            return res.status(400).json({ message: "Employee ID and month (YYYY-MM) are required." });
+        };
 
-// Delete a salary record by ID
-export const deleteSalary = async (req, res) => {
-    try {
-        const salary = await Salary.findByIdAndDelete(req.params.id);
-        if (!salary) return res.status(404).json({ message: 'Salary record not found' });
-        res.status(204).send();
+        const employee = await Team.findById(employeeId);
+
+        if (!employee) {
+            return res.status(404).json({ message: "Employee not found." });
+        };
+
+        const monthlySalary = parseFloat(employee.monthlySalary);
+        const [requiredHours, requiredMinutes] = employee.workingHoursPerDay.split(":").map(Number);
+        const dailyThreshold = requiredHours * 60 + requiredMinutes;
+
+        const sundayHolidayRecords = await Attendance.find({
+            employee: employeeId,
+            attendanceDate: { $regex: `^${month}-` },
+            status: { $in: ["Sunday", "Holiday"] },
+        });
+
+        const totalSundaysAndHolidays = sundayHolidayRecords.length;
+
+        // Total days in the month
+        const [year, monthIndex] = month.split("-").map(Number);
+        const daysInMonth = new Date(year, monthIndex, 0).getDate();
+        const companyWorkingDays = daysInMonth - totalSundaysAndHolidays;
+
+        const totalCompanyMinutes = companyWorkingDays * dailyThreshold;
+        const companyWorkingHours = minutesToTime(totalCompanyMinutes);
+
+        // Fetch attendance records for Present days
+        const attendanceRecords = await Attendance.find({
+            employee: employeeId,
+            attendanceDate: { $regex: `^${month}-` },
+            status: "Present",
+        });
+
+        let totalMinutesWorked = 0;
+
+        attendanceRecords.forEach((record) => {
+            if (record.hoursWorked) {
+                totalMinutesWorked += timeToMinutes(record.hoursWorked);
+            };
+        });
+
+        const employeeWorkingHours = minutesToTime(totalMinutesWorked);
+        const employeeWorkingDays = attendanceRecords.length;
+
+        // Deduction calculations
+        const hoursShortfall = totalCompanyMinutes - totalMinutesWorked;
+        const deductionDays = hoursShortfall > 0 ? Math.ceil(hoursShortfall / dailyThreshold) : 0;
+
+        const dailySalary = monthlySalary / companyWorkingDays;
+        const totalSalary = (companyWorkingDays - deductionDays) * dailySalary;
+
+        // Response data
+        const salary = {
+            employee: employeeId,
+            month,
+            companyWorkingDays,
+            companyWorkingHours,
+            employeeWorkingDays,
+            employeeWorkingHours,
+            totalSalary: totalSalary.toFixed(2),
+        };
+
+        return res.status(200).json({ success: true, salary });
+
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.log(error.message);
+        return res.status(500).json({ success: false, error: error.message });
     };
 };
