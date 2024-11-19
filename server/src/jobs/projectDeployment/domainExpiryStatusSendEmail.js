@@ -35,7 +35,7 @@ cron.schedule('0 9 * * *', async () => {
       if (project.domainExpiryStatus === 'Expired' && !project.domainExpiryNotified) {
         subject = `Domain Expired: ${project.websiteName}`;
         htmlContent = `<p>Your domain <strong>${project.websiteName}</strong> has expired. Please renew it as soon as possible.</p>`;
-        
+
         // Mark domain notification as sent
         project.domainExpiryNotified = true;
       } else if (['30 Days', '15 Days', '7 Days'].includes(project.domainExpireIn)) {
@@ -47,7 +47,7 @@ cron.schedule('0 9 * * *', async () => {
       if (project.hostingExpiryStatus === 'Expired' && !project.hostingExpiryNotified) {
         subject = `Hosting Expired: ${project.websiteName}`;
         htmlContent += `<p>Your hosting for <strong>${project.websiteName}</strong> has expired. Please renew it to avoid interruptions.</p>`;
-        
+
         // Mark hosting notification as sent
         project.hostingExpiryNotified = true;
       } else if (['30 Days', '15 Days', '7 Days'].includes(project.hostingExpireIn)) {
@@ -59,7 +59,7 @@ cron.schedule('0 9 * * *', async () => {
       if (project.sslExpiryStatus === 'Expired' && !project.sslExpiryNotified) {
         subject = `SSL Certificate Expired: ${project.websiteName}`;
         htmlContent += `<p>The SSL certificate for <strong>${project.websiteName}</strong> has expired. Please renew it to maintain secure access.</p>`;
-        
+
         // Mark SSL notification as sent
         project.sslExpiryNotified = true;
       } else if (['30 Days', '15 Days', '7 Days'].includes(project.sslExpireIn)) {
