@@ -47,7 +47,6 @@ export const fetchMonthlySalary = async (req, res) => {
         const companyWorkingDays = daysInMonth - totalSundaysAndHolidays;
 
         const totalCompanyMinutes = companyWorkingDays * dailyThreshold;
-        const companyWorkingHours = minutesToTime(totalCompanyMinutes);
 
         // Fetch attendance records for Present days
         const attendanceRecords = await Attendance.find({
@@ -64,13 +63,11 @@ export const fetchMonthlySalary = async (req, res) => {
             };
         });
 
-        const employeeWorkingHours = minutesToTime(totalMinutesWorked);
-        const employeeWorkingDays = attendanceRecords.length;
-
         // Deduction calculations
         const hoursShortfall = totalCompanyMinutes - totalMinutesWorked;
         const deductionDays = hoursShortfall > 0 ? Math.ceil(hoursShortfall / dailyThreshold) : 0;
 
+        // Calculate salary
         const dailySalary = monthlySalary / companyWorkingDays;
         const totalSalary = (companyWorkingDays - deductionDays) * dailySalary;
 
@@ -78,10 +75,6 @@ export const fetchMonthlySalary = async (req, res) => {
         const salary = {
             employee: employeeId,
             month,
-            companyWorkingDays,
-            companyWorkingHours,
-            employeeWorkingDays,
-            employeeWorkingHours,
             totalSalary: totalSalary.toFixed(2),
         };
 
