@@ -122,19 +122,19 @@ function minutesToTime(minutes) {
     return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 };
 
-// Get monthly statistic of employee attendance
+// Fetch monthly statistic
 export const fetchMonthlyStatistic = async (req, res) => {
     try {
         const { employeeId, month } = req.query;
 
         if (!employeeId || !month) {
-            return res.status(400).json({ success: false, message: "Employee ID and month (YYYY-MM) are required." });
+            return res.status(400).json({ success: false, message: "Employee ID and month in YYYY-MM format are required." });
         };
 
         // Fetch attendance records for the specified employee and month
         const attendanceRecords = await Attendance.find({
             employee: employeeId,
-            attendanceDate: { $regex: `^${month}-` }, // Matches "YYYY-MM" format
+            attendanceDate: { $regex: `^${month}-` }, // Matches month in "YYYY-MM" format
         });
 
         if (!attendanceRecords) {
@@ -150,6 +150,12 @@ export const fetchMonthlyStatistic = async (req, res) => {
         let totalMinutesWorked = 0;
         let totalLateIn = 0;
 
+        // Variables to calculate punch-in and punch-out averages
+        let totalPunchInMinutes = 0;
+        let punchInCount = 0;
+        let totalPunchOutMinutes = 0;
+        let punchOutCount = 0;
+
         // Iterate over attendance records to calculate statistics
         attendanceRecords.forEach((record) => {
             if (record.status === "Present") {
@@ -159,6 +165,14 @@ export const fetchMonthlyStatistic = async (req, res) => {
                 };
                 if (record.lateIn !== "00:00") {
                     totalLateIn++;
+                };
+                if (record.punchInTime) {
+                    totalPunchInMinutes += timeToMinutes(record.punchInTime);
+                    punchInCount++;
+                };
+                if (record.punchOutTime) {
+                    totalPunchOutMinutes += timeToMinutes(record.punchOutTime);
+                    punchOutCount++;
                 };
             } else if (record.status === "Absent") {
                 totalAbsent++;
@@ -171,11 +185,20 @@ export const fetchMonthlyStatistic = async (req, res) => {
             };
         });
 
+        // Calculate average punch-in and punch-out times
+        const averagePunchInTime = punchInCount
+            ? minutesToTime(Math.floor(totalPunchInMinutes / punchInCount))
+            : null;
+
+        const averagePunchOutTime = punchOutCount
+            ? minutesToTime(Math.floor(totalPunchOutMinutes / punchOutCount))
+            : null;
+
         // Calculate total days in the month
         const [year, monthIndex] = month.split("-").map(Number);
         const daysInMonth = new Date(year, monthIndex, 0).getDate();
 
-        const totalWorkingDays = daysInMonth - (totalHolidays + totalSundays)
+        const totalWorkingDays = daysInMonth - (totalHolidays + totalSundays);
 
         const employee = await Team.findById(employeeId);
 
@@ -205,10 +228,13 @@ export const fetchMonthlyStatistic = async (req, res) => {
             employeeLeaveDays: totalLeave,
             employeeWorkingHours: totalHoursWorked,
             employeeLateInDays: totalLateIn,
+            averagePunchInTime,
+            averagePunchOutTime,
         };
 
         return res.status(200).json({ success: true, attendance });
     } catch (error) {
+        console.log(error.message);
         return res.status(500).json({ success: false, error: error.message });
     };
 };

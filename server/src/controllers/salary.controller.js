@@ -1,17 +1,10 @@
 import Team from "../models/team.model.js";
 import Attendance from "../models/attendance.model.js";
 
-// Helper function to convert time into minutes
+// Helper function to convert time (HH:MM) into minutes
 function timeToMinutes(time) {
     const [hours, minutes] = time.split(":").map(Number);
     return hours * 60 + minutes;
-};
-
-// Helper function to convert minutes into time
-function minutesToTime(minutes) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 };
 
 // Fetch monthly salary for employee
