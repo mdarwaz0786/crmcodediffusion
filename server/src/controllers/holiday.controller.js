@@ -69,8 +69,8 @@ export const createHoliday = async (req, res) => {
 // Get all holidays
 export const fetchAllHoliday = async (req, res) => {
   try {
-    const holidays = await Holiday.find();
-    res.status(200).json({ successs: true, holidays });
+    const holiday = await Holiday.find();
+    res.status(200).json({ successs: true, holiday });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

@@ -7,7 +7,7 @@ const router = express.Router();
 
 // routes
 router.post("/create-holiday", isLoggedIn, createHoliday);
-router.get("/all-holiday", fetchAllHoliday);
+router.get("/all-holiday", isLoggedIn, fetchAllHoliday);
 router.get("/single-holiday/:id", fetchSingleHoliday);
 router.put("/update-holiday/:id", updateHoliday);
 router.delete("/delete-holiday/:id", deleteHoliday);
