@@ -1,29 +1,78 @@
-import Holiday from "../models/holiday.model.js"; // Adjust the import path as per your project structure
+import Holiday from "../models/holiday.model.js";
+import Attendance from "../models/attendance.model.js";
+import Team from "../models/team.model.js";
 
 // Create a new holiday
 export const createHoliday = async (req, res) => {
   try {
-    const { reason, date } = req.body;
+    const { reason, type, date } = req.body;
 
-    const newHoliday = new Holiday({
+    // Check if a holiday already exists for the given date
+    const existingHoliday = await Holiday.findOne({ date });
+
+    if (existingHoliday) {
+      return res.status(400).json({ success: false, message: "A holiday already exists for the given date." });
+    };
+
+    // Create a new holiday
+    const holiday = new Holiday({
       reason,
+      type,
       date,
     });
 
-    await newHoliday.save();
-    res.status(201).json({ message: "Holiday created successfully", data: newHoliday });
+    // Save holiday
+    await holiday.save();
+
+    // Get all employees
+    const employees = await Team.find();
+
+    // Update attendance records for all employees for the holiday date
+    const updateAttendancePromises = employees.map(async (employee) => {
+      const existingAttendance = await Attendance.findOne({
+        employee: employee._id,
+        attendanceDate: date,
+      });
+
+      // If attendance already exists for the given date for that employee, skip
+      if (existingAttendance) {
+        return;
+      };
+
+      // Create a new attendance record
+      const attendance = new Attendance({
+        employee: employee._id,
+        attendanceDate: date,
+        status: type,
+        punchInTime: "",
+        punchIn: true,
+        punchOutTime: "",
+        punchOut: true,
+        hoursWorked: "",
+        lateIn: "",
+      });
+
+      // Save attendance
+      await attendance.save();
+    });
+
+    // Wait for all attendance updates to be completed
+    await Promise.all(updateAttendancePromises);
+
+    res.status(201).json({ success: true, data: holiday });
   } catch (error) {
-    res.status(500).json({ message: "Error creating holiday", error: error.message });
-  }
+    console.error(error.message);
+    res.status(500).json({ success: false, error: error.message });
+  };
 };
 
 // Get all holidays
 export const fetchAllHoliday = async (req, res) => {
   try {
     const holidays = await Holiday.find();
-    res.status(200).json({ data: holidays });
+    res.status(200).json({ successs: true, holidays });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching holidays", error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -34,11 +83,11 @@ export const fetchSingleHoliday = async (req, res) => {
     const holiday = await Holiday.findById(id);
 
     if (!holiday) {
-      return res.status(404).json({ message: "Holiday not found" });
+      return res.status(404).json({ success: false, message: "Holiday not found" });
     }
     res.status(200).json({ data: holiday });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching holiday", error: error.message });
+    res.status(500).json({ success: true, error: error.message });
   }
 };
 
@@ -46,20 +95,20 @@ export const fetchSingleHoliday = async (req, res) => {
 export const updateHoliday = async (req, res) => {
   try {
     const { id } = req.params;
-    const { reason, date } = req.body;
+    const { reason, type, date } = req.body;
 
-    const updatedHoliday = await Holiday.findByIdAndUpdate(
+    const holiday = await Holiday.findByIdAndUpdate(
       id,
-      { reason, date },
+      { reason, type, date },
       { new: true, runValidators: true }
     );
 
-    if (!updatedHoliday) {
-      return res.status(404).json({ message: "Holiday not found" });
+    if (holiday) {
+      return res.status(404).json({ success: false, message: "Holiday not found" });
     }
-    res.status(200).json({ message: "Holiday updated successfully", data: updatedHoliday });
+    res.status(200).json({ success: true, message: "Holiday updated successfully", holiday });
   } catch (error) {
-    res.status(500).json({ message: "Error updating holiday", error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -67,12 +116,12 @@ export const updateHoliday = async (req, res) => {
 export const deleteHoliday = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedHoliday = await Holiday.findByIdAndDelete(id);
-    if (!deletedHoliday) {
-      return res.status(404).json({ message: "Holiday not found" });
+    const holiday = await Holiday.findByIdAndDelete(id);
+    if (!holiday) {
+      return res.status(404).json({ success: false, message: "Holiday not found" });
     }
-    res.status(200).json({ message: "Holiday deleted successfully" });
+    res.status(200).json({ success: true, message: "Holiday deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting holiday", error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };

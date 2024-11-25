@@ -4,6 +4,10 @@ const holidaySchema = new mongoose.Schema(
   {
     reason: {
       type: String,
+    },
+    type: {
+      type: String,
+      enum: ["Holiday", "Sunday"],
       required: true,
     },
     date: {
