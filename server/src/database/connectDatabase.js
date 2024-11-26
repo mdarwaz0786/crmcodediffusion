@@ -1,7 +1,4 @@
 import mongoose from "mongoose";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 // Function for connect MongoDB database
 const connectDatabase = async () => {
