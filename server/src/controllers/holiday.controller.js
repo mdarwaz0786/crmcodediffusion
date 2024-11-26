@@ -66,6 +66,24 @@ export const createHoliday = async (req, res) => {
   };
 };
 
+// Get all upcoming holidays
+export const fetchUpcomingHoliday = async (req, res) => {
+  try {
+    // Get the current date
+    const currentDate = new Date().toISOString().split("T")[0];
+
+    // Find all holidays with a date greater than or equal to the current date
+    const holiday = await Holiday.find({ date: { $gte: currentDate } })
+      .sort({ date: 1 })
+      .exec();
+
+    res.status(200).json({ success: true, holiday });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ success: false, error: error.message });
+  };
+};
+
 // Get all holidays
 export const fetchAllHoliday = async (req, res) => {
   try {
