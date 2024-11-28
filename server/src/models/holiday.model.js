@@ -13,6 +13,7 @@ const holidaySchema = new mongoose.Schema(
     date: {
       type: String,
       required: true,
+      index: true,
     },
   },
   {
@@ -32,6 +33,9 @@ holidaySchema.pre("save", function (next) {
 
   next();
 });
+
+// Enforce unique employee + date combination to prevent duplicates
+holidaySchema.index({ date: 1 }, { unique: true });
 
 const Holiday = mongoose.model("Holiday", holidaySchema);
 

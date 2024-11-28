@@ -7,6 +7,7 @@ import connectDatabase from "./src/database/connectDatabase.js";
 import "./src/jobs/projectDeployment/domainExpiryStatusSendEmail.js";
 import "./src/jobs/projectDeployment/domainExpiryStatusUpdate.js";
 import "./src/jobs/attendance/markSunday.js";
+import "./src/jobs/attendance/markAbsent.js";
 import testRoute from "./src/routes/test.route.js";
 import customerRoute from "./src/routes/customer.route.js";
 import projectTypeRoute from "./src/routes/projectType.route.js";

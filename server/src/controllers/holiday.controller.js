@@ -7,6 +7,10 @@ export const createHoliday = async (req, res) => {
   try {
     const { reason, type, date } = req.body;
 
+    if (!reason || !type || !date) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    };
+
     // Check if a holiday already exists for the given date
     const existingHoliday = await Holiday.findOne({ date });
 
@@ -27,6 +31,11 @@ export const createHoliday = async (req, res) => {
     // Get all employees
     const employees = await Team.find();
 
+    if (!employees || employees.length === 0) {
+      console.log("No employees found.");
+      return;
+    };
+
     // Update attendance records for all employees for the holiday date
     const updateAttendancePromises = employees.map(async (employee) => {
       const existingAttendance = await Attendance.findOne({
@@ -44,12 +53,12 @@ export const createHoliday = async (req, res) => {
         employee: employee._id,
         attendanceDate: date,
         status: type,
-        punchInTime: "",
+        punchInTime: null,
         punchIn: true,
-        punchOutTime: "",
+        punchOutTime: null,
         punchOut: true,
-        hoursWorked: "",
-        lateIn: "",
+        hoursWorked: null,
+        lateIn: null,
       });
 
       // Save attendance
@@ -91,7 +100,7 @@ export const fetchAllHoliday = async (req, res) => {
     res.status(200).json({ successs: true, holiday });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
-  }
+  };
 };
 
 // Get a single holiday by ID
@@ -102,11 +111,11 @@ export const fetchSingleHoliday = async (req, res) => {
 
     if (!holiday) {
       return res.status(404).json({ success: false, message: "Holiday not found" });
-    }
+    };
     res.status(200).json({ data: holiday });
   } catch (error) {
     res.status(500).json({ success: true, error: error.message });
-  }
+  };
 };
 
 // Update a holiday
@@ -121,13 +130,13 @@ export const updateHoliday = async (req, res) => {
       { new: true, runValidators: true }
     );
 
-    if (holiday) {
+    if (!holiday) {
       return res.status(404).json({ success: false, message: "Holiday not found" });
-    }
+    };
     res.status(200).json({ success: true, message: "Holiday updated successfully", holiday });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
-  }
+  };
 };
 
 // Delete a holiday
@@ -137,9 +146,9 @@ export const deleteHoliday = async (req, res) => {
     const holiday = await Holiday.findByIdAndDelete(id);
     if (!holiday) {
       return res.status(404).json({ success: false, message: "Holiday not found" });
-    }
+    };
     res.status(200).json({ success: true, message: "Holiday deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
-  }
+  };
 };

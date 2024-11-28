@@ -2,49 +2,61 @@ import Attendance from '../models/attendance.model.js';
 import Team from "../models/team.model.js";
 import mongoose from 'mongoose';
 
-// Helper function to calculate hours difference
-function calculateHoursDifference(punchInTime, punchOutTime) {
-    const [inHours, inMinutes] = punchInTime.split(":").map(Number);
-    const [outHours, outMinutes] = punchOutTime.split(":").map(Number);
+// Helper: Calculate time difference in HH:mm format
+const calculateTimeDifference = (startTime, endTime) => {
+    const [startHours, startMinutes] = startTime.split(":").map(Number);
+    const [endHours, endMinutes] = endTime.split(":").map(Number);
 
-    const inTotalMinutes = inHours * 60 + inMinutes;
-    const outTotalMinutes = outHours * 60 + outMinutes;
-    const totalMinutesWorked = Math.max(outTotalMinutes - inTotalMinutes, 0);
+    const startTotalMinutes = startHours * 60 + startMinutes;
+    const endTotalMinutes = endHours * 60 + endMinutes;
 
-    const hours = Math.floor(totalMinutesWorked / 60);
-    const minutes = totalMinutesWorked % 60;
+    const differenceMinutes = Math.max(endTotalMinutes - startTotalMinutes, 0);
+    const hours = Math.floor(differenceMinutes / 60);
+    const minutes = differenceMinutes % 60;
 
     return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 };
 
-// Create a new attendance record
+// Create or Update Attendance with Punch-in
 export const createAttendance = async (req, res) => {
     try {
         const { employee, attendanceDate, punchInTime } = req.body;
 
-        const existingAttendance = await Attendance.findOne({ employee, attendanceDate, punchIn: true });
-
-        if (existingAttendance) {
-            return res.status(400).json({ success: false, message: 'Already punched in' });
+        if (!employee || !attendanceDate || !punchInTime) {
+            return res.status(400).json({ success: false, message: "All fields are required" });
         };
 
-        const attendance = new Attendance({
-            employee,
-            attendanceDate,
-            status: "Present",
-            punchInTime,
-            punchIn: true,
-            punchOutTime: "",
-            punchOut: false,
-            hoursWorked: "00:00",
-            lateIn: calculateHoursDifference("10:00", punchInTime),
-        });
+        const EXPECTED_PUNCH_IN = "10:00";
 
-        await attendance.save();
-        return res.status(201).json({ success: true, attendance });
+        // Calculate lateIn
+        const lateIn = calculateTimeDifference(EXPECTED_PUNCH_IN, punchInTime);
+
+        // Use atomic operation to ensure no duplicate punch-in
+        const result = await Attendance.findOneAndUpdate(
+            { employee, attendanceDate, punchIn: false },
+            {
+                $set: {
+                    punchInTime,
+                    punchIn: true,
+                    status: "Present",
+                    lateIn,
+                },
+            },
+            { upsert: true, new: true }
+        );
+
+        if (result.punchIn && result.punchInTime !== punchInTime) {
+            return res.status(400).json({ success: false, message: "Punch-in already exists" });
+        };
+
+        return res.status(201).json({ success: true, message: "Punch-in successful", attedance: result });
     } catch (error) {
-        console.log(error.message);
-        return res.status(500).json({ success: false, message: error.message });
+        // Handle duplicate entry due to index constraint
+        if (error.code === 11000) {
+            return res.status(400).json({ success: false, error: "Duplicate entry for employee and date" });
+        };
+        console.error(error.message);
+        return res.status(500).json({ success: false, error: error.message });
     };
 };
 
@@ -239,34 +251,42 @@ export const fetchMonthlyStatistic = async (req, res) => {
     };
 };
 
-// Update an attendance record by ID
+// Update attendance with punch-out
 export const updateAttendance = async (req, res) => {
     try {
         const { employee, attendanceDate, punchOutTime } = req.body;
 
-        const existingAttendance = await Attendance.findOne({ employee, attendanceDate, punchOut: true });
-
-        if (existingAttendance) {
-            return res.status(400).json({ success: false, message: 'Already punched out' });
+        if (!employee || !attendanceDate || !punchOutTime) {
+            return res.status(400).json({ success: false, message: "All fields are required" });
         };
 
-        const attendance = await Attendance.findOne({ employee, attendanceDate, punchOut: false });
+        // Find record and ensure punch-out hasn't been done
+        const attendance = await Attendance.findOne({
+            employee,
+            attendanceDate,
+            punchOut: false,
+        });
 
         if (!attendance) {
-            return res.status(404).json({ success: false, message: 'Attendance not found' });
+            return res.status(400).json({ success: false, message: "Punch-in not found or already punched out" });
         };
 
-        if (punchOutTime) {
-            attendance.punchOutTime = punchOutTime;
-            attendance.punchOut = true;
-            attendance.hoursWorked = calculateHoursDifference(attendance.punchInTime, punchOutTime);
-        };
+        // Update punch-out details
+        const updatedAttendance = await Attendance.findOneAndUpdate(
+            { _id: attendance._id },
+            {
+                $set: {
+                    punchOutTime,
+                    punchOut: true,
+                    hoursWorked: calculateTimeDifference(attendance.punchInTime, punchOutTime),
+                },
+            },
+            { new: true },
+        );
 
-        await attendance.save();
-
-        return res.status(200).json({ success: true, attendance });
+        return res.status(200).json({ success: true, attendance: updatedAttendance });
     } catch (error) {
-        console.log(error.message);
+        console.error(error);
         return res.status(500).json({ success: false, message: error.message });
     };
 };

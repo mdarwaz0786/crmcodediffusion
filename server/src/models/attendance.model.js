@@ -6,10 +6,12 @@ const attendanceSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Team",
       required: true,
+      index: true,
     },
     attendanceDate: {
       type: String,
       required: true,
+      index: true,
     },
     status: {
       type: String,
@@ -18,6 +20,7 @@ const attendanceSchema = new mongoose.Schema(
     },
     punchInTime: {
       type: String,
+      default: null,
     },
     punchIn: {
       type: Boolean,
@@ -25,6 +28,7 @@ const attendanceSchema = new mongoose.Schema(
     },
     punchOutTime: {
       type: String,
+      default: null,
     },
     punchOut: {
       type: Boolean,
@@ -32,14 +36,19 @@ const attendanceSchema = new mongoose.Schema(
     },
     hoursWorked: {
       type: String,
+      default: "00:00",
     },
     lateIn: {
       type: String,
+      default: "00:00",
     },
   },
   {
     timestamps: true,
   },
 );
+
+// Enforce unique employee + date combination to prevent duplicates
+attendanceSchema.index({ employee: 1, attendanceDate: 1 }, { unique: true });
 
 export default mongoose.model("Attendance", attendanceSchema);
