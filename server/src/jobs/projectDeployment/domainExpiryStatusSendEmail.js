@@ -69,8 +69,8 @@ cron.schedule('0 9 * * *', async () => {
 
       // Send email to receivers if there is a notification
       if (subject && htmlContent) {
-        await sendEmail(process.env.FIRST_RECEIVER_EMAIL_ID, subject, htmlContent);
-        await sendEmail(process.env.SECOND_RECEIVER_EMAIL_ID, subject, htmlContent);
+        await sendEmail(project.client.email, subject, htmlContent);
+        await sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
         // Save the updated notification flags
         await project.save();

@@ -144,10 +144,6 @@ const EditTeamMember = () => {
       updateData.monthlySalary = monthlySalary;
     };
 
-    if (fieldPermissions?.workingHoursPerDay?.show && !fieldPermissions?.workingHoursPerDay?.read) {
-      updateData.workingHoursPerDay = "08:30";
-    };
-
     if (fieldPermissions?.designation?.show && !fieldPermissions?.designation?.read) {
       updateData.designation = selectedDesignation;
     };
@@ -291,7 +287,7 @@ const EditTeamMember = () => {
             (fieldPermissions?.monthlySalary?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="dob">monthlySalary <span className="text-danger">*</span></label>
+                  <label className="col-form-label" htmlFor="dob">Monthly Salary <span className="text-danger">*</span></label>
                   <input type="text" className={`form-control ${fieldPermissions?.monthlySalary?.read ? "readonly-style" : ""}`} name="monthlySalary" id="monthlySalary" value={monthlySalary} onChange={(e) => fieldPermissions?.monthlySalary?.read ? null : setMonthlySalary(e.target.value)} />
                 </div>
               </div>

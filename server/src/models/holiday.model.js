@@ -4,6 +4,8 @@ const holidaySchema = new mongoose.Schema(
   {
     reason: {
       type: String,
+      trim: true,
+      required: true,
     },
     type: {
       type: String,

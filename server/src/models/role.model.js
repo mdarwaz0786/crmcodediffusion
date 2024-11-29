@@ -167,13 +167,8 @@ const AttendancePermissionSchema = new mongoose.Schema(
     },
     fields: {
       employee: { type: FieldPermissionSchema, default: () => ({}) },
-      attendance: { type: FieldPermissionSchema, default: () => ({}) },
-      date: { type: FieldPermissionSchema, default: () => ({}) },
-      checkInTime: { type: FieldPermissionSchema, default: () => ({}) },
-      checkOutTime: { type: FieldPermissionSchema, default: () => ({}) },
-      totalHoursWorked: { type: FieldPermissionSchema, default: () => ({}) },
-      lateBy: { type: FieldPermissionSchema, default: () => ({}) },
-      location: { type: FieldPermissionSchema, default: () => ({}) },
+      holiday: { type: FieldPermissionSchema, default: () => ({}) },
+      settings: { type: FieldPermissionSchema, default: () => ({}) },
     },
   },
 );
