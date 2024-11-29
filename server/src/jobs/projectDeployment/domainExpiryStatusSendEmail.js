@@ -27,7 +27,7 @@ cron.schedule('0 9 * * *', async () => {
       ],
     });
 
-    notifications.forEach(async (project) => {
+    notifications?.forEach(async (project) => {
       let subject = '';
       let htmlContent = '';
 
