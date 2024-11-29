@@ -27,7 +27,12 @@ cron.schedule('0 9 * * *', async () => {
       ],
     });
 
-    notifications?.forEach(async (project) => {
+    if (!notifications || notifications.length === 0) {
+      console.log("Domain, SSL, Hosting not found.");
+      return;
+    };
+
+    notifications.forEach(async (project) => {
       let subject = '';
       let htmlContent = '';
 
