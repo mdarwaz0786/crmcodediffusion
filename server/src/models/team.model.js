@@ -30,7 +30,6 @@ const teamSchema = new mongoose.Schema(
     },
     monthlySalary: {
       type: String,
-      required: true,
     },
     workingHoursPerDay: {
       type: String,
