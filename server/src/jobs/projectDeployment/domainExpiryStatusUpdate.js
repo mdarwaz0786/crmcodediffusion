@@ -20,7 +20,6 @@ cron.schedule('0 8 * * *', async () => {
     console.log("expiry status update runs");
     const projectDeployments = await ProjectDeployment.find();
 
-
     if (!projectDeployments || projectDeployments.length === 0) {
       console.log("Project deployments not found");
       return;
