@@ -92,7 +92,7 @@ export const fetchAllAttendance = async (req, res) => {
         };
 
         // Fetch attendance with the constructed query
-        const attendance = await Attendance.find(query).populate('employee').exec();
+        const attendance = await Attendance.find(query).sort({ attendanceDate: -1 }).populate('employee').exec();
 
         if (!attendance) {
             return res.status(404).json({ success: false, message: 'Attendance not found' });
