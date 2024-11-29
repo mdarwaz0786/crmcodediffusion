@@ -215,23 +215,6 @@ const Header = () => {
                               </li>
                             )
                           }
-                          {/* {
-                            (team?.role?.permissions?.attendance?.create) && (
-                              <li>
-                                <Link to="/add-attendance">
-                                  <div className="menu-details">
-                                    <span className="menu-list-icon" style={{ background: "coral" }}>
-                                      <i className="ti ti-calendar-check"></i>
-                                    </span>
-                                    <div className="menu-details-content">
-                                      <p>Attendance</p>
-                                      <span>Add New Attendance</span>
-                                    </div>
-                                  </div>
-                                </Link>
-                              </li>
-                            )
-                          } */}
                           {
                             (team?.role?.permissions?.technology?.create) && (
                               <li>
