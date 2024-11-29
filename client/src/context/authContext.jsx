@@ -38,12 +38,14 @@ export const AuthProvider = ({ children }) => {
           Authorization: validToken,
         },
       });
-      setTeam(response?.data?.team);
-      setIsLoading(false);
+      if (response?.data?.success) {
+        setTeam(response?.data?.team);
+        setIsLoading(false);
+      };
     } catch (error) {
       setIsLoading(false);
-      if (error.response && error.response.status === 401) {
-        status = error.response.status;
+      if (error?.response && error?.response?.status === 401) {
+        status = error?.response?.status;
         logOutTeam();
         toast.error("Please log in to continue");
       } else {
