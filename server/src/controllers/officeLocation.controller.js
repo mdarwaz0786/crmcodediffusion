@@ -21,9 +21,7 @@ export const createOfficeLocation = async (req, res) => {
       !contact ||
       !latitude ||
       !longitude ||
-      !addressLine1 ||
-      !addressLine2 ||
-      !addressLine3
+      !addressLine1
     ) {
       return res.status(400).json({
         success: false,
