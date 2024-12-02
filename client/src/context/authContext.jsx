@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
 
   const logOutTeam = () => {
     setToken("");
+    setTeam("");
     if (status !== 401) {
       toast.success("Logout successful");
     };
