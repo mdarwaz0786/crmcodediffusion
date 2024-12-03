@@ -22,7 +22,15 @@ const EditPurchaseInvoice = () => {
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
-    setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
+
+    // Filter files to allow only images
+    const validFiles = selectedFiles.filter((file) => file.type.startsWith("image/"));
+
+    if (validFiles.length !== selectedFiles.length) {
+      toast.error("Only image files are allowed.");
+    };
+
+    setFiles((prevFiles) => [...prevFiles, ...validFiles]);
 
     // Reset file input field
     if (fileInputRef.current) {

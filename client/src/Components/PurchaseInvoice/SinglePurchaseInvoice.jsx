@@ -148,8 +148,8 @@ const SinglePurchaseInvoice = () => {
         if (preview.startsWith("data:image/jpeg") || preview.startsWith("data:image/png")) {
           try {
             await renderImage(preview, index); // Wait for image rendering
-          } catch (err) {
-            console.error(`Error rendering image ${index + 1}:`, err);
+          } catch (error) {
+            console.error(`Error rendering image ${index + 1}:`, error);
           };
         } else {
           renderOtherFiles(preview, index); // Handle other file types
@@ -163,7 +163,7 @@ const SinglePurchaseInvoice = () => {
     if (filePreviews.length > 0) {
       handlePreviews();
     } else {
-      doc.save("invoice.pdf"); // Save immediately if there are no previews
+      doc.save("purchase-invoice.pdf"); // Save immediately if there are no previews
     };
   };
 

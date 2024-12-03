@@ -20,25 +20,25 @@ const AddPurchaseInvoice = () => {
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files); // Convert FileList to an array
-    setFiles((prevFiles) => [...prevFiles, ...selectedFiles]); // Append new files
+
+    // Filter files to allow only images
+    const validFiles = selectedFiles.filter((file) => file.type.startsWith("image/"));
+
+    if (validFiles.length !== selectedFiles.length) {
+      toast.error("Only image files are allowed.");
+    };
+
+    // Update state with valid files
+    setFiles((prevFiles) => [...prevFiles, ...validFiles]);
+
+    // Generate file preview URLs for valid files
+    const previewUrls = validFiles.map((file) => URL.createObjectURL(file));
+    setFilePreviews((prevPreviews) => [...prevPreviews, ...previewUrls]);
 
     // Reset file input field
     if (fileInputRef.current) {
       fileInputRef.current.value = null;
     };
-
-    // Generate file preview URLs for images and PDFs
-    const previewUrls = selectedFiles?.map((file) => {
-      if (file?.type?.startsWith("image/")) {
-        return URL.createObjectURL(file);
-      } else if (file?.type === "application/pdf") {
-        return URL.createObjectURL(file);
-      } else {
-        return null;
-      };
-    });
-
-    setFilePreviews((prevPreviews) => [...prevPreviews, ...previewUrls]); // Append new preview URLs
   };
 
   // Remove file and corresponding preview

@@ -247,13 +247,15 @@ const PurchaseInvoice = () => {
     return new Promise((resolve, reject) => {
       const doc = new jsPDF();
       let yPos = 10;
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const marginBottom = 10; // Space to leave at the bottom of the page
 
-      // Add invoice details with horizontal center alignment for "Purchase Invoice"
+      // Add invoice title with horizontal center alignment
       const title = 'Purchase Invoice';
-      const titleWidth = doc.getStringUnitWidth(title) * doc.internal.getFontSize() / doc.internal.scaleFactor;
+      const titleWidth = (doc.getStringUnitWidth(title) * doc.internal.getFontSize()) / doc.internal.scaleFactor;
       const pageWidth = doc.internal.pageSize.getWidth();
-      const xPos = (pageWidth - titleWidth) / 2; // Center position for title
-      doc.text(title, xPos, yPos); // Add title centered
+      const xPos = (pageWidth - titleWidth) / 2;
+      doc.text(title, xPos, yPos);
       yPos += 10;
 
       // Add invoice details
@@ -282,17 +284,34 @@ const PurchaseInvoice = () => {
         if (preview.startsWith("data:image/jpeg") || preview.startsWith("data:image/png")) {
           const img = new Image();
           img.src = preview;
+
           img.onload = () => {
+            // Check for page overflow
+            if (yPos + 100 + marginBottom > pageHeight) {
+              doc.addPage();
+              yPos = 10; // Reset yPos for the new page
+            };
+
             doc.addImage(img, 'JPEG', 10, yPos, 100, 100);
             yPos += 110; // Adjust yPos for the next image
+
+            // Resolve after the last image is added
             if (index === base64Files.length - 1) {
               resolve(doc.output("blob"));
             };
           };
+
           img.onerror = (err) => reject(err);
         } else {
+          // Handle unsupported file types
+          if (yPos + 10 + marginBottom > pageHeight) {
+            doc.addPage();
+            yPos = 10;
+          };
+
           doc.text(`File ${index + 1}: Unsupported file type`, 10, yPos);
           yPos += 10;
+
           if (index === base64Files.length - 1) {
             resolve(doc.output("blob"));
           };
