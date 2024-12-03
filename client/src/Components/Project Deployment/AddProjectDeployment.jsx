@@ -197,7 +197,7 @@ const AddProjectDeployment = () => {
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="sslExpiryDate">SSL Expiry Date <span className="text-danger">*</span></label>
+              <label className="col-form-label" htmlFor="sslExpiryDate">SSL Expiry Date <span className="text-danger"></span></label>
               <input type="date" className="form-control" name="sslExpiryDate" id="sslExpiryDate" value={sslExpiryDate} onChange={(e) => setSslExpiryDate(e.target.value)} />
             </div>
           </div>
