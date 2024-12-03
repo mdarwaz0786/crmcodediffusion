@@ -49,8 +49,6 @@ import AddProformaInvoice from "./Components/ProformaInvoice/AddProformaInvoice.
 import SingleProformaInvoice from "./Components/ProformaInvoice/SingleProformaInvoice.jsx";
 import Profile from "./Components/Profile/Profile.jsx";
 import AttendanceList from "./Components/Attendance/AttendanceList.jsx";
-import AddAttendance from "./Components/Attendance/AddAttendance.jsx";
-import EditAttendance from "./Components/Attendance/EditAttendance.jsx";
 import PurchaseInvoice from "./Components/PurchaseInvoice/PurchaseInvoice.jsx";
 import AddPurchaseInvoice from "./Components/PurchaseInvoice/AddPurchaseInvoice.jsx";
 import EditPurchaseInvoice from "./Components/PurchaseInvoice/EditPurchaseInvoice.jsx";
@@ -118,8 +116,6 @@ const App = () => {
           <Route path="single-purchase-invoice/:id" element={<SinglePurchaseInvoice />} />
           <Route path="profile" element={<Profile />} />
           <Route path="attendance" element={<AttendanceList />} />
-          <Route path="add-attendance" element={<AddAttendance />} />
-          <Route path="edit-attendance/:id" element={<EditAttendance />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />

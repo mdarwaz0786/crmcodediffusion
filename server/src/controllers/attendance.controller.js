@@ -65,6 +65,7 @@ export const fetchAllAttendance = async (req, res) => {
     try {
         const { date, employeeId } = req.query;
         const query = {};
+        let sort = {};
 
         // Filter by exact date if provided
         if (date) {
@@ -91,14 +92,34 @@ export const fetchAllAttendance = async (req, res) => {
             };
         };
 
+        // Handle pagination
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 31;
+        const skip = (page - 1) * limit;
+
+        // Handle sorting
+        if (req.query.sort === 'Ascending') {
+            sort = { attendanceDate: 1 };
+        } else {
+            sort = { attendanceDate: -1 };
+        };
+
+        // Calculate total count
+        const totalCount = await Attendance.countDocuments(query);
+
         // Fetch attendance with the constructed query
-        const attendance = await Attendance.find(query).sort({ attendanceDate: -1 }).populate('employee').exec();
+        const attendance = await Attendance.find(query)
+            .sort(sort)
+            .skip(skip)
+            .limit(limit)
+            .populate('employee')
+            .exec();
 
         if (!attendance) {
             return res.status(404).json({ success: false, message: 'Attendance not found' });
         };
 
-        return res.status(200).json({ success: true, attendance });
+        return res.status(200).json({ success: true, attendance, totalCount });
     } catch (error) {
         console.log(error.message);
         return res.status(500).json({ success: false, message: error.message });

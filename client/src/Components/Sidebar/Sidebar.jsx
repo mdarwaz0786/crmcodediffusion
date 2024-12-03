@@ -74,6 +74,11 @@ const Sidebar = () => {
                     )
                   }
                   {
+                    (permissions?.attendance?.access) && (
+                      <li><Link to="/attendance" className={currentPath === "/attendance" ? "active" : ""} id={isMobile && active === "attendance" ? "mobile_btn" : ""} onClick={() => handleActive("attendance")}><i style={{ color: currentPath === "/attendance" ? "" : "#FFA201" }} className="ti ti-checklist"></i><span>Attendance</span></Link></li>
+                    )
+                  }
+                  {
                     (permissions?.projectDeployment?.access) && (
                       <li><Link to="/project-deployment" className={currentPath === "/project-deployment" ? "active" : ""} id={isMobile && active === "projectDeployment" ? "mobile_btn" : ""} onClick={() => handleActive("projectDeployment")}><i style={{ color: currentPath === "/project-deployment" ? "" : "#FFA201" }} className="ti ti-cloud-upload"></i><span>Project Deployment</span></Link></li>
                     )

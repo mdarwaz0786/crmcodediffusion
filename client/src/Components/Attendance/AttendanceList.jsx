@@ -1,52 +1,77 @@
 /* eslint-disable no-extra-semi */
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from 'axios';
-import { toast } from 'react-toastify';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from "../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
 import Preloader from "../../Preloader.jsx";
+import formatDate from "../../Helper/formatDate.js";
+import formatTimeToHoursMinutes from "../../Helper/formatTimeToHoursMinutes.js";
+import formatTimeWithAmPm from "../../Helper/formatTimeWithAmPm.js";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AttendanceList = () => {
   const [data, setData] = useState([]);
+  const [employee, setEmployee] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [singleEmployee, setSingleEmployee] = useState("");
   const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(true);
   const { validToken, team, isLoading } = useAuth();
+  const permissions = team?.role?.permissions?.attendance;
   const [filters, setFilters] = useState({
-    search: "",
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
     sort: "Descending",
     page: 1,
-    limit: 10,
+    limit: 31,
   });
-  const permissions = team?.role?.permissions?.attendance;
-  const filedPermissions = team?.role?.permissions?.attendance?.fields;
 
-  const useDebounce = (value, delay) => {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-    const timer = useRef();
+  const fetchAllEmployee = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/team/all-team`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
 
-    useEffect(() => {
-      if (value === "") {
-        setDebouncedValue("");
-        return;
+      if (response?.data?.success) {
+        setEmployee(response?.data?.team);
       };
-
-      timer.current = setTimeout(() => {
-        setDebouncedValue(value);
-      }, delay);
-
-      return () => {
-        clearTimeout(timer.current);
-      };
-    }, [value, delay]);
-
-    return debouncedValue;
+    } catch (error) {
+      console.log(error.message);
+    };
   };
 
-  const debouncedSearch = useDebounce(filters.search, 500);
+  useEffect(() => {
+    if (!isLoading && team && permissions?.access) {
+      fetchAllEmployee();
+    };
+  }, [isLoading, team, permissions]);
+
+  const fetchSingleEmployee = async (selectedEmployee) => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/team/single-team/${selectedEmployee}`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        setSingleEmployee(response?.data?.team);
+      };
+    } catch (error) {
+      console.log(error.message);
+    };
+  };
+
+  useEffect(() => {
+    if (!isLoading && team && permissions?.access && selectedEmployee) {
+      fetchSingleEmployee(selectedEmployee);
+    };
+  }, [isLoading, team, permissions, selectedEmployee]);
 
   const fetchAllData = async () => {
     try {
@@ -56,7 +81,9 @@ const AttendanceList = () => {
           Authorization: validToken,
         },
         params: {
-          search: filters.search,
+          year: filters.year,
+          month: filters.month,
+          employeeId: selectedEmployee,
           sort: filters.sort,
           page: filters.page,
           limit: filters.limit,
@@ -74,55 +101,27 @@ const AttendanceList = () => {
     };
   };
 
-  // const handleFilterChange = (e) => {
-  //   const { name, value, type, checked } = e.target;
+  const handleYearChange = (e) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      year: e.target.value,
+      page: 1,
+    }));
+  };
 
-  //   if (type === "checkbox") {
-  //     setFilters((prevFilters) => ({
-  //       ...prevFilters,
-  //       [name]: checked
-  //         ? [...prevFilters[name], value]
-  //         : prevFilters[name].filter((item) => item !== value),
-  //       page: 1,
-  //     }));
-  //   } else {
-  //     setFilters((prevFilters) => ({
-  //       ...prevFilters,
-  //       [name]: value,
-  //       page: 1,
-  //     }));
-  //   };
-  // };
+  const handleMonthChange = (e) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      month: e.target.value,
+      page: 1,
+    }));
+  };
 
   useEffect(() => {
     if (!isLoading && team && permissions?.access) {
       fetchAllData();
     };
-  }, [debouncedSearch, filters.limit, filters.page, filters.sort, isLoading, team, permissions]);
-
-  const handleDelete = async (id) => {
-    let isdelete = prompt("If you want to delete, type \"yes\".");
-
-    if (isdelete === "yes") {
-      try {
-        const response = await axios.delete(`${base_url}/api/v1/attendance/delete-attendance/${id}`, {
-          headers: {
-            Authorization: validToken,
-          },
-        });
-
-        if (response?.data?.success) {
-          toast.success("Deleted successfully");
-          fetchAllData();
-        };
-      } catch (error) {
-        console.log("Error while deleting attendance:", error.message);
-        toast.error("Error while deleting");
-      };
-    } else if (isdelete !== "") {
-      alert("Type only \"yes\".");
-    };
-  };
+  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team, permissions]);
 
   const exportAttendanceListAsExcel = () => {
     const element = document.querySelector("#exportAttendanceList");
@@ -133,7 +132,7 @@ const AttendanceList = () => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'attendance-list.xlsx';
+    a.download = `${filters.month}-${filters.year}-${singleEmployee?.name ? singleEmployee?.name : "all"}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -151,7 +150,7 @@ const AttendanceList = () => {
   const exportAttendanceListAsPdf = () => {
     const element = document.querySelector("#exportAttendanceList");
     const options = {
-      filename: "attendance-list.pdf",
+      filename: `${filters.month}-${filters.year}-${singleEmployee?.name ? singleEmployee?.name : "all"}`,
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
@@ -166,12 +165,6 @@ const AttendanceList = () => {
     if (element) {
       html2pdf().set(options).from(element).save();
     };
-  };
-
-  function formatDate(isoDate) {
-    const date = new Date(isoDate);
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    return date.toLocaleDateString('en-GB', options);
   };
 
   if (isLoading) {
@@ -211,68 +204,12 @@ const AttendanceList = () => {
 
               <div className="card main-card">
                 <div className="card-body">
-                  {/* Search */}
-                  <div className="search-section">
-                    <div className="row">
-                      <div className="col-md-5 col-sm-4">
-                        <div className="form-wrap icon-form">
-                          <span className="form-icon"><i className="ti ti-search" /></span>
-                          <input type="text" className="form-control" placeholder="Search Attendance" value={filters.search} onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value, page: 1 }))} />
-                        </div>
-                      </div>
-                      <div className="col-md-7 col-sm-8">
-                        <div className="export-list text-sm-end">
-                          <ul>
-                            {
-                              (permissions?.export) && (
-                                <li>
-                                  <div className="export-dropdwon">
-                                    <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown">
-                                      <i className="ti ti-package-export" />
-                                      Export
-                                    </Link>
-                                    <div className="dropdown-menu  dropdown-menu-end">
-                                      <ul>
-                                        <li>
-                                          <Link to="#" onClick={() => setTimeout(() => { exportAttendanceListAsPdf() }, 0)}>
-                                            <i className="ti ti-file-type-pdf text-danger" />
-                                            Export as PDF
-                                          </Link>
-                                        </li>
-                                        <li>
-                                          <Link to="#" onClick={() => setTimeout(() => { exportAttendanceListAsExcel() }, 0)}>
-                                            <i className="ti ti-file-spreadsheet text-success" />
-                                            Export as EXCEL
-                                          </Link>
-                                        </li>
-                                      </ul>
-                                    </div>
-                                  </div>
-                                </li>
-                              )
-                            }
-                            {
-                              (permissions?.create) && (
-                                <li>
-                                  <Link to="/add-attendance" className="btn btn-primary">
-                                    <i className="ti ti-square-rounded-plus" />
-                                    Add New Attendance
-                                  </Link>
-                                </li>
-                              )
-                            }
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* /Search */}
-
                   {/* Filter */}
                   <div className="filter-section filter-flex">
                     <div className="sortby-list">
                       <ul>
                         <li>
+                          <label className="pb-1">Sort:</label>
                           <div className="sort-dropdown drop-down">
                             <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown"><i className="ti ti-sort-ascending-2" />{filters.sort}</Link>
                             <div className="dropdown-menu  dropdown-menu-start">
@@ -293,203 +230,150 @@ const AttendanceList = () => {
                             </div>
                           </div>
                         </li>
-                      </ul>
-                    </div>
-                    {/* <div className="filter-list">
-                      <ul>
                         <li>
-                          <div className="form-sorts dropdown">
-                            <Link to="#" data-bs-toggle="dropdown" data-bs-auto-close="false"><i className="ti ti-filter-share" />Filter</Link>
-                            <div className="filter-dropdown-menu dropdown-menu  dropdown-menu-xl-end">
-                              <div className="filter-set-view">
-                                <div className="filter-set-head">
-                                  <h4><i className="ti ti-filter-share" />Filter</h4>
-                                </div>
-                                <div className="accordion" id="accordionExample">
-                                  <div className="filter-set-content">
-                                    <div className="filter-set-content-head">
-                                      <Link to="#" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Designation Name</Link>
-                                    </div>
-                                    <div className="filter-set-contents accordion-collapse collapse show" id="collapseTwo" data-bs-parent="#accordionExample">
-                                      <div className="filter-content-list">
-                                        <div className="form-wrap icon-form">
-                                          <span className="form-icon"><i className="ti ti-search" /></span>
-                                          <input type="text" className="form-control" placeholder="Search Designation Name" onChange={(e) => setName(e.target.value)} />
-                                        </div>
-                                        <ul>
-                                          {
-                                            nameData?.map((n) => (
-                                              <li key={n._id}>
-                                                <div className="filter-checks">
-                                                  <label className="checkboxs">
-                                                    <input
-                                                      type="checkbox"
-                                                      name="nameFilter"
-                                                      value={n?.name}
-                                                      checked={filters.nameFilter.includes(n?.name)}
-                                                      onChange={handleFilterChange}
-                                                    />
-                                                    <span className="checkmarks" />
-                                                  </label>
-                                                </div>
-                                                <div className="collapse-inside-text">
-                                                  <h5>{n.name}</h5>
-                                                </div>
-                                              </li>
-                                            ))
-                                          }
-                                        </ul>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="filter-reset-btns">
-                                  <div className="row">
-                                    <div className="col-6">
-                                      <Link to="#" className="btn btn-light" onClick={() => setFilters((prev) => ({ ...prev, nameFilter: [] }))}>Reset</Link>
-                                    </div>
-                                  </div>
+                          <label className="pb-1">Year:</label>
+                          <select
+                            id="year"
+                            name="year"
+                            value={filters.year}
+                            onChange={handleYearChange}
+                            className="form-select"
+                          >
+                            <option value="">All</option>
+                            {
+                              // Generate the years dynamically, starting from the current year and going backwards 10 year
+                              Array.from({ length: 10 }, (_, i) => {
+                                const year = new Date().getFullYear() - i;
+                                return <option key={year} value={year}>{year}</option>;
+                              })
+                            }
+                          </select>
+                        </li>
+                        <li>
+                          <label className="pb-1">Month:</label>
+                          <select
+                            id="month"
+                            name="month"
+                            value={filters.month}
+                            onChange={handleMonthChange}
+                            className="form-select"
+                          >
+                            <option value="">All</option>
+                            <option value="01">January</option>
+                            <option value="02">February</option>
+                            <option value="03">March</option>
+                            <option value="04">April</option>
+                            <option value="05">May</option>
+                            <option value="06">June</option>
+                            <option value="07">July</option>
+                            <option value="08">August</option>
+                            <option value="09">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                          </select>
+                        </li>
+                        <li>
+                          <label className="pb-1">Employee:</label>
+                          <select className="form-select" name="employee" id="employee" value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)}>
+                            <option value="">All</option>
+                            {
+                              employee?.map((e) => (
+                                <option key={e?._id} value={e?._id}>{e?.name}</option>
+                              ))
+                            }
+                          </select>
+                        </li>
+                        {
+                          (permissions?.export) && (
+                            <li>
+                              <label className="pb-1">Export:</label>
+                              <div className="export-dropdwon">
+                                <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown">
+                                  <i className="ti ti-package-export" />
+                                  Export
+                                </Link>
+                                <div className="dropdown-menu  dropdown-menu-end">
+                                  <ul>
+                                    <li>
+                                      <Link to="#" onClick={() => setTimeout(() => { exportAttendanceListAsPdf() }, 0)}>
+                                        <i className="ti ti-file-type-pdf text-danger" />
+                                        Export as PDF
+                                      </Link>
+                                    </li>
+                                    <li>
+                                      <Link to="#" onClick={() => setTimeout(() => { exportAttendanceListAsExcel() }, 0)}>
+                                        <i className="ti ti-file-spreadsheet text-success" />
+                                        Export as EXCEL
+                                      </Link>
+                                    </li>
+                                  </ul>
                                 </div>
                               </div>
-                            </div>
-                          </div>
-                        </li>
-                        <li>
-                          <div className="view-icons">
-                            <Link to="#" className="active"><i className="ti ti-list-tree" /></Link>
-                            <Link to="#"><i className="ti ti-grid-dots" /></Link>
-                          </div>
-                        </li>
+                            </li>
+                          )
+                        }
                       </ul>
-                    </div> */}
+                    </div>
                   </div>
                   {/* /Filter */}
 
                   {/* Attendance List */}
                   <div className="table-responsive custom-table">
-                    <table className="table table-bordered table-striped custom-border">
-                      <thead className="thead-light">
-                        <tr>
-                          <th className="no-sort">
-                            <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                          </th>
-                          <th>#</th>
+                    <div className="table-responsive custom-table">
+                      <table className="table table-bordered table-striped custom-border">
+                        <thead className="thead-light">
+                          <tr>
+                            <th className="no-sort">
+                              <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
+                            </th>
+                            <th>#</th>
+                            <th>Date</th>
+                            <th>Employee</th>
+                            <th>Punch In</th>
+                            <th>Punch Out</th>
+                            <th>Late In</th>
+                            <th>Hours Worked</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
                           {
-                            (filedPermissions?.date?.show) && (
-                              <th>Date</th>
-                            )
+                            data?.map((d, index) => (
+                              <tr key={d?._id}>
+                                <th className="no-sort">
+                                  <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
+                                </th>
+                                <td>{(filters.page - 1) * filters.limit + index + 1}</td>
+                                <td>{formatDate(d?.attendanceDate)}</td>
+                                <td>{d?.employee?.name}</td>
+                                <td>{d?.punchInTime ? formatTimeWithAmPm(d?.punchInTime) : <><hr /></>}</td>
+                                <td>{d?.punchOutTime ? formatTimeWithAmPm(d?.punchOutTime) : <><hr /></>}</td>
+                                <td>
+                                  {
+                                    d?.lateIn
+                                      ? d?.lateIn === "00:00"
+                                        ? "On Time"
+                                        : formatTimeToHoursMinutes(d?.lateIn)
+                                      : <><hr /></>
+                                  }
+                                </td>
+                                <td>
+                                  {
+                                    d?.hoursWorked
+                                      ? d?.hoursWorked === "00:00"
+                                        ? <><hr /></>
+                                        : formatTimeToHoursMinutes(d?.hoursWorked)
+                                      : <><hr /></>
+                                  }
+                                </td>
+                                <td>{d?.status}</td>
+                              </tr>
+                            ))
                           }
-                          {
-                            (filedPermissions?.employee?.show) && (
-                              <th>Employee Name</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.attendance?.show) && (
-                              <th>Attendance</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.checkInTime?.show) && (
-                              <th>Check In</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.checkOutTime?.show) && (
-                              <th>Check Out</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.employee?.show) && (
-                              <th>Late By</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.employee?.show) && (
-                              <th>Location</th>
-                            )
-                          }
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {
-                          data?.map((d, index) => (
-                            <tr key={d?._id}>
-                              <th className="no-sort">
-                                <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                              </th>
-                              <td>{(filters.page - 1) * filters.limit + index + 1}</td>
-                              {
-                                (filedPermissions?.date?.show) && (
-                                  <td>{formatDate(d?.date)}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.employee?.show) && (
-                                  <td>{d?.employee?.name}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.attendance?.show) && (
-                                  <td>{d?.attendance}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.checkInTime?.show) && (
-                                  <td>{d?.checkInTime}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.checkOutTime?.show) && (
-                                  <td>{d?.checkOutTime}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.employee?.show) && (
-                                  <td>{d?.lateBy}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.employee?.show) && (
-                                  <td>{d?.location?.name}</td>
-                                )
-                              }
-                              <td>
-                                <div className="table-action">
-                                  <Link to="#" className="action-icon" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i className="fa fa-ellipsis-v"></i>
-                                  </Link>
-                                  <div className="dropdown-menu dropdown-menu-right">
-                                    {
-                                      (permissions?.update) && (
-                                        <Link to={`/edit-attendance/${d?._id}`} className="dropdown-item">
-                                          <i className="ti ti-edit text-blue"></i>
-                                          Update
-                                        </Link>
-                                      )
-                                    }
-                                    {
-                                      permissions?.update && permissions?.delete && (
-                                        <hr className="horizontal-line" />
-                                      )
-                                    }
-                                    {
-                                      (permissions?.delete) && (
-                                        <Link to="#" className="dropdown-item" onClick={() => handleDelete(d?._id)}>
-                                          <i className="ti ti-trash text-danger"></i>
-                                          Delete
-                                        </Link>
-                                      )
-                                    }
-                                  </div>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                        }
-                      </tbody>
-                    </table>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                   <div className="row align-items-center">
                     <div className="col-md-4 custom-pagination">
