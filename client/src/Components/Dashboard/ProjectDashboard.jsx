@@ -404,381 +404,395 @@ const ProjectDashboard = () => {
                     </div>
                   </div>
                 </div>
-                <div className="row">
-                  <div className="col-md-7">
-                    <div className="card">
-                      <div className="card-body">
-                        <div className="statistic-header">
-                          <h4><i className="ti ti-grip-vertical me-1" />Recent Projects</h4>
-                          <div className="dropdown statistic-dropdown">
-                            <div className="card-select">
-                              <ul>
-                                <li>
-                                  <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown" >
-                                    <i className="ti ti-calendar-check me-2" /> {filters.sort}
-                                  </Link>
-                                  <div className="dropdown-menu dropdown-menu-end">
-                                    <Link to="#" className="dropdown-item" onClick={() => setFilters((prev) => ({ ...prev, sort: "Ascending", page: 1 }))} >
-                                      <i className="ti ti-circle-chevron-right" /> Ascending
-                                    </Link>
-                                    <Link to="#" className="dropdown-item" onClick={() => setFilters((prev) => ({ ...prev, sort: "Descending", page: 1 }))} >
-                                      <i className="ti ti-circle-chevron-right" /> Descending
-                                    </Link>
-                                  </div>
-                                </li>
-                                {
-                                  (permissions?.create) && (
+                {
+                  project && team?.role?.permissions?.project?.access && (
+                    <div className="row">
+                      <div className="col-md-7">
+                        <div className="card">
+                          <div className="card-body">
+                            <div className="statistic-header">
+                              <h4><i className="ti ti-grip-vertical me-1" />Recent Projects</h4>
+                              <div className="dropdown statistic-dropdown">
+                                <div className="card-select">
+                                  <ul>
                                     <li>
-                                      <Link to="/add-project" className="btn btn-primary" style={{ width: "10.2rem" }}>
-                                        <i className="ti ti-square-rounded-plus me-1" />
-                                        Add New Project
+                                      <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown" >
+                                        <i className="ti ti-calendar-check me-2" /> {filters.sort}
                                       </Link>
+                                      <div className="dropdown-menu dropdown-menu-end">
+                                        <Link to="#" className="dropdown-item" onClick={() => setFilters((prev) => ({ ...prev, sort: "Ascending", page: 1 }))} >
+                                          <i className="ti ti-circle-chevron-right" /> Ascending
+                                        </Link>
+                                        <Link to="#" className="dropdown-item" onClick={() => setFilters((prev) => ({ ...prev, sort: "Descending", page: 1 }))} >
+                                          <i className="ti ti-circle-chevron-right" /> Descending
+                                        </Link>
+                                      </div>
                                     </li>
-                                  )
-                                }
-                              </ul>
+                                    {
+                                      (permissions?.create) && (
+                                        <li>
+                                          <Link to="/add-project" className="btn btn-primary" style={{ width: "10.2rem" }}>
+                                            <i className="ti ti-square-rounded-plus me-1" />
+                                            Add New Project
+                                          </Link>
+                                        </li>
+                                      )
+                                    }
+                                  </ul>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                        <div className="table-responsive custom-table">
-                          <table className="table table-bordered table-striped custom-border">
-                            <thead className="thead-light">
-                              <tr>
-                                <th>#</th>
-                                {
-                                  (permissions?.access) && (
-                                    <th>View</th>
-                                  )
-                                }
-                                {
-                                  (fieldPermissions?.projectId?.show) && (
-                                    <th>Project ID</th>
-                                  )
-                                }
-                                {
-                                  (fieldPermissions?.projectName?.show) && (
-                                    <th>Project Name</th>
-                                  )
-                                }
-                                <th>Action</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {
-                                project?.map((p, index) => (
-                                  <tr key={p?._id}>
-                                    <td>{(filters.page - 1) * filters.limit + index + 1}</td>
+                            <div className="table-responsive custom-table">
+                              <table className="table table-bordered table-striped custom-border">
+                                <thead className="thead-light">
+                                  <tr>
+                                    <th>#</th>
                                     {
                                       (permissions?.access) && (
-                                        <td><Link to={permissions.access ? `/single-project-detail/${p?._id}` : "/"}><i className="fas fa-eye"></i></Link></td>
+                                        <th>View</th>
                                       )
                                     }
                                     {
                                       (fieldPermissions?.projectId?.show) && (
-                                        <td>{p?.projectId}</td>
+                                        <th>Project ID</th>
                                       )
                                     }
                                     {
                                       (fieldPermissions?.projectName?.show) && (
-                                        <td>{p?.projectName}</td>
+                                        <th>Project Name</th>
                                       )
                                     }
-                                    <td>
-                                      <div className="table-action">
-                                        <Link to="#" className="action-icon" data-bs-toggle="dropdown" aria-expanded="false">
-                                          <i className="fa fa-ellipsis-v"></i>
-                                        </Link>
-                                        <div className="dropdown-menu dropdown-menu-right">
-                                          {
-                                            (permissions?.update) && (
-                                              <Link to={`/edit-project/${p?._id}`} className="dropdown-item">
-                                                <i className="ti ti-edit text-blue"></i>
-                                                Update
-                                              </Link>
-                                            )
-                                          }
-                                          {
-                                            permissions?.update && permissions?.delete && (
-                                              <hr className="horizontal-line" />
-                                            )
-                                          }
-                                          {
-                                            (permissions?.delete) && (
-                                              <Link to="#" className="dropdown-item" onClick={() => handleDelete(p?._id)}>
-                                                <i className="ti ti-trash text-danger"></i>
-                                                Delete
-                                              </Link>
-                                            )
-                                          }
-                                        </div>
-                                      </div>
-                                    </td>
+                                    <th>Action</th>
                                   </tr>
-                                ))
-                              }
-                            </tbody>
-                          </table>
-                        </div>
-                        <div className="row align-items-center">
-                          <div className="col-md-4 custom-pagination">
-                            <div className="datatable-length">
-                              <div className="dataTables_length" id="project-list_length">
-                                <label>
-                                  Show
-                                  <select name="project-list_length" value={filters.limit} onChange={(e) => setFilters((prev) => ({ ...prev, limit: e.target.value, page: 1 }))} aria-controls="project-list" className="form-select form-select-sm">
-                                    <option value="5">5</option>
-                                    <option value="10">10</option>
-                                    <option value="15">15</option>
-                                    <option value="20">20</option>
-                                    <option value="25">25</option>
-                                    <option value={total}>All</option>
-                                  </select>
-                                </label>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="col-md-4 custom-pagination">
-                            {
-                              (filteredTotal === 0) ? (
-                                <span style={{ textAlign: "center", fontSize: "1rem", fontWeight: "600" }}>No Data</span>
-                              ) : loading && permissions?.access ? (
-                                <h5 style={{ textAlign: "center", color: "#00918E" }}>
-                                  <div className="spinner-border" role="status">
-                                    <span className="visually-hidden">Loading...</span>
-                                  </div>
-                                </h5>
-                              ) : (
-                                null
-                              )
-                            }
-                          </div>
-                          <div className="col-md-4 custom-pagination">
-                            <div className="datatable-paginate">
-                              <div className="dataTables_paginate paging_simple_numbers" id="project-list_paginate">
-                                <ul className="pagination">
-                                  <li className={`paginate_button page-item previous ${filters.page === 1 ? "disabled" : ""}`} id="project-list_previous">
-                                    <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page - 1 }))} aria-controls="project-list" aria-disabled={filters.page === 1} role="link" data-dt-idx="previous" tabIndex="-1" className="page-link" >
-                                      <i className="fa fa-angle-left"></i> Prev
-                                    </Link>
-                                  </li>
+                                </thead>
+                                <tbody>
                                   {
-                                    [...Array(Math.ceil(total / filters.limit)).keys()].map((num) => (
-                                      <li className={`paginate_button page-item page-number ${filters.page === num + 1 ? "active" : ""}`} key={num}>
-                                        <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: num + 1 }))} aria-controls="project-list" role="link" aria-current={filters.page === num + 1} data-dt-idx={num} tabIndex="0" className="page-link">
-                                          {num + 1}
-                                        </Link>
-                                      </li>
+                                    project?.map((p, index) => (
+                                      <tr key={p?._id}>
+                                        <td>{(filters.page - 1) * filters.limit + index + 1}</td>
+                                        {
+                                          (permissions?.access) && (
+                                            <td><Link to={permissions.access ? `/single-project-detail/${p?._id}` : "/"}><i className="fas fa-eye"></i></Link></td>
+                                          )
+                                        }
+                                        {
+                                          (fieldPermissions?.projectId?.show) && (
+                                            <td>{p?.projectId}</td>
+                                          )
+                                        }
+                                        {
+                                          (fieldPermissions?.projectName?.show) && (
+                                            <td>{p?.projectName}</td>
+                                          )
+                                        }
+                                        <td>
+                                          <div className="table-action">
+                                            <Link to="#" className="action-icon" data-bs-toggle="dropdown" aria-expanded="false">
+                                              <i className="fa fa-ellipsis-v"></i>
+                                            </Link>
+                                            <div className="dropdown-menu dropdown-menu-right">
+                                              {
+                                                (permissions?.update) && (
+                                                  <Link to={`/edit-project/${p?._id}`} className="dropdown-item">
+                                                    <i className="ti ti-edit text-blue"></i>
+                                                    Update
+                                                  </Link>
+                                                )
+                                              }
+                                              {
+                                                permissions?.update && permissions?.delete && (
+                                                  <hr className="horizontal-line" />
+                                                )
+                                              }
+                                              {
+                                                (permissions?.delete) && (
+                                                  <Link to="#" className="dropdown-item" onClick={() => handleDelete(p?._id)}>
+                                                    <i className="ti ti-trash text-danger"></i>
+                                                    Delete
+                                                  </Link>
+                                                )
+                                              }
+                                            </div>
+                                          </div>
+                                        </td>
+                                      </tr>
                                     ))
                                   }
-                                  <li className="paginate_button page-item page-number-mobile active">
-                                    {filters.page}
-                                  </li>
-                                  <li className={`paginate_button page-item next ${filters.page === Math.ceil(total / filters.limit) ? "disabled" : ""}`} id="project-list_next">
-                                    <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page + 1 }))} className="page-link" aria-controls="project-list" role="link" data-dt-idx="next" tabIndex="0">
-                                      Next <i className="fa fa-angle-right"></i>
-                                    </Link>
-                                  </li>
-                                </ul>
+                                </tbody>
+                              </table>
+                            </div>
+                            <div className="row align-items-center">
+                              <div className="col-md-4 custom-pagination">
+                                <div className="datatable-length">
+                                  <div className="dataTables_length" id="project-list_length">
+                                    <label>
+                                      Show
+                                      <select name="project-list_length" value={filters.limit} onChange={(e) => setFilters((prev) => ({ ...prev, limit: e.target.value, page: 1 }))} aria-controls="project-list" className="form-select form-select-sm">
+                                        <option value="5">5</option>
+                                        <option value="10">10</option>
+                                        <option value="15">15</option>
+                                        <option value="20">20</option>
+                                        <option value="25">25</option>
+                                        <option value={total}>All</option>
+                                      </select>
+                                    </label>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="col-md-4 custom-pagination">
+                                {
+                                  (filteredTotal === 0) ? (
+                                    <span style={{ textAlign: "center", fontSize: "1rem", fontWeight: "600" }}>No Data</span>
+                                  ) : loading && permissions?.access ? (
+                                    <h5 style={{ textAlign: "center", color: "#00918E" }}>
+                                      <div className="spinner-border" role="status">
+                                        <span className="visually-hidden">Loading...</span>
+                                      </div>
+                                    </h5>
+                                  ) : (
+                                    null
+                                  )
+                                }
+                              </div>
+                              <div className="col-md-4 custom-pagination">
+                                <div className="datatable-paginate">
+                                  <div className="dataTables_paginate paging_simple_numbers" id="project-list_paginate">
+                                    <ul className="pagination">
+                                      <li className={`paginate_button page-item previous ${filters.page === 1 ? "disabled" : ""}`} id="project-list_previous">
+                                        <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page - 1 }))} aria-controls="project-list" aria-disabled={filters.page === 1} role="link" data-dt-idx="previous" tabIndex="-1" className="page-link" >
+                                          <i className="fa fa-angle-left"></i> Prev
+                                        </Link>
+                                      </li>
+                                      {
+                                        [...Array(Math.ceil(total / filters.limit)).keys()].map((num) => (
+                                          <li className={`paginate_button page-item page-number ${filters.page === num + 1 ? "active" : ""}`} key={num}>
+                                            <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: num + 1 }))} aria-controls="project-list" role="link" aria-current={filters.page === num + 1} data-dt-idx={num} tabIndex="0" className="page-link">
+                                              {num + 1}
+                                            </Link>
+                                          </li>
+                                        ))
+                                      }
+                                      <li className="paginate_button page-item page-number-mobile active">
+                                        {filters.page}
+                                      </li>
+                                      <li className={`paginate_button page-item next ${filters.page === Math.ceil(total / filters.limit) ? "disabled" : ""}`} id="project-list_next">
+                                        <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page + 1 }))} className="page-link" aria-controls="project-list" role="link" data-dt-idx="next" tabIndex="0">
+                                          Next <i className="fa fa-angle-right"></i>
+                                        </Link>
+                                      </li>
+                                    </ul>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                  {/* Pie chart project by priority */}
-                  <div className="col-md-5 d-flex">
-                    <div className="card w-100">
-                      <div className="card-body">
-                        <div className="statistic-header">
-                          <h4><i className="ti ti-grip-vertical me-1" />Projects By Priority</h4>
-                        </div>
-                        <Pie data={pieData} />
-                      </div>
-                    </div>
-                  </div>
-                  {/* /Pie chart project by priority */}
-                </div>
-
-                {/* Attendance */}
-                <div className="row">
-                  <div className="col-md-12">
-                    <div className="card">
-                      <div className="card-body">
-                        <div className="statistic-header">
-                          <h4><i className="ti ti-grip-vertical me-1" />Today&apos;s Attendance</h4>
-                        </div>
-                        <div className="table-responsive custom-table">
-                          <div className="table-responsive custom-table">
-                            <table className="table table-bordered table-striped custom-border">
-                              <thead className="thead-light">
-                                <tr>
-                                  <th className="no-sort">
-                                    <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                                  </th>
-                                  <th>#</th>
-                                  <th>Date</th>
-                                  <th>Employee</th>
-                                  <th>Punch In</th>
-                                  <th>Punch Out</th>
-                                  <th>Late In</th>
-                                  <th>Hours Worked</th>
-                                  <th>Status</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {
-                                  attendance?.map((d, index) => (
-                                    <tr key={d?._id}>
-                                      <th className="no-sort">
-                                        <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                                      </th>
-                                      <td>{(filters.page - 1) * filters.limit + index + 1}</td>
-                                      <td>{formatDate(d?.attendanceDate)}</td>
-                                      <td>{d?.employee?.name}</td>
-                                      <td>{d?.punchInTime ? formatTimeWithAmPm(d?.punchInTime) : <><hr /></>}</td>
-                                      <td>{d?.punchOutTime ? formatTimeWithAmPm(d?.punchOutTime) : <><hr /></>}</td>
-                                      <td>
-                                        {
-                                          d?.lateIn
-                                            ? d?.lateIn === "00:00"
-                                              ? "On Time"
-                                              : formatTimeToHoursMinutes(d?.lateIn)
-                                            : <><hr /></>
-                                        }
-                                      </td>
-                                      <td>
-                                        {
-                                          d?.hoursWorked
-                                            ? d?.hoursWorked === "00:00"
-                                              ? <><hr /></>
-                                              : formatTimeToHoursMinutes(d?.hoursWorked)
-                                            : <><hr /></>
-                                        }
-                                      </td>
-                                      <td>{d?.status}</td>
-                                    </tr>
-                                  ))
-                                }
-                              </tbody>
-                            </table>
+                      {/* Pie chart project by priority */}
+                      <div className="col-md-5 d-flex">
+                        <div className="card w-100">
+                          <div className="card-body">
+                            <div className="statistic-header">
+                              <h4><i className="ti ti-grip-vertical me-1" />Projects By Priority</h4>
+                            </div>
+                            <Pie data={pieData} />
                           </div>
                         </div>
                       </div>
+                      {/* /Pie chart project by priority */}
                     </div>
-                  </div>
-                </div>
-                {/* /Attendance */}
+                  )
+                }
 
-                {/* Project Deployment */}
-                <div className="row">
-                  <div className="col-md-12">
-                    <div className="card">
-                      <div className="card-body">
-                        <div className="statistic-header">
-                          <h4><i className="ti ti-grip-vertical me-1" />Expiring Project Deployments</h4>
-                        </div>
-                        <div className="table-responsive custom-table">
-                          <table className="table table-bordered table-striped custom-border">
-                            <thead className="thead-light">
-                              <tr>
-                                <th className="no-sort">
-                                  <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                                </th>
-                                <th>#</th>
-                                <th>Website Name</th>
-                                <th>Client Name</th>
-                                <th>Domain Status</th>
-                                <th>Hosting Status</th>
-                                <th>SSL Status</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {
-                                projectDeployment?.map((d, index) => (
-                                  <tr key={d?._id}>
+                {/* Attendance */}
+                {
+                  attendance && team?.role?.permissions?.attendance?.access && (
+                    <div className="row">
+                      <div className="col-md-12">
+                        <div className="card">
+                          <div className="card-body">
+                            <div className="statistic-header">
+                              <h4><i className="ti ti-grip-vertical me-1" />Today&apos;s Attendance</h4>
+                            </div>
+                            <div className="table-responsive custom-table">
+                              <table className="table table-bordered table-striped custom-border">
+                                <thead className="thead-light">
+                                  <tr>
                                     <th className="no-sort">
                                       <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
                                     </th>
-                                    <td>{(filters.page - 1) * filters.limit + index + 1}</td>
-                                    <td>{d?.websiteName}</td>
-                                    <td>{d?.client?.name}</td>
-                                    <td>
-                                      {
-                                        (parseInt(d?.domainExpireIn) <= 30) ? (
-                                          <div style={{
-                                            color: parseInt(d?.domainExpireIn) <= 30 ? "red" : "green",
-                                          }}>
-                                            Expire in {d?.domainExpireIn}
-                                          </div>
-                                        ) : (
-                                          <div style={{
-                                            color: d?.domainExpiryStatus === "Expired" ? "red" : "green",
-                                          }}>
-                                            {d?.domainExpiryStatus}
-                                          </div>
-                                        )
-                                      }
-                                    </td>
-                                    <td>
-                                      {
-                                        (parseInt(d?.hostingExpireIn) <= 30) ? (
-                                          <div style={{
-                                            color: parseInt(d?.hostingExpireIn) <= 30 ? "red" : "green",
-                                          }}>
-                                            Expire in {d?.hostingExpireIn}
-                                          </div>
-                                        ) : (
-                                          <div style={{
-                                            color: d?.hostingExpiryStatus === "Expired" ? "red" : "green",
-                                          }}>
-                                            {d?.hostingExpiryStatus}
-                                          </div>
-                                        )
-                                      }
-                                    </td>
-                                    <td>
-                                      {
-                                        (parseInt(d?.sslExpireIn) <= 30) ? (
-                                          <div style={{
-                                            color: parseInt(d?.sslExpireIn) <= 30 ? "red" : "green",
-                                          }}>
-                                            Expire in {d?.sslExpireIn}
-                                          </div>
-                                        ) : (
-                                          <div style={{
-                                            color: d?.sslExpiryStatus === "Expired" ? "red" : "green",
-                                          }}>
-                                            {d?.sslExpiryStatus}
-                                          </div>
-                                        )
-                                      }
-                                    </td>
+                                    <th>#</th>
+                                    <th>Date</th>
+                                    <th>Employee</th>
+                                    <th>Punch In</th>
+                                    <th>Punch Out</th>
+                                    <th>Late In</th>
+                                    <th>Hours Worked</th>
+                                    <th>Status</th>
                                   </tr>
-                                ))
-                              }
-                            </tbody>
-                          </table>
+                                </thead>
+                                <tbody>
+                                  {
+                                    attendance?.map((d, index) => (
+                                      <tr key={d?._id}>
+                                        <th className="no-sort">
+                                          <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
+                                        </th>
+                                        <td>{(filters.page - 1) * filters.limit + index + 1}</td>
+                                        <td>{formatDate(d?.attendanceDate)}</td>
+                                        <td>{d?.employee?.name}</td>
+                                        <td>{d?.punchInTime ? formatTimeWithAmPm(d?.punchInTime) : <><hr /></>}</td>
+                                        <td>{d?.punchOutTime ? formatTimeWithAmPm(d?.punchOutTime) : <><hr /></>}</td>
+                                        <td>
+                                          {
+                                            d?.lateIn
+                                              ? d?.lateIn === "00:00"
+                                                ? "On Time"
+                                                : formatTimeToHoursMinutes(d?.lateIn)
+                                              : <><hr /></>
+                                          }
+                                        </td>
+                                        <td>
+                                          {
+                                            d?.hoursWorked
+                                              ? d?.hoursWorked === "00:00"
+                                                ? <><hr /></>
+                                                : formatTimeToHoursMinutes(d?.hoursWorked)
+                                              : <><hr /></>
+                                          }
+                                        </td>
+                                        <td>{d?.status}</td>
+                                      </tr>
+                                    ))
+                                  }
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
+                  )
+                }
+                {/* /Attendance */}
+
+                {/* Project Deployment */}
+                {
+                  projectDeployment && team?.role?.permissions?.projectDeployment?.access && (
+                    <div className="row">
+                      <div className="col-md-12">
+                        <div className="card">
+                          <div className="card-body">
+                            <div className="statistic-header">
+                              <h4><i className="ti ti-grip-vertical me-1" />Expiring Project Deployments</h4>
+                            </div>
+                            <div className="table-responsive custom-table">
+                              <table className="table table-bordered table-striped custom-border">
+                                <thead className="thead-light">
+                                  <tr>
+                                    <th className="no-sort">
+                                      <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
+                                    </th>
+                                    <th>#</th>
+                                    <th>Website Name</th>
+                                    <th>Client Name</th>
+                                    <th>Domain Status</th>
+                                    <th>Hosting Status</th>
+                                    <th>SSL Status</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {
+                                    projectDeployment?.map((d, index) => (
+                                      <tr key={d?._id}>
+                                        <th className="no-sort">
+                                          <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
+                                        </th>
+                                        <td>{(filters.page - 1) * filters.limit + index + 1}</td>
+                                        <td>{d?.websiteName}</td>
+                                        <td>{d?.client?.name}</td>
+                                        <td>
+                                          {
+                                            (parseInt(d?.domainExpireIn) <= 30) ? (
+                                              <div style={{
+                                                color: parseInt(d?.domainExpireIn) <= 30 ? "red" : "green",
+                                              }}>
+                                                Expire in {d?.domainExpireIn}
+                                              </div>
+                                            ) : (
+                                              <div style={{
+                                                color: d?.domainExpiryStatus === "Expired" ? "red" : "green",
+                                              }}>
+                                                {d?.domainExpiryStatus}
+                                              </div>
+                                            )
+                                          }
+                                        </td>
+                                        <td>
+                                          {
+                                            (parseInt(d?.hostingExpireIn) <= 30) ? (
+                                              <div style={{
+                                                color: parseInt(d?.hostingExpireIn) <= 30 ? "red" : "green",
+                                              }}>
+                                                Expire in {d?.hostingExpireIn}
+                                              </div>
+                                            ) : (
+                                              <div style={{
+                                                color: d?.hostingExpiryStatus === "Expired" ? "red" : "green",
+                                              }}>
+                                                {d?.hostingExpiryStatus}
+                                              </div>
+                                            )
+                                          }
+                                        </td>
+                                        <td>
+                                          {
+                                            (parseInt(d?.sslExpireIn) <= 30) ? (
+                                              <div style={{
+                                                color: parseInt(d?.sslExpireIn) <= 30 ? "red" : "green",
+                                              }}>
+                                                Expire in {d?.sslExpireIn}
+                                              </div>
+                                            ) : (
+                                              <div style={{
+                                                color: d?.sslExpiryStatus === "Expired" ? "red" : "green",
+                                              }}>
+                                                {d?.sslExpiryStatus}
+                                              </div>
+                                            )
+                                          }
+                                        </td>
+                                      </tr>
+                                    ))
+                                  }
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                }
                 {/* /Project Deployemnt */}
 
                 {/* Bar chart project by status */}
-                <div className="row">
-                  <div className="col-md-12">
-                    <div className="card">
-                      <div className="card-body">
-                        <div className="statistic-header">
-                          <h4><i className="ti ti-grip-vertical me-1" />Projects By Status</h4>
+                {
+                  project && team?.role?.permissions?.project?.access && (
+                    <div className="row">
+                      <div className="col-md-12">
+                        <div className="card">
+                          <div className="card-body">
+                            <div className="statistic-header">
+                              <h4><i className="ti ti-grip-vertical me-1" />Projects By Status</h4>
+                            </div>
+                            <Bar data={barData} />
+                          </div>
                         </div>
-                        <Bar data={barData} />
                       </div>
                     </div>
-                  </div>
-                </div>
+                  )
+                }
                 {/* /Bar chart project by status */}
               </div>
             </div>
