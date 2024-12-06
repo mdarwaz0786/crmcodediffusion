@@ -32,6 +32,7 @@ ChartJS.register(
 const ProjectDashboard = () => {
   const location = useLocation();
   const [attendance, setAttendance] = useState([]);
+  const [projectDeployment, setProjectDeployment] = useState([]);
   const [project, setProject] = useState([]);
   const [projectStatus, setProjectStatus] = useState({});
   const [projectPriority, setProjectPriority] = useState({});
@@ -327,7 +328,29 @@ const ProjectDashboard = () => {
     if (team?.role?.permissions?.attendance?.access) {
       fetchTodayAttendance();
     }
-  }, []);
+  }, [team?.role?.permissions?.attendance?.access]);
+
+  const fetchAllExpiringProjectDeployment = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/projectDeployment/all-expiring-projectDeployment`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        setProjectDeployment(response?.data?.projectDeployment);
+      };
+    } catch (error) {
+      console.log(error.message);
+    };
+  };
+
+  useEffect(() => {
+    if (team?.role?.permissions?.projectDeployment?.access) {
+      fetchAllExpiringProjectDeployment()
+    }
+  }, [team?.role?.permissions?.projectDeployment?.access]);
 
   if (isLoading) {
     return <Preloader />;
@@ -650,6 +673,102 @@ const ProjectDashboard = () => {
                   </div>
                 </div>
                 {/* /Attendance */}
+
+                {/* Project Deployment */}
+                <div className="row">
+                  <div className="col-md-12">
+                    <div className="card">
+                      <div className="card-body">
+                        <div className="statistic-header">
+                          <h4><i className="ti ti-grip-vertical me-1" />Expiring Project Deployment</h4>
+                        </div>
+                        <div className="table-responsive custom-table">
+                          <table className="table table-bordered table-striped custom-border">
+                            <thead className="thead-light">
+                              <tr>
+                                <th className="no-sort">
+                                  <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
+                                </th>
+                                <th>#</th>
+                                <th>Website Name</th>
+                                <th>Client Name</th>
+                                <th>Domain Status</th>
+                                <th>Hosting Status</th>
+                                <th>SSL Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {
+                                projectDeployment?.map((d, index) => (
+                                  <tr key={d?._id}>
+                                    <th className="no-sort">
+                                      <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
+                                    </th>
+                                    <td>{(filters.page - 1) * filters.limit + index + 1}</td>
+                                    <td>{d?.websiteName}</td>
+                                    <td>{d?.client?.name}</td>
+                                    <td>
+                                      {
+                                        (parseInt(d?.domainExpireIn) <= 30) ? (
+                                          <div style={{
+                                            color: parseInt(d?.domainExpireIn) <= 30 ? "red" : "green",
+                                          }}>
+                                            Expire in {d?.domainExpireIn}
+                                          </div>
+                                        ) : (
+                                          <div style={{
+                                            color: d?.domainExpiryStatus === "Expired" ? "red" : "green",
+                                          }}>
+                                            {d?.domainExpiryStatus}
+                                          </div>
+                                        )
+                                      }
+                                    </td>
+                                    <td>
+                                      {
+                                        (parseInt(d?.hostingExpireIn) <= 30) ? (
+                                          <div style={{
+                                            color: parseInt(d?.hostingExpireIn) <= 30 ? "red" : "green",
+                                          }}>
+                                            Expire in {d?.hostingExpireIn}
+                                          </div>
+                                        ) : (
+                                          <div style={{
+                                            color: d?.hostingExpiryStatus === "Expired" ? "red" : "green",
+                                          }}>
+                                            {d?.hostingExpiryStatus}
+                                          </div>
+                                        )
+                                      }
+                                    </td>
+                                    <td>
+                                      {
+                                        (parseInt(d?.sslExpireIn) <= 30) ? (
+                                          <div style={{
+                                            color: parseInt(d?.sslExpireIn) <= 30 ? "red" : "green",
+                                          }}>
+                                            Expire in {d?.sslExpireIn}
+                                          </div>
+                                        ) : (
+                                          <div style={{
+                                            color: d?.sslExpiryStatus === "Expired" ? "red" : "green",
+                                          }}>
+                                            {d?.sslExpiryStatus}
+                                          </div>
+                                        )
+                                      }
+                                    </td>
+                                  </tr>
+                                ))
+                              }
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* /Project Deployemnt */}
 
                 {/* Bar chart project by status */}
                 <div className="row">
