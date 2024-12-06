@@ -1,5 +1,5 @@
 import express from "express";
-import { createProject, deleteProject, fetchAllProject, fetchSingleProject, updateProject } from "../controllers/project.controller.js";
+import { createProject, deleteProject, fetchAllProject, fetchSingleProject, fetchWorkDetail, updateProject } from "../controllers/project.controller.js";
 import { isLoggedIn } from './../middleware/auth.middleware.js';
 import checkMasterActionPermission from "../middleware/masterActionPermission.middleware.js";
 import checkFieldUpdatePermission from "../middleware/checkFieldUpdatePermission.middleware.js";
@@ -15,6 +15,7 @@ const router = express.Router();
 // routes
 router.post("/create-project", isLoggedIn, checkMasterActionPermission("project", "create"), createProject);
 router.get("/all-project", isLoggedIn, fetchAllProject);
+router.get("/work-detail", isLoggedIn, fetchWorkDetail);
 router.get("/single-project/:id", isLoggedIn, fetchSingleProject);
 router.put("/update-project/:id", isLoggedIn, checkMasterActionPermission("project", "update"), checkFieldUpdatePermission('project', fields), updateProject);
 router.delete("/delete-project/:id", isLoggedIn, checkMasterActionPermission("project", "delete"), deleteProject);

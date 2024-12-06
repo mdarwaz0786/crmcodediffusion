@@ -1,5 +1,7 @@
 // Function to convert date from "YYYY-MM-DD" to "DD MMM YYYY"
 const formatDate = dateString => {
+  if (!dateString) return ""; // Return empty if date is not provided
+
   const months = [
     "Jan",
     "Feb",

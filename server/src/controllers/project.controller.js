@@ -231,6 +231,76 @@ export const fetchSingleProject = async (req, res) => {
   };
 };
 
+// Fetch work details based on projectId, current date, or teamId
+export const fetchWorkDetail = async (req, res) => {
+  try {
+    const { projectId, date, teamId } = req.query;
+    const match = {};
+
+    if (projectId) {
+      match._id = projectId;
+    };
+
+    if (date) {
+      match["workDetail.date"] = date;
+    };
+
+    if (teamId) {
+      match["workDetail.teamMember"] = teamId;
+    };
+
+    // Aggregate query
+    const result = await Project.aggregate([
+      { $unwind: "$workDetail" },
+      { $match: match },
+      {
+        $group: {
+          _id: "$workDetail.teamMember",
+          workDetails: {
+            $push: {
+              projectId: "$_id",
+              projectName: "$projectName",
+              startTime: "$workDetail.startTime",
+              endTime: "$workDetail.endTime",
+              workDescription: "$workDetail.workDescription",
+              date: "$workDetail.date",
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "teams", // Collection name for the Team model
+          localField: "_id",
+          foreignField: "_id",
+          as: "teamMemberInfo",
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          teamMember: { $arrayElemAt: ["$teamMemberInfo", 0] },
+          workDetails: 1,
+        },
+      },
+    ]);
+
+    // Send response
+    res.status(200).json({
+      success: true,
+      message: "Work detail fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Error while fetching work details:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Error while fetching work details",
+      error: error.message,
+    });
+  };
+};
+
 // Helper function to calculate the difference in hours
 const calculateHourDifference = (startTime, endTime) => {
   const [startHours, startMinutes] = startTime.split(':').map(Number);
