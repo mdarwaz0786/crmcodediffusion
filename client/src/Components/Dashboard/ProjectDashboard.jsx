@@ -11,6 +11,9 @@ import { Bar, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import Search from "../Header/Search.jsx";
 import Preloader from "../../Preloader.jsx";
+import formatTimeWithAmPm from "../../Helper/formatTimeWithAmPm.js";
+import formatTimeToHoursMinutes from "../../Helper/formatTimeToHoursMinutes.js";
+import formatDate from "../../Helper/formatDate.js";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 // Register required components for Chart.js
@@ -28,6 +31,7 @@ ChartJS.register(
 
 const ProjectDashboard = () => {
   const location = useLocation();
+  const [attendance, setAttendance] = useState([]);
   const [project, setProject] = useState([]);
   const [projectStatus, setProjectStatus] = useState({});
   const [projectPriority, setProjectPriority] = useState({});
@@ -43,7 +47,7 @@ const ProjectDashboard = () => {
     search: "",
     sort: "Descending",
     page: 1,
-    limit: 5,
+    limit: 10,
     dateRange: "",
   });
 
@@ -300,6 +304,31 @@ const ProjectDashboard = () => {
     };
   };
 
+  const fetchTodayAttendance = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/attendance/all-attendance`, {
+        headers: {
+          Authorization: validToken,
+        },
+        params: {
+          date: new Date().toISOString().split("T")[0],
+        },
+      });
+
+      if (response?.data?.success) {
+        setAttendance(response?.data?.attendance);
+      };
+    } catch (error) {
+      console.log(error.message);
+    };
+  };
+
+  useEffect(() => {
+    if (team?.role?.permissions?.attendance?.access) {
+      fetchTodayAttendance();
+    }
+  }, []);
+
   if (isLoading) {
     return <Preloader />;
   };
@@ -551,6 +580,77 @@ const ProjectDashboard = () => {
                   </div>
                   {/* /Pie chart project by priority */}
                 </div>
+
+                {/* Attendance */}
+                <div className="row">
+                  <div className="col-md-12">
+                    <div className="card">
+                      <div className="card-body">
+                        <div className="statistic-header">
+                          <h4><i className="ti ti-grip-vertical me-1" />Today&apos;s Attendance</h4>
+                        </div>
+                        <div className="table-responsive custom-table">
+                          <div className="table-responsive custom-table">
+                            <table className="table table-bordered table-striped custom-border">
+                              <thead className="thead-light">
+                                <tr>
+                                  <th className="no-sort">
+                                    <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
+                                  </th>
+                                  <th>#</th>
+                                  <th>Date</th>
+                                  <th>Employee</th>
+                                  <th>Punch In</th>
+                                  <th>Punch Out</th>
+                                  <th>Late In</th>
+                                  <th>Hours Worked</th>
+                                  <th>Status</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {
+                                  attendance?.map((d, index) => (
+                                    <tr key={d?._id}>
+                                      <th className="no-sort">
+                                        <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
+                                      </th>
+                                      <td>{(filters.page - 1) * filters.limit + index + 1}</td>
+                                      <td>{formatDate(d?.attendanceDate)}</td>
+                                      <td>{d?.employee?.name}</td>
+                                      <td>{d?.punchInTime ? formatTimeWithAmPm(d?.punchInTime) : <><hr /></>}</td>
+                                      <td>{d?.punchOutTime ? formatTimeWithAmPm(d?.punchOutTime) : <><hr /></>}</td>
+                                      <td>
+                                        {
+                                          d?.lateIn
+                                            ? d?.lateIn === "00:00"
+                                              ? "On Time"
+                                              : formatTimeToHoursMinutes(d?.lateIn)
+                                            : <><hr /></>
+                                        }
+                                      </td>
+                                      <td>
+                                        {
+                                          d?.hoursWorked
+                                            ? d?.hoursWorked === "00:00"
+                                              ? <><hr /></>
+                                              : formatTimeToHoursMinutes(d?.hoursWorked)
+                                            : <><hr /></>
+                                        }
+                                      </td>
+                                      <td>{d?.status}</td>
+                                    </tr>
+                                  ))
+                                }
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* /Attendance */}
+
                 {/* Bar chart project by status */}
                 <div className="row">
                   <div className="col-md-12">

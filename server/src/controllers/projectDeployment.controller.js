@@ -251,6 +251,49 @@ export const fetchSingleProjectDeployment = async (req, res) => {
   };
 };
 
+// Controller to fetch all records expiring in 30 days
+export const fetchAllExpiringDeployment = async (req, res) => {
+  try {
+    // Define the date range (from today to 30 days ahead)
+    const currentDate = moment().startOf("day");
+    const futureDate = moment().add(30, "days").endOf("day");
+
+    // Create filters for domain, hosting, and SSL expiry
+    const filter = {
+      $or: [
+        { domainExpiryDate: { $gte: currentDate.format("YYYY-MM-DD"), $lte: futureDate.format("YYYY-MM-DD") } },
+        { hostingExpiryDate: { $gte: currentDate.format("YYYY-MM-DD"), $lte: futureDate.format("YYYY-MM-DD") } },
+        { sslExpiryDate: { $gte: currentDate.format("YYYY-MM-DD"), $lte: futureDate.format("YYYY-MM-DD") } },
+      ],
+    };
+
+    // Fetch matching records
+    const expiringDeployment = await ProjectDeployment.find(filter)
+      .populate({ path: "client", select: "name email" })
+      .exec();
+
+    if (!expiringDeployment) {
+      return res.status(404).json({
+        success: false,
+        message: "No deployments found expiring within 30 days",
+      });
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "Deployments expiring in the next 30 days fetched successfully",
+      projectDeployment: expiringDeployment,
+    });
+  } catch (error) {
+    console.error("Error fetching expiring deployments:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error while fetching expiring deployments",
+      error: error.message,
+    });
+  };
+};
+
 // UPDATE Project Deployment
 export const updateProjectDeployment = async (req, res) => {
   try {
