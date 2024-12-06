@@ -255,15 +255,18 @@ export const fetchSingleProjectDeployment = async (req, res) => {
 export const fetchAllExpiringDeployment = async (req, res) => {
   try {
     // Define the date range (from today to 30 days ahead)
-    const currentDate = moment().startOf("day");
-    const futureDate = moment().add(30, "days").endOf("day");
+    const currentDate = moment().startOf("day").format("YYYY-MM-DD");
+    const futureDate = moment().add(30, "days").endOf("day").format("YYYY-MM-DD");
 
     // Create filters for domain, hosting, and SSL expiry
     const filter = {
       $or: [
-        { domainExpiryDate: { $gte: currentDate.format("YYYY-MM-DD"), $lte: futureDate.format("YYYY-MM-DD") } },
-        { hostingExpiryDate: { $gte: currentDate.format("YYYY-MM-DD"), $lte: futureDate.format("YYYY-MM-DD") } },
-        { sslExpiryDate: { $gte: currentDate.format("YYYY-MM-DD"), $lte: futureDate.format("YYYY-MM-DD") } },
+        { domainExpiryDate: { $gte: currentDate, $lte: futureDate } },
+        { domainExpiryStatus: "Expired" },
+        { hostingExpiryDate: { $gte: currentDate, $lte: futureDate } },
+        { hostingExpiryStatus: "Expired" },
+        { sslExpiryDate: { $gte: currentDate, $lte: futureDate } },
+        { sslExpiryStatus: "Expired" },
       ],
     };
 

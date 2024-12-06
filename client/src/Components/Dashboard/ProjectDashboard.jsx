@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-extra-semi */
 import { useEffect, useRef, useState } from "react";
-import { Link, Navigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import axios from 'axios';
 import { useAuth } from "../../context/authContext.jsx";
 import DatePicker from 'react-datepicker';
@@ -356,10 +356,6 @@ const ProjectDashboard = () => {
     return <Preloader />;
   };
 
-  if (!permissions?.access) {
-    return <Navigate to="/login" />;
-  };
-
   return (
     <>
       <div className="main-wrapper">
@@ -680,7 +676,7 @@ const ProjectDashboard = () => {
                     <div className="card">
                       <div className="card-body">
                         <div className="statistic-header">
-                          <h4><i className="ti ti-grip-vertical me-1" />Expiring Project Deployment</h4>
+                          <h4><i className="ti ti-grip-vertical me-1" />Expiring Project Deployments</h4>
                         </div>
                         <div className="table-responsive custom-table">
                           <table className="table table-bordered table-striped custom-border">
