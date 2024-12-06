@@ -26,6 +26,7 @@ export const fetchMonthlySalary = async (req, res) => {
         const [requiredHours, requiredMinutes] = employee.workingHoursPerDay.split(":").map(Number);
         const dailyThreshold = requiredHours * 60 + requiredMinutes;
 
+        // Fetch Sunday and Holiday records
         const sundayHolidayRecords = await Attendance.find({
             employee: employeeId,
             attendanceDate: { $regex: `^${month}-` },
@@ -41,34 +42,44 @@ export const fetchMonthlySalary = async (req, res) => {
 
         const totalCompanyMinutes = companyWorkingDays * dailyThreshold;
 
-        // Fetch attendance records for Present days
+        // Fetch attendance records
         const attendanceRecords = await Attendance.find({
             employee: employeeId,
             attendanceDate: { $regex: `^${month}-` },
-            status: "Present",
         });
 
         let totalMinutesWorked = 0;
+        let absentDays = 0;
 
         attendanceRecords.forEach((record) => {
-            if (record.hoursWorked) {
+            if (record.status === "Present" && record.hoursWorked) {
                 totalMinutesWorked += timeToMinutes(record.hoursWorked);
+            } else if (record.status === "Absent") {
+                absentDays += 1;
             };
         });
 
         // Deduction calculations
+        const effectiveAbsentDays = Math.max(0, absentDays - 2); // Allow up to 2 absent days without salary deduction
         const hoursShortfall = totalCompanyMinutes - totalMinutesWorked;
-        const deductionDays = hoursShortfall > 0 ? Math.ceil(hoursShortfall / dailyThreshold) : 0;
+        const additionalDeductionDays = hoursShortfall > 0 ? Math.ceil(hoursShortfall / dailyThreshold) : 0;
+
+        const totalDeductionDays = effectiveAbsentDays + additionalDeductionDays;
 
         // Calculate salary
         const dailySalary = monthlySalary / companyWorkingDays;
-        const totalSalary = (companyWorkingDays - deductionDays) * dailySalary;
+        const totalSalary = (companyWorkingDays - totalDeductionDays) * dailySalary;
+
+        // Calculate total deduction
+        const totalDeduction = monthlySalary - totalSalary;
 
         // Response data
         const salary = {
             employee: employeeId,
             month,
+            monthlySalary,
             totalSalary: totalSalary.toFixed(2),
+            totalDeduction: totalDeduction.toFixed(2),
         };
 
         return res.status(200).json({ success: true, salary });
