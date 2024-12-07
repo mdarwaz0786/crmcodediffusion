@@ -44,24 +44,17 @@ const Sidebar = () => {
             </ul>
 
             <ul>
-              {
-                (permissions?.project?.access) && (
-                  <li>
-                    <h6 className="submenu-hdr">Main Menu</h6>
-                    <ul>
-                      <li><Link to="/" className={currentPath === "/" ? "active" : ""} id={isMobile && active === "dashboard" ? "mobile_btn" : ""} onClick={() => handleActive("dashboard")}><i className="ti ti-layout-2" style={{ color: currentPath === "/" ? "" : "#FFA201" }} /><span>Dashboard</span></Link></li>
-                    </ul>
-                  </li>
-                )
-              }
+              <li>
+                <h6 className="submenu-hdr">Main Menu</h6>
+                <ul>
+                  <li><Link to="/" className={currentPath === "/" ? "active" : ""} id={isMobile && active === "dashboard" ? "mobile_btn" : ""} onClick={() => handleActive("dashboard")}><i className="ti ti-layout-2" style={{ color: currentPath === "/" ? "" : "#FFA201" }} /><span>Dashboard</span></Link></li>
+                </ul>
+              </li>
               <li>
                 {
                   (permissions?.project?.access ||
-                    permissions?.invoice?.access ||
-                    permissions?.proformaInvoice?.access ||
                     permissions?.project?.fields?.workDetail?.show ||
                     permissions?.project?.fields?.payment?.show ||
-                    permissions?.purchaseInvoice?.access ||
                     permissions?.projectDeployment?.access ||
                     permissions?.attendance?.access) && (
                     <h6 className="submenu-hdr">CRM</h6>
@@ -74,18 +67,8 @@ const Sidebar = () => {
                     )
                   }
                   {
-                    (permissions?.attendance?.access) && (
-                      <li><Link to="/attendance" className={currentPath === "/attendance" ? "active" : ""} id={isMobile && active === "attendance" ? "mobile_btn" : ""} onClick={() => handleActive("attendance")}><i style={{ color: currentPath === "/attendance" ? "" : "#FFA201" }} className="ti ti-checklist"></i><span>Attendance</span></Link></li>
-                    )
-                  }
-                  {
                     (permissions?.projectDeployment?.access) && (
                       <li><Link to="/project-deployment" className={currentPath === "/project-deployment" ? "active" : ""} id={isMobile && active === "projectDeployment" ? "mobile_btn" : ""} onClick={() => handleActive("projectDeployment")}><i style={{ color: currentPath === "/project-deployment" ? "" : "#FFA201" }} className="ti ti-cloud-upload"></i><span>Project Deployment</span></Link></li>
-                    )
-                  }
-                  {
-                    (permissions?.project?.fields?.workDetail?.show) && (
-                      <li><Link to="/add-work-detail" className={currentPath === "/add-work-detail" ? "active" : ""} id={isMobile && active === "addWorkDetail" ? "mobile_btn" : ""} onClick={() => handleActive("addWorkDetail")}><i style={{ color: currentPath === "/add-work-detail" ? "" : "#FFA201" }} className="ti ti-clipboard"></i><span>Add Daily Work Summary</span></Link></li>
                     )
                   }
                   {
@@ -93,11 +76,19 @@ const Sidebar = () => {
                       <li><Link to="/add-payment" className={currentPath === "/add-payment" ? "active" : ""} id={isMobile && active === "addPayment" ? "mobile_btn" : ""} onClick={() => handleActive("addPayment")}><i style={{ color: currentPath === "/add-payment" ? "" : "#FFA201" }} className="ti ti-credit-card"></i><span>Add Received Payment</span></Link></li>
                     )
                   }
-                  {
-                    (permissions?.purchaseInvoice?.access) && (
-                      <li><Link to="/purchase-invoice" className={currentPath === "/purchase-invoice" ? "active" : ""} id={isMobile && active === "purchaseInvoice" ? "mobile_btn" : ""} onClick={() => handleActive("purchaseInvoice")}><i style={{ color: currentPath === "/purchase-invoice" ? "" : "#FFA201" }} className="ti ti-wallet"></i><span>Purchase Invoice</span></Link></li>
-                    )
-                  }
+                </ul>
+              </li>
+
+              <li>
+                {
+                  (permissions?.invoice?.access ||
+                    permissions?.proformaInvoice?.access ||
+                    permissions?.purchaseInvoice?.access
+                  ) && (
+                    <h6 className="submenu-hdr">INVOICE</h6>
+                  )
+                }
+                <ul>
                   <li className="submenu">
                     <Link to="#" className={currentPath === "/invoice" || currentPath === "/proforma-invoice" ? "active subdrop" : ""}>
                       {
@@ -121,12 +112,45 @@ const Sidebar = () => {
                       }
                     </ul>
                   </li>
+                  {
+                    (permissions?.purchaseInvoice?.access) && (
+                      <li><Link to="/purchase-invoice" className={currentPath === "/purchase-invoice" ? "active" : ""} id={isMobile && active === "purchaseInvoice" ? "mobile_btn" : ""} onClick={() => handleActive("purchaseInvoice")}><i style={{ color: currentPath === "/purchase-invoice" ? "" : "#FFA201" }} className="ti ti-wallet"></i><span>Purchase Invoice</span></Link></li>
+                    )
+                  }
                 </ul>
               </li>
+
+              <li>
+                {
+                  (permissions?.team?.access ||
+                    permissions?.attendance?.access ||
+                    permissions?.project?.fields?.workDetail?.show
+                  ) && (
+                    <h6 className="submenu-hdr">EMPLOYEE</h6>
+                  )
+                }
+                <ul>
+                  {
+                    (permissions?.team?.access) && (
+                      <li><Link to="/employee" className={currentPath === "/employee" ? "active" : ""} id={isMobile && active === "employee" ? "mobile_btn" : ""} onClick={() => handleActive("employee")}><i style={{ color: currentPath === "/employee" ? "" : "#FFA201" }} className="ti ti-user"></i><span>Employee</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.attendance?.access) && (
+                      <li><Link to="/attendance" className={currentPath === "/attendance" ? "active" : ""} id={isMobile && active === "attendance" ? "mobile_btn" : ""} onClick={() => handleActive("attendance")}><i style={{ color: currentPath === "/attendance" ? "" : "#FFA201" }} className="ti ti-checklist"></i><span>Attendance</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.project?.fields?.workDetail?.show) && (
+                      <li><Link to="/add-work-detail" className={currentPath === "/add-work-detail" ? "active" : ""} id={isMobile && active === "addWorkDetail" ? "mobile_btn" : ""} onClick={() => handleActive("addWorkDetail")}><i style={{ color: currentPath === "/add-work-detail" ? "" : "#FFA201" }} className="ti ti-clipboard"></i><span>Add Daily Work Summary</span></Link></li>
+                    )
+                  }
+                </ul>
+              </li>
+
               <li>
                 {
                   (permissions?.customer?.access ||
-                    permissions?.team?.access ||
                     permissions?.role?.access ||
                     permissions?.designation?.access ||
                     permissions?.technology?.access ||
@@ -142,11 +166,6 @@ const Sidebar = () => {
                   {
                     (permissions?.customer?.access) && (
                       <li><Link to="/client" className={currentPath === "/client" ? "active" : ""} id={isMobile && active === "client" ? "mobile_btn" : ""} onClick={() => handleActive("client")}><i style={{ color: currentPath === "/client" ? "" : "#FFA201" }} className="ti ti-user-circle"></i><span>Client</span></Link></li>
-                    )
-                  }
-                  {
-                    (permissions?.team?.access) && (
-                      <li><Link to="/employee" className={currentPath === "/employee" ? "active" : ""} id={isMobile && active === "employee" ? "mobile_btn" : ""} onClick={() => handleActive("employee")}><i style={{ color: currentPath === "/employee" ? "" : "#FFA201" }} className="ti ti-user"></i><span>Employee</span></Link></li>
                     )
                   }
                   {

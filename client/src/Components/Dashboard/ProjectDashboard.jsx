@@ -13,7 +13,7 @@ import Search from "../Header/Search.jsx";
 import Preloader from "../../Preloader.jsx";
 import formatTimeWithAmPm from "../../Helper/formatTimeWithAmPm.js";
 import formatTimeToHoursMinutes from "../../Helper/formatTimeToHoursMinutes.js";
-import formatDate from "../../Helper/formatDate.js";
+import calculateTimeDifference from "../../Helper/calculateTimeDifference.js";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 // Register required components for Chart.js
@@ -34,6 +34,7 @@ const ProjectDashboard = () => {
   const [attendance, setAttendance] = useState([]);
   const [projectDeployment, setProjectDeployment] = useState([]);
   const [project, setProject] = useState([]);
+  const [workSummary, setWorkSummary] = useState([]);
   const [projectStatus, setProjectStatus] = useState({});
   const [projectPriority, setProjectPriority] = useState({});
   const [total, setTotal] = useState("");
@@ -330,6 +331,31 @@ const ProjectDashboard = () => {
     }
   }, [team?.role?.permissions?.attendance?.access]);
 
+  const fetchTodayWorkSumary = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/project//work-detail`, {
+        headers: {
+          Authorization: validToken,
+        },
+        params: {
+          date: new Date().toISOString().split("T")[0],
+        },
+      });
+
+      if (response?.data?.success) {
+        setWorkSummary(response?.data?.data);
+      };
+    } catch (error) {
+      console.log(error.message);
+    };
+  };
+
+  useEffect(() => {
+    if (team?.role?.permissions?.project?.fields?.workDetail?.show) {
+      fetchTodayWorkSumary();
+    };
+  }, [team?.role?.permissions?.project?.fields?.workDetail?.show]);
+
   const fetchAllExpiringProjectDeployment = async () => {
     try {
       const response = await axios.get(`${base_url}/api/v1/projectDeployment/all-expiring-projectDeployment`, {
@@ -618,11 +644,7 @@ const ProjectDashboard = () => {
                               <table className="table table-bordered table-striped custom-border">
                                 <thead className="thead-light">
                                   <tr>
-                                    <th className="no-sort">
-                                      <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                                    </th>
                                     <th>#</th>
-                                    <th>Date</th>
                                     <th>Employee</th>
                                     <th>Punch In</th>
                                     <th>Punch Out</th>
@@ -635,11 +657,7 @@ const ProjectDashboard = () => {
                                   {
                                     attendance?.map((d, index) => (
                                       <tr key={d?._id}>
-                                        <th className="no-sort">
-                                          <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                                        </th>
                                         <td>{(filters.page - 1) * filters.limit + index + 1}</td>
-                                        <td>{formatDate(d?.attendanceDate)}</td>
                                         <td>{d?.employee?.name}</td>
                                         <td>{d?.punchInTime ? formatTimeWithAmPm(d?.punchInTime) : <><hr /></>}</td>
                                         <td>{d?.punchOutTime ? formatTimeWithAmPm(d?.punchOutTime) : <><hr /></>}</td>
@@ -676,6 +694,57 @@ const ProjectDashboard = () => {
                 }
                 {/* /Attendance */}
 
+                {/* Work Summary */}
+                {
+                  workSummary && team?.role?.permissions?.project?.fields?.workDetail?.show && (
+                    <div className="row">
+                      <div className="col-md-12">
+                        <div className="card">
+                          <div className="card-body">
+                            <div className="statistic-header">
+                              <h4><i className="ti ti-grip-vertical me-1" />Today&apos;s Work Summary</h4>
+                            </div>
+                            {
+                              workSummary?.map((w) => (
+                                <div className="table-responsive custom-table" style={{ marginBottom: "2rem" }} key={w?._id}>
+                                  <h5 style={{ marginBottom: "10px" }}>{w?.teamMember?.name}</h5>
+                                  <table className="table table-bordered table-striped custom-border">
+                                    <thead className="thead-light">
+                                      <tr>
+                                        <th>#</th>
+                                        <th>Project Name</th>
+                                        <th>Work Summary</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Spent Hour</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {
+                                        w?.workDetails?.map((s, index) => (
+                                          <tr key={index}>
+                                            <td style={{ padding: "0.5rem" }}>{index + 1}</td>
+                                            <td>{s?.projectName}</td>
+                                            <td>{s?.workDescription}</td>
+                                            <td>{formatTimeWithAmPm(s?.startTime)}</td>
+                                            <td>{formatTimeWithAmPm(s?.endTime)}</td>
+                                            <td>{formatTimeToHoursMinutes(calculateTimeDifference(s?.startTime, s?.endTime))}</td>
+                                          </tr>
+                                        ))
+                                      }
+                                    </tbody>
+                                  </table>
+                                </div>
+                              ))
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                }
+                {/* /Work Summary */}
+
                 {/* Project Deployment */}
                 {
                   projectDeployment && team?.role?.permissions?.projectDeployment?.access && (
@@ -690,9 +759,6 @@ const ProjectDashboard = () => {
                               <table className="table table-bordered table-striped custom-border">
                                 <thead className="thead-light">
                                   <tr>
-                                    <th className="no-sort">
-                                      <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                                    </th>
                                     <th>#</th>
                                     <th>Website Name</th>
                                     <th>Client Name</th>
@@ -705,10 +771,7 @@ const ProjectDashboard = () => {
                                   {
                                     projectDeployment?.map((d, index) => (
                                       <tr key={d?._id}>
-                                        <th className="no-sort">
-                                          <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                                        </th>
-                                        <td>{(filters.page - 1) * filters.limit + index + 1}</td>
+                                        <td style={{ padding: "0.5rem" }}>{(filters.page - 1) * filters.limit + index + 1}</td>
                                         <td>{d?.websiteName}</td>
                                         <td>{d?.client?.name}</td>
                                         <td>

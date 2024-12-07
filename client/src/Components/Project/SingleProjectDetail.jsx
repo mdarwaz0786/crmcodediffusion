@@ -256,7 +256,7 @@ const SingleProjectDetail = () => {
           {
             (fieldPermissions?.payment?.show) && (
               <>
-                <h5 style={{ marginTop: "5rem", fontSize: "1.15rem", marginBottom: "1rem", textAlign: "center" }}>History of Received Payment</h5>
+                <h6 style={{ marginTop: "5rem", fontSize: "1rem", marginBottom: "1rem", textAlign: "center" }}>History of Received Payment</h6>
                 <div style={{ display: "flex", columnGap: "1rem" }}>
                   <div style={{ fontSize: "0.95rem", marginBottom: "0.5rem" }}><strong style={{ color: "#6F6F6F" }}>Project Cost: </strong>₹{data?.projectPrice},</div>
                   <div style={{ fontSize: "0.95rem", marginBottom: "0.5rem" }}><strong style={{ color: "#6F6F6F" }}>Total Dues: </strong>₹{data?.totalDues}</div>
@@ -275,7 +275,7 @@ const SingleProjectDetail = () => {
                       {
                         data?.payment?.map((d, i) => (
                           <tr key={d?._id}>
-                            <td>{i + 1}</td>
+                            <td style={{ padding: "0.5rem" }}>{i + 1}</td>
                             <td>{d?.teamMember?.name}</td>
                             <td>₹{d?.amount}</td>
                             <td>{formatDate(d?.date)}</td>
@@ -283,7 +283,7 @@ const SingleProjectDetail = () => {
                         ))
                       }
                       <tr className="table-secondary">
-                        <td colSpan="2"><strong>Total Received Payment</strong></td>
+                        <td colSpan="2" style={{ padding: "0.5rem" }}><strong>Total Received Payment</strong></td>
                         <td><strong>₹{data?.totalPaid}</strong></td>
                         <td></td>
                       </tr>
@@ -299,7 +299,7 @@ const SingleProjectDetail = () => {
           {
             (fieldPermissions?.workDetail?.show) && (
               <>
-                <h5 style={{ marginTop: "5rem", fontSize: "1.15rem", marginBottom: "1rem", textAlign: "center" }}>History of Daily Work Summary</h5>
+                <h6 style={{ marginTop: "5rem", fontSize: "1rem", marginBottom: "1rem", textAlign: "center" }}>History of Daily Work Summary</h6>
                 {
                   Object.keys(groupedWorkDetail)?.map((memberName) => (
                     <div key={memberName} className="mb-5">
@@ -320,7 +320,7 @@ const SingleProjectDetail = () => {
                             {
                               groupedWorkDetail[memberName]?.workDetails?.map((w, i) => (
                                 <tr key={w?._id}>
-                                  <td>{i + 1}</td>
+                                  <td style={{ padding: "0.5rem" }}>{i + 1}</td>
                                   <td>{w?.workDescription}</td>
                                   <td>{w?.startTime}</td>
                                   <td>{w?.endTime}</td>
@@ -330,7 +330,7 @@ const SingleProjectDetail = () => {
                               ))
                             }
                             <tr className="table-secondary">
-                              <td colSpan="4"><strong>Total Spent Hours</strong></td>
+                              <td colSpan="4" style={{ padding: "0.5rem" }}><strong>Total Spent Hours</strong></td>
                               <td colSpan="2"><strong>{convertToHoursAndMinutes(groupedWorkDetail[memberName]?.totalSpentHours?.toFixed(2))}</strong></td>
                             </tr>
                           </tbody>
