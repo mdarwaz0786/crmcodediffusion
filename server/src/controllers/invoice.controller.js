@@ -12,7 +12,6 @@ const getNextInvoiceId = async () => {
 // Controller for creating an invoice
 export const createInvoice = async (req, res) => {
   try {
-    const invoiceId = await getNextInvoiceId();
     const { projects, date, tax } = req.body;
 
     let total = 0;
@@ -56,7 +55,6 @@ export const createInvoice = async (req, res) => {
     };
 
     const newInvoice = new Invoice({
-      invoiceId,
       projects: invoiceProjects,
       tax,
       date,
@@ -69,6 +67,14 @@ export const createInvoice = async (req, res) => {
     });
 
     await newInvoice.save();
+
+    // Generate the next invoiceId only after successful save
+    const invoiceId = await getNextInvoiceId();
+
+    // Update the invoice document with the generated invoiceId
+    newInvoice.invoiceId = invoiceId;
+    await newInvoice.save();
+
     return res.status(200).json({ success: true, message: "Invoice created successfully", invoice: newInvoice });
   } catch (error) {
     console.log("Error while creating invoice:", error.message);

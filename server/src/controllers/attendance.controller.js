@@ -231,7 +231,7 @@ export const fetchMonthlyStatistic = async (req, res) => {
         const [year, monthIndex] = month.split("-").map(Number);
         const daysInMonth = new Date(year, monthIndex, 0).getDate();
 
-        const totalWorkingDays = daysInMonth - (totalHolidays + totalSundays);
+        const totalWorkingDays = totalPresent + totalAbsent;
 
         const employee = await Team.findById(employeeId);
 
@@ -243,8 +243,7 @@ export const fetchMonthlyStatistic = async (req, res) => {
         const dailyThreshold = requiredHours * 60 + requiredMinutes;
 
         const totalWorkingHours = minutesToTime(totalWorkingDays * dailyThreshold);
-
-        // Convert total minutes worked to "HH:MM" format
+        const requiredWorkingHours = minutesToTime(totalPresent * dailyThreshold);
         const totalHoursWorked = minutesToTime(totalMinutesWorked);
 
         // Prepare the response
@@ -260,6 +259,7 @@ export const fetchMonthlyStatistic = async (req, res) => {
             employeeAbsentDays: totalAbsent,
             employeeLeaveDays: totalLeave,
             employeeWorkingHours: totalHoursWorked,
+            employeeRequiredWorkingHours: requiredWorkingHours,
             employeeLateInDays: totalLateIn,
             averagePunchInTime,
             averagePunchOutTime,

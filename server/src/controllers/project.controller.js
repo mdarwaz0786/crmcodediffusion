@@ -11,11 +11,19 @@ const getNextProjectId = async () => {
 // Controller for creating a project
 export const createProject = async (req, res) => {
   try {
-    const projectId = await getNextProjectId();
     const { ...projectData } = req.body;
-    const project = new Project({ ...projectData, projectId });
 
+    // Create a new project without projectId initially
+    const project = new Project({ ...projectData });
     await project.save();
+
+    // Generate the next projectId only after successful save
+    const projectId = await getNextProjectId();
+
+    // Update the project document with the generated projectId
+    project.projectId = projectId;
+    await project.save();
+
     return res.status(201).json({ success: true, message: "Project created successfully", project });
   } catch (error) {
     console.log("Error while creating project:", error.message);

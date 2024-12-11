@@ -12,10 +12,17 @@ const getNextEmployeeId = async () => {
 // Controller for creating a team
 export const createTeam = async (req, res) => {
   try {
-    const employeeId = await getNextEmployeeId();
     const { name, email, password, mobile, joining, dob, monthlySalary, workingHoursPerDay, designation, role, reportingTo } = req.body;
 
-    const team = new Team({ employeeId, name, email, password, mobile, joining, dob, monthlySalary, workingHoursPerDay, designation, role, reportingTo });
+    // Create a new team without employeeId initially
+    const team = new Team({ name, email, password, mobile, joining, dob, monthlySalary, workingHoursPerDay, designation, role, reportingTo });
+    await team.save();
+
+    // Generate the next employeeId only after successful save
+    const employeeId = await getNextEmployeeId();
+
+    // Update the team document with the generated employeeId
+    team.employeeId = employeeId;
     await team.save();
 
     return res.status(200).json({ success: true, message: "Employee created successfully", team });

@@ -12,7 +12,6 @@ const getNextProformaInvoiceId = async () => {
 // Controller for creating an invoice
 export const createInvoice = async (req, res) => {
   try {
-    const proformaInvoiceId = await getNextProformaInvoiceId();
     const { projects, date, tax } = req.body;
 
     let total = 0;
@@ -56,7 +55,6 @@ export const createInvoice = async (req, res) => {
     };
 
     const newInvoice = new Invoice({
-      proformaInvoiceId,
       projects: invoiceProjects,
       tax,
       date,
@@ -69,6 +67,15 @@ export const createInvoice = async (req, res) => {
     });
 
     await newInvoice.save();
+
+    // Generate the next proformaInvoiceId only after successful save
+    const proformaInvoiceId = await getNextProformaInvoiceId();
+
+    // Update the invoice document with the generated proformaInvoiceId
+    newInvoice.proformaInvoiceId = proformaInvoiceId;
+
+    await newInvoice.save();
+
     return res.status(200).json({ success: true, message: "Invoice created successfully", invoice: newInvoice });
   } catch (error) {
     console.log("Error while creating invoice:", error.message);
