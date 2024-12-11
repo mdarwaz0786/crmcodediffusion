@@ -53,10 +53,8 @@ const Sidebar = () => {
               <li>
                 {
                   (permissions?.project?.access ||
-                    permissions?.project?.fields?.workDetail?.show ||
                     permissions?.project?.fields?.payment?.show ||
-                    permissions?.projectDeployment?.access ||
-                    permissions?.attendance?.access) && (
+                    permissions?.projectDeployment?.access) && (
                     <h6 className="submenu-hdr">CRM</h6>
                   )
                 }
@@ -67,13 +65,13 @@ const Sidebar = () => {
                     )
                   }
                   {
-                    (permissions?.projectDeployment?.access) && (
-                      <li><Link to="/project-deployment" className={currentPath === "/project-deployment" ? "active" : ""} id={isMobile && active === "projectDeployment" ? "mobile_btn" : ""} onClick={() => handleActive("projectDeployment")}><i style={{ color: currentPath === "/project-deployment" ? "" : "#FFA201" }} className="ti ti-cloud-upload"></i><span>Project Deployment</span></Link></li>
+                    (permissions?.project?.fields?.payment?.show) && (
+                      <li><Link to="/add-payment" className={currentPath === "/add-payment" ? "active" : ""} id={isMobile && active === "addPayment" ? "mobile_btn" : ""} onClick={() => handleActive("addPayment")}><i style={{ color: currentPath === "/add-payment" ? "" : "#FFA201" }} className="ti ti-credit-card"></i><span>Add Received Payment</span></Link></li>
                     )
                   }
                   {
-                    (permissions?.project?.fields?.payment?.show) && (
-                      <li><Link to="/add-payment" className={currentPath === "/add-payment" ? "active" : ""} id={isMobile && active === "addPayment" ? "mobile_btn" : ""} onClick={() => handleActive("addPayment")}><i style={{ color: currentPath === "/add-payment" ? "" : "#FFA201" }} className="ti ti-credit-card"></i><span>Add Received Payment</span></Link></li>
+                    (permissions?.projectDeployment?.access) && (
+                      <li><Link to="/project-deployment" className={currentPath === "/project-deployment" ? "active" : ""} id={isMobile && active === "projectDeployment" ? "mobile_btn" : ""} onClick={() => handleActive("projectDeployment")}><i style={{ color: currentPath === "/project-deployment" ? "" : "#FFA201" }} className="ti ti-cloud-upload"></i><span>Project Deployment</span></Link></li>
                     )
                   }
                 </ul>
