@@ -358,7 +358,6 @@ export const updateInvoice = async (req, res) => {
   };
 };
 
-
 // Controller for deleting an invoice by ID
 export const deleteInvoice = async (req, res) => {
   try {

@@ -7,6 +7,7 @@ import Project from "./Components/Project/Project.jsx";
 import AddProject from "./Components/Project/AddProject.jsx";
 import EditProject from "./Components/Project/EditProject.jsx";
 import SingleProjectDetail from "./Components/Project/SingleProjectDetail.jsx";
+import WorkDetail from "./Components/AddWorkDetail/WorkDetail.jsx";
 import AddWorkDetail from "./Components/AddWorkDetail/AddWorkDetail.jsx";
 import AddPayment from "./Components/AddPayment/AddPayment.jsx";
 import ProjectType from './Components/Project/ProjectType/projectType.jsx';
@@ -73,6 +74,7 @@ const App = () => {
           <Route path="project-deployment" element={<ProjectDeployment />} />
           <Route path="add-project-deployment" element={<AddProjectDeployment />} />
           <Route path="edit-project-deployment/:id" element={<EditProjectDeployment />} />
+          <Route path="work-detail" element={<WorkDetail />} />
           <Route path="add-work-detail" element={<AddWorkDetail />} />
           <Route path="add-payment" element={<AddPayment />} />
           <Route path="project-type" element={<ProjectType />} />

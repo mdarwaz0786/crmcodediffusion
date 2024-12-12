@@ -239,28 +239,57 @@ export const fetchSingleProject = async (req, res) => {
   };
 };
 
-// Fetch work details based on projectId, current date, or teamId
+// Fetch work details based on projectId, current date, month, year or employeeId
 export const fetchWorkDetail = async (req, res) => {
   try {
-    const { projectId, date, teamId } = req.query;
+    const { projectId, date, year, month, employeeId, page = 1, limit = 10 } = req.query;
     const match = {};
 
+    // Filter by projectId if provided
     if (projectId) {
-      match._id = projectId;
+      match._id = new mongoose.Types.ObjectId(projectId);
     };
 
+    // Filter by date if provided
     if (date) {
       match["workDetail.date"] = date;
     };
 
-    if (teamId) {
-      match["workDetail.teamMember"] = teamId;
+    // Filter by year if provided (no month)
+    if (year && !month) {
+      match["workDetail.date"] = {
+        $gte: `${year}-01-01`,
+        $lte: `${year}-12-31`,
+      };
     };
 
-    // Aggregate query
+    // Filter by month if provided (all years)
+    if (month && !year) {
+      match["workDetail.date"] = { $regex: `-${month}-`, $options: "i" };
+    };
+
+    // Filter by both year and month
+    if (year && month) {
+      match["workDetail.date"] = {
+        $gte: `${year}-${month}-01`,
+        $lte: `${year}-${month}-31`,
+      };
+    };
+
+    // Filter by employeeId if provided
+    if (employeeId) {
+      match["workDetail.teamMember"] = new mongoose.Types.ObjectId(employeeId);
+    };
+
+    // Aggregate query to fetch paginated work details
     const result = await Project.aggregate([
       { $unwind: "$workDetail" },
       { $match: match },
+      {
+        $sort: {
+          "workDetail.date": 1, // Sorting by teamMember (ascending order)
+        },
+      },
       {
         $group: {
           _id: "$workDetail.teamMember",
@@ -285,19 +314,32 @@ export const fetchWorkDetail = async (req, res) => {
         },
       },
       {
+        $addFields: {
+          teamMember: { $first: "$teamMemberInfo" },
+        },
+      },
+      {
         $project: {
           _id: 0,
-          teamMember: { $arrayElemAt: ["$teamMemberInfo", 0] },
+          "teamMember._id": 1,
+          "teamMember.name": 1,
           workDetails: 1,
         },
       },
     ]);
 
-    // Send response
+    // Calculate the total count
+    const totalCount = result.length;
+
+    // Apply pagination
+    const paginatedResult = result.slice((page - 1) * limit, page * limit);
+
+    // Send response with the result and the total count
     res.status(200).json({
       success: true,
       message: "Work detail fetched successfully",
-      data: result,
+      data: paginatedResult,
+      totalCount: totalCount,
     });
   } catch (error) {
     console.error("Error while fetching work details:", error.message);

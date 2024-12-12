@@ -72,6 +72,21 @@ export const fetchAllAttendance = async (req, res) => {
             query.attendanceDate = date;
         };
 
+        // Filter by year only
+        if (req.query.year && !req.query.month) {
+            const year = req.query.year;
+            query.attendanceDate = {
+                $gte: `${year}-01-01`,
+                $lte: `${year}-12-31`,
+            };
+        };
+
+        // Filter by month only (all years)
+        if (req.query.month && !req.query.year) {
+            const month = req.query.month;
+            query.attendanceDate = { $regex: `-${month}-`, $options: "i" }; // Match the month in the date string
+        };
+
         // Filter by both year and month
         if (req.query.year && req.query.month) {
             const year = req.query.year;
@@ -112,7 +127,7 @@ export const fetchAllAttendance = async (req, res) => {
             .sort(sort)
             .skip(skip)
             .limit(limit)
-            .populate('employee')
+            .populate('employee', 'name')
             .exec();
 
         if (!attendance) {

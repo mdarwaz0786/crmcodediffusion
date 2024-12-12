@@ -143,6 +143,11 @@ const Sidebar = () => {
                       <li><Link to="/add-work-detail" className={currentPath === "/add-work-detail" ? "active" : ""} id={isMobile && active === "addWorkDetail" ? "mobile_btn" : ""} onClick={() => handleActive("addWorkDetail")}><i style={{ color: currentPath === "/add-work-detail" ? "" : "#FFA201" }} className="ti ti-clipboard"></i><span>Add Daily Work Summary</span></Link></li>
                     )
                   }
+                  {
+                    (permissions?.project?.fields?.workDetail?.show) && (
+                      <li><Link to="/work-detail" className={currentPath === "/work-detail" ? "active" : ""} id={isMobile && active === "workDetail" ? "mobile_btn" : ""} onClick={() => handleActive("workDetail")}><i style={{ color: currentPath === "/work-detail" ? "" : "#FFA201" }} className="ti ti-clipboard"></i><span>Work Summary</span></Link></li>
+                    )
+                  }
                 </ul>
               </li>
 
