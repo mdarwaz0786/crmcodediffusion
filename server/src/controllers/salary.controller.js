@@ -52,7 +52,7 @@ export const fetchMonthlySalary = async (req, res) => {
         let absentDays = 0;
 
         attendanceRecords.forEach((record) => {
-            if (record.status === "Present" && record.hoursWorked) {
+            if (record.status === "Present") {
                 totalMinutesWorked += timeToMinutes(record.hoursWorked);
             } else if (record.status === "Absent") {
                 absentDays += 1;
@@ -60,11 +60,11 @@ export const fetchMonthlySalary = async (req, res) => {
         });
 
         // Deduction calculations
-        const effectiveAbsentDays = Math.max(0, absentDays - 2); // Allow up to 2 absent days without salary deduction
+        const effectiveAbsentDays = Math.min(2, Math.max(0, absentDays)); // Allow up to 2 absent days without salary deduction
         const hoursShortfall = totalCompanyMinutes - totalMinutesWorked;
-        const additionalDeductionDays = hoursShortfall > 0 ? Math.ceil(hoursShortfall / dailyThreshold) : 0;
+        const additionalDeductionDays = hoursShortfall > 0 ? (hoursShortfall / dailyThreshold) : 0;
 
-        const totalDeductionDays = effectiveAbsentDays + additionalDeductionDays;
+        const totalDeductionDays = additionalDeductionDays - effectiveAbsentDays;
 
         // Calculate salary
         const dailySalary = monthlySalary / companyWorkingDays;
