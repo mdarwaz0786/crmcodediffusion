@@ -46,16 +46,16 @@ export const createAttendance = async (req, res) => {
         );
 
         if (result.punchIn && result.punchInTime !== punchInTime) {
-            return res.status(400).json({ success: false, message: "Punch-in already exists" });
+            return res.status(400).json({ success: false, message: "Punch in already exists" });
         };
 
-        return res.status(201).json({ success: true, message: "Punch-in successful", attedance: result });
+        return res.status(201).json({ success: true, message: "Punch in successful", attedance: result });
     } catch (error) {
         // Handle duplicate entry due to index constraint
         if (error.code === 11000) {
             return res.status(400).json({ success: false, error: "Duplicate entry for employee and date" });
         };
-        console.error(error.message);
+        console.log(error.message);
         return res.status(500).json({ success: false, error: error.message });
     };
 };
@@ -300,11 +300,11 @@ export const updateAttendance = async (req, res) => {
         const attendance = await Attendance.findOne({
             employee,
             attendanceDate,
-            punchOut: false,
+            punchIn: true,
         });
 
         if (!attendance) {
-            return res.status(400).json({ success: false, message: "Punch-in not found or already punched out" });
+            return res.status(400).json({ success: false, message: "Punch in not found for today" });
         };
 
         // Update punch-out details
