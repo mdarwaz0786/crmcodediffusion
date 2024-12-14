@@ -22,7 +22,7 @@ const TeamMember = () => {
     nameFilter: [],
     sort: "Descending",
     page: 1,
-    limit: 10,
+    limit: 15,
   });
   const permissions = team?.role?.permissions?.team;
   const fieldPermissions = team?.role?.permissions?.team?.fields;

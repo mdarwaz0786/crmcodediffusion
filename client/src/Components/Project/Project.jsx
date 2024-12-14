@@ -30,7 +30,7 @@ const Project = () => {
     projectIdFilter: [],
     sort: "Descending",
     page: 1,
-    limit: 10,
+    limit: 15,
     dateRange: "",
   });
   const permissions = team?.role?.permissions?.project;

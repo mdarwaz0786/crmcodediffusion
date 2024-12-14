@@ -22,7 +22,7 @@ const TechnologyList = () => {
     nameFilter: [],
     sort: "Descending",
     page: 1,
-    limit: 10,
+    limit: 15,
   });
   const permissions = team?.role?.permissions?.technology;
   const filedPermissions = team?.role?.permissions?.technology?.fields;
