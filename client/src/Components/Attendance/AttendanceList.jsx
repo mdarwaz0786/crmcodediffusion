@@ -124,27 +124,40 @@ const AttendanceList = () => {
   }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team, permissions]);
 
   const exportAttendanceListAsExcel = () => {
-    const element = document.querySelector("#exportAttendanceList");
-    if (!element) return;
-    const workbook = XLSX.utils.table_to_book(element, { sheet: "Attendance List" });
-    const excelData = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-    const blob = new Blob([s2ab(excelData)], { type: "application/octet-stream" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filters.month}-${filters.year}-${singleEmployee?.name ? singleEmployee?.name : "all"}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  function s2ab(s) {
-    const buffer = new ArrayBuffer(s.length);
-    const view = new Uint8Array(buffer);
-    for (let i = 0; i < s.length; i++) {
-      view[i] = s.charCodeAt(i) & 0xFF;
+    if (data?.length === 0) {
+      alert("No data available to export");
+      return;
     };
-    return buffer;
+
+    const exportData = data?.map((entry) => ({
+      "Date": formatDate(entry?.attendanceDate),
+      "Name": entry?.employee?.name,
+      "Punch in": formatTimeWithAmPm(entry?.punchInTime),
+      "Punch out": formatTimeWithAmPm(entry?.punchOutTime),
+      "Late in": entry?.lateIn === "00:00" ? "On Time" : formatTimeToHoursMinutes(entry?.lateIn),
+      "Hours Worked": formatTimeToHoursMinutes(entry?.hoursWorked),
+      "Status": entry?.status,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    // Calculate column widths dynamically
+    const columnWidths = Object.keys(exportData[0] || {}).map((key) => ({
+      wch: Math.max(
+        key.length, // Header length
+        ...exportData.map((row) => (row[key] ? row[key].toString().length : 0)) // Longest content length
+      ) + 2, // Add buffer for better spacing
+    }));
+
+    worksheet["!cols"] = columnWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
+
+    XLSX.writeFile(
+      workbook,
+      `${filters.month}-${filters.year}-${singleEmployee?.name || "all"}-Attendance.xlsx`
+    );
   };
 
   const exportAttendanceListAsPdf = () => {

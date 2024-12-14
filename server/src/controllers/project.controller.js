@@ -287,7 +287,7 @@ export const fetchWorkDetail = async (req, res) => {
       { $match: match },
       {
         $sort: {
-          "workDetail.date": 1, // Sorting by teamMember (ascending order)
+          "workDetail.date": -1,
         },
       },
       {
@@ -307,7 +307,7 @@ export const fetchWorkDetail = async (req, res) => {
       },
       {
         $lookup: {
-          from: "teams", // Collection name for the Team model
+          from: "teams",
           localField: "_id",
           foreignField: "_id",
           as: "teamMemberInfo",
@@ -316,6 +316,11 @@ export const fetchWorkDetail = async (req, res) => {
       {
         $addFields: {
           teamMember: { $first: "$teamMemberInfo" },
+        },
+      },
+      {
+        $sort: {
+          "teamMember.name": 1,
         },
       },
       {
