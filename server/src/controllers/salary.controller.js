@@ -83,7 +83,6 @@ export const fetchMonthlySalary = async (req, res) => {
         };
 
         return res.status(200).json({ success: true, salary });
-
     } catch (error) {
         console.log(error.message);
         return res.status(500).json({ success: false, error: error.message });

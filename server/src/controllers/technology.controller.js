@@ -95,8 +95,8 @@ export const fetchAllTechnology = async (req, res) => {
     };
 
     // Handle pagination
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
     const skip = (page - 1) * limit;
 
     const technology = await Technology.find(filter)

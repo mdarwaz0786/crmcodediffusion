@@ -144,7 +144,7 @@ export const fetchAllAttendance = async (req, res) => {
 // Get a single attendance record by ID
 export const fetchSingleAttendance = async (req, res) => {
     try {
-        const attendance = await Attendance.findById(req.params.id).populate('employee');
+        const attendance = await Attendance.findById(req.params.id).populate('employee', 'name');
 
         if (!attendance) {
             return res.status(404).json({ success: false, message: 'Attendance not found' });
@@ -296,7 +296,7 @@ export const updateAttendance = async (req, res) => {
             return res.status(400).json({ success: false, message: "All fields are required" });
         };
 
-        // Find record and ensure punch-out hasn't been done
+        // Find punch in record
         const attendance = await Attendance.findOne({
             employee,
             attendanceDate,
@@ -322,7 +322,7 @@ export const updateAttendance = async (req, res) => {
 
         return res.status(200).json({ success: true, attendance: updatedAttendance });
     } catch (error) {
-        console.error(error);
+        console.log(error);
         return res.status(500).json({ success: false, message: error.message });
     };
 };
