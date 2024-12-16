@@ -23,12 +23,12 @@ const WorkDetail = () => {
   const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(true);
   const { validToken, team, isLoading } = useAuth();
-  const permissions = team?.role?.permissions?.attendance;
+  const permissions = team?.role?.permissions?.project?.fields?.workDetail;
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
     page: 1,
-    limit: 25,
+    limit: 15,
   });
 
   const fetchAllProject = async () => {
@@ -48,7 +48,7 @@ const WorkDetail = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && permissions?.access) {
+    if (!isLoading && team && permissions?.show) {
       fetchAllProject();
     };
   }, [isLoading, team, permissions]);
@@ -70,7 +70,7 @@ const WorkDetail = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && permissions?.access) {
+    if (!isLoading && team && permissions?.show) {
       fetchAllEmployee();
     };
   }, [isLoading, team, permissions]);
@@ -92,7 +92,7 @@ const WorkDetail = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && permissions?.access && selectedEmployee) {
+    if (!isLoading && team && permissions?.show && selectedEmployee) {
       fetchSingleEmployee(selectedEmployee);
     };
   }, [isLoading, team, permissions, selectedEmployee]);
@@ -142,39 +142,54 @@ const WorkDetail = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && permissions?.access) {
+    if (!isLoading && team && permissions?.show) {
       fetchAllData();
     };
   }, [filters.month, filters.year, selectedEmployee, selectedProject, filters.limit, filters.page, isLoading, team, permissions]);
 
   const exportWorkSummaryListAsExcel = () => {
-    const element = document.querySelector("#exportWorkSummaryList");
-    if (!element) return;
-    const workbook = XLSX.utils.table_to_book(element, { sheet: "Work Summary List" });
-    const excelData = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-    const blob = new Blob([s2ab(excelData)], { type: "application/octet-stream" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filters.month}-${filters.year}-${singleEmployee?.name ? singleEmployee?.name : "all"}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  function s2ab(s) {
-    const buffer = new ArrayBuffer(s.length);
-    const view = new Uint8Array(buffer);
-    for (let i = 0; i < s.length; i++) {
-      view[i] = s.charCodeAt(i) & 0xFF;
+    if (!data || data?.length === 0) {
+      alert("No data available to export");
+      return;
     };
-    return buffer;
+
+    const exportData = data?.flatMap((d) =>
+      d?.workDetails?.map((entry) => ({
+        "Date": formatDate(entry?.date) || "N/A",
+        "Employee Name": d?.teamMember?.name || "N/A",
+        "Project Name": entry?.projectName || "N/A",
+        "Start Time": formatTimeWithAmPm(entry?.startTime) || "N/A",
+        "End Time": formatTimeWithAmPm(entry?.endTime) || "N/A",
+        "Spent Hours": formatTimeToHoursMinutes(calculateTimeDifference(entry?.startTime, entry?.endTime)) || "N/A",
+        "Work Description": entry?.workDescription || "N/A",
+      })) || [],
+    );
+
+    if (exportData?.length === 0) {
+      alert("No work summary found to export");
+      return;
+    };
+
+    // Create worksheet and dynamically calculate column width
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const columnWidths = Object.keys(exportData[0]).map((key) => ({
+      wch: Math.max(key.length, ...exportData.map((row) => (row[key] ? row[key].toString().length : 0))) + 2,
+    }));
+
+    worksheet["!cols"] = columnWidths;
+
+    // Create workbook and append worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Work-Summary");
+
+    // Generate and download the Excel file
+    XLSX.writeFile(workbook, `${filters.month || ""}-${filters.year || ""}-${singleEmployee?.name || ""}-Work-Summary.xlsx`);
   };
 
   const exportWorkSummaryListAsPdf = () => {
     const element = document.querySelector("#exportWorkSummaryList");
     const options = {
-      filename: `${filters.month}-${filters.year}-${singleEmployee?.name ? singleEmployee?.name : "all"}`,
+      filename: `${filters.month || ""}-${filters.year || ""}-${singleEmployee?.name || ""}-Work-Summary`,
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
@@ -195,7 +210,7 @@ const WorkDetail = () => {
     return <Preloader />;
   };
 
-  if (!permissions?.access) {
+  if (!permissions?.show) {
     return <Navigate to="/" />;
   };
 
@@ -298,7 +313,7 @@ const WorkDetail = () => {
                           </select>
                         </li>
                         {
-                          (permissions?.export) && (
+                          (permissions?.show) && (
                             <li>
                               <label className="pb-1">Export:</label>
                               <div className="export-dropdwon">
@@ -342,10 +357,10 @@ const WorkDetail = () => {
                               <th>#</th>
                               <th>Date</th>
                               <th>Project Name</th>
-                              <th>Work Summary</th>
                               <th>Start Time</th>
                               <th>End Time</th>
                               <th>Spent Hour</th>
+                              <th>Work Description</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -353,21 +368,19 @@ const WorkDetail = () => {
                               w?.workDetails?.map((s, index) => (
                                 <tr key={index}>
                                   <td style={{ padding: "0.5rem" }}>{index + 1}</td>
-                                  <td>{formatDate(s?.date)}</td>
-                                  <td>{s?.projectName}</td>
+                                  <td>{formatDate(s?.date) || "N/A"}</td>
+                                  <td>{s?.projectName || "N/A"}</td>
+                                  <td>{formatTimeWithAmPm(s?.startTime) || "N/A"}</td>
+                                  <td>{formatTimeWithAmPm(s?.endTime) || "N/A"}</td>
+                                  <td>{formatTimeToHoursMinutes(calculateTimeDifference(s?.startTime, s?.endTime)) || "N/A"}</td>
                                   <td
                                     style={{ cursor: "pointer" }}
                                     title={s?.workDescription.length > 30 && s?.workDescription}
                                   >
-                                    {
-                                      s?.workDescription.length > 30
-                                        ? `${s?.workDescription.substring(0, 30)}...`
-                                        : s?.workDescription
-                                    }
+                                    {s?.workDescription.length > 30
+                                      ? `${s?.workDescription.substring(0, 30)}...`
+                                      : s?.workDescription || "N/A"}
                                   </td>
-                                  <td>{formatTimeWithAmPm(s?.startTime)}</td>
-                                  <td>{formatTimeWithAmPm(s?.endTime)}</td>
-                                  <td>{formatTimeToHoursMinutes(calculateTimeDifference(s?.startTime, s?.endTime))}</td>
                                 </tr>
                               ))
                             }

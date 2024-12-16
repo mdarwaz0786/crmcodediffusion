@@ -130,14 +130,19 @@ const AttendanceList = () => {
     };
 
     const exportData = data?.map((entry) => ({
-      "Date": formatDate(entry?.attendanceDate),
-      "Name": entry?.employee?.name,
-      "Punch in": formatTimeWithAmPm(entry?.punchInTime),
-      "Punch out": formatTimeWithAmPm(entry?.punchOutTime),
-      "Late in": entry?.lateIn === "00:00" ? "On Time" : formatTimeToHoursMinutes(entry?.lateIn),
-      "Hours Worked": formatTimeToHoursMinutes(entry?.hoursWorked),
-      "Status": entry?.status,
+      "Date": formatDate(entry?.attendanceDate) || "N/A",
+      "Name": entry?.employee?.name || "N/A",
+      "Punch in": formatTimeWithAmPm(entry?.punchInTime) || "N/A",
+      "Punch out": formatTimeWithAmPm(entry?.punchOutTime) || "N/A",
+      "Late in": entry?.lateIn === "00:00" ? "On Time" : formatTimeToHoursMinutes(entry?.lateIn) || "N/A",
+      "Hours Worked": formatTimeToHoursMinutes(entry?.hoursWorked) || "N/A",
+      "Status": entry?.status || "N/A",
     }));
+
+    if (exportData?.length === 0) {
+      alert("No Attendance found to export");
+      return;
+    };
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
 
@@ -154,10 +159,7 @@ const AttendanceList = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
 
-    XLSX.writeFile(
-      workbook,
-      `${filters.month}-${filters.year}-${singleEmployee?.name || "all"}-Attendance.xlsx`
-    );
+    XLSX.writeFile(workbook, `${filters.month || ""}-${filters.year || ""}-${singleEmployee?.name || ""}-Attendance.xlsx`);
   };
 
   const exportAttendanceListAsPdf = () => {
@@ -358,26 +360,26 @@ const AttendanceList = () => {
                                   <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
                                 </th>
                                 <td>{(filters.page - 1) * filters.limit + index + 1}</td>
-                                <td>{formatDate(d?.attendanceDate)}</td>
-                                <td>{d?.employee?.name}</td>
-                                <td>{d?.punchInTime ? formatTimeWithAmPm(d?.punchInTime) : <><hr /></>}</td>
-                                <td>{d?.punchOutTime ? formatTimeWithAmPm(d?.punchOutTime) : <><hr /></>}</td>
+                                <td>{formatDate(d?.attendanceDate) || "N/A"}</td>
+                                <td>{d?.employee?.name || "N/A"}</td>
+                                <td>{d?.punchInTime ? formatTimeWithAmPm(d?.punchInTime) : "N/A"}</td>
+                                <td>{d?.punchOutTime ? formatTimeWithAmPm(d?.punchOutTime) : "N/A"}</td>
                                 <td>
                                   {
                                     d?.lateIn
                                       ? d?.lateIn === "00:00"
                                         ? "On Time"
                                         : formatTimeToHoursMinutes(d?.lateIn)
-                                      : <><hr /></>
+                                      : "N/A"
                                   }
                                 </td>
                                 <td>
                                   {
                                     d?.hoursWorked
                                       ? d?.hoursWorked === "00:00"
-                                        ? <><hr /></>
+                                        ? "N/A"
                                         : formatTimeToHoursMinutes(d?.hoursWorked)
-                                      : <><hr /></>
+                                      : "N/A"
                                   }
                                 </td>
                                 <td>{d?.status}</td>
