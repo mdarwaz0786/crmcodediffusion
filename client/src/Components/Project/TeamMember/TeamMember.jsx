@@ -8,6 +8,8 @@ import { useAuth } from "../../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
 import Preloader from "../../../Preloader.jsx";
+import formatDate from "../../../Helper/formatDate.js";
+import formatTimeToHoursMinute from "../../../Helper/formatTimeToHoursMinutes.js";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const TeamMember = () => {
@@ -155,27 +157,43 @@ const TeamMember = () => {
   };
 
   const exportTeamListAsExcel = () => {
-    const element = document.querySelector("#exportTeamList");
-    if (!element) return;
-    const workbook = XLSX.utils.table_to_book(element, { sheet: "Empoyee List" });
-    const excelData = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-    const blob = new Blob([s2ab(excelData)], { type: "application/octet-stream" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'employee-list.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  function s2ab(s) {
-    const buffer = new ArrayBuffer(s.length);
-    const view = new Uint8Array(buffer);
-    for (let i = 0; i < s.length; i++) {
-      view[i] = s.charCodeAt(i) & 0xFF;
+    if (data?.length === 0) {
+      alert("No data available to export");
+      return;
     };
-    return buffer;
+
+    const exportData = data?.map((entry) => ({
+      "EmployeeId": entry?.employeeId || "N/A",
+      "Name": entry?.name || "N/A",
+      "Email": entry?.email || "N/A",
+      "Mobile": entry?.mobile || "N/A",
+      "Password": entry?.password || "N/A",
+      "Joining Date": formatDate(entry?.joining) || "N/A",
+      "Date Of Birth": formatDate(entry?.dob) || "N/A",
+      "Monthly Salary": entry?.monthlySalary || "N/A",
+      "Designation": entry?.designation?.name || "N/A",
+      "Role": entry?.role?.name || "N/A",
+      "Working Hours/Day": formatTimeToHoursMinute(entry?.workingHoursPerDay) || "N/A",
+    }));
+
+    if (exportData?.length === 0) {
+      alert("No employee found to export");
+      return;
+    };
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    // Calculate column width dynamically
+    const columnWidths = Object.keys(exportData[0] || {}).map((key) => ({
+      wch: Math.max(key.length, ...exportData.map((row) => (row[key] ? row[key].toString().length : 0))) + 2,
+    }));
+
+    worksheet["!cols"] = columnWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employee");
+
+    XLSX.writeFile(workbook, `Employee.xlsx`);
   };
 
   const exportTeamListAsPdf = () => {
@@ -357,7 +375,7 @@ const TeamMember = () => {
                                                   </label>
                                                 </div>
                                                 <div className="collapse-inside-text">
-                                                  <h5>{n.name}</h5>
+                                                  <h5>{n?.name}</h5>
                                                 </div>
                                               </li>
                                             ))

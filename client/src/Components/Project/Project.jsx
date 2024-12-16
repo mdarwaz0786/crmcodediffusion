@@ -264,37 +264,52 @@ const Project = () => {
   };
 
   const exportProjectListAsExcel = () => {
-    // Get the table element or the data you want to export
-    const element = document.querySelector("#exportProjectList");
-    if (!element) return;
-
-    // Convert the HTML table or data into a worksheet
-    const workbook = XLSX.utils.table_to_book(element, { sheet: "Project List" });
-
-    // Convert the workbook to a binary Excel file
-    const excelData = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-
-    // Create a Blob from the binary data
-    const blob = new Blob([s2ab(excelData)], { type: "application/octet-stream" });
-
-    // Create a link to download the Blob as an Excel file
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'project-list.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  // Helper function to convert the binary string to an ArrayBuffer
-  function s2ab(s) {
-    const buffer = new ArrayBuffer(s.length);
-    const view = new Uint8Array(buffer);
-    for (let i = 0; i < s.length; i++) {
-      view[i] = s.charCodeAt(i) & 0xFF;
+    if (project?.length === 0) {
+      alert("No data available to export");
+      return;
     };
-    return buffer;
+
+    const exportData = project?.map((entry) => ({
+      "ProjectId": entry?.projectId || "N/A",
+      "Project Name": entry?.projectName || "N/A",
+      "Client Name": entry?.customer?.name || "N/A",
+      "Start Date": entry?.startDate || "N/A",
+      "End Date": entry?.endDate || "N/A",
+      "Project Cost": entry?.projectPrice || "N/A",
+      "Total Received": entry?.totalPaid || "N/A",
+      "Total Dues": entry?.totalDues || "N/A",
+      "Responsible Person": entry?.responsiblePerson?.map((member) => member?.name).join(', ') || "N/A",
+      "Team Leader": entry?.teamLeader?.map((member) => member?.name).join(', ') || "N/A",
+      "Technology": entry?.technology?.map((tech) => tech?.name).join(', ') || "N/A",
+      "Type": entry?.projectType?.name || "N/A",
+      "Category": entry?.projectCategory?.name || "N/A",
+      "Priority": entry?.projectPriority?.name || "N/A",
+      "Timeline": entry?.projectTiming?.name || "N/A",
+      "Status": entry?.projectStatus?.status || "N/A",
+      "Total Hours": entry?.totalHour || "N/A",
+      "Total Spent Hours": entry?.totalSpentHour || "N/A",
+      "Total Remaining Hours": entry?.totalRemainingHour || "N/A",
+      "Description": entry?.description || "N/A",
+    }));
+
+    if (exportData?.length === 0) {
+      alert("No project found to export");
+      return;
+    };
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    // Calculate column width dynamically
+    const columnWidths = Object.keys(exportData[0] || {}).map((key) => ({
+      wch: Math.max(key.length, ...exportData.map((row) => (row[key] ? row[key].toString().length : 0))) + 2,
+    }));
+
+    worksheet["!cols"] = columnWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Project");
+
+    XLSX.writeFile(workbook, `Project.xlsx`);
   };
 
   if (isLoading) {
