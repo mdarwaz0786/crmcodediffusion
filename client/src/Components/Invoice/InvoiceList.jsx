@@ -32,6 +32,12 @@ const InvoiceList = () => {
   const permissions = team?.role?.permissions?.invoice;
   const filedPermissions = team?.role?.permissions?.invoice?.fields;
 
+  function formatDate(isoDate) {
+    const date = new Date(isoDate);
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return date.toLocaleDateString('en-GB', options);
+  };
+
   const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
     const timer = useRef();
@@ -178,33 +184,53 @@ const InvoiceList = () => {
   };
 
   const exportInvoiceListAsExcel = () => {
-    const element = document.querySelector("#exportInvoiceList");
-    if (!element) return;
-    const workbook = XLSX.utils.table_to_book(element, { sheet: "Role List" });
-    const excelData = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-    const blob = new Blob([s2ab(excelData)], { type: "application/octet-stream" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'invoice-list.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  function s2ab(s) {
-    const buffer = new ArrayBuffer(s.length);
-    const view = new Uint8Array(buffer);
-    for (let i = 0; i < s.length; i++) {
-      view[i] = s.charCodeAt(i) & 0xFF;
+    if (!data || data?.length === 0) {
+      alert("No data available to export");
+      return;
     };
-    return buffer;
+
+    const exportData = data.map((entry) => {
+      const projectsWithAmounts = entry?.projects
+        ?.map((p) => `${p?.project?.projectName} (₹${p?.amount || 0})`)
+        .join(", ") || "N/A";
+
+      return {
+        "InvoiceId": entry?.invoiceId || "N/A",
+        "Date": formatDate(entry?.date) || "N/A",
+        "Project Name (Project Cost)": projectsWithAmounts,
+        "Client Name": entry?.projects[0]?.project?.customer?.name,
+        "Sub Total": `₹${entry?.subtotal}` || "0",
+        "CGST": entry?.CGST > 0 ? `₹${entry?.CGST}` : "Not Applicable",
+        "SGST": entry?.SGST > 0 ? `₹${entry?.SGST}` : "Not Applicable",
+        "IGST": entry?.IGST > 0 ? `₹${entry?.IGST}` : "Not Applicable",
+        "Total": `₹${entry?.total}` || "0",
+        "Balance Due": `₹${entry?.balanceDue}` || "0",
+      };
+    });
+
+    if (exportData?.length === 0) {
+      alert("No tax found to export");
+      return;
+    };
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    const columnWidths = Object.keys(exportData[0] || {}).map((key) => ({
+      wch: Math.max(key.length, ...exportData.map((row) => row[key] ? row[key].toString().length : 0)) + 2,
+    }));
+
+    worksheet["!cols"] = columnWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "tax-invoice");
+
+    XLSX.writeFile(workbook, `tax-invoice.xlsx`);
   };
 
   const exportInvoiceListAsPdf = () => {
     const element = document.querySelector("#exportInvoiceList");
     const options = {
-      filename: "invoice-list.pdf",
+      filename: "tax-invoice",
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
@@ -247,12 +273,6 @@ const InvoiceList = () => {
     // Generate the ZIP file and save it
     const content = await zip.generateAsync({ type: "blob" });
     FileSaver.saveAs(content, `${filters.month}-${filters.year}-Tax-Invoice.zip`);
-  };
-
-  function formatDate(isoDate) {
-    const date = new Date(isoDate);
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    return date.toLocaleDateString('en-GB', options);
   };
 
   if (isLoading) {

@@ -155,33 +155,40 @@ const ProjectType = () => {
   };
 
   const exportProjectTypeListAsExcel = () => {
-    const element = document.querySelector("#exportProjectTypeList");
-    if (!element) return;
-    const workbook = XLSX.utils.table_to_book(element, { sheet: "Project Type List" });
-    const excelData = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-    const blob = new Blob([s2ab(excelData)], { type: "application/octet-stream" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'project-type-list.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  function s2ab(s) {
-    const buffer = new ArrayBuffer(s.length);
-    const view = new Uint8Array(buffer);
-    for (let i = 0; i < s.length; i++) {
-      view[i] = s.charCodeAt(i) & 0xFF;
+    if (data?.length === 0) {
+      alert("No data available to export");
+      return;
     };
-    return buffer;
+
+    const exportData = data?.map((entry) => ({
+      "Name": entry?.name || "N/A",
+      "Description": entry?.description || "N/A",
+    }));
+
+    if (exportData?.length === 0) {
+      alert("No project type found to export");
+      return;
+    };
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    // Calculate column width dynamically
+    const columnWidths = Object.keys(exportData[0] || {}).map((key) => ({
+      wch: Math.max(key.length, ...exportData.map((row) => (row[key] ? row[key].toString().length : 0))) + 2,
+    }));
+
+    worksheet["!cols"] = columnWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "project-type");
+
+    XLSX.writeFile(workbook, `project-type.xlsx`);
   };
 
   const exportProjectTypeListAsPdf = () => {
     const element = document.querySelector("#exportProjectTypeList");
     const options = {
-      filename: "project-type-list.pdf",
+      filename: "project-type",
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,

@@ -37,6 +37,12 @@ const ProjectDeployment = () => {
   const permissions = team?.role?.permissions?.projectDeployment;
   const filedPermissions = team?.role?.permissions?.projectDeployment?.fields;
 
+  function formatDate(isoDate) {
+    const date = new Date(isoDate);
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return date.toLocaleDateString('en-GB', options);
+  };
+
   const openModal = (clientId) => {
     setIsOpen(true);
     setClientId(clientId);
@@ -190,33 +196,53 @@ const ProjectDeployment = () => {
   };
 
   const exportProjectDeploymentListAsExcel = () => {
-    const element = document.querySelector("#exportProjectDeploymentList");
-    if (!element) return;
-    const workbook = XLSX.utils.table_to_book(element, { sheet: "Project Deployment List" });
-    const excelData = XLSX.write(workbook, { bookType: 'xlsx', type: 'binary' });
-    const blob = new Blob([s2ab(excelData)], { type: "application/octet-stream" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'project-deployment-list.xlsx';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  function s2ab(s) {
-    const buffer = new ArrayBuffer(s.length);
-    const view = new Uint8Array(buffer);
-    for (let i = 0; i < s.length; i++) {
-      view[i] = s.charCodeAt(i) & 0xFF;
+    if (data?.length === 0) {
+      alert("No data available to export");
+      return;
     };
-    return buffer;
+
+    const exportData = data?.map((entry) => ({
+      "Website Name": entry?.websiteName || "N/A",
+      "Website Link": entry?.websiteLink || "N/A",
+      "Client Name": entry?.client?.name || "N/A",
+      "Domain Purchase Date": formatDate(entry?.domainPurchaseDate) || "N/A",
+      "Domain Expiry Date": formatDate(entry?.domainExpiryDate) || "N/A",
+      "Domain Expire IN": entry?.domainExpireIn || "N/A",
+      "Domain Expiry Status": entry?.domainExpiryStatus || "N/A",
+      "Hosting Purchase Date": formatDate(entry?.hostingPurchaseDate) || "N/A",
+      "Hosting Expiry Date": formatDate(entry?.hostingExpiryDate) || "N/A",
+      "Hosting Expire IN": entry?.hostingExpireIn || "N/A",
+      "Hosting Expiry Status": entry?.hostingExpiryStatus || "N/A",
+      "SSL Purchase Date": formatDate(entry?.sslPurchaseDate) || "N/A",
+      "SSL Expiry Date": formatDate(entry?.sslExpiryDate) || "N/A",
+      "SSL Expire IN": entry?.sslExpireIn || "N/A",
+      "SSL Expiry Status": entry?.sslExpiryStatus || "N/A",
+    }));
+
+    if (exportData?.length === 0) {
+      alert("No project deployment found to export");
+      return;
+    };
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    // Calculate column width dynamically
+    const columnWidths = Object.keys(exportData[0] || {}).map((key) => ({
+      wch: Math.max(key.length, ...exportData.map((row) => (row[key] ? row[key].toString().length : 0))) + 2,
+    }));
+
+    worksheet["!cols"] = columnWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "project-deployment");
+
+    XLSX.writeFile(workbook, `project-deployment.xlsx`);
   };
 
   const exportProjectDeploymentListAsPdf = () => {
     const element = document.querySelector("#exportProjectDeploymentList");
     const options = {
-      filename: "project-deployment-list.pdf",
+      filename: "project-deployment",
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
@@ -276,12 +302,6 @@ const ProjectDeployment = () => {
       fetchSingleClientData(clientId);
     };
   }, [clientId, isLoading, team, permissions]);
-
-  function formatDate(isoDate) {
-    const date = new Date(isoDate);
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    return date.toLocaleDateString('en-GB', options);
-  };
 
   if (isLoading) {
     return <Preloader />;

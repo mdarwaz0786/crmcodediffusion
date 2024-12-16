@@ -11,6 +11,7 @@ import Preloader from "../../Preloader.jsx";
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 const base_url = import.meta.env.VITE_API_BASE_URL;
+import formatDate from "../../Helper/formatDate.js";
 
 const Project = () => {
   const [project, setProject] = useState([]);
@@ -82,6 +83,12 @@ const Project = () => {
     const date = new Date(isoDate);
     const options = { day: 'numeric', month: 'long', year: 'numeric' };
     return date.toLocaleDateString('en-GB', options);
+  };
+
+  const convertToHoursAndMinutes = (hours) => {
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    return `${h} hours ${m} minutes`;
   };
 
   const fetchAllProject = async () => {
@@ -246,7 +253,7 @@ const Project = () => {
   const exportProjectListAsPdf = () => {
     const element = document.querySelector("#exportProjectList");
     const options = {
-      filename: "project-list.pdf",
+      filename: "project",
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
@@ -273,23 +280,23 @@ const Project = () => {
       "ProjectId": entry?.projectId || "N/A",
       "Project Name": entry?.projectName || "N/A",
       "Client Name": entry?.customer?.name || "N/A",
-      "Start Date": entry?.startDate || "N/A",
-      "End Date": entry?.endDate || "N/A",
-      "Project Cost": entry?.projectPrice || "N/A",
-      "Total Received": entry?.totalPaid || "N/A",
-      "Total Dues": entry?.totalDues || "N/A",
+      "Start Date": formatDate(entry?.startDate) || "N/A",
+      "End Date": formatDate(entry?.endDate) || "N/A",
+      "Project Status": entry?.projectStatus?.status || "N/A",
+      "Project Cost": `₹${entry?.projectPrice}` || "0",
+      "Total Received": `₹${entry?.totalPaid}` || "0",
+      "Total Dues": `₹${entry?.totalDues}` || "0",
       "Responsible Person": entry?.responsiblePerson?.map((member) => member?.name).join(', ') || "N/A",
       "Team Leader": entry?.teamLeader?.map((member) => member?.name).join(', ') || "N/A",
-      "Technology": entry?.technology?.map((tech) => tech?.name).join(', ') || "N/A",
-      "Type": entry?.projectType?.name || "N/A",
-      "Category": entry?.projectCategory?.name || "N/A",
-      "Priority": entry?.projectPriority?.name || "N/A",
-      "Timeline": entry?.projectTiming?.name || "N/A",
-      "Status": entry?.projectStatus?.status || "N/A",
-      "Total Hours": entry?.totalHour || "N/A",
-      "Total Spent Hours": entry?.totalSpentHour || "N/A",
-      "Total Remaining Hours": entry?.totalRemainingHour || "N/A",
-      "Description": entry?.description || "N/A",
+      "Technology Used": entry?.technology?.map((tech) => tech?.name).join(', ') || "N/A",
+      "Project Type": entry?.projectType?.name || "N/A",
+      "Project Category": entry?.projectCategory?.name || "N/A",
+      "Project Priority": entry?.projectPriority?.name || "N/A",
+      "Project Timeline": entry?.projectTiming?.name || "N/A",
+      "Total Hours": convertToHoursAndMinutes(entry?.totalHour) || "0",
+      "Total Spent Hours": convertToHoursAndMinutes(entry?.totalSpentHour) || "0",
+      "Total Remaining Hours": convertToHoursAndMinutes(entry?.totalRemainingHour) || "0",
+      "Description": entry?.description.replace(/<[^>]+>/g, '') || "N/A",
     }));
 
     if (exportData?.length === 0) {

@@ -199,7 +199,7 @@ const TeamMember = () => {
   const exportTeamListAsPdf = () => {
     const element = document.querySelector("#exportTeamList");
     const options = {
-      filename: "employee-list.pdf",
+      filename: "employee",
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,

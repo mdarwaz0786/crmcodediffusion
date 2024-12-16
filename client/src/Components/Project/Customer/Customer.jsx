@@ -171,7 +171,7 @@ const Customer = () => {
     }));
 
     if (exportData?.length === 0) {
-      alert("No Client found to export");
+      alert("No client found to export");
       return;
     };
 
@@ -185,15 +185,15 @@ const Customer = () => {
     worksheet["!cols"] = columnWidths;
 
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Client");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "client");
 
-    XLSX.writeFile(workbook, `Client.xlsx`);
+    XLSX.writeFile(workbook, `client.xlsx`);
   };
 
   const exportCustomerListAsPdf = () => {
     const element = document.querySelector("#exportCustomerList");
     const options = {
-      filename: "customer-list.pdf",
+      filename: "customer",
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
