@@ -8,27 +8,29 @@ const leaveApprovalSchema = new mongoose.Schema(
       required: true,
     },
     startDate: {
-      type: String,
+      type: Date,
       required: true,
     },
     endDate: {
-      type: String,
+      type: Date,
       required: true,
     },
     leaveType: {
       type: String,
-      enum: ["Full Day", "Half Day"],
-      default: "Full Day",
+      enum: ["Sick Leave", "Casual Leave", "Other"],
+      required: true,
     },
     leaveApprovedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Team",
-      required: true,
     },
     leaveStatus: {
       type: String,
       enum: ["Pending", "Approved", "Rejected"],
       default: "Pending",
+    },
+    leaveDuration: {
+      type: Number,
     },
   },
   {

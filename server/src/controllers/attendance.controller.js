@@ -251,7 +251,7 @@ export const fetchMonthlyStatistic = async (req, res) => {
         const employee = await Team.findById(employeeId);
 
         if (!employee) {
-            return res.status(404).json({ message: "Employee not found." });
+            return res.status(404).json({ success: false, message: "Employee not found." });
         };
 
         const [requiredHours, requiredMinutes] = employee.workingHoursPerDay.split(":").map(Number);
@@ -333,7 +333,7 @@ export const deleteAttendance = async (req, res) => {
         const attendance = await Attendance.findByIdAndDelete(req.params.id);
 
         if (!attendance) {
-            return res.status(404).json({ message: 'Attendance not found' });
+            return res.status(404).json({ success: false, message: 'Attendance not found' });
         };
 
         return res.status(204).json({ success: true });
