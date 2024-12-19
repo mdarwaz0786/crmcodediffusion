@@ -546,7 +546,7 @@ const TeamMember = () => {
                         (total === 0) ? (
                           <span style={{ textAlign: "center", fontSize: "1rem", fontWeight: "600" }}>No Data</span>
                         ) : loading ? (
-                          <h5 style={{ textAlign: "center", color: "#00918E" }}>
+                          <h5 style={{ textAlign: "center", color: "#ffb300" }}>
                             <div className="spinner-border" role="status">
                               <span className="visually-hidden">Loading...</span>
                             </div>
