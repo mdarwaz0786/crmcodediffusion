@@ -9,11 +9,9 @@ cron.schedule("30 18 * * *", async () => {
     const employees = await Team.find();
 
     if (!employees || employees.length === 0) {
-      console.log("No employees found.");
       return;
     };
 
-    // Today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split("T")[0];
 
     // Update attendance records for all employees who have not punched in

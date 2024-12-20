@@ -15,60 +15,60 @@ export const createHoliday = async (req, res) => {
     const existingHoliday = await Holiday.findOne({ date });
 
     if (existingHoliday) {
-      return res.status(400).json({ success: false, message: "A holiday already exists for the given date." });
+      // Update the existing holiday
+      existingHoliday.reason = reason;
+      existingHoliday.type = type;
+      await existingHoliday.save();
+    } else {
+      // Create a new holiday
+      const holiday = new Holiday({ reason, type, date });
+      await holiday.save();
     };
-
-    // Create a new holiday
-    const holiday = new Holiday({
-      reason,
-      type,
-      date,
-    });
-
-    // Save holiday
-    await holiday.save();
 
     // Get all employees
     const employees = await Team.find();
 
     if (!employees || employees.length === 0) {
-      console.log("No employees found.");
-      return;
+      return res.status(404).json({ success: false, message: "No employees found" });
     };
 
-    // Update attendance records for all employees for the holiday date
+    // Update attendance records for all employees
     const updateAttendancePromises = employees.map(async (employee) => {
       const existingAttendance = await Attendance.findOne({
         employee: employee._id,
         attendanceDate: date,
       });
 
-      // If attendance already exists for the given date for that employee, skip
       if (existingAttendance) {
-        return;
+        // Update existing attendance record
+        existingAttendance.status = type;
+        existingAttendance.punchInTime = null;
+        existingAttendance.punchOutTime = null;
+        existingAttendance.hoursWorked = null;
+        existingAttendance.punchIn = true;
+        existingAttendance.punchOut = true;
+        await existingAttendance.save();
+      } else {
+        // Create a new attendance record
+        const attendance = new Attendance({
+          employee: employee._id,
+          attendanceDate: date,
+          status: type,
+          punchInTime: null,
+          punchIn: true,
+          punchOutTime: null,
+          punchOut: true,
+          hoursWorked: null,
+          lateIn: null,
+        });
+        await attendance.save();
       };
-
-      // Create a new attendance record
-      const attendance = new Attendance({
-        employee: employee._id,
-        attendanceDate: date,
-        status: type,
-        punchInTime: null,
-        punchIn: true,
-        punchOutTime: null,
-        punchOut: true,
-        hoursWorked: null,
-        lateIn: null,
-      });
-
-      // Save attendance
-      await attendance.save();
     });
 
     // Wait for all attendance updates to be completed
     await Promise.all(updateAttendancePromises);
 
-    res.status(201).json({ success: true, data: holiday });
+    res.status(200).json({ success: true, message: "Holiday and attendance created successfully" });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ success: false, error: error.message });

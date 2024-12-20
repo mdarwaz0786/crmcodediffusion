@@ -15,7 +15,7 @@ const attendanceSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Present", "Absent", "Holiday", "Sunday"],
+      enum: ["Present", "Absent", "Holiday", "Sunday", "On Leave"],
       default: "Absent",
     },
     punchInTime: {

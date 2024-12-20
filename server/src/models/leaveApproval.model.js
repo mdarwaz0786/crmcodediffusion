@@ -8,16 +8,16 @@ const leaveApprovalSchema = new mongoose.Schema(
       required: true,
     },
     startDate: {
-      type: Date,
+      type: String,
       required: true,
     },
     endDate: {
-      type: Date,
+      type: String,
       required: true,
     },
     leaveType: {
       type: String,
-      enum: ["Sick Leave", "Casual Leave", "Other"],
+      enum: ["Sick Leave", "Casual Leave", "Earned Leave", "Annual Leave", "Maternity Leave", "Paternity Leave", "Parental Leave", "Bereavement Leave", "Wedding Leave", "Relocation Leave", "Emergency Leave", "Other"],
       required: true,
     },
     leaveApprovedBy: {
@@ -32,6 +32,9 @@ const leaveApprovalSchema = new mongoose.Schema(
     leaveDuration: {
       type: Number,
     },
+    reason: {
+      type: String,
+    }
   },
   {
     timestamps: true,

@@ -9,7 +9,7 @@ const router = express.Router();
 router.post("/create-leaveApproval", isLoggedIn, createLeaveApproval);
 router.get("/all-leaveApproval", isLoggedIn, fetchAllLeaveApproval);
 router.get("/single-leaveApproval/:id", isLoggedIn, fetchSingleLeaveApproval);
-router.put("/update-leaveApproval/:id", isLoggedIn, updateLeaveApproval);
+router.put("/update-leaveApproval", isLoggedIn, updateLeaveApproval);
 router.delete("/delete-leaveApproval/:id", isLoggedIn, deleteLeaveApproval);
 
 export default router;
