@@ -57,6 +57,7 @@ import SinglePurchaseInvoice from "./Components/PurchaseInvoice/SinglePurchaseIn
 import ProjectDeployment from "./Components/Project Deployment/ProjectDeployment.jsx";
 import AddProjectDeployment from "./Components/Project Deployment/AddProjectDeployment.jsx";
 import EditProjectDeployment from "./Components/Project Deployment/EditProjectDeployment.jsx";
+import LeaveRequest from "./Components/LeaveRequest/LeaveRequest.jsx";
 
 const App = () => {
   return (
@@ -118,6 +119,7 @@ const App = () => {
           <Route path="single-purchase-invoice/:id" element={<SinglePurchaseInvoice />} />
           <Route path="profile" element={<Profile />} />
           <Route path="attendance" element={<AttendanceList />} />
+          <Route path="leave-request" element={<LeaveRequest />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />

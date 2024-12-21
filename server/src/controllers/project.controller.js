@@ -138,6 +138,16 @@ export const fetchAllProject = async (req, res) => {
       filter.projectName = { $in: Array.isArray(req.query.projectNameFilter) ? req.query.projectNameFilter : [req.query.projectNameFilter] };
     };
 
+    // Handle project status search
+    if (req.query.projectStatus) {
+      filter.projectStatus = await findObjectIdByString('ProjectStatus', 'status', req.query.projectStatus);
+    };
+
+    // Handle project status filter
+    if (req.query.statusFilter) {
+      filter.projectStatus = { $in: Array.isArray(req.query.statusFilter) ? req.query.statusFilter : [req.query.statusFilter] };
+    };
+
     // Handle projectId search
     if (req.query.projectId) {
       filter.projectId = { $regex: new RegExp(req.query.projectId, 'i') };

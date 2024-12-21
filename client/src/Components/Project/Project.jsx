@@ -23,12 +23,15 @@ const Project = () => {
   const [projectName, setProjectName] = useState("");
   const [projectIdData, setProjectIdData] = useState([]);
   const [projectId, setProjectId] = useState("");
+  const [projectStatusData, setProjectStatusData] = useState([]);
+  const [projectStatus, setProjectStatus] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [filters, setFilters] = useState({
     search: "",
     projectNameFilter: [],
     projectIdFilter: [],
+    statusFilter: [],
     sort: "Descending",
     page: 1,
     limit: 15,
@@ -62,6 +65,7 @@ const Project = () => {
   const debouncedSearch = useDebounce(filters.search, 500);
   const debouncedSearchProjectName = useDebounce(projectName, 500);
   const debouncedSearchProjectId = useDebounce(projectId, 500);
+  const debouncedSearchProjectStatus = useDebounce(projectStatus, 500);
 
   useEffect(() => {
     const formatDate = (date) => {
@@ -106,6 +110,7 @@ const Project = () => {
           dateRange: filters.dateRange,
           projectNameFilter: filters.projectNameFilter.map(String),
           projectIdFilter: filters.projectIdFilter.map(String),
+          statusFilter: filters.statusFilter.map(String),
         },
       });
 
@@ -200,6 +205,40 @@ const Project = () => {
     };
   }, [debouncedSearchProjectId, isLoading, team, permissions]);
 
+  const fetchAllProjectStatus = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/project/all-project`, {
+        headers: {
+          Authorization: validToken,
+        },
+        params: {
+          projectStatus,
+        },
+      });
+
+      if (response?.data?.success) {
+        const filteredProject = response?.data?.project?.filter((p) => {
+          const isLeader = p?.leader?.some((l) => l?._id === team?._id);
+          const isResponsible = p?.responsible?.some((r) => r?._id === team?._id);
+          return isLeader || isResponsible;
+        });
+        if (team?.role?.name.toLowerCase() === "coordinator" || team?.role?.name.toLowerCase() === "admin") {
+          setProjectStatusData(response?.data?.project);
+        } else {
+          setProjectStatusData(filteredProject);
+        };
+      };
+    } catch (error) {
+      console.log(error.message);
+    };
+  };
+
+  useEffect(() => {
+    if (!isLoading && team && permissions?.access) {
+      fetchAllProjectStatus();
+    };
+  }, [debouncedSearchProjectStatus, isLoading, team, permissions]);
+
   const handleFilterChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -224,7 +263,7 @@ const Project = () => {
     if (!isLoading && team && permissions?.access) {
       fetchAllProject();
     };
-  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.projectNameFilter, filters.projectIdFilter, filters.dateRange, isLoading, team, permissions]);
+  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.projectNameFilter, filters.projectIdFilter, filters.statusFilter, filters.dateRange, isLoading, team, permissions]);
 
   const handleDelete = async (id) => {
     let isdelete = prompt("If you want to delete, type \"yes\".");
@@ -470,9 +509,54 @@ const Project = () => {
                                 <div className="accordion" id="accordionExample">
                                   <div className="filter-set-content">
                                     <div className="filter-set-content-head">
-                                      <Link to="#" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">Project Name</Link>
+                                      <Link to="#" className="collapse" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">Project Status</Link>
                                     </div>
                                     <div className="filter-set-contents accordion-collapse collapse show" id="collapseOne" data-bs-parent="#accordionExample">
+                                      <div className="filter-content-list">
+                                        <div className="form-wrap icon-form">
+                                          <span className="form-icon"><i className="ti ti-search" /></span>
+                                          <input type="text" className="form-control" placeholder="Search Project status" onChange={(e) => { const searchValue = e.target.value; setProjectStatus(searchValue) }} />
+                                        </div>
+                                        <ul>
+                                          {
+                                            projectStatusData?.map((p) => (
+                                              <li key={p?._id}>
+                                                <div className="filter-checks">
+                                                  <label className="checkboxs">
+                                                    <input
+                                                      type="checkbox"
+                                                      name="statusFilter"
+                                                      value={p?.projectStatus?._id}
+                                                      checked={filters.statusFilter.includes(p?.projectStatus?._id)}
+                                                      onChange={handleFilterChange}
+                                                    />
+                                                    <span className="checkmarks" />
+                                                  </label>
+                                                </div>
+                                                <div className="collapse-inside-text">
+                                                  <h5>{p?.projectStatus?.status}</h5>
+                                                </div>
+                                              </li>
+                                            ))
+                                          }
+                                        </ul>
+                                        <div className="filter-reset-btns" style={{ marginTop: "1rem" }}>
+                                          <div className="row">
+                                            <div className="col-6">
+                                              <Link to="#" className="btn btn-light" onClick={() => setFilters((prev) => ({ ...prev, statusFilter: [] }))}>Reset</Link>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="accordion" id="accordionExample">
+                                  <div className="filter-set-content">
+                                    <div className="filter-set-content-head">
+                                      <Link to="#" className="collapse" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Project Name</Link>
+                                    </div>
+                                    <div className="filter-set-contents accordion-collapse collapse show" id="collapseTwo" data-bs-parent="#accordionExample">
                                       <div className="filter-content-list">
                                         <div className="form-wrap icon-form">
                                           <span className="form-icon"><i className="ti ti-search" /></span>
@@ -515,9 +599,9 @@ const Project = () => {
                                 <div className="accordion" id="accordionExample">
                                   <div className="filter-set-content">
                                     <div className="filter-set-content-head">
-                                      <Link to="#" className="collapsed" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Project Id</Link>
+                                      <Link to="#" className="collapse" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">Project Id</Link>
                                     </div>
-                                    <div className="filter-set-contents accordion-collapse collapse" id="collapseTwo" data-bs-parent="#accordionExample">
+                                    <div className="filter-set-contents accordion-collapse collapse show" id="collapseThree" data-bs-parent="#accordionExample">
                                       <div className="filter-content-list">
                                         <div className="form-wrap icon-form">
                                           <span className="form-icon"><i className="ti ti-search" /></span>
