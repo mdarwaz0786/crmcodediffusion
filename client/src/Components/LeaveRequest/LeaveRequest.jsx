@@ -8,25 +8,25 @@ import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
 import Preloader from "../../Preloader.jsx";
 import formatDate from "../../Helper/formatDate.js";
-import formatTimeToHoursMinutes from "../../Helper/formatTimeToHoursMinutes.js";
-import formatTimeWithAmPm from "../../Helper/formatTimeWithAmPm.js";
+import { toast } from "react-toastify";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const LeaveRequest = () => {
+  const { validToken, team, isLoading } = useAuth();
+  const [leaveStatus, setLeaveStatus] = useState();
   const [data, setData] = useState([]);
   const [employee, setEmployee] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [singleEmployee, setSingleEmployee] = useState("");
   const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(true);
-  const { validToken, team, isLoading } = useAuth();
   const permissions = team?.role?.permissions?.attendance;
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
     sort: "Descending",
     page: 1,
-    limit: 31,
+    limit: 15,
   });
 
   const fetchAllEmployee = async () => {
@@ -76,7 +76,7 @@ const LeaveRequest = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${base_url}/api/v1/attendance/all-attendance`, {
+      const response = await axios.get(`${base_url}/api/v1/leaveApproval/all-leaveApproval`, {
         headers: {
           Authorization: validToken,
         },
@@ -91,7 +91,7 @@ const LeaveRequest = () => {
       });
 
       if (response?.data?.success) {
-        setData(response?.data?.attendance);
+        setData(response?.data?.data);
         setTotal(response?.data?.totalCount);
         setLoading(false);
       };
@@ -123,24 +123,25 @@ const LeaveRequest = () => {
     };
   }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team, permissions]);
 
-  const exportAttendanceListAsExcel = () => {
+  const exportLeaveRequestListAsExcel = () => {
     if (data?.length === 0) {
       alert("No data available to export");
       return;
     };
 
     const exportData = data?.map((entry) => ({
-      "Date": formatDate(entry?.attendanceDate) || "N/A",
-      "Name": entry?.employee?.name || "N/A",
-      "Punch in": formatTimeWithAmPm(entry?.punchInTime) || "N/A",
-      "Punch out": formatTimeWithAmPm(entry?.punchOutTime) || "N/A",
-      "Late in": entry?.lateIn === "00:00" ? "On Time" : formatTimeToHoursMinutes(entry?.lateIn) || "N/A",
-      "Hours Worked": formatTimeToHoursMinutes(entry?.hoursWorked) || "N/A",
+      "Employee Name": entry?.employee?.name || "N/A",
+      "From": formatDate(entry?.startDate) || "N/A",
+      "To": formatDate(entry?.endDate) || "N/A",
+      "Duration": `${entry?.leaveDuration} Days` || "N/A",
+      "Leave Type": entry?.leaveType || "N/A",
+      "Reason": entry?.reason || "N/A",
       "Status": entry?.status || "N/A",
+      "Approved By": entry?.leaveApprovedBy || "N/A",
     }));
 
     if (exportData?.length === 0) {
-      alert("No Attendance found to export");
+      alert("No leave request found to export");
       return;
     };
 
@@ -148,24 +149,21 @@ const LeaveRequest = () => {
 
     // Calculate column widths dynamically
     const columnWidths = Object.keys(exportData[0] || {}).map((key) => ({
-      wch: Math.max(
-        key.length, // Header length
-        ...exportData.map((row) => (row[key] ? row[key].toString().length : 0)) // Longest content length
-      ) + 2, // Add buffer for better spacing
+      wch: Math.max(key.length, ...exportData.map((row) => (row[key] ? row[key].toString().length : 0))) + 2
     }));
 
     worksheet["!cols"] = columnWidths;
 
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "LeaveRequest");
 
-    XLSX.writeFile(workbook, `${filters.month || ""}-${filters.year || ""}-${singleEmployee?.name || ""}-Attendance.xlsx`);
+    XLSX.writeFile(workbook, `${filters.month || ""}-${filters.year || ""}-${singleEmployee?.name || ""}-Leave-Request.xlsx`);
   };
 
-  const exportAttendanceListAsPdf = () => {
-    const element = document.querySelector("#exportAttendanceList");
+  const exportLeaveRequestListAsPdf = () => {
+    const element = document.querySelector("#exportLeaveRequestList");
     const options = {
-      filename: `${filters.month}-${filters.year}-${singleEmployee?.name ? singleEmployee?.name : "all"}`,
+      filename: `${filters.month || ""}-${filters.year || ""}-${singleEmployee?.name || ""}-Leave-Request`,
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
@@ -182,6 +180,42 @@ const LeaveRequest = () => {
     };
   };
 
+  const handleUpdateLeaveStatus = async (e, leaveId) => {
+    e.preventDefault();
+    try {
+      // Validation
+      if (!leaveId) {
+        return toast.error("leaveId");
+      };
+
+      if (!team?._id) {
+        return toast.error("teamId");
+      };
+
+      if (!leaveStatus) {
+        return toast.error("leaveStatus");
+      };
+
+      const response = await axios.put(`${base_url}/api/v1/leaveApproval/update-leaveApproval`,
+        { leaveStatus, leaveId, approverId: team?._id },
+        {
+          headers: {
+            Authorization: validToken,
+          },
+        },
+      );
+
+      if (response?.data?.success) {
+        setLeaveStatus();
+        fetchAllData();
+        toast.success("Updated Successfully");
+      };
+    } catch (error) {
+      console.log("Error while updating:", error.message);
+      toast.error("Error while updating");
+    };
+  };
+
   if (isLoading) {
     return <Preloader />;
   };
@@ -194,14 +228,14 @@ const LeaveRequest = () => {
     <>
       {/* Page Wrapper */}
       <div className="page-wrapper">
-        <div className="content" id="exportAttendanceList">
+        <div className="content" id="exportLeaveRequestList">
           <div className="row">
             <div className="col-md-12">
               {/* Page Header */}
               <div className="page-header">
                 <div className="row align-items-center">
                   <div className="col-4">
-                    <h4 className="page-title">Attendances<span className="count-title">{total}</span></h4>
+                    <h4 className="page-title">Leave Requests<span className="count-title">{total}</span></h4>
                   </div>
                   <div className="col-8 text-end">
                     <div className="head-icons">
@@ -311,13 +345,13 @@ const LeaveRequest = () => {
                                 <div className="dropdown-menu  dropdown-menu-end">
                                   <ul>
                                     <li>
-                                      <Link to="#" onClick={() => setTimeout(() => { exportAttendanceListAsPdf() }, 0)}>
+                                      <Link to="#" onClick={() => setTimeout(() => { exportLeaveRequestListAsPdf() }, 0)}>
                                         <i className="ti ti-file-type-pdf text-danger" />
                                         Export as PDF
                                       </Link>
                                     </li>
                                     <li>
-                                      <Link to="#" onClick={() => setTimeout(() => { exportAttendanceListAsExcel() }, 0)}>
+                                      <Link to="#" onClick={() => setTimeout(() => { exportLeaveRequestListAsExcel() }, 0)}>
                                         <i className="ti ti-file-spreadsheet text-success" />
                                         Export as EXCEL
                                       </Link>
@@ -333,7 +367,7 @@ const LeaveRequest = () => {
                   </div>
                   {/* /Filter */}
 
-                  {/* Attendance List */}
+                  {/* LeaveRequest List */}
                   <div className="table-responsive custom-table">
                     <div className="table-responsive custom-table">
                       <table className="table table-bordered table-striped custom-border">
@@ -343,46 +377,51 @@ const LeaveRequest = () => {
                               <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
                             </th>
                             <th>#</th>
-                            <th>Date</th>
-                            <th>Employee</th>
-                            <th>Punch In</th>
-                            <th>Punch Out</th>
-                            <th>Late In</th>
-                            <th>Hours Worked</th>
+                            <th>Employee Name</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Leave Type</th>
+                            <th>Reason</th>
                             <th>Status</th>
+                            <th>Approved By</th>
                           </tr>
                         </thead>
                         <tbody>
                           {
                             data?.map((d, index) => (
                               <tr key={d?._id}>
-                                <th className="no-sort">
+                                <td className="no-sort">
                                   <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                                </th>
+                                </td>
                                 <td>{(filters.page - 1) * filters.limit + index + 1}</td>
-                                <td>{formatDate(d?.attendanceDate) || "N/A"}</td>
-                                <td>{d?.employee?.name || "N/A"}</td>
-                                <td>{d?.punchInTime ? formatTimeWithAmPm(d?.punchInTime) : "N/A"}</td>
-                                <td>{d?.punchOutTime ? formatTimeWithAmPm(d?.punchOutTime) : "N/A"}</td>
-                                <td>
-                                  {
-                                    d?.lateIn
-                                      ? d?.lateIn === "00:00"
-                                        ? "On Time"
-                                        : formatTimeToHoursMinutes(d?.lateIn)
-                                      : "N/A"
-                                  }
+                                <td>{d?.employee?.name}</td>
+                                <td>{formatDate(d?.startDate)}</td>
+                                <td>{formatDate(d?.endDate)}</td>
+                                <td>{d?.leaveType}</td>
+                                <td
+                                  style={{ cursor: "pointer" }}
+                                  title={d?.reason.length > 30 && d?.reason}
+                                >
+                                  {d?.reason.length > 30
+                                    ? `${d?.reason.substring(0, 30)}...`
+                                    : d?.reason || "N/A"}
                                 </td>
                                 <td>
-                                  {
-                                    d?.hoursWorked
-                                      ? d?.hoursWorked === "00:00"
-                                        ? "N/A"
-                                        : formatTimeToHoursMinutes(d?.hoursWorked)
-                                      : "N/A"
-                                  }
+                                  <form style={{ display: "flex", columnGap: "0.5rem" }} onSubmit={(e) => handleUpdateLeaveStatus(e, d?._id)}>
+                                    <select
+                                      value={leaveStatus || d?.leaveStatus}
+                                      onChange={(e) => setLeaveStatus(e.target.value)}
+                                      className="form-select"
+                                    >
+                                      <option value="" disabled>Select</option>
+                                      <option value="Approved">Approved</option>
+                                      <option value="Rejected">Rejected</option>
+                                      <option value="Pending">Pending</option>
+                                    </select>
+                                    <button type="submit" className="btn btn-primary">Update</button>
+                                  </form>
                                 </td>
-                                <td>{d?.status}</td>
+                                <td>{d?.leaveApprovedBy?.name || "N/A"}</td>
                               </tr>
                             ))
                           }
@@ -402,7 +441,6 @@ const LeaveRequest = () => {
                               <option value="15">15</option>
                               <option value="20">20</option>
                               <option value="25">25</option>
-                              <option value="31">31</option>
                               <option value={total}>All</option>
                             </select>
                           </label>
@@ -455,7 +493,7 @@ const LeaveRequest = () => {
                       </div>
                     </div>
                   </div>
-                  {/* /Attendance List */}
+                  {/* /LeaveRequest List */}
                 </div>
               </div>
             </div>
