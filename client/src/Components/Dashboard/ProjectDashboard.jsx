@@ -659,27 +659,47 @@ const ProjectDashboard = () => {
                                       <tr key={d?._id}>
                                         <td>{(filters.page - 1) * filters.limit + index + 1}</td>
                                         <td>{d?.employee?.name}</td>
-                                        <td>{d?.punchInTime ? formatTimeWithAmPm(d?.punchInTime) : <><hr /></>}</td>
-                                        <td>{d?.punchOutTime ? formatTimeWithAmPm(d?.punchOutTime) : <><hr /></>}</td>
-                                        <td>
+                                        <td>{d?.punchInTime ? formatTimeWithAmPm(d?.punchInTime) : "N/A"}</td>
+                                        <td>{d?.punchOutTime ? formatTimeWithAmPm(d?.punchOutTime) : "N/A"}</td>
+                                        <td
+                                          style={{
+                                            color: d?.lateIn === "00:00"
+                                              ? "green"
+                                              : "black"
+                                          }}
+                                        >
                                           {
                                             d?.lateIn
                                               ? d?.lateIn === "00:00"
                                                 ? "On Time"
                                                 : formatTimeToHoursMinutes(d?.lateIn)
-                                              : <><hr /></>
+                                              : "N/A"
                                           }
                                         </td>
                                         <td>
                                           {
                                             d?.hoursWorked
                                               ? d?.hoursWorked === "00:00"
-                                                ? <><hr /></>
+                                                ? "N/A"
                                                 : formatTimeToHoursMinutes(d?.hoursWorked)
-                                              : <><hr /></>
+                                              : "N/A"
                                           }
                                         </td>
-                                        <td>{d?.status}</td>
+                                        <td
+                                          style={{
+                                            color: d?.status === "Present"
+                                              ? "green"
+                                              : d?.status === "Absent"
+                                                ? "red"
+                                                : d?.status === "Holiday"
+                                                  ? "#ffb300"
+                                                  : d?.status === "Sunday"
+                                                    ? "blue"
+                                                    : d?.status === "On Leave"
+                                                      ? "purple"
+                                                      : "black"
+                                          }}
+                                        >{d?.status}</td>
                                       </tr>
                                     ))
                                   }
