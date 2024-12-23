@@ -99,6 +99,7 @@ export const fetchAllHoliday = async (req, res) => {
     const holiday = await Holiday.find();
     res.status(200).json({ successs: true, holiday });
   } catch (error) {
+    console.log(error.message);
     res.status(500).json({ success: false, error: error.message });
   };
 };
@@ -112,9 +113,10 @@ export const fetchSingleHoliday = async (req, res) => {
     if (!holiday) {
       return res.status(404).json({ success: false, message: "Holiday not found" });
     };
-    res.status(200).json({ data: holiday });
+    res.status(200).json({ success: true, holiday });
   } catch (error) {
-    res.status(500).json({ success: true, error: error.message });
+    console.log(error.message);
+    res.status(500).json({ success: false, error: error.message });
   };
 };
 
@@ -124,17 +126,74 @@ export const updateHoliday = async (req, res) => {
     const { id } = req.params;
     const { reason, type, date } = req.body;
 
-    const holiday = await Holiday.findByIdAndUpdate(
-      id,
-      { reason, type, date },
-      { new: true, runValidators: true }
-    );
+    if (!reason || !type || !date) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    };
+
+    // Find the existing holiday
+    const holiday = await Holiday.findById(id);
 
     if (!holiday) {
       return res.status(404).json({ success: false, message: "Holiday not found" });
     };
+
+    // Check if the date has changed
+    const isDateChanged = holiday.date !== date;
+
+    // Get all employees
+    const employees = await Team.find();
+
+    if (!employees || employees.length === 0) {
+      return res.status(404).json({ success: false, message: "No employees found" });
+    };
+
+    if (isDateChanged) {
+      // Update or create attendance records for the new date
+      const updateAttendancePromises = employees.map(async (employee) => {
+        const existingAttendance = await Attendance.findOne({
+          employee: employee._id,
+          attendanceDate: date,
+        });
+
+        if (existingAttendance) {
+          // Update existing attendance record
+          existingAttendance.status = type;
+          existingAttendance.punchInTime = null;
+          existingAttendance.punchOutTime = null;
+          existingAttendance.hoursWorked = null;
+          existingAttendance.punchIn = true;
+          existingAttendance.punchOut = true;
+          return existingAttendance.save();
+        } else {
+          // Create a new attendance record
+          const attendance = new Attendance({
+            employee: employee._id,
+            attendanceDate: date,
+            status: type,
+            punchInTime: null,
+            punchIn: true,
+            punchOutTime: null,
+            punchOut: true,
+            hoursWorked: null,
+            lateIn: null,
+          });
+          return attendance.save();
+        };
+      });
+
+      // Wait for all attendance updates/creations to be completed
+      await Promise.all(updateAttendancePromises);
+    };
+
+    // Update the holiday details
+    holiday.reason = reason;
+    holiday.type = type;
+    holiday.date = date;
+    await holiday.save();
+
     res.status(200).json({ success: true, message: "Holiday updated successfully", holiday });
   } catch (error) {
+    console.log(error.message);
     res.status(500).json({ success: false, error: error.message });
   };
 };
@@ -143,12 +202,30 @@ export const updateHoliday = async (req, res) => {
 export const deleteHoliday = async (req, res) => {
   try {
     const { id } = req.params;
-    const holiday = await Holiday.findByIdAndDelete(id);
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Holiday id is required" });
+    };
+
+    // Find the holiday by ID
+    const holiday = await Holiday.findById(id);
+
     if (!holiday) {
       return res.status(404).json({ success: false, message: "Holiday not found" });
     };
-    res.status(200).json({ success: true, message: "Holiday deleted successfully" });
+
+    // Extract the holiday date
+    const { date } = holiday;
+
+    // Delete the holiday
+    await Holiday.deleteOne({ _id: id });
+
+    // Delete all attendance records for the holiday date
+    await Attendance.deleteMany({ attendanceDate: date, status: "Holiday", });
+
+    res.status(200).json({ success: true, message: "Holiday and associated attendance records deleted successfully" });
   } catch (error) {
+    console.log(error.message);
     res.status(500).json({ success: false, error: error.message });
   };
 };

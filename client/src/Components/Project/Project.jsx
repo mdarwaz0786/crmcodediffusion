@@ -207,26 +207,17 @@ const Project = () => {
 
   const fetchAllProjectStatus = async () => {
     try {
-      const response = await axios.get(`${base_url}/api/v1/project/all-project`, {
+      const response = await axios.get(`${base_url}/api/v1/projectStatus/all-projectStatus`, {
         headers: {
           Authorization: validToken,
         },
         params: {
-          projectStatus,
+          search: projectStatus,
         },
       });
 
       if (response?.data?.success) {
-        const filteredProject = response?.data?.project?.filter((p) => {
-          const isLeader = p?.leader?.some((l) => l?._id === team?._id);
-          const isResponsible = p?.responsible?.some((r) => r?._id === team?._id);
-          return isLeader || isResponsible;
-        });
-        if (team?.role?.name.toLowerCase() === "coordinator" || team?.role?.name.toLowerCase() === "admin") {
-          setProjectStatusData(response?.data?.project);
-        } else {
-          setProjectStatusData(filteredProject);
-        };
+        setProjectStatusData(response?.data?.projectStatus)
       };
     } catch (error) {
       console.log(error.message);
@@ -526,15 +517,15 @@ const Project = () => {
                                                     <input
                                                       type="checkbox"
                                                       name="statusFilter"
-                                                      value={p?.projectStatus?._id}
-                                                      checked={filters.statusFilter.includes(p?.projectStatus?._id)}
+                                                      value={p?._id}
+                                                      checked={filters.statusFilter.includes(p?._id)}
                                                       onChange={handleFilterChange}
                                                     />
                                                     <span className="checkmarks" />
                                                   </label>
                                                 </div>
                                                 <div className="collapse-inside-text">
-                                                  <h5>{p?.projectStatus?.status}</h5>
+                                                  <h5>{p?.status}</h5>
                                                 </div>
                                               </li>
                                             ))
