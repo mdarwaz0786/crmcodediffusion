@@ -113,10 +113,10 @@ export const fetchAllAttendance = async (req, res) => {
         const skip = (page - 1) * limit;
 
         // Handle sorting
-        if (req.query.sort === 'Ascending') {
-            sort = { attendanceDate: 1 };
-        } else {
+        if (req.query.sort === 'Descending') {
             sort = { attendanceDate: -1 };
+        } else {
+            sort = { attendanceDate: 1 };
         };
 
         // Calculate total count

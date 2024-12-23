@@ -24,7 +24,7 @@ const AttendanceList = () => {
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
-    sort: "Descending",
+    sort: "Ascending",
     page: 1,
     limit: 31,
   });
