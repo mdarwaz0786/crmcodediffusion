@@ -364,7 +364,13 @@ const AttendanceList = () => {
                                 <td>{d?.employee?.name || "N/A"}</td>
                                 <td>{d?.punchInTime ? formatTimeWithAmPm(d?.punchInTime) : "N/A"}</td>
                                 <td>{d?.punchOutTime ? formatTimeWithAmPm(d?.punchOutTime) : "N/A"}</td>
-                                <td>
+                                <td
+                                  style={{
+                                    color: d?.lateIn === "00:00"
+                                      ? "green"
+                                      : "black"
+                                  }}
+                                >
                                   {
                                     d?.lateIn
                                       ? d?.lateIn === "00:00"
@@ -382,7 +388,21 @@ const AttendanceList = () => {
                                       : "N/A"
                                   }
                                 </td>
-                                <td>{d?.status}</td>
+                                <td
+                                  style={{
+                                    color: d?.status === "Present"
+                                      ? "green"
+                                      : d?.status === "Absent"
+                                        ? "red"
+                                        : d?.status === "Holiday"
+                                          ? "#ffb300"
+                                          : d?.status === "Sunday"
+                                            ? "blue"
+                                            : d?.status === "On Leave"
+                                              ? "purple"
+                                              : "black"
+                                  }}
+                                >{d?.status}</td>
                               </tr>
                             ))
                           }
