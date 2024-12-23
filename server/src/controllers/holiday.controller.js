@@ -152,7 +152,7 @@ export const updateHoliday = async (req, res) => {
       const updateAttendancePromises = employees.map(async (employee) => {
         const existingAttendance = await Attendance.findOne({
           employee: employee._id,
-          attendanceDate: date,
+          attendanceDate: holiday.date,
         });
 
         if (existingAttendance) {
