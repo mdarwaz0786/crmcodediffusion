@@ -20,7 +20,6 @@ const LeaveRequest = () => {
   const [singleEmployee, setSingleEmployee] = useState("");
   const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(true);
-  const permissions = team?.role?.permissions?.attendance;
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
@@ -46,10 +45,10 @@ const LeaveRequest = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && permissions?.access) {
+    if (!isLoading && team && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
       fetchAllEmployee();
     };
-  }, [isLoading, team, permissions]);
+  }, [isLoading, team]);
 
   const fetchSingleEmployee = async (selectedEmployee) => {
     try {
@@ -68,10 +67,10 @@ const LeaveRequest = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && permissions?.access && selectedEmployee) {
+    if (!isLoading && team && selectedEmployee && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
       fetchSingleEmployee(selectedEmployee);
     };
-  }, [isLoading, team, permissions, selectedEmployee]);
+  }, [isLoading, team, selectedEmployee]);
 
   const fetchAllData = async () => {
     try {
@@ -118,10 +117,10 @@ const LeaveRequest = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && permissions?.access) {
+    if (!isLoading && team && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
       fetchAllData();
     };
-  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team, permissions]);
+  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team]);
 
   const exportLeaveRequestListAsExcel = () => {
     if (data?.length === 0) {
@@ -220,7 +219,7 @@ const LeaveRequest = () => {
     return <Preloader />;
   };
 
-  if (!permissions?.access) {
+  if (team?.role?.name.toLowerCase() !== "admin" && team?.role?.name.toLowerCase() !== "hr") {
     return <Navigate to="/" />;
   };
 
@@ -333,35 +332,31 @@ const LeaveRequest = () => {
                             }
                           </select>
                         </li>
-                        {
-                          (permissions?.export) && (
-                            <li>
-                              <label className="pb-1">Export:</label>
-                              <div className="export-dropdwon">
-                                <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown">
-                                  <i className="ti ti-package-export" />
-                                  Export
-                                </Link>
-                                <div className="dropdown-menu  dropdown-menu-end">
-                                  <ul>
-                                    <li>
-                                      <Link to="#" onClick={() => setTimeout(() => { exportLeaveRequestListAsPdf() }, 0)}>
-                                        <i className="ti ti-file-type-pdf text-danger" />
-                                        Export as PDF
-                                      </Link>
-                                    </li>
-                                    <li>
-                                      <Link to="#" onClick={() => setTimeout(() => { exportLeaveRequestListAsExcel() }, 0)}>
-                                        <i className="ti ti-file-spreadsheet text-success" />
-                                        Export as EXCEL
-                                      </Link>
-                                    </li>
-                                  </ul>
-                                </div>
-                              </div>
-                            </li>
-                          )
-                        }
+                        <li>
+                          <label className="pb-1">Export:</label>
+                          <div className="export-dropdwon">
+                            <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown">
+                              <i className="ti ti-package-export" />
+                              Export
+                            </Link>
+                            <div className="dropdown-menu  dropdown-menu-end">
+                              <ul>
+                                <li>
+                                  <Link to="#" onClick={() => setTimeout(() => { exportLeaveRequestListAsPdf() }, 0)}>
+                                    <i className="ti ti-file-type-pdf text-danger" />
+                                    Export as PDF
+                                  </Link>
+                                </li>
+                                <li>
+                                  <Link to="#" onClick={() => setTimeout(() => { exportLeaveRequestListAsExcel() }, 0)}>
+                                    <i className="ti ti-file-spreadsheet text-success" />
+                                    Export as EXCEL
+                                  </Link>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </li>
                       </ul>
                     </div>
                   </div>

@@ -292,7 +292,7 @@ export const fetchWorkDetail = async (req, res) => {
       { $match: match },
       {
         $sort: {
-          "workDetail.date": -1,
+          "workDetail.date": 1,
         },
       },
       {

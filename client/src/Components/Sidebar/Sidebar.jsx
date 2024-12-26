@@ -122,7 +122,9 @@ const Sidebar = () => {
                 {
                   (permissions?.team?.access ||
                     permissions?.attendance?.access ||
-                    permissions?.project?.fields?.workDetail?.show
+                    permissions?.project?.fields?.workDetail?.show ||
+                    team?.role?.name.toLowerCase() === "admin" ||
+                    team?.role?.name.toLowerCase() === "hr"
                   ) && (
                     <h6 className="submenu-hdr">EMPLOYEE</h6>
                   )
@@ -143,7 +145,11 @@ const Sidebar = () => {
                       <li><Link to="/work-detail" className={currentPath === "/work-detail" ? "active" : ""} id={isMobile && active === "workDetail" ? "mobile_btn" : ""} onClick={() => handleActive("workDetail")}><i style={{ color: currentPath === "/work-detail" ? "" : "#FFA201" }} className="ti ti-clipboard"></i><span>Work Summary</span></Link></li>
                     )
                   }
-                  <li><Link to="/leave-request" className={currentPath === "/leave-request" ? "active" : ""} id={isMobile && active === "leave-request" ? "mobile_btn" : ""} onClick={() => handleActive("leaveRequest")}><i style={{ color: currentPath === "/leave-request" ? "" : "#FFA201" }} className="ti ti-user-check"></i><span>Leave Request</span></Link></li>
+                  {
+                    (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr") && (
+                      <li><Link to="/leave-request" className={currentPath === "/leave-request" ? "active" : ""} id={isMobile && active === "leave-request" ? "mobile_btn" : ""} onClick={() => handleActive("leaveRequest")}><i style={{ color: currentPath === "/leave-request" ? "" : "#FFA201" }} className="ti ti-user-check"></i><span>Leave Request</span></Link></li>
+                    )
+                  }
                 </ul>
               </li>
 

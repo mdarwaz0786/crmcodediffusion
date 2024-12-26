@@ -180,6 +180,13 @@ export const updateLeaveApproval = async (req, res) => {
   try {
     const { leaveId, approverId, leaveStatus } = req.body;
 
+    // Validate user role
+    const userRole = req.team?.role?.name;
+
+    if (userRole !== "admin" && userRole !== "hr") {
+      return res.status(403).json({ success: false, message: "You do not have permission to update leave requests." });
+    };
+
     // Validations
     if (!leaveId || !approverId || !leaveStatus) {
       return res.status(400).json({ success: false, message: "Leave ID, approver ID, and leave status are required." });
