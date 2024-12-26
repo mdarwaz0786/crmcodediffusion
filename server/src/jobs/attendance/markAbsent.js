@@ -3,7 +3,7 @@ import Attendance from "../../models/attendance.model.js";
 import Team from "../../models/team.model.js";
 
 // Schedule a task to run every day at 18:30
-cron.schedule("48 18 * * *", async () => {
+cron.schedule("30 18 * * *", async () => {
   try {
     // Get all employees from the Team model
     const employees = await Team.find();
