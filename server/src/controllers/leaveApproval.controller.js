@@ -30,7 +30,7 @@ export const createLeaveApproval = async (req, res) => {
     };
 
     if (new Date(startDate) > new Date(endDate)) {
-      return res.status(400).json({ success: false, message: "Start date cannot be after end date" });
+      return res.status(400).json({ success: false, message: "Start date cannot be later than the end date" });
     };
 
     // Check if the employee exist
