@@ -5,30 +5,48 @@ const proformaInvoiceSchema = new mongoose.Schema(
     proformaInvoiceId: {
       type: String,
     },
-    projects: [
-      {
-        project: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Project",
-          required: true,
-        },
-        amount: {
-          type: String,
-          required: true,
-          trim: true,
-        },
-      },
-    ],
-    quantity: {
+    date: {
       type: String,
-      default: 1,
+      required: true,
     },
     tax: {
       type: String,
       enum: ["Inclusive", "Exclusive"],
       required: true,
     },
-    date: {
+    projects: [
+      {
+        projectName: {
+          type: String,
+          required: true,
+        },
+        projectCost: {
+          type: String,
+          required: true,
+        },
+        quantity: {
+          type: String,
+          default: 1,
+        },
+      }
+    ],
+    clientName: {
+      type: String,
+      required: true,
+    },
+    GSTNumber: {
+      type: String,
+      required: true,
+    },
+    shipTo: {
+      type: String,
+      required: true,
+    },
+    billTo: {
+      type: String,
+      required: true,
+    },
+    state: {
       type: String,
       required: true,
     },

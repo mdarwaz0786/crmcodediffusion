@@ -5,14 +5,18 @@ import mongoose from "mongoose";
 
 // Helper function to generate the next proforma invoice id
 const getNextProformaInvoiceId = async () => {
-  const counter = await ProformaInvoiceId.findOneAndUpdate({ _id: "proformaInvoiceId" }, { $inc: { sequence: 1 } }, { new: true, upsert: true });
+  const counter = await ProformaInvoiceId.findOneAndUpdate(
+    { _id: "proformaInvoiceId" },
+    { $inc: { sequence: 1 } },
+    { new: true, upsert: true }
+  );
   return `#CD${1818 + counter.sequence}`;
 };
 
 // Controller for creating an invoice
 export const createInvoice = async (req, res) => {
   try {
-    const { projects, date, tax } = req.body;
+    const { projects, date, tax, clientName, GSTNumber, shipTo, state } = req.body;
 
     let total = 0;
     let subtotal = 0;
@@ -20,32 +24,25 @@ export const createInvoice = async (req, res) => {
     let SGST = 0;
     let IGST = 0;
 
-    // Calculate subtotal by summing up the amount of all projects
-    const invoiceProjects = await Promise.all(
-      projects.map(async (projectData) => {
-        const { project, amount } = projectData;
+    // Calculate subtotal by summing up the cost of all projects
+    const invoiceProjects = projects.map((project) => {
+      let projectCost = parseFloat(project.projectCost) * parseFloat(project.quantity || 1);
 
-        let originalAmount = parseFloat(amount);
+      // Adjust for inclusive tax
+      if (tax === "Inclusive") {
+        projectCost = projectCost / 1.18;
+      };
 
-        // Adjust amount for inclusive tax
-        if (tax === "Inclusive") {
-          originalAmount = parseFloat(amount) / 1.18;
-        };
+      subtotal += projectCost;
+      return {
+        projectName: project.projectName,
+        projectCost: projectCost.toFixed(2),
+        quantity: project.quantity || 1
+      };
+    });
 
-        subtotal += originalAmount;
-
-        return {
-          project,
-          amount: originalAmount.toFixed(2),
-        };
-      })
-    );
-
-    // Determine whether to apply CGST/SGST or IGST based on customer's state
-    const firstProjectDetails = await Project.findById(projects[0].project).populate({ path: "customer", select: "state" });
-    const customerState = firstProjectDetails.customer.state;
-
-    if (customerState === "Delhi") {
+    // Apply GST based on state
+    if (state === "Delhi") {
       CGST = subtotal * 0.09;
       SGST = subtotal * 0.09;
       total = subtotal + CGST + SGST;
@@ -54,16 +51,22 @@ export const createInvoice = async (req, res) => {
       total = subtotal + IGST;
     };
 
+    // Create new proforma invoice
     const newInvoice = new Invoice({
-      projects: invoiceProjects,
-      tax,
       date,
+      tax,
+      projects: invoiceProjects,
+      clientName,
+      GSTNumber,
+      shipTo,
+      billTo: shipTo,
+      state,
       subtotal: subtotal.toFixed(2),
       CGST: CGST.toFixed(2),
       SGST: SGST.toFixed(2),
       IGST: IGST.toFixed(2),
       total: total.toFixed(2),
-      balanceDue: total.toFixed(2),
+      balanceDue: total.toFixed(2)
     });
 
     await newInvoice.save();
@@ -71,15 +74,15 @@ export const createInvoice = async (req, res) => {
     // Generate the next proformaInvoiceId only after successful save
     const proformaInvoiceId = await getNextProformaInvoiceId();
 
-    // Update the invoice document with the generated proformaInvoiceId
+    // Update the proformainvoice document with the generated proformaInvoiceId
     newInvoice.proformaInvoiceId = proformaInvoiceId;
 
     await newInvoice.save();
 
-    return res.status(200).json({ success: true, message: "Invoice created successfully", invoice: newInvoice });
+    return res.status(200).json({ success: true, message: "Proforma invoice created successfully", invoice: newInvoice });
   } catch (error) {
-    console.log("Error while creating invoice:", error.message);
-    return res.status(500).json({ success: false, message: `Error while creating invoice: ${error.message}` });
+    console.error("Error while creating proforma invoice:", error.message);
+    return res.status(500).json({ success: false, message: `Error while creating proforma invoice: ${error.message}` });
   };
 };
 
