@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-extra-semi */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -10,80 +10,73 @@ import Select from "react-select";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddProformaInvoice = () => {
-  const [projects, setProjects] = useState([{ project: "", amount: "", projectPrice: "", totalDues: "", totalPaid: "", projectId: "" }]);
-  const [allProjects, setAllProjects] = useState([]);
+  const [projects, setProjects] = useState([{ projectName: "", projectCost: "", quantity: 1 }]);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [tax, setTax] = useState("Exclusive");
+  const [clientName, setClientName] = useState("");
+  const [GSTNumber, setGSTNumber] = useState("");
+  const [shipTo, setShipTo] = useState("");
+  const [state, setState] = useState(null);
   const { validToken, team, isLoading } = useAuth();
   const navigate = useNavigate();
   const permissions = team?.role?.permissions?.invoice;
 
-  const fetchAllProjects = async () => {
-    try {
-      const response = await axios.get(`${base_url}/api/v1/project/all-project`, {
-        headers: {
-          Authorization: validToken,
-        },
-      });
+  const statesOfIndia = [
+    { value: 'Delhi', label: 'Delhi' },
+    { value: 'Andhra Pradesh', label: 'Andhra Pradesh' },
+    { value: 'Arunachal Pradesh', label: 'Arunachal Pradesh' },
+    { value: 'Assam', label: 'Assam' },
+    { value: 'Bihar', label: 'Bihar' },
+    { value: 'Chhattisgarh', label: 'Chhattisgarh' },
+    { value: 'Chhandigarh', label: 'Chhandigarh' },
+    { value: 'Delhi', label: 'Delhi' },
+    { value: 'Goa', label: 'Goa' },
+    { value: 'Gujarat', label: 'Gujarat' },
+    { value: 'Haryana', label: 'Haryana' },
+    { value: 'Himachal Pradesh', label: 'Himachal Pradesh' },
+    { value: 'Jharkhand', label: 'Jharkhand' },
+    { value: 'Jammu and Kashmir', label: 'Jammu and Kashmir' },
+    { value: 'Karnataka', label: 'Karnataka' },
+    { value: 'Kerala', label: 'Kerala' },
+    { value: 'Madhya Pradesh', label: 'Madhya Pradesh' },
+    { value: 'Maharashtra', label: 'Maharashtra' },
+    { value: 'Manipur', label: 'Manipur' },
+    { value: 'Meghalaya', label: 'Meghalaya' },
+    { value: 'Mizoram', label: 'Mizoram' },
+    { value: 'Nagaland', label: 'Nagaland' },
+    { value: 'Odisha', label: 'Odisha' },
+    { value: 'Punjab', label: 'Punjab' },
+    { value: 'Rajasthan', label: 'Rajasthan' },
+    { value: 'Sikkim', label: 'Sikkim' },
+    { value: 'Tamil Nadu', label: 'Tamil Nadu' },
+    { value: 'Telangana', label: 'Telangana' },
+    { value: 'Tripura', label: 'Tripura' },
+    { value: 'Uttar Pradesh', label: 'Uttar Pradesh' },
+    { value: 'Uttarakhand', label: 'Uttarakhand' },
+    { value: 'West Bengal', label: 'West Bengal' },
+    { value: 'Puducherry', label: 'Puducherry' },
+    { value: 'Daman and Diu', label: 'Daman and Diu' },
+    { value: 'Lakshadweep', label: 'Lakshadweep' },
+    { value: 'Ladakh', label: 'Ladakh' },
+    { value: 'Andaman and Nicobar Islands', label: 'Andaman and Nicobar Islands' },
+    { value: 'Dadra and Nagar haveli', label: 'Dadra and Nagar haveli' },
+  ];
 
-      if (response?.data?.success) {
-        setAllProjects(response?.data?.project);
-      };
-    } catch (error) {
-      console.log("Error while fetching projects:", error.message);
-    };
+  const handleStateChange = (selectedOption) => {
+    setState(selectedOption.value);
   };
 
-  useEffect(() => {
-    if (permissions?.create && !isLoading && team) {
-      fetchAllProjects();
-    };
-  }, [permissions, isLoading, team]);
-
   const handleAddProject = () => {
-    setProjects([...projects, { project: "", amount: "", projectPrice: "", totalDues: "", totalPaid: "", projectId: "" }]);
+    setProjects([...projects, { projectName: "", projectCost: "", quantity: 1 }]);
   };
 
   const handleRemoveProject = (index) => {
     const newProjects = projects?.filter((_, i) => i !== index);
     setProjects(newProjects);
     toast.success("Project removed");
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
   };
 
-  const handleProjectChange = (index, selectedOption) => {
-    const newProjects = [...projects];
-    newProjects[index].project = selectedOption.value;
-    setProjects(newProjects);
-    fetchProjectDetails(selectedOption.value, index);
-  };
-
-  const fetchProjectDetails = async (projectId, index) => {
-    try {
-      const response = await axios.get(`${base_url}/api/v1/project/single-project/${projectId}`, {
-        headers: {
-          Authorization: validToken,
-        },
-      });
-
-      if (response?.data?.success) {
-        const updatedProjects = [...projects];
-        updatedProjects[index].projectPrice = response?.data?.project?.projectPrice;
-        updatedProjects[index].totalDues = response?.data?.project?.totalDues;
-        updatedProjects[index].totalPaid = response?.data?.project?.totalPaid;
-        updatedProjects[index].projectId = response?.data?.project?.projectId;
-        updatedProjects[index].amount = response?.data?.project?.projectPrice;
-        setProjects(updatedProjects);
-      };
-    } catch (error) {
-      console.log("Error while fetching single project:", error.message);
-    };
-  };
-
-  const handleFieldChange = (index, field, value) => {
+  const handleProjectChange = (index, field, value) => {
     const newProjects = [...projects];
     newProjects[index][field] = value;
     setProjects(newProjects);
@@ -92,33 +85,66 @@ const AddProformaInvoice = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
 
-    // Validation
+    // Validations
     for (const project of projects) {
-      if (!project?.project) {
-        return toast.error("Select project for all entries");
+      if (!project?.projectName) {
+        return toast.error("Enter project");
       };
 
-      if (parseFloat(project?.amount) < 1) {
-        return toast.error("Amount should not be less than 1");
+      if (!project?.projectCost) {
+        return toast.error("Enter project cost");
+      };
+
+      if (!project?.quantity) {
+        return toast.error("Enter project quantity");
+      };
+
+      if (parseFloat(project?.projectCost) < 1) {
+        return toast.error("Project cost should not be less than 1");
+      };
+
+      if (parseFloat(project?.quantity) < 1) {
+        return toast.error("Project quantity should not be less than 1");
       };
     };
 
     if (!date) {
-      return toast.error("Enter date");
+      return toast.error("Select date");
     };
 
     if (!tax) {
       return toast.error("Select tax");
     };
 
+    if (!shipTo) {
+      return toast.error("Enter ship to");
+    };
+
+    if (!clientName) {
+      return toast.error("Enter client name");
+    };
+
+    if (!state) {
+      return toast.error("Enter state");
+    };
+
+    if (!GSTNumber) {
+      return toast.error("Enter GST Number");
+    };
+
     try {
       const invoiceData = {
         projects: projects?.map((project) => ({
-          project: project?.project,
-          amount: project?.amount,
+          projectName: project?.projectName,
+          projectCost: project?.projectCost,
+          quantity: project?.quantity,
         })),
         date,
         tax,
+        clientName,
+        GSTNumber,
+        shipTo,
+        state,
       };
 
       const response = await axios.post(`${base_url}/api/v1/proformaInvoice/create-proformaInvoice`, invoiceData, {
@@ -137,11 +163,6 @@ const AddProformaInvoice = () => {
     };
   };
 
-  const projectOptions = allProjects?.map((p) => ({
-    value: p?._id,
-    label: p?.projectName,
-  }));
-
   if (isLoading) {
     return <Preloader />;
   };
@@ -153,7 +174,7 @@ const AddProformaInvoice = () => {
   return (
     <div className="page-wrapper" style={{ paddingBottom: "2rem" }}>
       <div className="content">
-        <div style={{ display: "flex", justifyContent: "space-between", paddingBottom: "1rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "1rem" }}>
           <h4>Add Proforma Invoice</h4>
           <Link to="#" onClick={() => navigate(-1)}>
             <button className="btn btn-primary">Back</button>
@@ -180,71 +201,81 @@ const AddProformaInvoice = () => {
           </div>
         </div>
 
+        <div className="row">
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="clientName">Client Name <span className="text-danger">*</span></label>
+              <input type="text" className="form-control" id="clientName" name="clientName" value={clientName} onChange={(e) => setClientName(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="GSTNumber">GST Number <span className="text-danger">*</span></label>
+              <input type="text" className="form-control" id="GSTNumber" name="GSTNumber" value={GSTNumber} onChange={(e) => setGSTNumber(e.target.value)} />
+            </div>
+          </div>
+        </div>
+
+        <div className="row">
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="shipTo">Ship To <span className="text-danger">*</span></label>
+              <input type="text" className="form-control" id="shipTo" name="shipTo" value={shipTo} onChange={(e) => setShipTo(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="state">State <span className="text-danger">*</span></label>
+              <Select
+                styles={{
+                  control: (provided) => ({ ...provided, outline: 'none', border: "none", boxShadow: 'none' }),
+                  indicatorSeparator: (provided) => ({ ...provided, display: 'none' }),
+                  option: (provided, state) => ({ ...provided, backgroundColor: state.isSelected ? "#f0f0f0" : state.isFocused ? "#e0e0e0" : "#fff", color: "#333" }),
+                }}
+                className="form-select p-0"
+                id="state"
+                name="state"
+                value={statesOfIndia.find((option) => option.value === state)}
+                onChange={handleStateChange}
+                options={statesOfIndia}
+              />
+            </div>
+          </div>
+        </div>
+
         {
           projects.map((project, index) => (
             <div key={index} className="row">
               <div className="col-md-4">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="project">Project Name<span className="text-danger">*</span></label>
-                  <Select
-                    styles={{
-                      control: (provided) => ({ ...provided, outline: 'none', border: "none", boxShadow: 'none' }),
-                      indicatorSeparator: (provided) => ({ ...provided, display: 'none' }),
-                      option: (provided, state) => ({ ...provided, backgroundColor: state.isSelected ? "#f0f0f0" : state.isFocused ? "#e0e0e0" : "#fff", color: "#333" }),
-                    }}
-                    className="form-select p-0"
-                    name={`project-${index}`}
-                    id={`project-${index}`}
-                    options={projectOptions}
-                    value={projectOptions?.find((option) => option?.value === project?.project)}
-                    onChange={(selectedOption) => handleProjectChange(index, selectedOption)}
-                    isSearchable
+                  <label className="col-form-label" htmlFor="projectName">Project Name <span className="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name={`projectName-${index}`}
+                    id={`projectName-${index}`}
+                    value={project?.projectName}
+                    onChange={(e) => handleProjectChange(index, "projectName", e.target.value)}
                   />
                 </div>
               </div>
 
               <div className="col-md-4">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor={`projectId-${index}`}>Project Id</label>
+                  <label className="col-form-label" htmlFor={`projectCost-${index}`}>Project Cost <span className="text-danger">*</span></label>
                   <input
                     type="text"
                     className="form-control"
-                    name={`projectId-${index}`}
-                    id={`projectId-${index}`}
-                    value={project?.projectId}
-                    disabled
-                  />
-                </div>
-              </div>
-
-              <div className="col-md-4">
-                <div className="form-wrap">
-                  <label className="col-form-label" htmlFor={`projectPrice-${index}`}>Project Cost</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name={`projectPrice-${index}`}
-                    id={`projectPrice-${index}`}
-                    value={project?.projectPrice}
-                    disabled
-                  />
-                </div>
-              </div>
-
-              <div className="col-md-4">
-                <div className="form-wrap">
-                  <label className="col-form-label" htmlFor={`amount-${index}`}>Amount <span className="text-danger">*</span></label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name={`amount-${index}`}
-                    id={`amount-${index}`}
-                    value={project?.amount}
-                    onChange={(e) => handleFieldChange(index, "amount", e.target.value)}
+                    name={`projectCost-${index}`}
+                    id={`projectCost-${index}`}
+                    value={project?.projectCost}
+                    onChange={(e) => handleProjectChange(index, "projectCost", e.target.value)}
                   />
                   {
-                    (parseFloat(project?.amount) < 1) && (
-                      <div className="col-form-label" style={{ color: "red" }}>Amount should not less than 1. <i className="fas fa-times"></i></div>
+                    (parseFloat(project?.projectCost) < 1) && (
+                      <div className="col-form-label" style={{ color: "red" }}>Project cost should not less than 1. <i className="fas fa-times"></i></div>
                     )
                   }
                 </div>
@@ -252,29 +283,20 @@ const AddProformaInvoice = () => {
 
               <div className="col-md-4">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor={`totalDues-${index}`}>Total Dues</label>
+                  <label className="col-form-label" htmlFor={`quantity-${index}`}>quantity <span className="text-danger">*</span></label>
                   <input
                     type="text"
                     className="form-control"
-                    name={`totalDues-${index}`}
-                    id={`totalDues-${index}`}
-                    value={project?.totalDues}
-                    disabled
+                    name={`quantity-${index}`}
+                    id={`quantity-${index}`}
+                    value={project?.quantity}
+                    onChange={(e) => handleProjectChange(index, "quantity", e.target.value)}
                   />
-                </div>
-              </div>
-
-              <div className="col-md-4">
-                <div className="form-wrap">
-                  <label className="col-form-label" htmlFor={`totalPaid-${index}`}>Total Received</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name={`totalPaid-${index}`}
-                    id={`totalPaid-${index}`}
-                    value={project?.totalPaid}
-                    disabled
-                  />
+                  {
+                    (parseFloat(project?.quantity) < 1) && (
+                      <div className="col-form-label" style={{ color: "red" }}>Project quantity should not less than 1. <i className="fas fa-times"></i></div>
+                    )
+                  }
                 </div>
               </div>
 

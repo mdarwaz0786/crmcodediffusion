@@ -28,7 +28,7 @@ const SingleProformaInvoice = () => {
         setData(response?.data?.invoice);
       };
     } catch (error) {
-      console.log("Error while fetching single invoice:", error.message);
+      console.log("Error while fetching single proforma invoice:", error.message);
     };
   };
 
@@ -44,18 +44,10 @@ const SingleProformaInvoice = () => {
     return date.toLocaleDateString('en-GB', options);
   };
 
-  if (isLoading) {
-    return <Preloader />;
-  };
-
-  if (!permissions?.access) {
-    return <Navigate to="/" />;
-  };
-
   const exportInvoiceAsPdf = () => {
     const element = document.querySelector("#exportProformaInvoice");
     const options = {
-      filename: `${data?.proformaInvoiceId}-${data?.projects[0]?.project?.customer?.companyName}-Proforma-Invoice.pdf`,
+      filename: `${data?.proformaInvoiceId}-${data?.clientName}-Proforma-Invoice.pdf`,
       margin: [0, 0, 10, 0],
       html2canvas: {
         useCORS: true,
@@ -68,6 +60,14 @@ const SingleProformaInvoice = () => {
       },
     };
     html2pdf().set(options).from(element).save();
+  };
+
+  if (isLoading) {
+    return <Preloader />;
+  };
+
+  if (!permissions?.access) {
+    return <Navigate to="/" />;
   };
 
   if (!data || !data?.projects || data?.projects?.length === 0) {
@@ -104,7 +104,7 @@ const SingleProformaInvoice = () => {
               <div className="col-md-6 p-5 pt-0">
                 <div className="p-0 m-0"><strong>Code Diffusion Technologies</strong></div>
                 <div>Address :</div>
-                <div>1020 , Kirti Sikhar Tower,</div>
+                <div>1020, Kirti Sikhar Tower,</div>
                 <div>District Centre, Janakpuri,</div>
                 <div>New Delhi.</div>
                 <div><strong>GST No: O7FRWPS7288J3ZC</strong></div>
@@ -114,7 +114,7 @@ const SingleProformaInvoice = () => {
                   <p className>{data?.proformaInvoiceId}</p><br />
                 </div>
                 <div className="date-box d-flex justify-content-end mt-5 pt-3">
-                  <div className="date px-2">
+                  <div className="date px-1">
                     <strong>Date:</strong>
                   </div>
                   <div className="date text-end">
@@ -130,10 +130,10 @@ const SingleProformaInvoice = () => {
                     <h5 style={{ color: "#262a2a7a" }}>Bill To:</h5>
                     <div>
                       <strong style={{ color: "#000" }}>
-                        {data?.projects[0]?.project?.customer?.companyName}
+                        {data?.clientName}
                       </strong>
                     </div>
-                    <div><strong>GST No: {data?.projects[0]?.project?.customer?.GSTNumber}</strong></div>
+                    <div><strong>GST No: {data?.GSTNumber}</strong></div>
                   </div>
                 </div>
                 <div className="content w-100">
@@ -141,7 +141,7 @@ const SingleProformaInvoice = () => {
                     <h5 style={{ color: "#262a2a7a" }}>Ship To:</h5>
                     <p>
                       <strong style={{ color: "#000" }}>
-                        {data?.projects[0]?.project?.customer?.address}
+                        {data?.shipTo}
                       </strong>
                     </p>
                   </div>
@@ -166,10 +166,10 @@ const SingleProformaInvoice = () => {
                     {
                       data?.projects?.map((d) => (
                         <tr className="text-start" key={d?._id}>
-                          <th scope="col">{d?.project?.projectName}</th>
-                          <th scope="col" className="ps-5">1</th>
-                          <th scope="col">₹{d?.amount}</th>
-                          <th scope="col" className="text-end">₹{d?.amount}</th>
+                          <th scope="col">{d?.projectName}</th>
+                          <th scope="col" className="ps-5">{d?.quantity}</th>
+                          <th scope="col">₹{d?.projectCost}</th>
+                          <th scope="col" className="text-end">₹{d?.projectCost * d?.quantity}</th>
                         </tr>
                       ))
                     }

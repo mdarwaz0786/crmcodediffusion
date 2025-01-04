@@ -79,7 +79,6 @@ const AddCustomer = () => {
   const handleCreate = async (e) => {
     e.preventDefault();
 
-
     // Validation
     const requiredFields = formFields.filter(({ name }) => name !== 'GSTNumber' && name !== 'companyName');
     const allFieldsValid = requiredFields.every(({ name }) => formData[name]) && selectedState;
@@ -144,7 +143,8 @@ const AddCustomer = () => {
                           name="state"
                           value={selectedState}
                           onChange={handleStateChange}
-                          options={statesOfIndia} />
+                          options={statesOfIndia}
+                        />
                       </div>
                     </div>
                   );

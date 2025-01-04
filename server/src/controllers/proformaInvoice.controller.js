@@ -1,7 +1,5 @@
 import Invoice from "../models/proformaInvoice.model.js";
-import Project from "../models/project.model.js";
 import ProformaInvoiceId from "../models/proformaInvoiceId.model.js";
-import mongoose from "mongoose";
 
 // Helper function to generate the next proforma invoice id
 const getNextProformaInvoiceId = async () => {
@@ -26,7 +24,7 @@ export const createInvoice = async (req, res) => {
 
     // Calculate subtotal by summing up the cost of all projects
     const invoiceProjects = projects.map((project) => {
-      let projectCost = parseFloat(project.projectCost) * parseFloat(project.quantity || 1);
+      let projectCost = parseFloat(project.projectCost) * parseFloat(project.quantity);
 
       // Adjust for inclusive tax
       if (tax === "Inclusive") {
@@ -34,10 +32,11 @@ export const createInvoice = async (req, res) => {
       };
 
       subtotal += projectCost;
+
       return {
         projectName: project.projectName,
-        projectCost: projectCost.toFixed(2),
-        quantity: project.quantity || 1
+        projectCost: tax === "Inclusive" ? (project.projectCost / 1.18).toFixed(2) : project.projectCost,
+        quantity: project.quantity,
       };
     });
 
@@ -51,15 +50,17 @@ export const createInvoice = async (req, res) => {
       total = subtotal + IGST;
     };
 
+    // Ensure the date is a valid Date object
+    const invoiceDate = date ? new Date(date) : new Date();
+
     // Create new proforma invoice
     const newInvoice = new Invoice({
-      date,
+      date: invoiceDate,
       tax,
       projects: invoiceProjects,
       clientName,
       GSTNumber,
       shipTo,
-      billTo: shipTo,
       state,
       subtotal: subtotal.toFixed(2),
       CGST: CGST.toFixed(2),
@@ -133,128 +134,116 @@ const filterFields = (invoice, projection) => {
   return filteredInvoice;
 };
 
-// Controller for fetching all invoice
+// Controller for fetching all proforma invoice
 export const fetchAllInvoice = async (req, res) => {
   try {
     let filter = {};
     let sort = {};
 
-    // Handle universal searching across all fields
     if (req.query.search) {
       const searchRegex = new RegExp(req.query.search, 'i');
-      const customers = await mongoose.model('Customer').find({
-        $or: [
-          { name: searchRegex },
-          { email: searchRegex },
-          { mobile: searchRegex },
-          { GSTNumber: searchRegex },
-          { companyName: searchRegex },
-          { state: searchRegex },
-          { address: searchRegex },
-        ]
-      }).select('_id');
-
-      // Find projects associated with these customers
-      const projectIds = await mongoose.model('Project').find({
-        $or: [
-          { projectName: searchRegex },
-          { projectId: searchRegex },
-          { customer: { $in: customers.map((customer) => customer._id) } },
-        ]
-      }).select('_id');
-
       filter = {
         $or: [
-          { invoiceId: searchRegex },
+          { proformaInvoiceId: searchRegex },
+          { clientName: searchRegex },
+          { GSTNumber: searchRegex },
+          { state: searchRegex },
+          { shipTo: searchRegex },
+          { billTo: searchRegex },
           { tax: searchRegex },
           { date: searchRegex },
-          { 'projects.project': { $in: projectIds.map((project) => project._id) } },
+          { 'projects.projectName': searchRegex }
         ],
       };
     };
 
-    // Handle invoice id search
     if (req.query.nameSearch) {
       filter.proformaInvoiceId = { $regex: new RegExp(req.query.nameSearch, 'i') };
     };
 
-    // Handle invoice id filter
     if (req.query.nameFilter) {
-      filter.proformaInvoiceId = { $in: Array.isArray(req.query.nameFilter) ? req.query.nameFilter : [req.query.nameFilter] };
+      filter.proformaInvoiceId = {
+        $in: Array.isArray(req.query.nameFilter) ? req.query.nameFilter : [req.query.nameFilter]
+      };
     };
 
     // Handle year-wise filtering
     if (req.query.year && !req.query.month) {
-      const year = req.query.year;
+      const year = parseInt(req.query.year);
+
+      // Start of the year (January 1st) and end of the year (December 31st)
+      const startDate = new Date(year, 0, 1); // January 1st
+      const endDate = new Date(year + 1, 0, 0); // December 31st (last day of the year)
 
       filter.date = {
-        $gte: `${year}-01-01`,
-        $lte: `${year}-12-31`,
+        $gte: startDate,
+        $lt: endDate
       };
     };
 
-    // Handle month-wise filtering
+    // Handle month-wise filtering (ignore year)
     if (req.query.month && !req.query.year) {
-      const month = req.query.month.padStart(2, "0");
-      const currentYear = new Date().getFullYear();  // Default to current year if only month is provided
+      const month = parseInt(req.query.month);
 
+      // Filtering for all records with the specified month (across all years)
       filter.date = {
-        $gte: `${currentYear}-${month}-01`,
-        $lte: `${currentYear}-${month}-31`,
+        $expr: {
+          $eq: [{ $month: "$date" }, month]
+        },
       };
     };
 
     // Handle both year and month filtering
     if (req.query.year && req.query.month) {
-      const year = req.query.year;
-      const month = req.query.month.padStart(2, "0");
+      const year = parseInt(req.query.year);
+      const month = parseInt(req.query.month);
+
+      // Start of the month and end of the month
+      const startDate = new Date(year, month - 1, 1); // 1st day of the month
+      const endDate = new Date(year, month, 0); // Last day of the month
 
       filter.date = {
-        $gte: `${year}-${month}-01`,
-        $lte: `${year}-${month}-31`,
+        $gte: startDate,
+        $lt: endDate
       };
     };
 
-    // Handle sorting
-    if (req.query.sort === 'Ascending') {
-      sort = { createdAt: 1 };
-    } else {
-      sort = { createdAt: -1 };
-    };
+    sort = req.query.sort === 'Ascending' ? { createdAt: 1 } : { createdAt: -1 };
 
-    // Handle pagination
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
     const skip = (page - 1) * limit;
 
-    const invoice = await Invoice.find(filter)
+    const proformaInvoices = await Invoice.find(filter)
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .populate({
-        path: "projects.project",
-        select: "customer projectName projectId projectPrice totalPaid totalDues",
-        populate: [
-          {
-            path: "customer",
-            select: "",
-          },
-        ],
-      }).exec();
+      .exec();
 
-    if (!invoice) {
-      return res.status(404).json({ success: false, message: "Invoice not found" });
+    if (!proformaInvoices) {
+      return res.status(404).json({ success: false, message: "Proforma invoices not found" });
     };
 
     const permissions = req.team.role.permissions;
     const projection = buildProjection(permissions);
-    const filteredInvoice = invoice.map((invoice) => filterFields(invoice, projection));
+    const filteredProformaInvoices = proformaInvoices.map((invoice) => filterFields(invoice, projection));
+
     const totalCount = await Invoice.countDocuments(filter);
 
-    return res.status(200).json({ success: true, message: "All invoice fetched successfully", invoice: filteredInvoice, totalCount });
+    return res.status(200).json({
+      success: true,
+      message: "Proforma invoices fetched successfully",
+      invoice: filteredProformaInvoices,
+      totalCount,
+    });
+
   } catch (error) {
-    console.log("Error while fetching all invoice:", error.message);
-    return res.status(500).json({ success: false, message: "Error while fetching all invoice", error: error.message });
+    console.error("Error while fetching proforma invoice:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Error while fetching proforma invoice",
+      error: error.message,
+    });
   };
 };
 
@@ -262,17 +251,7 @@ export const fetchAllInvoice = async (req, res) => {
 export const fetchSingleInvoice = async (req, res) => {
   try {
     const invoiceId = req.params.id;
-    const invoice = await Invoice.findById(invoiceId)
-      .populate({
-        path: "projects.project",
-        select: "customer projectName projectId projectPrice totalPaid totalDues",
-        populate: [
-          {
-            path: "customer",
-            select: "",
-          },
-        ],
-      }).exec();
+    const invoice = await Invoice.findById(invoiceId).exec();
 
     if (!invoice) {
       return res.status(404).json({ success: false, message: "Invoice not found" });
@@ -293,12 +272,12 @@ export const fetchSingleInvoice = async (req, res) => {
 export const updateInvoice = async (req, res) => {
   try {
     const invoiceId = req.params.id;
-    const { projects, date, tax } = req.body;
+    const { projects, date, tax, clientName, GSTNumber, shipTo, state } = req.body;
 
-    const invoice = await Invoice.findById(invoiceId).populate("projects.project");
+    const invoice = await Invoice.findById(invoiceId);
 
     if (!invoice) {
-      return res.status(404).json({ success: false, message: "Invoice not found" });
+      return res.status(404).json({ success: false, message: "Proforma invoice not found" });
     };
 
     let total = 0;
@@ -307,32 +286,26 @@ export const updateInvoice = async (req, res) => {
     let SGST = 0;
     let IGST = 0;
 
-    // Calculate subtotal by summing up the amount of all projects
-    const invoiceProjects = await Promise.all(
-      projects.map(async (projectData) => {
-        const { project, amount } = projectData;
+    // Calculate subtotal by summing up the cost of all projects
+    const updatedProjects = projects.map((project) => {
+      let projectCost = parseFloat(project.projectCost) * parseFloat(project.quantity);
 
-        let originalAmount = parseFloat(amount);
+      // Adjust for inclusive tax
+      if (tax === "Inclusive") {
+        projectCost = projectCost / 1.18;
+      };
 
-        // Adjust amount for inclusive tax
-        if (tax === "Inclusive") {
-          originalAmount = parseFloat(amount) / 1.18;
-        };
+      subtotal += projectCost;
 
-        subtotal += originalAmount;
+      return {
+        projectName: project.projectName,
+        projectCost: tax === "Inclusive" ? (project.projectCost / 1.18).toFixed(2) : project.projectCost,
+        quantity: project.quantity,
+      };
+    });
 
-        return {
-          project,
-          amount: originalAmount.toFixed(2),
-        };
-      })
-    );
-
-    // Determine whether to apply CGST/SGST or IGST based on customer's state
-    const firstProjectDetails = await Project.findById(projects[0].project).populate({ path: "customer", select: "state" });
-    const customerState = firstProjectDetails.customer.state;
-
-    if (customerState === "Delhi") {
+    // Apply GST based on state
+    if (state === "Delhi") {
       CGST = subtotal * 0.09;
       SGST = subtotal * 0.09;
       total = subtotal + CGST + SGST;
@@ -341,10 +314,17 @@ export const updateInvoice = async (req, res) => {
       total = subtotal + IGST;
     };
 
-    // Update invoice details
-    invoice.projects = invoiceProjects;
+    // Ensure the date is a valid Date object
+    const invoiceDate = date ? new Date(date) : new Date();
+
+    // Update invoice fields
+    invoice.date = invoiceDate;
     invoice.tax = tax;
-    invoice.date = date;
+    invoice.projects = updatedProjects;
+    invoice.clientName = clientName;
+    invoice.GSTNumber = GSTNumber;
+    invoice.shipTo = shipTo;
+    invoice.state = state;
     invoice.subtotal = subtotal.toFixed(2);
     invoice.CGST = CGST.toFixed(2);
     invoice.SGST = SGST.toFixed(2);
@@ -354,10 +334,11 @@ export const updateInvoice = async (req, res) => {
 
     await invoice.save();
 
-    return res.status(200).json({ success: true, message: "Invoice updated successfully", invoice });
+    return res.status(200).json({ success: true, message: "proforma invoice updated successfully", invoice });
+
   } catch (error) {
-    console.log("Error while updating invoice:", error.message);
-    return res.status(500).json({ success: false, message: "Error while updating invoice", error: error.message });
+    console.error("Error while updating invoice proforma:", error.message);
+    return res.status(500).json({ success: false, message: `Error while updating proforma invoice: ${error.message}` });
   };
 };
 

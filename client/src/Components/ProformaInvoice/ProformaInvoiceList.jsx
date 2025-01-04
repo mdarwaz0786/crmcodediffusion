@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from "../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
@@ -16,9 +16,6 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const ProformaInvoiceList = () => {
   const [data, setData] = useState([]);
   const [total, setTotal] = useState("");
-  const [id, setId] = useState("");
-  const [singleProformaInvoice, setSingleProformaInvoice] = useState("");
-  const [tax, setTax] = useState("");
   const [loading, setLoading] = useState(true);
   const { validToken, team, isLoading } = useAuth();
   const [nameData, setNameData] = useState([]);
@@ -34,7 +31,6 @@ const ProformaInvoiceList = () => {
   });
   const permissions = team?.role?.permissions?.proformaInvoice;
   const filedPermissions = team?.role?.permissions?.proformaInvoice?.fields;
-  const navigate = useNavigate();
 
   const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -173,14 +169,11 @@ const ProformaInvoiceList = () => {
           fetchAllData();
         };
       } catch (error) {
-        console.log("Error while deleting invoice:", error.message);
+        console.log("Error while deleting proforma invoice:", error.message);
         toast.error("Error while deleting");
       };
-    } else if (isdelete !== "") {
-      alert("Type only \"yes\".");
     };
   };
-
 
   const exportInvoiceListAsExcel = () => {
     if (!data || data?.length === 0) {
@@ -188,16 +181,16 @@ const ProformaInvoiceList = () => {
       return;
     };
 
-    const exportData = data.map((entry) => {
+    const exportData = data?.map((entry) => {
       const projectsWithAmounts = entry?.projects
-        ?.map((p) => `${p?.project?.projectName} (₹${p?.amount || 0})`)
+        ?.map((p) => `${p?.projectName} (₹${p?.projectCost || 0}) (${p?.quantity || 1})`)
         .join(", ") || "N/A";
 
       return {
         "InvoiceId": entry?.proformaInvoiceId || "N/A",
+        "Client Name": entry?.clientName || "N/A",
         "Date": formatDate(entry?.date) || "N/A",
-        "Project Name (Project Cost)": projectsWithAmounts,
-        "Client Name": entry?.projects[0]?.project?.customer?.name,
+        "Project Name (Cost) (Quantity)": projectsWithAmounts,
         "Sub Total": `₹${entry?.subtotal}` || "0",
         "CGST": entry?.CGST > 0 ? `₹${entry?.CGST}` : "Not Applicable",
         "SGST": entry?.SGST > 0 ? `₹${entry?.SGST}` : "Not Applicable",
@@ -251,7 +244,7 @@ const ProformaInvoiceList = () => {
     for (const invoice of data) {
       const element = document.querySelector(`#invoice-${invoice?._id}`);
       const pdfOptions = {
-        filename: `${invoice?.proformaInvoiceId}-${invoice?.projects[0]?.project?.customer?.companyName}.pdf`,
+        filename: `${invoice?.proformaInvoiceId}-${invoice?.clientName}.pdf`,
         margin: [0, 0, 10, 0],
         html2canvas: {
           useCORS: true,
@@ -266,7 +259,7 @@ const ProformaInvoiceList = () => {
 
       // Pass pdfOptions to html2pdf
       const pdfBlob = await html2pdf().from(element).set(pdfOptions).output('blob');
-      zip.file(`${invoice?.proformaInvoiceId}-${invoice?.projects[0]?.project?.customer?.companyName}-Proforma-Invoice.pdf`, pdfBlob);
+      zip.file(`${invoice?.proformaInvoiceId}-${invoice?.clientName}-Proforma-Invoice.pdf`, pdfBlob);
     };
 
     // Generate the ZIP file and save it
@@ -279,62 +272,6 @@ const ProformaInvoiceList = () => {
     const options = { day: 'numeric', month: 'long', year: 'numeric' };
     return date.toLocaleDateString('en-GB', options);
   };
-
-  const fetchSingleProformaInvoicve = async (id) => {
-    try {
-      const response = await axios.get(`${base_url}/api/v1/proformaInvoice/single-proformaInvoice/${id}`, {
-        headers: {
-          Authorization: validToken,
-        },
-      });
-
-      if (response?.data?.success) {
-        setSingleProformaInvoice(response?.data?.invoice);
-        setTax(response?.data?.invoice?.tax);
-      };
-    } catch (error) {
-      console.log("Error while fetching single proforma invoice:", error.message);
-    };
-  };
-
-  useEffect(() => {
-    if (!isLoading && team && team?.role?.permissions?.invoice?.create && id) {
-      fetchSingleProformaInvoicve(id);
-    };
-  }, [id, isLoading, team, team?.role?.permissions?.invoice?.create]);
-
-  const handleCreateInvoice = async () => {
-    try {
-      const invoiceData = {
-        projects: singleProformaInvoice?.projects?.map((project) => ({
-          project: project?.project,
-          amount: tax === "Inclusive" ? (parseFloat(project?.amount) * 1.18).toFixed(2) : project?.amount,
-        })),
-        date: singleProformaInvoice?.date,
-        tax: singleProformaInvoice?.tax,
-      };
-
-      const response = await axios.post(`${base_url}/api/v1/invoice/create-invoice`, invoiceData, {
-        headers: {
-          Authorization: validToken,
-        },
-      });
-
-      if (response?.data?.success) {
-        toast.success("Moved successfully");
-        navigate("/invoice");
-      };
-    } catch (error) {
-      console.log("Error while creating invoices:", error.message);
-      toast.error("Error while moving");
-    };
-  };
-
-  useEffect(() => {
-    if (singleProformaInvoice) {
-      handleCreateInvoice();
-    };
-  }, [singleProformaInvoice]);
 
   if (isLoading) {
     return <Preloader />;
@@ -607,7 +544,7 @@ const ProformaInvoiceList = () => {
                           }
                           {
                             (filedPermissions?.subtotal.show) && (
-                              <th>Amount</th>
+                              <th>Total Cost</th>
                             )
                           }
                           {
@@ -638,18 +575,17 @@ const ProformaInvoiceList = () => {
                               }
                               {
                                 (filedPermissions?.projects?.show) && (
-                                  <td>{d?.projects?.map((value) => value?.project?.projectName).join(", ")}</td>
+                                  <td>{d?.projects?.map((value) => value?.projectName).join(", ")}</td>
                                 )
                               }
                               {
                                 (filedPermissions?.projects?.show) && (
-                                  <td>{d?.projects[0]?.project?.customer?.name}</td>
+                                  <td>{d?.clientName}</td>
                                 )
                               }
                               {
                                 (filedPermissions?.subtotal?.show) && (
-                                  d?.tax === "Inclusive" ? <td>₹{d?.total}</td> : <td>₹{d?.subtotal}</td>
-
+                                  <td>₹{d?.subtotal}</td>
                                 )
                               }
                               {
@@ -663,14 +599,6 @@ const ProformaInvoiceList = () => {
                                     <i className="fa fa-ellipsis-v"></i>
                                   </Link>
                                   <div className="dropdown-menu dropdown-menu-right">
-                                    {
-                                      (team?.role?.permissions?.invoice?.create) && (
-                                        <Link to="#" onClick={() => setId(d?._id)} className="dropdown-item">
-                                          <i className="ti ti-arrow-right text-blue"></i>
-                                          Move to tax invoice
-                                        </Link>
-                                      )
-                                    }
                                     {
                                       (permissions?.update) && (
                                         <hr className="horizontal-line" />
@@ -776,7 +704,7 @@ const ProformaInvoiceList = () => {
             </div>
           </div>
 
-          {/* All Invoice in zip file */}
+          {/* All Proforma Invoice in zip file */}
           <section className="zip-invoice">
             {
               data?.map((invoice) => (
@@ -790,7 +718,7 @@ const ProformaInvoiceList = () => {
                     </div>
                     <div className="col-md-6 px-4">
                       <div className="name d-flex mt-4 justify-content-end">
-                        <h4>TAX INVOICE</h4>
+                        <h4>PROFORMA INVOICE</h4>
                       </div>
                     </div>
                   </div>
@@ -799,7 +727,7 @@ const ProformaInvoiceList = () => {
                     <div className="col-md-6 p-5 pt-0">
                       <div className="p-0 m-0"><strong>Code Diffusion Technologies</strong></div>
                       <div>Address :</div>
-                      <div>1020 , Kirti Sikhar Tower,</div>
+                      <div>1020, Kirti Sikhar Tower,</div>
                       <div>District Centre, Janakpuri,</div>
                       <div>New Delhi.</div>
                       <div><strong>GST No: O7FRWPS7288J3Z</strong></div>
@@ -809,7 +737,7 @@ const ProformaInvoiceList = () => {
                         <p>{invoice?.proformaInvoiceId}</p><br />
                       </div>
                       <div className="date-box d-flex justify-content-end mt-5 pt-3">
-                        <div className="date px-2">
+                        <div className="date px-1">
                           <strong>Date:</strong>
                         </div>
                         <div className="date text-end">
@@ -825,10 +753,10 @@ const ProformaInvoiceList = () => {
                           <h5 style={{ color: "#262a2a7a" }}>Bill To:</h5>
                           <div>
                             <strong style={{ color: "#000" }}>
-                              {invoice?.projects[0]?.project?.customer?.companyName}
+                              {invoice?.clientName}
                             </strong>
                           </div>
-                          <div><strong>GST No: {invoice?.projects[0]?.project?.customer?.GSTNumber}</strong></div>
+                          <div><strong>GST No: {invoice?.GSTNumber}</strong></div>
                         </div>
                       </div>
                       <div className="content w-100">
@@ -836,7 +764,7 @@ const ProformaInvoiceList = () => {
                           <h5 style={{ color: "#262a2a7a" }}>Ship To:</h5>
                           <p>
                             <strong style={{ color: "#000" }}>
-                              {invoice?.projects[0]?.project?.customer?.address}
+                              {invoice?.shipTo}
                             </strong>
                           </p>
                         </div>
@@ -861,10 +789,10 @@ const ProformaInvoiceList = () => {
                           {
                             invoice?.projects?.map((d) => (
                               <tr className="text-start" key={d?._id}>
-                                <th scope="col">{d?.project?.projectName}</th>
-                                <th scope="col" className="ps-5">1</th>
-                                <th scope="col">₹{d?.amount}</th>
-                                <th scope="col" className="text-end">₹{d?.amount}</th>
+                                <th scope="col">{d?.projectName}</th>
+                                <th scope="col" className="ps-5">{d?.quantity}</th>
+                                <th scope="col">₹{d?.projectCost}</th>
+                                <th scope="col" className="text-end">₹{d?.quantity * d?.projectCost}</th>
                               </tr>
                             ))
                           }
@@ -929,7 +857,7 @@ const ProformaInvoiceList = () => {
               ))
             }
           </section>
-          {/* /All Invoice in zip file */}
+          {/* /All Proforma Invoice in zip file */}
         </div>
       </div>
       {/* /Page Wrapper */}

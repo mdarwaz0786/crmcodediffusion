@@ -6,7 +6,7 @@ const proformaInvoiceSchema = new mongoose.Schema(
       type: String,
     },
     date: {
-      type: String,
+      type: Date,
       required: true,
     },
     tax: {
@@ -26,7 +26,7 @@ const proformaInvoiceSchema = new mongoose.Schema(
         },
         quantity: {
           type: String,
-          default: 1,
+          required: true,
         },
       }
     ],
@@ -39,10 +39,6 @@ const proformaInvoiceSchema = new mongoose.Schema(
       required: true,
     },
     shipTo: {
-      type: String,
-      required: true,
-    },
-    billTo: {
       type: String,
       required: true,
     },
@@ -79,5 +75,7 @@ const proformaInvoiceSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+proformaInvoiceSchema.index({ date: 1 });
 
 export default mongoose.model("ProformaInvoice", proformaInvoiceSchema);
