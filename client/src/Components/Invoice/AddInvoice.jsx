@@ -10,7 +10,7 @@ import Select from "react-select";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddInvoice = () => {
-  const [projects, setProjects] = useState([{ project: "", amount: "", projectPrice: "", totalDues: "", totalPaid: "", projectId: "" }]);
+  const [projects, setProjects] = useState([{ project: "", amount: "" }]);
   const [allProjects, setAllProjects] = useState([]);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [tax, setTax] = useState("Exclusive");
@@ -41,18 +41,19 @@ const AddInvoice = () => {
   }, [permissions, isLoading, team]);
 
   const handleAddProject = () => {
-    setProjects([...projects, { project: "", amount: "", projectPrice: "", totalDues: "", totalPaid: "", projectId: "" }]);
+    setProjects([...projects, { project: "", amount: "" }]);
   };
 
   const handleRemoveProject = (index) => {
     const newProjects = projects?.filter((_, i) => i !== index);
     setProjects(newProjects);
     toast.success("Project removed");
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
   };
+
+  const projectOptions = allProjects?.map((p) => ({
+    value: p?._id,
+    label: p?.projectName,
+  }));
 
   const handleProjectChange = (index, selectedOption) => {
     const newProjects = [...projects];
@@ -71,10 +72,6 @@ const AddInvoice = () => {
 
       if (response?.data?.success) {
         const updatedProjects = [...projects];
-        updatedProjects[index].projectPrice = response?.data?.project?.projectPrice;
-        updatedProjects[index].totalDues = response?.data?.project?.totalDues;
-        updatedProjects[index].totalPaid = response?.data?.project?.totalPaid;
-        updatedProjects[index].projectId = response?.data?.project?.projectId;
         updatedProjects[index].amount = response?.data?.project?.projectPrice;
         setProjects(updatedProjects);
       };
@@ -95,11 +92,15 @@ const AddInvoice = () => {
     // Validation
     for (const project of projects) {
       if (!project?.project) {
-        return toast.error("Select project for all entries");
+        return toast.error("Select project");
+      };
+
+      if (!project?.amount) {
+        return toast.error("Enter project cost");
       };
 
       if (parseFloat(project?.amount) < 1) {
-        return toast.error("Amount should not be less than 1");
+        return toast.error("Project cost should not be less than 1");
       };
     };
 
@@ -136,11 +137,6 @@ const AddInvoice = () => {
       toast.error("Error while submitting");
     };
   };
-
-  const projectOptions = allProjects?.map((p) => ({
-    value: p?._id,
-    label: p?.projectName,
-  }));
 
   if (isLoading) {
     return <Preloader />;
@@ -183,9 +179,9 @@ const AddInvoice = () => {
         {
           projects?.map((project, index) => (
             <div key={index} className="row">
-              <div className="col-md-4">
+              <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="project">Project Name<span className="text-danger">*</span></label>
+                  <label className="col-form-label" htmlFor="project">Project Name <span className="text-danger">*</span></label>
                   <Select
                     styles={{
                       control: (provided) => ({ ...provided, outline: 'none', border: "none", boxShadow: 'none' }),
@@ -203,37 +199,9 @@ const AddInvoice = () => {
                 </div>
               </div>
 
-              <div className="col-md-4">
+              <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor={`projectId-${index}`}>Project Id</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name={`projectId-${index}`}
-                    id={`projectId-${index}`}
-                    value={project?.projectId}
-                    disabled
-                  />
-                </div>
-              </div>
-
-              <div className="col-md-4">
-                <div className="form-wrap">
-                  <label className="col-form-label" htmlFor={`projectPrice-${index}`}>Project Cost</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name={`projectPrice-${index}`}
-                    id={`projectPrice-${index}`}
-                    value={project?.projectPrice}
-                    disabled
-                  />
-                </div>
-              </div>
-
-              <div className="col-md-4">
-                <div className="form-wrap">
-                  <label className="col-form-label" htmlFor={`amount-${index}`}>Amount <span className="text-danger">*</span></label>
+                  <label className="col-form-label" htmlFor={`amount-${index}`}>Project Cost <span className="text-danger">*</span></label>
                   <input
                     type="text"
                     className="form-control"
@@ -244,37 +212,9 @@ const AddInvoice = () => {
                   />
                   {
                     (parseFloat(project?.amount) < 1) && (
-                      <div className="col-form-label" style={{ color: "red" }}>Amount should not less than 1. <i className="fas fa-times"></i></div>
+                      <div className="col-form-label" style={{ color: "red" }}>Project Cost should not less than 1. <i className="fas fa-times"></i></div>
                     )
                   }
-                </div>
-              </div>
-
-              <div className="col-md-4">
-                <div className="form-wrap">
-                  <label className="col-form-label" htmlFor={`totalDues-${index}`}>Total Dues</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name={`totalDues-${index}`}
-                    id={`totalDues-${index}`}
-                    value={project?.totalDues}
-                    disabled
-                  />
-                </div>
-              </div>
-
-              <div className="col-md-4">
-                <div className="form-wrap">
-                  <label className="col-form-label" htmlFor={`totalPaid-${index}`}>Total Received</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name={`totalPaid-${index}`}
-                    id={`totalPaid-${index}`}
-                    value={project?.totalPaid}
-                    disabled
-                  />
                 </div>
               </div>
 

@@ -19,10 +19,6 @@ const invoiceSchema = new mongoose.Schema(
         },
       },
     ],
-    quantity: {
-      type: String,
-      default: 1,
-    },
     tax: {
       type: String,
       enum: ["Inclusive", "Exclusive"],

@@ -11,7 +11,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const EditInvoice = () => {
   const { id } = useParams();
-  const [projects, setProjects] = useState([{ project: "", amount: "", projectPrice: "", totalDues: "", totalPaid: "", projectId: "" }]);
+  const [projects, setProjects] = useState([{ project: "", amount: "" }]);
   const [allProjects, setAllProjects] = useState([]);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [tax, setTax] = useState("Exclusive");
@@ -51,10 +51,6 @@ const EditInvoice = () => {
           project: d?.project?._id,
           amount: d?.project?.projectPrice,
           projectName: d?.project?.projectName,
-          projectId: d?.project?.projectId,
-          projectPrice: d?.project?.projectPrice,
-          totalPaid: d?.project?.totalPaid,
-          totalDues: d?.project?.totalDues,
         })));
 
         setDate(response?.data?.invoice?.date);
@@ -73,18 +69,19 @@ const EditInvoice = () => {
   }, [permissions, team, isLoading, id]);
 
   const handleAddProject = () => {
-    setProjects([...projects, { project: "", amount: "", projectPrice: "", totalDues: "", totalPaid: "", projectId: "" }]);
+    setProjects([...projects, { project: "", amount: "" }]);
   };
 
   const handleRemoveProject = (index) => {
     const newProjects = projects?.filter((_, i) => i !== index);
     setProjects(newProjects);
     toast.success("Project removed");
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
   };
+
+  const projectOptions = allProjects?.map((p) => ({
+    value: p?._id,
+    label: p?.projectName,
+  }));
 
   const handleProjectChange = (index, selectedOption) => {
     const newProjects = [...projects];
@@ -103,10 +100,6 @@ const EditInvoice = () => {
 
       if (response?.data?.success) {
         const updatedProjects = [...projects];
-        updatedProjects[index].projectPrice = response?.data?.project?.projectPrice;
-        updatedProjects[index].totalDues = response?.data?.project?.totalDues;
-        updatedProjects[index].totalPaid = response?.data?.project?.totalPaid;
-        updatedProjects[index].projectId = response?.data?.project?.projectId;
         updatedProjects[index].amount = response?.data?.project?.projectPrice;
         setProjects(updatedProjects);
       };
@@ -142,11 +135,15 @@ const EditInvoice = () => {
     // Validation
     for (const project of projects) {
       if (!project?.project) {
-        return toast.error("Select project for all entries");
+        return toast.error("Select project");
+      };
+
+      if (!project?.amount) {
+        return toast.error("Enter project cost");
       };
 
       if (parseFloat(project?.amount) < 1) {
-        return toast.error("Amount should not be less than 1");
+        return toast.error("Project cost should not be less than 1");
       };
     };
 
@@ -160,9 +157,9 @@ const EditInvoice = () => {
 
     try {
       const formData = {
-        projects: projects?.map((proj) => ({
-          project: proj?.project,
-          amount: proj?.amount,
+        projects: projects?.map((p) => ({
+          project: p?.project,
+          amount: p?.amount,
         })),
         date,
         tax,
@@ -184,10 +181,11 @@ const EditInvoice = () => {
     };
   };
 
-  const projectOptions = allProjects?.map((p) => ({
-    value: p?._id,
-    label: p?.projectName,
-  }));
+  const selectStyle = {
+    control: (provided) => ({ ...provided, outline: 'none', border: "none", boxShadow: 'none' }),
+    indicatorSeparator: (provided) => ({ ...provided, display: 'none' }),
+    option: (provided, state) => ({ ...provided, backgroundColor: state.isSelected ? "#f0f0f0" : state.isFocused ? "#e0e0e0" : "#fff", color: "#333" }),
+  };
 
   if (isLoading) {
     return <Preloader />;
@@ -240,15 +238,11 @@ const EditInvoice = () => {
             <div key={index} className="row">
               {
                 (fieldPermissions?.projects?.show) && (
-                  <div className="col-md-4">
+                  <div className="col-md-6">
                     <div className="form-wrap">
                       <label className="col-form-label" htmlFor={`project-${index}`}>Project Name <span className="text-danger">*</span></label>
                       <Select
-                        styles={{
-                          control: (provided) => ({ ...provided, outline: 'none', border: "none", boxShadow: 'none' }),
-                          indicatorSeparator: (provided) => ({ ...provided, display: 'none' }),
-                          option: (provided, state) => ({ ...provided, backgroundColor: state.isSelected ? "#f0f0f0" : state.isFocused ? "#e0e0e0" : "#fff", color: "#333" }),
-                        }}
+                        styles={selectStyle}
                         className={`form-select p-0 ${fieldPermissions?.projects?.read ? "readonly-style" : ""}`}
                         name={`project-${index}`}
                         id={`project-${index}`}
@@ -264,45 +258,9 @@ const EditInvoice = () => {
 
               {
                 (fieldPermissions?.projects?.show) && (
-                  <div className="col-md-4">
+                  <div className="col-md-6">
                     <div className="form-wrap">
-                      <label className="col-form-label" htmlFor={`projectId-${index}`}>Project Id</label>
-                      <input
-                        type="text"
-                        className={`form-control ${fieldPermissions?.projects?.read ? "readonly-style" : ""}`}
-                        name={`projectId-${index}`}
-                        id={`projectId-${index}`}
-                        value={project?.projectId}
-                        disabled
-                      />
-                    </div>
-                  </div>
-                )
-              }
-
-              {
-                (fieldPermissions?.projects?.show) && (
-                  <div className="col-md-4">
-                    <div className="form-wrap">
-                      <label className="col-form-label" htmlFor={`projectPrice-${index}`}>Project Cost</label>
-                      <input
-                        type="text"
-                        className={`form-control ${fieldPermissions?.projects?.read ? "readonly-style" : ""}`}
-                        name={`projectPrice-${index}`}
-                        id={`projectPrice-${index}`}
-                        value={project?.projectPrice}
-                        disabled
-                      />
-                    </div>
-                  </div>
-                )
-              }
-
-              {
-                (fieldPermissions?.projects?.show) && (
-                  <div className="col-md-4">
-                    <div className="form-wrap">
-                      <label className="col-form-label" htmlFor={`amount-${index}`}>Amount <span className="text-danger">*</span></label>
+                      <label className="col-form-label" htmlFor={`amount-${index}`}>Project Cost <span className="text-danger">*</span></label>
                       <input
                         type="text"
                         className={`form-control ${fieldPermissions?.projects?.read ? "readonly-style" : ""}`}
@@ -310,42 +268,6 @@ const EditInvoice = () => {
                         id={`amount-${index}`}
                         value={project?.amount}
                         onChange={(e) => fieldPermissions?.projects?.read ? null : handleFieldChange(index, 'amount', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )
-              }
-
-              {
-                (fieldPermissions?.projects?.show) && (
-                  <div className="col-md-4">
-                    <div className="form-wrap">
-                      <label className="col-form-label" htmlFor={`totalDues-${index}`}>Total Dues</label>
-                      <input
-                        type="text"
-                        className={`form-control ${fieldPermissions?.projects?.read ? "readonly-style" : ""}`}
-                        name={`totalDues-${index}`}
-                        id={`totalDues-${index}`}
-                        value={project?.totalDues}
-                        disabled
-                      />
-                    </div>
-                  </div>
-                )
-              }
-
-              {
-                (fieldPermissions?.projects?.show) && (
-                  <div className="col-md-4">
-                    <div className="form-wrap">
-                      <label className="col-form-label" htmlFor={`totalPaid-${index}`}>Total Received</label>
-                      <input
-                        type="text"
-                        className={`form-control ${fieldPermissions?.projects?.read ? "readonly-style" : ""}`}
-                        name={`totalPaid-${index}`}
-                        id={`totalPaid-${index}`}
-                        value={project?.totalPaid}
-                        disabled
                       />
                     </div>
                   </div>
