@@ -189,6 +189,16 @@ const Sidebar = () => {
                     )
                   }
                   {
+                    (team?.role?.name.toLowerCase() === "admin") && (
+                      <li><Link to="/service" className={currentPath === "/service" ? "active" : ""} id={isMobile && active === "service" ? "mobile_btn" : ""} onClick={() => handleActive("service")}><i style={{ color: currentPath === "/service" ? "" : "#FFA201" }} className="ti ti-briefcase"></i><span>Service</span></Link></li>
+                    )
+                  }
+                  {
+                    (team?.role?.name.toLowerCase() === "admin") && (
+                      <li><Link to="/add-on-service" className={currentPath === "/add-on-service" ? "active" : ""} id={isMobile && active === "addOnService" ? "mobile_btn" : ""} onClick={() => handleActive("addOnService")}><i style={{ color: currentPath === "/add-on-service" ? "" : "#FFA201" }} className="ti ti-layers-union"></i><span>Add On Service</span></Link></li>
+                    )
+                  }
+                  {
                     (permissions?.projectType?.access) && (
                       <li><Link to="/project-type" className={currentPath === "/project-type" ? "active" : ""} id={isMobile && active === "projectType" ? "mobile_btn" : ""} onClick={() => handleActive("projectType")}><i style={{ color: currentPath === "/project-type" ? "" : "#FFA201" }} className="ti ti-apps"></i><span>Project Type</span></Link></li>
                     )

@@ -11,7 +11,8 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const EditProformaInvoice = () => {
   const { id } = useParams();
-  const [projects, setProjects] = useState([{ projectName: "", projectCost: "", quantity: 1 }]);
+  const [projectName, setProjectName] = useState("");
+  const [projectCost, setProjectCost] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [tax, setTax] = useState("Exclusive");
   const [clientName, setClientName] = useState("");
@@ -67,22 +68,6 @@ const EditProformaInvoice = () => {
     setState(selectedOption.value);
   };
 
-  const handleAddProject = () => {
-    setProjects([...projects, { projectName: "", projectCost: "", quantity: 1 }]);
-  };
-
-  const handleRemoveProject = (index) => {
-    const newProjects = projects?.filter((_, i) => i !== index);
-    setProjects(newProjects);
-    toast.success("Project removed");
-  };
-
-  const handleProjectChange = (index, field, value) => {
-    const newProjects = [...projects];
-    newProjects[index][field] = value;
-    setProjects(newProjects);
-  };
-
   const fetchSingleProformaInvoice = async (id) => {
     try {
       const response = await axios.get(`${base_url}/api/v1/proformaInvoice/single-proformaInvoice/${id}`, {
@@ -92,14 +77,8 @@ const EditProformaInvoice = () => {
       });
 
       if (response?.data?.success) {
-        const projectsData = response?.data?.invoice?.projects;
-
-        setProjects(projectsData?.map((d) => ({
-          projectName: d?.projectName,
-          projectCost: d?.projectCost,
-          quantity: d?.quantity,
-        })));
-
+        setProjectName(response?.data?.invoice?.projectName);
+        setProjectCost(response?.data?.invoice?.projectCost);
         setDate(response?.data?.invoice?.date.split("T")[0]);
         setTax(response?.data?.invoice?.tax);
         setClientName(response?.data?.invoice?.clientName);
@@ -121,61 +100,10 @@ const EditProformaInvoice = () => {
   const handleUpdate = async (e, id) => {
     e.preventDefault();
 
-    // Validations
-    for (const project of projects) {
-      if (!project?.projectName) {
-        return toast.error("Enter project");
-      };
-
-      if (!project?.projectCost) {
-        return toast.error("Enter project cost");
-      };
-
-      if (!project?.quantity) {
-        return toast.error("Enter project quantity");
-      };
-
-      if (parseFloat(project?.projectCost) < 1) {
-        return toast.error("Project cost should not be less than 1");
-      };
-
-      if (parseFloat(project?.quantity) < 1) {
-        return toast.error("Project quantity should not be less than 1");
-      };
-    };
-
-    if (!date) {
-      return toast.error("Select date");
-    };
-
-    if (!tax) {
-      return toast.error("Select tax");
-    };
-
-    if (!shipTo) {
-      return toast.error("Enter ship to");
-    };
-
-    if (!clientName) {
-      return toast.error("Enter client name");
-    };
-
-    if (!state) {
-      return toast.error("Enter state");
-    };
-
-    if (!GSTNumber) {
-      return toast.error("Enter GST Number");
-    };
-
     try {
       const invoiceData = {
-        projects: projects?.map((project) => ({
-          projectName: project?.projectName,
-          projectCost: project?.projectCost,
-          quantity: project?.quantity,
-        })),
-        date,
+        projectName: projectName,
+        projectCost: projectCost,
         tax,
         clientName,
         GSTNumber,
@@ -281,74 +209,39 @@ const EditProformaInvoice = () => {
           </div>
         </div>
 
-        {
-          projects.map((project, index) => (
-            <div key={index} className="row">
-              <div className="col-md-4">
-                <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="projectName">Project Name <span className="text-danger">*</span></label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name={`projectName-${index}`}
-                    id={`projectName-${index}`}
-                    value={project?.projectName}
-                    onChange={(e) => handleProjectChange(index, "projectName", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="col-md-4">
-                <div className="form-wrap">
-                  <label className="col-form-label" htmlFor={`projectCost-${index}`}>Project Cost <span className="text-danger">*</span></label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name={`projectCost-${index}`}
-                    id={`projectCost-${index}`}
-                    value={project?.projectCost}
-                    onChange={(e) => handleProjectChange(index, "projectCost", e.target.value)}
-                  />
-                  {
-                    (parseFloat(project?.projectCost) < 1) && (
-                      <div className="col-form-label" style={{ color: "red" }}>Project cost should not less than 1. <i className="fas fa-times"></i></div>
-                    )
-                  }
-                </div>
-              </div>
-
-              <div className="col-md-4">
-                <div className="form-wrap">
-                  <label className="col-form-label" htmlFor={`quantity-${index}`}>quantity <span className="text-danger">*</span></label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name={`quantity-${index}`}
-                    id={`quantity-${index}`}
-                    value={project?.quantity}
-                    onChange={(e) => handleProjectChange(index, "quantity", e.target.value)}
-                  />
-                  {
-                    (parseFloat(project?.quantity) < 1) && (
-                      <div className="col-form-label" style={{ color: "red" }}>Project quantity should not less than 1. <i className="fas fa-times"></i></div>
-                    )
-                  }
-                </div>
-              </div>
-
-              <div className="col-md-12 mb-5 mt-0">
-                {
-                  projects?.length > 1 && (
-                    <button className="btn btn-danger" onClick={() => handleRemoveProject(index)}>Remove Project</button>
-                  )
-                }
-              </div>
+        <div className="row">
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="projectName">Project Name <span className="text-danger">*</span></label>
+              <input
+                type="text"
+                className="form-control"
+                name="projectName"
+                id="projectName"
+                value={projectName}
+                onChange={(e) => (e.target.value)}
+              />
             </div>
-          ))
-        }
+          </div>
 
-        <div className="text-center">
-          <button className="btn btn-secondary" onClick={handleAddProject}>Add Project</button>
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="projectCost">Project Cost <span className="text-danger">*</span></label>
+              <input
+                type="text"
+                className="form-control"
+                name="projectCost"
+                id="projectCost"
+                value={projectCost}
+                onChange={(e) => setProjectCost(e.target.value)}
+              />
+              {
+                (parseFloat(projectCost) < 1) && (
+                  <div className="col-form-label" style={{ color: "red" }}>Project cost should not less than 1. <i className="fas fa-times"></i></div>
+                )
+              }
+            </div>
+          </div>
         </div>
 
         <div className="submit-button text-end">

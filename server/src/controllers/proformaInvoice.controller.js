@@ -6,7 +6,7 @@ const getNextProformaInvoiceId = async () => {
   const counter = await ProformaInvoiceId.findOneAndUpdate(
     { _id: "proformaInvoiceId" },
     { $inc: { sequence: 1 } },
-    { new: true, upsert: true }
+    { new: true, upsert: true },
   );
   return `#CD${1818 + counter.sequence}`;
 };
@@ -14,33 +14,18 @@ const getNextProformaInvoiceId = async () => {
 // Controller for creating an invoice
 export const createInvoice = async (req, res) => {
   try {
-    const { projects, date, tax, clientName, GSTNumber, shipTo, state } = req.body;
+    const { date, tax, projectName, projectCost, clientName, GSTNumber, state, shipTo } = req.body;
 
-    let total = 0;
-    let subtotal = 0;
+    let subtotal = parseFloat(projectCost);
     let CGST = 0;
     let SGST = 0;
     let IGST = 0;
+    let total = 0;
 
-    // Calculate subtotal by summing up the cost of all projects
-    const invoiceProjects = projects.map((project) => {
-      let projectCost = parseFloat(project.projectCost) * parseFloat(project.quantity);
+    if (tax === "Inclusive") {
+      subtotal = subtotal / 1.18;
+    };
 
-      // Adjust for inclusive tax
-      if (tax === "Inclusive") {
-        projectCost = projectCost / 1.18;
-      };
-
-      subtotal += projectCost;
-
-      return {
-        projectName: project.projectName,
-        projectCost: tax === "Inclusive" ? (project.projectCost / 1.18).toFixed(2) : project.projectCost,
-        quantity: project.quantity,
-      };
-    });
-
-    // Apply GST based on state
     if (state === "Delhi") {
       CGST = subtotal * 0.09;
       SGST = subtotal * 0.09;
@@ -50,24 +35,23 @@ export const createInvoice = async (req, res) => {
       total = subtotal + IGST;
     };
 
-    // Ensure the date is a valid Date object
     const invoiceDate = date ? new Date(date) : new Date();
 
-    // Create new proforma invoice
     const newInvoice = new Invoice({
       date: invoiceDate,
       tax,
-      projects: invoiceProjects,
+      projectName,
+      projectCost: projectCost,
       clientName,
       GSTNumber,
-      shipTo,
       state,
+      shipTo,
       subtotal: subtotal.toFixed(2),
       CGST: CGST.toFixed(2),
       SGST: SGST.toFixed(2),
       IGST: IGST.toFixed(2),
       total: total.toFixed(2),
-      balanceDue: total.toFixed(2)
+      balanceDue: total.toFixed(2),
     });
 
     await newInvoice.save();
@@ -80,10 +64,10 @@ export const createInvoice = async (req, res) => {
 
     await newInvoice.save();
 
-    return res.status(200).json({ success: true, message: "Proforma invoice created successfully", invoice: newInvoice });
+    res.status(200).json({ success: true, message: "Proforma invoice created successfully", invoice: newInvoice });
   } catch (error) {
     console.error("Error while creating proforma invoice:", error.message);
-    return res.status(500).json({ success: false, message: `Error while creating proforma invoice: ${error.message}` });
+    res.status(500).json({ success: false, message: `Error while creating proforma invoice: ${error.message}` });
   };
 };
 
@@ -149,10 +133,10 @@ export const fetchAllInvoice = async (req, res) => {
           { GSTNumber: searchRegex },
           { state: searchRegex },
           { shipTo: searchRegex },
-          { billTo: searchRegex },
           { tax: searchRegex },
           { date: searchRegex },
-          { 'projects.projectName': searchRegex }
+          { projectName: searchRegex },
+          { projectCost: searchRegex },
         ],
       };
     };
@@ -272,7 +256,7 @@ export const fetchSingleInvoice = async (req, res) => {
 export const updateInvoice = async (req, res) => {
   try {
     const invoiceId = req.params.id;
-    const { projects, date, tax, clientName, GSTNumber, shipTo, state } = req.body;
+    const { date, tax, projectName, projectCost, clientName, GSTNumber, state, shipTo } = req.body;
 
     const invoice = await Invoice.findById(invoiceId);
 
@@ -280,31 +264,16 @@ export const updateInvoice = async (req, res) => {
       return res.status(404).json({ success: false, message: "Proforma invoice not found" });
     };
 
-    let total = 0;
-    let subtotal = 0;
+    let subtotal = parseFloat(projectCost);
     let CGST = 0;
     let SGST = 0;
     let IGST = 0;
+    let total = 0;
 
-    // Calculate subtotal by summing up the cost of all projects
-    const updatedProjects = projects.map((project) => {
-      let projectCost = parseFloat(project.projectCost) * parseFloat(project.quantity);
+    if (tax === "Inclusive") {
+      subtotal = subtotal / 1.18;
+    };
 
-      // Adjust for inclusive tax
-      if (tax === "Inclusive") {
-        projectCost = projectCost / 1.18;
-      };
-
-      subtotal += projectCost;
-
-      return {
-        projectName: project.projectName,
-        projectCost: tax === "Inclusive" ? (project.projectCost / 1.18).toFixed(2) : project.projectCost,
-        quantity: project.quantity,
-      };
-    });
-
-    // Apply GST based on state
     if (state === "Delhi") {
       CGST = subtotal * 0.09;
       SGST = subtotal * 0.09;
@@ -314,17 +283,16 @@ export const updateInvoice = async (req, res) => {
       total = subtotal + IGST;
     };
 
-    // Ensure the date is a valid Date object
     const invoiceDate = date ? new Date(date) : new Date();
 
-    // Update invoice fields
     invoice.date = invoiceDate;
     invoice.tax = tax;
-    invoice.projects = updatedProjects;
+    invoice.projectName = projectName;
+    invoice.projectCost = projectCost;
     invoice.clientName = clientName;
     invoice.GSTNumber = GSTNumber;
-    invoice.shipTo = shipTo;
     invoice.state = state;
+    invoice.shipTo = shipTo;
     invoice.subtotal = subtotal.toFixed(2);
     invoice.CGST = CGST.toFixed(2);
     invoice.SGST = SGST.toFixed(2);
@@ -334,11 +302,10 @@ export const updateInvoice = async (req, res) => {
 
     await invoice.save();
 
-    return res.status(200).json({ success: true, message: "proforma invoice updated successfully", invoice });
-
+    res.status(200).json({ success: true, message: "Proforma invoice updated successfully", invoice });
   } catch (error) {
-    console.error("Error while updating invoice proforma:", error.message);
-    return res.status(500).json({ success: false, message: `Error while updating proforma invoice: ${error.message}` });
+    console.error("Error while updating proforma invoice:", error.message);
+    res.status(500).json({ success: false, message: `Error while updating proforma invoice: ${error.message}` });
   };
 };
 

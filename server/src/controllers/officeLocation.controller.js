@@ -9,6 +9,7 @@ export const createOfficeLocation = async (req, res) => {
       contact,
       latitude,
       longitude,
+      attendanceRadius,
       addressLine1,
       addressLine2,
       addressLine3,
@@ -21,6 +22,7 @@ export const createOfficeLocation = async (req, res) => {
       !contact ||
       !latitude ||
       !longitude ||
+      !attendanceRadius ||
       !addressLine1
     ) {
       return res.status(400).json({
@@ -43,6 +45,7 @@ export const createOfficeLocation = async (req, res) => {
       contact,
       latitude,
       longitude,
+      attendanceRadius,
       addressLine1,
       addressLine2,
       addressLine3,
@@ -105,6 +108,7 @@ export const updateOfficeLocation = async (req, res) => {
       contact,
       latitude,
       longitude,
+      attendanceRadius,
       addressLine1,
       addressLine2,
       addressLine3,
@@ -116,6 +120,7 @@ export const updateOfficeLocation = async (req, res) => {
       contact,
       latitude,
       longitude,
+      attendanceRadius,
       addressLine1,
       addressLine2,
       addressLine3,

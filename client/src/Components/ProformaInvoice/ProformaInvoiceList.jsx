@@ -182,15 +182,12 @@ const ProformaInvoiceList = () => {
     };
 
     const exportData = data?.map((entry) => {
-      const projectsWithAmounts = entry?.projects
-        ?.map((p) => `${p?.projectName} (₹${p?.projectCost || 0}) (${p?.quantity || 1})`)
-        .join(", ") || "N/A";
-
       return {
-        "InvoiceId": entry?.proformaInvoiceId || "N/A",
+        "Proforma InvoiceId": entry?.proformaInvoiceId || "N/A",
         "Client Name": entry?.clientName || "N/A",
         "Date": formatDate(entry?.date) || "N/A",
-        "Project Name (Cost) (Quantity)": projectsWithAmounts,
+        "Project Name": entry?.projectName || "N/A",
+        "Project Cost": `₹${entry?.projectCost}` || "0",
         "Sub Total": `₹${entry?.subtotal}` || "0",
         "CGST": entry?.CGST > 0 ? `₹${entry?.CGST}` : "Not Applicable",
         "SGST": entry?.SGST > 0 ? `₹${entry?.SGST}` : "Not Applicable",
@@ -544,7 +541,7 @@ const ProformaInvoiceList = () => {
                           }
                           {
                             (filedPermissions?.subtotal.show) && (
-                              <th>Total Cost</th>
+                              <th>Project Cost</th>
                             )
                           }
                           {
@@ -575,7 +572,7 @@ const ProformaInvoiceList = () => {
                               }
                               {
                                 (filedPermissions?.projects?.show) && (
-                                  <td>{d?.projects?.map((value) => value?.projectName).join(", ")}</td>
+                                  <td>{d?.projectName}</td>
                                 )
                               }
                               {
@@ -585,7 +582,7 @@ const ProformaInvoiceList = () => {
                               }
                               {
                                 (filedPermissions?.subtotal?.show) && (
-                                  <td>₹{d?.subtotal}</td>
+                                  <td>₹{d?.projectCost}</td>
                                 )
                               }
                               {
@@ -786,16 +783,13 @@ const ProformaInvoiceList = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {
-                            invoice?.projects?.map((d) => (
-                              <tr className="text-start" key={d?._id}>
-                                <th scope="col">{d?.projectName}</th>
-                                <th scope="col" className="ps-5">{d?.quantity}</th>
-                                <th scope="col">₹{d?.projectCost}</th>
-                                <th scope="col" className="text-end">₹{d?.quantity * d?.projectCost}</th>
-                              </tr>
-                            ))
-                          }
+
+                          <tr className="text-start">
+                            <th scope="col">{invoice?.projectName}</th>
+                            <th scope="col" className="ps-5">1</th>
+                            <th scope="col">₹{invoice?.subtotal}</th>
+                            <th scope="col" className="text-end">₹{invoice?.subtotal}</th>
+                          </tr>
                         </tbody>
                         <tbody className="text-end mt-5 pt-5">
                           <tr>

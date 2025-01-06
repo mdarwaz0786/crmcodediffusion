@@ -29,6 +29,8 @@ import officeLocationRoute from "./src/routes/officeLocation.route.js";
 import technologyRoute from "./src/routes/technology.route.js";
 import purchaseInvoiceRoute from "./src/routes/purchaseInvoice.route.js";
 import projectDeploymentRoute from "./src/routes/projectDeployment.route.js";
+import serviceRoute from "./src/routes/service.route.js";
+import addOnServiceRoute from "./src/routes/addOnService.route.js";
 
 // Directory name for serving index.html file
 const __dirname = path.resolve();
@@ -89,6 +91,10 @@ server.use("/api/v1/technology", technologyRoute);
 server.use("/api/v1/purchaseInvoice", purchaseInvoiceRoute);
 // Project deployment route
 server.use("/api/v1/projectDeployment", projectDeploymentRoute);
+// Service route
+server.use("/api/v1/service", serviceRoute);
+// Add on service route
+server.use("/api/v1/addOnService", addOnServiceRoute);
 
 // Middleware for serving client index.html file
 server.use(express.static(path.join(__dirname, "../client/dist")), (req, res, next) => next());

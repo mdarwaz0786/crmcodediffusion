@@ -14,22 +14,14 @@ const proformaInvoiceSchema = new mongoose.Schema(
       enum: ["Inclusive", "Exclusive"],
       required: true,
     },
-    projects: [
-      {
-        projectName: {
-          type: String,
-          required: true,
-        },
-        projectCost: {
-          type: String,
-          required: true,
-        },
-        quantity: {
-          type: String,
-          required: true,
-        },
-      }
-    ],
+    projectName: {
+      type: String,
+      required: true,
+    },
+    projectCost: {
+      type: String,
+      required: true,
+    },
     clientName: {
       type: String,
       required: true,
@@ -38,11 +30,11 @@ const proformaInvoiceSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    shipTo: {
+    state: {
       type: String,
       required: true,
     },
-    state: {
+    shipTo: {
       type: String,
       required: true,
     },

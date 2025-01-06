@@ -70,7 +70,7 @@ const SingleProformaInvoice = () => {
     return <Navigate to="/" />;
   };
 
-  if (!data || !data?.projects || data?.projects?.length === 0) {
+  if (!data) {
     return <div>No data available</div>;
   };
 
@@ -163,16 +163,12 @@ const SingleProformaInvoice = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {
-                      data?.projects?.map((d) => (
-                        <tr className="text-start" key={d?._id}>
-                          <th scope="col">{d?.projectName}</th>
-                          <th scope="col" className="ps-5">{d?.quantity}</th>
-                          <th scope="col">₹{d?.projectCost}</th>
-                          <th scope="col" className="text-end">₹{d?.projectCost * d?.quantity}</th>
-                        </tr>
-                      ))
-                    }
+                    <tr className="text-start" key={data?._id}>
+                      <th scope="col">{data?.projectName}</th>
+                      <th scope="col" className="ps-5">1</th>
+                      <th scope="col">₹{data?.subtotal}</th>
+                      <th scope="col" className="text-end">₹{data?.subtotal}</th>
+                    </tr>
                   </tbody>
                   <tbody className="text-end mt-5 pt-5">
                     <tr>

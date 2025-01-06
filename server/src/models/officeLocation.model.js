@@ -4,7 +4,7 @@ const officeLocationSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      default: "Code Diffusion Technologies",
+      required: true,
       trim: true,
     },
     logo: {
@@ -23,6 +23,10 @@ const officeLocationSchema = new mongoose.Schema(
       trim: true,
     },
     longitude: {
+      type: String,
+      trim: true,
+    },
+    attendanceRadius: {
       type: String,
       trim: true,
     },

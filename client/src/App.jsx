@@ -58,6 +58,12 @@ import ProjectDeployment from "./Components/Project Deployment/ProjectDeployment
 import AddProjectDeployment from "./Components/Project Deployment/AddProjectDeployment.jsx";
 import EditProjectDeployment from "./Components/Project Deployment/EditProjectDeployment.jsx";
 import LeaveRequest from "./Components/LeaveRequest/LeaveRequest.jsx";
+import Service from "./Components/Service/Service.jsx";
+import AddService from "./Components/Service/AddService.jsx";
+import EditService from "./Components/Service/EditService.jsx";
+import AddOnService from "./Components/AddOnService/AddOnService.jsx";
+import AddAddOnService from "./Components/AddOnService/AddAddOnService.jsx";
+import EditAddOnService from "./Components/AddOnService/EditAddOnService.jsx";
 
 const App = () => {
   return (
@@ -120,6 +126,12 @@ const App = () => {
           <Route path="profile" element={<Profile />} />
           <Route path="attendance" element={<AttendanceList />} />
           <Route path="leave-request" element={<LeaveRequest />} />
+          <Route path="service" element={<Service />} />
+          <Route path="add-service" element={<AddService />} />
+          <Route path="edit-service/:id" element={<EditService />} />
+          <Route path="add-on-service" element={<AddOnService />} />
+          <Route path="add-add-on-service" element={<AddAddOnService />} />
+          <Route path="edit-add-on-service/:id" element={<EditAddOnService />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
