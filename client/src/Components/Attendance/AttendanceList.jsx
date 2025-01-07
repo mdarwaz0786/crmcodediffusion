@@ -10,23 +10,23 @@ import Preloader from "../../Preloader.jsx";
 import formatDate from "../../Helper/formatDate.js";
 import formatTimeToHoursMinutes from "../../Helper/formatTimeToHoursMinutes.js";
 import formatTimeWithAmPm from "../../Helper/formatTimeWithAmPm.js";
+import Calendar from "./Calender.jsx";
+import AttendanceSummary from "./AttendanceSummary.jsx";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AttendanceList = () => {
+  const { validToken, team, isLoading } = useAuth();
+  const [attendanceSummary, setAttendanceSummary] = useState([]);
   const [data, setData] = useState([]);
   const [employee, setEmployee] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
-  const [singleEmployee, setSingleEmployee] = useState("");
+  const [singleEmployee, setSingleEmployee] = useState();
   const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(true);
-  const { validToken, team, isLoading } = useAuth();
   const permissions = team?.role?.permissions?.attendance;
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
-    sort: "Ascending",
-    page: 1,
-    limit: 31,
   });
 
   const fetchAllEmployee = async () => {
@@ -84,9 +84,6 @@ const AttendanceList = () => {
           year: filters.year,
           month: filters.month,
           employeeId: selectedEmployee,
-          sort: filters.sort,
-          page: filters.page,
-          limit: filters.limit,
         },
       });
 
@@ -121,7 +118,7 @@ const AttendanceList = () => {
     if (!isLoading && team && permissions?.access) {
       fetchAllData();
     };
-  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team, permissions]);
+  }, [filters.month, filters.year, selectedEmployee, isLoading, team, permissions]);
 
   const exportAttendanceListAsExcel = () => {
     if (data?.length === 0) {
@@ -129,7 +126,8 @@ const AttendanceList = () => {
       return;
     };
 
-    const exportData = data?.map((entry) => ({
+    const exportData = data?.map((entry, index) => ({
+      "#": index + 1 || "1",
       "Date": formatDate(entry?.attendanceDate) || "N/A",
       "Name": entry?.employee?.name || "N/A",
       "Punch in": formatTimeWithAmPm(entry?.punchInTime) || "N/A",
@@ -139,19 +137,11 @@ const AttendanceList = () => {
       "Status": entry?.status || "N/A",
     }));
 
-    if (exportData?.length === 0) {
-      alert("No Attendance found to export");
-      return;
-    };
-
     const worksheet = XLSX.utils.json_to_sheet(exportData);
 
     // Calculate column widths dynamically
     const columnWidths = Object.keys(exportData[0] || {}).map((key) => ({
-      wch: Math.max(
-        key.length, // Header length
-        ...exportData.map((row) => (row[key] ? row[key].toString().length : 0)) // Longest content length
-      ) + 2, // Add buffer for better spacing
+      wch: Math.max(key.length, ...exportData.map((row) => (row[key] ? row[key].toString().length : 0))) + 2,
     }));
 
     worksheet["!cols"] = columnWidths;
@@ -181,6 +171,44 @@ const AttendanceList = () => {
       html2pdf().set(options).from(element).save();
     };
   };
+
+  // Get selected month and year statistic for employee
+  const fetchMonthlyStatistic = async () => {
+    try {
+      const params = {};
+
+      if (filters.month) {
+        const formattedMonth = filters.month.toString().padStart(2, "0");
+        params.month = `${filters.year}-${formattedMonth}`;
+      };
+
+      if (selectedEmployee) {
+        params.employeeId = selectedEmployee;
+      };
+
+      const response = await axios.get(
+        `${base_url}/api/v1/attendance/monthly-statistic`,
+        {
+          params,
+          headers: {
+            Authorization: validToken,
+          },
+        },
+      );
+
+      if (response?.data?.success) {
+        setAttendanceSummary(response?.data?.attendance);
+      };
+    } catch (error) {
+      console.log("Error while fetching monthly statistic:", error?.response?.data?.message);
+    };
+  };
+
+  useEffect(() => {
+    if (selectedEmployee && filters.month && filters.year && validToken && !isLoading) {
+      fetchMonthlyStatistic();
+    };
+  }, [selectedEmployee, filters.month, filters.year, validToken, isLoading]);
 
   if (isLoading) {
     return <Preloader />;
@@ -224,28 +252,6 @@ const AttendanceList = () => {
                     <div className="sortby-list">
                       <ul>
                         <li>
-                          <label className="pb-1">Sort:</label>
-                          <div className="sort-dropdown drop-down">
-                            <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown"><i className="ti ti-sort-ascending-2" />{filters.sort}</Link>
-                            <div className="dropdown-menu  dropdown-menu-start">
-                              <ul>
-                                <li>
-                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, sort: "Ascending", page: 1 }))}>
-                                    <i className="ti ti-circle-chevron-right" />
-                                    Ascending
-                                  </Link>
-                                </li>
-                                <li>
-                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, sort: "Descending", page: 1 }))}>
-                                    <i className="ti ti-circle-chevron-right" />
-                                    Descending
-                                  </Link>
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                        </li>
-                        <li>
                           <label className="pb-1">Year:</label>
                           <select
                             id="year"
@@ -254,9 +260,7 @@ const AttendanceList = () => {
                             onChange={handleYearChange}
                             className="form-select"
                           >
-                            <option value="">All</option>
                             {
-                              // Generate the years dynamically, starting from the current year and going backwards 10 year
                               Array.from({ length: 10 }, (_, i) => {
                                 const year = new Date().getFullYear() - i;
                                 return <option key={year} value={year}>{year}</option>;
@@ -273,7 +277,6 @@ const AttendanceList = () => {
                             onChange={handleMonthChange}
                             className="form-select"
                           >
-                            <option value="">All</option>
                             <option value="01">January</option>
                             <option value="02">February</option>
                             <option value="03">March</option>
@@ -291,7 +294,6 @@ const AttendanceList = () => {
                         <li>
                           <label className="pb-1">Employee:</label>
                           <select className="form-select" name="employee" id="employee" value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)}>
-                            <option value="">All</option>
                             {
                               employee?.map((e) => (
                                 <option key={e?._id} value={e?._id}>{e?.name}</option>
@@ -333,149 +335,20 @@ const AttendanceList = () => {
                   </div>
                   {/* /Filter */}
 
+                  <h4 style={{ textAlign: "center", marginBottom: "2rem", marginTop: "1rem" }}>{singleEmployee?.name}</h4>
+
                   {/* Attendance List */}
-                  <div className="table-responsive custom-table">
-                    <div className="table-responsive custom-table">
-                      <table className="table table-bordered table-striped custom-border">
-                        <thead className="thead-light">
-                          <tr>
-                            <th className="no-sort">
-                              <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                            </th>
-                            <th>#</th>
-                            <th>Date</th>
-                            <th>Employee</th>
-                            <th>Punch In</th>
-                            <th>Punch Out</th>
-                            <th>Late In</th>
-                            <th>Hours Worked</th>
-                            <th>Status</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {
-                            data?.map((d, index) => (
-                              <tr key={d?._id}>
-                                <th className="no-sort">
-                                  <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                                </th>
-                                <td>{(filters.page - 1) * filters.limit + index + 1}</td>
-                                <td>{formatDate(d?.attendanceDate) || "N/A"}</td>
-                                <td>{d?.employee?.name || "N/A"}</td>
-                                <td>{d?.punchInTime ? formatTimeWithAmPm(d?.punchInTime) : "N/A"}</td>
-                                <td>{d?.punchOutTime ? formatTimeWithAmPm(d?.punchOutTime) : "N/A"}</td>
-                                <td
-                                  style={{
-                                    color: d?.lateIn === "00:00"
-                                      ? "green"
-                                      : "black"
-                                  }}
-                                >
-                                  {
-                                    d?.lateIn
-                                      ? d?.lateIn === "00:00"
-                                        ? "On Time"
-                                        : formatTimeToHoursMinutes(d?.lateIn)
-                                      : "N/A"
-                                  }
-                                </td>
-                                <td>
-                                  {
-                                    d?.hoursWorked
-                                      ? d?.hoursWorked === "00:00"
-                                        ? "N/A"
-                                        : formatTimeToHoursMinutes(d?.hoursWorked)
-                                      : "N/A"
-                                  }
-                                </td>
-                                <td
-                                  style={{
-                                    color: d?.status === "Present"
-                                      ? "green"
-                                      : d?.status === "Absent"
-                                        ? "red"
-                                        : d?.status === "Holiday"
-                                          ? "#ffb300"
-                                          : d?.status === "Sunday"
-                                            ? "blue"
-                                            : d?.status === "On Leave"
-                                              ? "purple"
-                                              : "black"
-                                  }}
-                                >{d?.status}</td>
-                              </tr>
-                            ))
-                          }
-                        </tbody>
-                      </table>
-                    </div>
+                  {
+                    loading ? (
+                      <h6>Loading...</h6>
+                    ) : (
+                      <Calendar attendanceData={data} employeeId={selectedEmployee} month={filters.month} year={filters.year} />
+                    )
+                  }
+                  {/* Attendance summary */}
+                  <div style={{ marginTop: "5rem" }}>
+                    <AttendanceSummary attendance={attendanceSummary} />
                   </div>
-                  <div className="row align-items-center">
-                    <div className="col-md-4 custom-pagination">
-                      <div className="datatable-length">
-                        <div className="dataTables_length" id="project-list_length">
-                          <label>
-                            Show
-                            <select name="project-list_length" value={filters.limit} onChange={(e) => setFilters((prev) => ({ ...prev, limit: e.target.value, page: 1 }))} aria-controls="project-list" className="form-select form-select-sm">
-                              <option value="5">5</option>
-                              <option value="10">10</option>
-                              <option value="15">15</option>
-                              <option value="20">20</option>
-                              <option value="25">25</option>
-                              <option value="31">31</option>
-                              <option value={total}>All</option>
-                            </select>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-4 custom-pagination">
-                      {
-                        (total === 0) ? (
-                          <span style={{ textAlign: "center", fontSize: "1rem", fontWeight: "600" }}>No Data</span>
-                        ) : loading ? (
-                          <h5 style={{ textAlign: "center", color: "#ffb300" }}>
-                            <div className="spinner-border" role="status">
-                              <span className="visually-hidden">Loading...</span>
-                            </div>
-                          </h5>
-                        ) : (
-                          null
-                        )
-                      }
-                    </div>
-                    <div className="col-md-4 custom-pagination">
-                      <div className="datatable-paginate">
-                        <div className="dataTables_paginate paging_simple_numbers" id="project-list_paginate">
-                          <ul className="pagination">
-                            <li className={`paginate_button page-item previous ${filters.page === 1 ? "disabled" : ""}`} id="project-list_previous">
-                              <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page - 1 }))} aria-controls="project-list" aria-disabled={filters.page === 1} role="link" data-dt-idx="previous" tabIndex="-1" className="page-link" >
-                                <i className="fa fa-angle-left"></i> Prev
-                              </Link>
-                            </li>
-                            {
-                              [...Array(Math.ceil(total / filters.limit)).keys()].map((num) => (
-                                <li className={`paginate_button page-item page-number ${filters.page === num + 1 ? "active" : ""}`} key={num}>
-                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: num + 1 }))} aria-controls="project-list" role="link" aria-current={filters.page === num + 1} data-dt-idx={num} tabIndex="0" className="page-link">
-                                    {num + 1}
-                                  </Link>
-                                </li>
-                              ))
-                            }
-                            <li className="paginate_button page-item page-number-mobile active">
-                              {filters.page}
-                            </li>
-                            <li className={`paginate_button page-item next ${filters.page === Math.ceil(total / filters.limit) ? "disabled" : ""}`} id="project-list_next">
-                              <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page + 1 }))} className="page-link" aria-controls="project-list" role="link" data-dt-idx="next" tabIndex="0">
-                                Next <i className="fa fa-angle-right"></i>
-                              </Link>
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* /Attendance List */}
                 </div>
               </div>
             </div>

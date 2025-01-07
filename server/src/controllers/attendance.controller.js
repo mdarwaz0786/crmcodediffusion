@@ -65,7 +65,6 @@ export const fetchAllAttendance = async (req, res) => {
     try {
         const { date, employeeId } = req.query;
         const query = {};
-        let sort = {};
 
         // Filter by exact date if provided
         if (date) {
@@ -84,7 +83,7 @@ export const fetchAllAttendance = async (req, res) => {
         // Filter by month only (all years)
         if (req.query.month && !req.query.year) {
             const month = req.query.month;
-            query.attendanceDate = { $regex: `-${month}-`, $options: "i" }; // Match the month in the date string
+            query.attendanceDate = { $regex: `-${month}-`, $options: "i" };
         };
 
         // Filter by both year and month
@@ -107,26 +106,12 @@ export const fetchAllAttendance = async (req, res) => {
             };
         };
 
-        // Handle pagination
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 31;
-        const skip = (page - 1) * limit;
-
-        // Handle sorting
-        if (req.query.sort === 'Descending') {
-            sort = { attendanceDate: -1 };
-        } else {
-            sort = { attendanceDate: 1 };
-        };
-
         // Calculate total count
         const totalCount = await Attendance.countDocuments(query);
 
         // Fetch attendance with the constructed query
         const attendance = await Attendance.find(query)
-            .sort(sort)
-            .skip(skip)
-            .limit(limit)
+            .sort({ attendanceDate: -1 })
             .populate('employee', 'name')
             .exec();
 
