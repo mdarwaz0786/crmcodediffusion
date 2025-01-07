@@ -38,6 +38,25 @@ export const getAddOnServiceById = async (req, res) => {
   };
 };
 
+// Get AddOnService by projectId
+export const getAddOnServiceByProjectId = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const addOnService = await AddOnService.findOne({ projectName: projectId }).populate("clientName projectName serviceName");
+
+    if (!addOnService) {
+      return res.status(404).json({ success: false, message: "No add on service for this project" });
+    };
+
+    res.status(200).json({
+      success: true,
+      data: addOnService,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  };
+};
+
 // Update an AddOnService by ID
 export const updateAddOnService = async (req, res) => {
   try {

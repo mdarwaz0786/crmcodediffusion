@@ -70,7 +70,7 @@ const SingleInvoice = () => {
     html2pdf().set(options).from(element).save();
   };
 
-  if (!data || !data?.projects || data?.projects?.length === 0) {
+  if (!data) {
     return <div>No data available</div>;
   };
 
@@ -114,7 +114,7 @@ const SingleInvoice = () => {
                   <p className>{data?.invoiceId}</p><br />
                 </div>
                 <div className="date-box d-flex justify-content-end mt-5 pt-3">
-                  <div className="date px-2">
+                  <div className="date px-1">
                     <strong>Date:</strong>
                   </div>
                   <div className="date text-end">

@@ -178,8 +178,6 @@ const InvoiceList = () => {
         console.log("Error while deleting invoice:", error.message);
         toast.error("Error while deleting");
       };
-    } else if (isdelete !== "") {
-      alert("Type only \"yes\".");
     };
   };
 
@@ -189,12 +187,13 @@ const InvoiceList = () => {
       return;
     };
 
-    const exportData = data.map((entry) => {
+    const exportData = data.map((entry, index) => {
       const projectsWithAmounts = entry?.projects
         ?.map((p) => `${p?.project?.projectName} (₹${p?.amount || 0})`)
         .join(", ") || "N/A";
 
       return {
+        "#": index + 1 || "1",
         "InvoiceId": entry?.invoiceId || "N/A",
         "Date": formatDate(entry?.date) || "N/A",
         "Project Name (Project Cost)": projectsWithAmounts,
@@ -207,11 +206,6 @@ const InvoiceList = () => {
         "Balance Due": `₹${entry?.balanceDue}` || "0",
       };
     });
-
-    if (exportData?.length === 0) {
-      alert("No tax found to export");
-      return;
-    };
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
 
@@ -546,7 +540,7 @@ const InvoiceList = () => {
                           }
                           {
                             (filedPermissions?.subtotal.show) && (
-                              <th>Amount</th>
+                              <th>Total Cost</th>
                             )
                           }
                           {
@@ -734,7 +728,7 @@ const InvoiceList = () => {
                         <p>{invoice?.invoiceId}</p><br />
                       </div>
                       <div className="date-box d-flex justify-content-end mt-5 pt-3">
-                        <div className="date px-2">
+                        <div className="date px-1">
                           <strong>Date:</strong>
                         </div>
                         <div className="date text-end">

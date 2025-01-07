@@ -49,7 +49,7 @@ const EditInvoice = () => {
 
         setProjects(invoiceData?.map((d) => ({
           project: d?.project?._id,
-          amount: d?.project?.projectPrice,
+          amount: d?.amount,
           projectName: d?.project?.projectName,
         })));
 
@@ -90,6 +90,12 @@ const EditInvoice = () => {
     fetchProjectDetails(selectedOption?.value, index);
   };
 
+  const handleAmountChange = (index, field, value) => {
+    const newProjects = [...projects];
+    newProjects[index][field] = value;
+    setProjects(newProjects);
+  };
+
   const fetchProjectDetails = async (projectId, index) => {
     try {
       const response = await axios.get(`${base_url}/api/v1/project/single-project/${projectId}`, {
@@ -108,10 +114,24 @@ const EditInvoice = () => {
     };
   };
 
-  const handleFieldChange = (index, field, value) => {
-    const newProjects = [...projects];
-    newProjects[index][field] = value;
-    setProjects(newProjects);
+  const handleFetchAddOnService = async (projectId, index) => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/addOnService/single-addOnService-byProjectId/${projectId}`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        const addOnCost = parseFloat(response?.data?.data?.totalProjectCost);
+        const updatedProjects = [...projects];
+        updatedProjects[index].amount = addOnCost;
+        setProjects(updatedProjects);
+        toast.success("Add on service cost added");
+      };
+    } catch (error) {
+      toast.info(error?.response?.data?.message || "No add on service for this project");
+    };
   };
 
   const handleUpdate = async (e, id) => {
@@ -240,7 +260,9 @@ const EditInvoice = () => {
                 (fieldPermissions?.projects?.show) && (
                   <div className="col-md-6">
                     <div className="form-wrap">
-                      <label className="col-form-label" htmlFor={`project-${index}`}>Project Name <span className="text-danger">*</span></label>
+                      <div style={{ marginTop: "1.3rem" }}>
+                        <label className="col-form-label" htmlFor={`project-${index}`}>Project Name <span className="text-danger">*</span></label>
+                      </div>
                       <Select
                         styles={selectStyle}
                         className={`form-select p-0 ${fieldPermissions?.projects?.read ? "readonly-style" : ""}`}
@@ -260,15 +282,28 @@ const EditInvoice = () => {
                 (fieldPermissions?.projects?.show) && (
                   <div className="col-md-6">
                     <div className="form-wrap">
-                      <label className="col-form-label" htmlFor={`amount-${index}`}>Project Cost <span className="text-danger">*</span></label>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                        <label className="col-form-label" style={{ marginBottom: "-1.5rem" }} htmlFor={`amount-${index}`}>Project Cost <span className="text-danger">*</span></label>
+                        <button
+                          className="btn btn-info"
+                          onClick={() => handleFetchAddOnService(project?.project, index)}
+                        >
+                          Add On Service
+                        </button>
+                      </div>
                       <input
                         type="text"
                         className={`form-control ${fieldPermissions?.projects?.read ? "readonly-style" : ""}`}
                         name={`amount-${index}`}
                         id={`amount-${index}`}
                         value={project?.amount}
-                        onChange={(e) => fieldPermissions?.projects?.read ? null : handleFieldChange(index, 'amount', e.target.value)}
+                        onChange={(e) => fieldPermissions?.projects?.read ? null : handleAmountChange(index, 'amount', e.target.value)}
                       />
+                      {
+                        (parseFloat(project?.amount) < 1) && (
+                          <div className="col-form-label" style={{ color: "red" }}>Project Cost should not less than 1. <i className="fas fa-times"></i></div>
+                        )
+                      }
                     </div>
                   </div>
                 )

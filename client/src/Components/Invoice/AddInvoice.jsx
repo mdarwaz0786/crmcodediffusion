@@ -62,6 +62,12 @@ const AddInvoice = () => {
     fetchProjectDetails(selectedOption.value, index);
   };
 
+  const handleAmountChange = (index, field, value) => {
+    const newProjects = [...projects];
+    newProjects[index][field] = value;
+    setProjects(newProjects);
+  };
+
   const fetchProjectDetails = async (projectId, index) => {
     try {
       const response = await axios.get(`${base_url}/api/v1/project/single-project/${projectId}`, {
@@ -80,10 +86,24 @@ const AddInvoice = () => {
     };
   };
 
-  const handleFieldChange = (index, field, value) => {
-    const newProjects = [...projects];
-    newProjects[index][field] = value;
-    setProjects(newProjects);
+  const handleFetchAddOnService = async (projectId, index) => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/addOnService/single-addOnService-byProjectId/${projectId}`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        const addOnCost = parseFloat(response?.data?.data?.totalProjectCost);
+        const updatedProjects = [...projects];
+        updatedProjects[index].amount = addOnCost;
+        setProjects(updatedProjects);
+        toast.success("Add on service cost added");
+      };
+    } catch (error) {
+      toast.info(error?.response?.data?.message || "No add on service for this project");
+    };
   };
 
   const handleCreate = async (e) => {
@@ -138,6 +158,12 @@ const AddInvoice = () => {
     };
   };
 
+  const selectStyle = {
+    control: (provided) => ({ ...provided, outline: 'none', border: "none", boxShadow: 'none' }),
+    indicatorSeparator: (provided) => ({ ...provided, display: 'none' }),
+    option: (provided, state) => ({ ...provided, backgroundColor: state.isSelected ? "#f0f0f0" : state.isFocused ? "#e0e0e0" : "#fff", color: "#333" }),
+  }
+
   if (isLoading) {
     return <Preloader />;
   };
@@ -181,13 +207,11 @@ const AddInvoice = () => {
             <div key={index} className="row">
               <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor="project">Project Name <span className="text-danger">*</span></label>
+                  <div style={{ marginTop: "1.3rem" }}>
+                    <label className="col-form-label" htmlFor={`project-${index}`}>Project Name <span className="text-danger">*</span></label>
+                  </div>
                   <Select
-                    styles={{
-                      control: (provided) => ({ ...provided, outline: 'none', border: "none", boxShadow: 'none' }),
-                      indicatorSeparator: (provided) => ({ ...provided, display: 'none' }),
-                      option: (provided, state) => ({ ...provided, backgroundColor: state.isSelected ? "#f0f0f0" : state.isFocused ? "#e0e0e0" : "#fff", color: "#333" }),
-                    }}
+                    styles={selectStyle}
                     className="form-select p-0"
                     name={`project-${index}`}
                     id={`project-${index}`}
@@ -201,14 +225,22 @@ const AddInvoice = () => {
 
               <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label" htmlFor={`amount-${index}`}>Project Cost <span className="text-danger">*</span></label>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                    <label className="col-form-label" style={{ marginBottom: "-1.5rem" }} htmlFor={`amount-${index}`}>Project Cost <span className="text-danger">*</span></label>
+                    <button
+                      className="btn btn-info"
+                      onClick={() => handleFetchAddOnService(project?.project, index)}
+                    >
+                      Add On Service
+                    </button>
+                  </div>
                   <input
                     type="text"
                     className="form-control"
                     name={`amount-${index}`}
                     id={`amount-${index}`}
                     value={project?.amount}
-                    onChange={(e) => handleFieldChange(index, "amount", e.target.value)}
+                    onChange={(e) => handleAmountChange(index, "amount", e.target.value)}
                   />
                   {
                     (parseFloat(project?.amount) < 1) && (
