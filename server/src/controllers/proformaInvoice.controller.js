@@ -169,11 +169,9 @@ export const fetchAllInvoice = async (req, res) => {
     if (req.query.month && !req.query.year) {
       const month = parseInt(req.query.month);
 
-      // Filtering for all records with the specified month (across all years)
       filter.date = {
-        $expr: {
-          $eq: [{ $month: "$date" }, month]
-        },
+        $gte: new Date(new Date().getFullYear(), month - 1, 1),  // Start of the month
+        $lt: new Date(new Date().getFullYear(), month, 1)        // Start of the next month (non-inclusive)
       };
     };
 
