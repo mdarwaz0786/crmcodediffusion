@@ -181,9 +181,10 @@ const ProformaInvoiceList = () => {
       return;
     };
 
-    const exportData = data?.map((entry) => {
+    const exportData = data?.map((entry, index) => {
       return {
-        "Proforma InvoiceId": entry?.proformaInvoiceId || "N/A",
+        "#": index + 1 || "1",
+        "InvoiceId": entry?.proformaInvoiceId || "N/A",
         "Client Name": entry?.clientName || "N/A",
         "Date": formatDate(entry?.date) || "N/A",
         "Project Name": entry?.projectName || "N/A",
@@ -530,17 +531,17 @@ const ProformaInvoiceList = () => {
                             )
                           }
                           {
-                            (filedPermissions?.projects?.show) && (
+                            (filedPermissions?.projectName?.show) && (
                               <th>Project Name</th>
                             )
                           }
                           {
-                            (filedPermissions?.projects?.show) && (
+                            (filedPermissions?.clientName?.show) && (
                               <th>Client Name</th>
                             )
                           }
                           {
-                            (filedPermissions?.subtotal.show) && (
+                            (filedPermissions?.subtotal?.show) && (
                               <th>Project Cost</th>
                             )
                           }
@@ -571,12 +572,12 @@ const ProformaInvoiceList = () => {
                                 )
                               }
                               {
-                                (filedPermissions?.projects?.show) && (
+                                (filedPermissions?.projectName?.show) && (
                                   <td>{d?.projectName}</td>
                                 )
                               }
                               {
-                                (filedPermissions?.projects?.show) && (
+                                (filedPermissions?.clientName?.show) && (
                                   <td>{d?.clientName}</td>
                                 )
                               }
