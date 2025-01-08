@@ -26,7 +26,7 @@ const AttendanceList = () => {
   const permissions = team?.role?.permissions?.attendance;
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
-    month: new Date().getMonth() + 1,
+    month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
   });
 
   const fetchAllEmployee = async () => {
@@ -39,6 +39,9 @@ const AttendanceList = () => {
 
       if (response?.data?.success) {
         setEmployee(response?.data?.team);
+        if (response?.data?.team?.length > 0) {
+          setSelectedEmployee(response?.data?.team[0]?._id);
+        };
       };
     } catch (error) {
       console.log(error.message);
@@ -115,7 +118,7 @@ const AttendanceList = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && permissions?.access) {
+    if (!isLoading && team && selectedEmployee && filters.month && filters.year && permissions?.access) {
       fetchAllData();
     };
   }, [filters.month, filters.year, selectedEmployee, isLoading, team, permissions]);
@@ -178,8 +181,7 @@ const AttendanceList = () => {
       const params = {};
 
       if (filters.month) {
-        const formattedMonth = filters.month.toString().padStart(2, "0");
-        params.month = `${filters.year}-${formattedMonth}`;
+        params.month = `${filters.year}-${filters.month}`;
       };
 
       if (selectedEmployee) {

@@ -27,28 +27,28 @@ const Calender = ({ attendanceData, month, year, employeeId }) => {
     setCalendarDays(generateCalendar());
   }, [month, year, employeeId]);
 
+  const getAttendance = (day) => {
+    const dateString = `${year}-${(zeroBasedMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    const attendance = attendanceData?.find((entry) => entry?.attendanceDate === dateString);
+    return attendance;
+  };
+
+  const calendarStyle = {
+    border: '1px solid #eee',
+    padding: '0.625rem',
+    textAlign: 'center',
+    borderRadius: '0.3125rem',
+    cursor: 'pointer',
+    background: '#f4f8f4',
+  };
+
   const attendanceColors = {
     Present: 'green',
     Absent: 'red',
     Holiday: '#ffb300',
     Sunday: 'blue',
-    'On Leave': "purple",
+    'On Leave': 'purple',
     default: 'black',
-  };
-
-  const getAttendanceStatus = (day) => {
-    const dateString = `${year}-${(zeroBasedMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-    const status = attendanceData.find((entry) => entry.attendanceDate === dateString);
-    return status ? status.status : <div>X</div>;
-  };
-
-  const calendarStyle = {
-    border: '1px solid #eee',
-    padding: '10px',
-    textAlign: 'center',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    background: '#f4f8f4'
   };
 
   return (
@@ -60,11 +60,12 @@ const Calender = ({ attendanceData, month, year, employeeId }) => {
 
         {calendarDays.map((day, index) => {
           if (!day) return <div key={index} />;
-          const status = getAttendanceStatus(day);
+          const attendance = getAttendance(day);
           return (
             <div key={index} style={calendarStyle} className="text-center">
-              {day}
-              <div style={{ color: attendanceColors[status] }}>{status}</div>
+              <div>{day}</div>
+              <div style={{ color: attendanceColors[attendance?.status] }}>{attendance?.status}</div>
+              <div>{attendance?.punchInTime} {" "} {attendance?.punchOutTime}</div>
             </div>
           );
         })}

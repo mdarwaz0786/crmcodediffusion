@@ -9,7 +9,7 @@ const holidaySchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["Holiday", "Sunday"],
+      default: "Holiday",
       required: true,
     },
     date: {
@@ -24,9 +24,11 @@ const holidaySchema = new mongoose.Schema(
 );
 
 holidaySchema.pre("save", function (next) {
-  // Helper function to capitalize first letter of each word
-  const capitalizeWords = (str) => {
-    return str.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
+  const capitalizeWords = (string) => {
+    return string
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
   };
 
   if (this.reason) {
@@ -36,7 +38,6 @@ holidaySchema.pre("save", function (next) {
   next();
 });
 
-// Enforce unique employee + date combination to prevent duplicates
 holidaySchema.index({ date: 1 }, { unique: true });
 
 const Holiday = mongoose.model("Holiday", holidaySchema);

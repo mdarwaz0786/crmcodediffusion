@@ -6,28 +6,27 @@ import formatTimeWithAmPm from "../../Helper/formatTimeWithAmPm";
 const AttendanceSummary = ({ attendance }) => {
   const summaryStyle = {
     border: '1px solid #ddd',
-    borderRadius: '5px',
-    padding: '20px',
-    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-    backgroundColor: '#f9f9f9',
-    maxWidth: '600px',
-    margin: '20px auto',
+    borderRadius: '0.3125rem',
+    padding: '1.25rem',
+    backgroundColor: '#f4f8f4',
+    maxWidth: '40rem',
+    margin: '1.25rem auto',
   };
 
   const headerStyle = {
     textAlign: 'center',
-    fontSize: '20px',
-    marginBottom: '20px',
+    fontSize: '1.15rem',
+    marginBottom: '1.25rem',
     color: '#333',
   };
 
   const itemStyle = {
-    marginBottom: '10px',
-    fontSize: '16px',
+    marginBottom: '0.625rem',
     display: 'flex',
     justifyContent: 'space-between',
+    alignItems: 'center',
     borderBottom: '1px solid #eee',
-    paddingBottom: '5px',
+    paddingBottom: '0.6rem',
   };
 
   const boldText = {
@@ -47,14 +46,13 @@ const AttendanceSummary = ({ attendance }) => {
       <div style={itemStyle}><span style={boldText}>Total Days in Month:</span> <span>{attendance?.totalDaysInMonth}</span></div>
       <div style={itemStyle}><span style={boldText}>Total Holidays:</span> <span>{attendance?.totalHolidays}</span></div>
       <div style={itemStyle}><span style={boldText}>Total Sundays:</span> <span>{attendance?.totalSundays}</span></div>
-      <div style={itemStyle}><span style={boldText}>Company Working Days:</span> <span>{attendance?.companyWorkingDays}</span></div>
-      <div style={itemStyle}><span style={boldText}>Company Working Hours:</span> <span>{formatTimeToHoursMinutes(attendance?.companyWorkingHours)}</span></div>
+      <div style={itemStyle}><span style={boldText}>Company&apos;s Working Days:</span> <span>{attendance?.companyWorkingDays}</span></div>
+      <div style={itemStyle}><span style={boldText}>Company&apos;s Working Hours:</span> <span>{formatTimeToHoursMinutes(attendance?.companyWorkingHours)}</span></div>
       <div style={itemStyle}><span style={boldText}>Present Days:</span> <span style={highlightStyle}>{attendance?.employeePresentDays}</span></div>
       <div style={itemStyle}><span style={boldText}>Absent Days:</span> <span style={{ color: 'red', fontWeight: 'bold' }}>{attendance?.employeeAbsentDays}</span></div>
       <div style={itemStyle}><span style={boldText}>On Leave Days:</span> <span style={{ color: 'orange', fontWeight: 'bold' }}>{attendance?.employeeLeaveDays}</span></div>
       <div style={itemStyle}><span style={boldText}>Late In Days:</span> <span style={{ color: '#dc3545', fontWeight: 'bold' }}>{attendance?.employeeLateInDays}</span></div>
       <div style={itemStyle}><span style={boldText}>Total Hours Worked:</span> <span>{formatTimeToHoursMinutes(attendance?.employeeWorkingHours)}</span></div>
-      <div style={itemStyle}><span style={boldText}>Required Working Hours:</span> <span>{formatTimeToHoursMinutes(attendance?.employeeRequiredWorkingHours)}</span></div>
       <div style={itemStyle}><span style={boldText}>Average Punch In Time:</span> <span>{formatTimeWithAmPm(attendance?.averagePunchInTime)}</span></div>
       <div style={itemStyle}><span style={boldText}>Average Punch Out Time:</span> <span>{formatTimeWithAmPm(attendance?.averagePunchOutTime)}</span></div>
     </div>
