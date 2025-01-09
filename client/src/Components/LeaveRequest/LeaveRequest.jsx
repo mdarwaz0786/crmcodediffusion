@@ -128,21 +128,16 @@ const LeaveRequest = () => {
       return;
     };
 
-    const exportData = data?.map((entry) => ({
+    const exportData = data?.map((entry, index) => ({
+      "#": index + 1 || "1",
       "Employee Name": entry?.employee?.name || "N/A",
       "From": formatDate(entry?.startDate) || "N/A",
       "To": formatDate(entry?.endDate) || "N/A",
       "Duration": `${entry?.leaveDuration} Days` || "N/A",
-      "Leave Type": entry?.leaveType || "N/A",
       "Reason": entry?.reason || "N/A",
       "Status": entry?.status || "N/A",
       "Approved By": entry?.leaveApprovedBy || "N/A",
     }));
-
-    if (exportData?.length === 0) {
-      alert("No leave request found to export");
-      return;
-    };
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
 
@@ -211,7 +206,7 @@ const LeaveRequest = () => {
       };
     } catch (error) {
       console.log("Error while updating:", error.message);
-      toast.error("Error while updating");
+      toast.error(error?.response?.data?.message || "Error while updating");
     };
   };
 
@@ -373,9 +368,8 @@ const LeaveRequest = () => {
                             </th>
                             <th>#</th>
                             <th>Employee Name</th>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Leave Type</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
                             <th>Reason</th>
                             <th>Status</th>
                             <th>Approved By</th>
@@ -392,7 +386,6 @@ const LeaveRequest = () => {
                                 <td>{d?.employee?.name}</td>
                                 <td>{formatDate(d?.startDate)}</td>
                                 <td>{formatDate(d?.endDate)}</td>
-                                <td>{d?.leaveType}</td>
                                 <td
                                   style={{ cursor: "pointer" }}
                                   title={d?.reason.length > 30 && d?.reason}

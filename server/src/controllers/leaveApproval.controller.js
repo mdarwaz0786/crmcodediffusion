@@ -2,6 +2,7 @@ import LeaveApproval from "../models/leaveApproval.model.js";
 import Team from "../models/team.model.js";
 import Attendance from "../models/attendance.model.js";
 import mongoose from "mongoose";
+import { sendEmail } from '../services/emailService.js';
 
 // Helper function to get a range of dates between two dates
 const getDateRange = (startDate, endDate) => {
@@ -17,10 +18,10 @@ const getDateRange = (startDate, endDate) => {
 // Create a new leave approval request
 export const createLeaveApproval = async (req, res) => {
   try {
-    const { employee, startDate, endDate, leaveType, leaveApprovedBy, leaveStatus, reason } = req.body;
+    const { employee, startDate, endDate, leaveApprovedBy, leaveStatus, reason } = req.body;
 
     // List of required fields
-    const requiredFields = ['employee', 'startDate', 'endDate', 'leaveType', 'reason'];
+    const requiredFields = ['employee', 'startDate', 'endDate', 'reason'];
 
     // Check if any required field is missing or empty
     for (const field of requiredFields) {
@@ -43,12 +44,15 @@ export const createLeaveApproval = async (req, res) => {
     const overlappingLeave = await LeaveApproval.findOne({
       employee,
       $or: [
-        { startDate: { $lte: new Date(endDate) }, endDate: { $gte: new Date(startDate) } },
+        {
+          startDate: { $lte: new Date(endDate) },
+          endDate: { $gte: new Date(startDate) }
+        },
       ],
     });
 
     if (overlappingLeave) {
-      return res.status(400).json({ success: false, message: "Leave already exists for the given dates" });
+      return res.status(400).json({ success: false, message: `Leave already exists between ${startDate} and ${endDate}` });
     };
 
     const leaveDuration = getDateRange(startDate, endDate);
@@ -57,7 +61,6 @@ export const createLeaveApproval = async (req, res) => {
       employee,
       startDate,
       endDate,
-      leaveType,
       leaveApprovedBy,
       leaveStatus,
       leaveDuration: leaveDuration.length,
@@ -65,9 +68,25 @@ export const createLeaveApproval = async (req, res) => {
     });
 
     await newLeaveApproval.save();
+
+    const subject = `${existingEmployee.name} Applied for Leave for ${leaveDuration.length} Days`;
+
+    // Send email to HR using the updated service
+    const htmlContent = `
+      <h3>New Leave Request</h3>
+      <p><strong>Employee:</strong> ${existingEmployee.name}</p>
+      <p><strong>Start Date:</strong> ${startDate}</p>
+      <p><strong>End Date:</strong> ${endDate}</p>
+      <p><strong>Leave Duration:</strong> ${leaveDuration.length} Days</p>
+      <p><strong>Reason:</strong> ${reason}</p>
+      <p>Please review the request.</p>
+    `;
+
+    await sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+
     res.status(201).json({ success: true, message: "Leave approval request created successfully", data: newLeaveApproval });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error creating leave approval request", error: error.message });
+    res.status(500).json({ success: false, message: "Error while creating leave approval request", error: error.message });
   };
 };
 
@@ -183,7 +202,7 @@ export const updateLeaveApproval = async (req, res) => {
     // Validate user role
     const userRole = req.team?.role?.name;
 
-    if (userRole !== "admin" && userRole !== "hr") {
+    if (userRole.toLowerCase() !== "admin" && userRole.toLowerCase() !== "hr") {
       return res.status(403).json({ success: false, message: "You do not have permission to update leave requests." });
     };
 
@@ -193,11 +212,23 @@ export const updateLeaveApproval = async (req, res) => {
     };
 
     // Fetch the leave request
-    const leaveRequest = await LeaveApproval.findById(leaveId);
+    const leaveRequest = await LeaveApproval.findById(leaveId)
+      .populate("employee")
+      .populate("leaveApprovedBy")
+      .exec();
 
     if (!leaveRequest) {
       return res.status(404).json({ success: false, message: "Leave request not found." });
     };
+
+    const { employee, startDate, endDate } = leaveRequest;
+    const employeeEmail = leaveRequest.employee.email;
+
+    // Email content
+    const subject = `Your Leave Request has updated to ${leaveStatus}`;
+    const htmlContent = `<p>Dear ${leaveRequest.employee.name},</p>
+                         <p>Your leave request from ${startDate.toString()} to ${endDate.toString()} has been updated to <strong>${leaveStatus}</strong>.</p>
+                         <p>Regards,<br/>HR Team</p>`;
 
     // If leave status is "Approved", handle the approval and attendance marking
     if (leaveStatus === "Approved") {
@@ -211,10 +242,7 @@ export const updateLeaveApproval = async (req, res) => {
       leaveRequest.leaveApprovedBy = approverId;
       await leaveRequest.save();
 
-      // Mark status as On Leave in attendance
-      const { employee, startDate, endDate } = leaveRequest;
-
-      // If it is a single day leave, set the date range to just the start date
+      // If it is a single day leave, set the date range to just the start date otherwise not
       const datesToUpdate = startDate.toString() === endDate.toString()
         ? [new Date(startDate)]
         : getDateRange(new Date(startDate), new Date(endDate));
@@ -228,7 +256,7 @@ export const updateLeaveApproval = async (req, res) => {
         });
 
         // If attendance already exists and the status is "Sunday" or "Holiday", or "Present" skip
-        if (existingAttendance && (existingAttendance.status === "Sunday" || existingAttendance.status === "Holiday" || existingAttendance.status === "Present")) {
+        if (existingAttendance && ["Sunday", "Holiday", "Present"].includes(existingAttendance.status)) {
           return;
         };
 
@@ -259,11 +287,13 @@ export const updateLeaveApproval = async (req, res) => {
       // Wait for all attendance updates to be completed
       await Promise.all(updateAttendancePromises);
 
-      return res.status(200).json({ success: true, message: "Leave approved and marked attendance as On Leave" });
+      // Send leave status email to employee
+      await sendEmail(employeeEmail, subject, htmlContent);
+
+      return res.status(200).json({ success: true, message: "Leave approved, email sent and marked attendance as On Leave" });
     } else {
       // If the leave status is changed from "Approved" to "Rejected" or "Pending", delete all associated attendance records
       if (leaveRequest.leaveStatus === "Approved" && (leaveStatus === "Rejected" || leaveStatus === "Pending")) {
-        const { employee, startDate, endDate } = leaveRequest;
 
         // Get the date range for attendance deletion
         const datesToDelete = startDate.toString() === endDate.toString()
@@ -284,10 +314,13 @@ export const updateLeaveApproval = async (req, res) => {
       leaveRequest.leaveApprovedBy = approverId;
       await leaveRequest.save();
 
-      return res.status(200).json({ success: true, message: "Leave status updated successfully, and attendance records cleared if applicable." });
+      // Send leave status email to employee
+      await sendEmail(employeeEmail, subject, htmlContent);
+
+      return res.status(200).json({ success: true, message: "Leave status updated, email sent to employee and attendance records cleared if applicable." });
     };
   } catch (error) {
-    console.error(error.message);
+    console.log(error.message);
     res.status(500).json({ success: false, error: error.message });
   };
 };

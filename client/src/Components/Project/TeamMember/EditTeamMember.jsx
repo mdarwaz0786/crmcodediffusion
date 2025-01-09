@@ -128,6 +128,10 @@ const EditTeamMember = () => {
       updateData.name = name;
     };
 
+    if (fieldPermissions?.name?.show && !fieldPermissions?.name?.read) {
+      updateData.email = email;
+    };
+
     if (fieldPermissions?.mobile?.show && !fieldPermissions?.mobile?.read) {
       updateData.mobile = mobile;
     };
