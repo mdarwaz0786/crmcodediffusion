@@ -4,6 +4,11 @@ import mongoose from 'mongoose';
 
 // Helper: Calculate time difference in HH:mm format
 const calculateTimeDifference = (startTime, endTime) => {
+    // Check if either startTime or endTime is empty
+    if (!startTime || !endTime) {
+        return "00:00";
+    };
+
     const [startHours, startMinutes] = startTime.split(":").map(Number);
     const [endHours, endMinutes] = endTime.split(":").map(Number);
 
@@ -51,10 +56,6 @@ export const createAttendance = async (req, res) => {
 
         return res.status(201).json({ success: true, message: "Punch in successful", attedance: result });
     } catch (error) {
-        // Handle duplicate entry due to index constraint
-        if (error.code === 11000) {
-            return res.status(400).json({ success: false, error: "Duplicate entry for employee and date" });
-        };
         console.log(error.message);
         return res.status(500).json({ success: false, error: error.message });
     };
@@ -289,10 +290,10 @@ export const updateAttendance = async (req, res) => {
         });
 
         if (!attendance) {
-            return res.status(400).json({ success: false, message: "Punch in not found for today" });
+            return res.status(400).json({ success: false, message: `Punch in not found for today ${attendanceDate}` });
         };
 
-        // Update punch-out details
+        // Update punch out details
         const updatedAttendance = await Attendance.findOneAndUpdate(
             { _id: attendance._id },
             {

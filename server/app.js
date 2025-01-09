@@ -31,6 +31,7 @@ import purchaseInvoiceRoute from "./src/routes/purchaseInvoice.route.js";
 import projectDeploymentRoute from "./src/routes/projectDeployment.route.js";
 import serviceRoute from "./src/routes/service.route.js";
 import addOnServiceRoute from "./src/routes/addOnService.route.js";
+import missedPunchOutRoute from "./src/routes/missedPunchOut.route.js";
 
 // Directory name for serving index.html file
 const __dirname = path.resolve();
@@ -95,6 +96,8 @@ server.use("/api/v1/projectDeployment", projectDeploymentRoute);
 server.use("/api/v1/service", serviceRoute);
 // Add on service route
 server.use("/api/v1/addOnService", addOnServiceRoute);
+// Miss punch out route
+server.use("/api/v1/missedPunchOut", missedPunchOutRoute);
 
 // Middleware for serving client index.html file
 server.use(express.static(path.join(__dirname, "../client/dist")), (req, res, next) => next());

@@ -45,6 +45,6 @@ cron.schedule('0 8 * * *', async () => {
     };
 
   } catch (error) {
-    console.error("Error while updating expiration fields:", error.message);
+    console.log("Error while updating expiration fields:", error.message);
   };
 });
