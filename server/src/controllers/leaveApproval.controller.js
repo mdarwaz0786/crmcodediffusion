@@ -69,14 +69,13 @@ export const createLeaveApproval = async (req, res) => {
 
     await newLeaveApproval.save();
 
-    const subject = `${existingEmployee.name} Applied for Leave for ${leaveDuration.length} Days`;
+    const subject = `${existingEmployee.name} Applied Leave for ${leaveDuration.length} Days`;
 
     // Send email to HR using the updated service
     const htmlContent = `
-      <h3>New Leave Request</h3>
-      <p><strong>Employee:</strong> ${existingEmployee.name}</p>
-      <p><strong>Start Date:</strong> ${startDate}</p>
-      <p><strong>End Date:</strong> ${endDate}</p>
+      <p><strong>Employee Name:</strong> ${existingEmployee.name}</p>
+      <p><strong>Start Date:</strong> ${new Date(startDate).toLocaleDateString('en-GB')}</p>
+      <p><strong>End Date:</strong> ${new Date(endDate).toLocaleDateString('en-GB')}</p>
       <p><strong>Leave Duration:</strong> ${leaveDuration.length} Days</p>
       <p><strong>Reason:</strong> ${reason}</p>
       <p>Please review the request.</p>
@@ -93,21 +92,11 @@ export const createLeaveApproval = async (req, res) => {
 // Get all leave approvals
 export const fetchAllLeaveApproval = async (req, res) => {
   try {
-    const { startDate, endDate, employeeId } = req.query;
+    const { employeeId } = req.query;
     const query = {};
     let sort = {};
 
-    // Filter by exact startDate and endDate if provided
-    if (startDate && endDate) {
-      query.startDate = { $gte: startDate };
-      query.endDate = { $lte: endDate };
-    } else if (startDate) {
-      query.startDate = { $gte: startDate };
-    } else if (endDate) {
-      query.endDate = { $lte: endDate };
-    };
-
-    // Filter by year only
+    // Filter by year only (all month)
     if (req.query.year && !req.query.month) {
       const year = req.query.year;
       query.startDate = {
@@ -203,7 +192,7 @@ export const updateLeaveApproval = async (req, res) => {
     const userRole = req.team?.role?.name;
 
     if (userRole.toLowerCase() !== "admin" && userRole.toLowerCase() !== "hr") {
-      return res.status(403).json({ success: false, message: "You do not have permission to update leave requests." });
+      return res.status(403).json({ success: false, message: "You do not have permission to update leave request." });
     };
 
     // Validations
@@ -213,8 +202,8 @@ export const updateLeaveApproval = async (req, res) => {
 
     // Fetch the leave request
     const leaveRequest = await LeaveApproval.findById(leaveId)
-      .populate("employee")
-      .populate("leaveApprovedBy")
+      .populate("employee", "email name")
+      .populate("leaveApprovedBy", "name")
       .exec();
 
     if (!leaveRequest) {
@@ -224,10 +213,15 @@ export const updateLeaveApproval = async (req, res) => {
     const { employee, startDate, endDate } = leaveRequest;
     const employeeEmail = leaveRequest.employee.email;
 
+    // If it is a single day leave, set the date range to just the start date otherwise not
+    const datesToUpdate = startDate.toString() === endDate.toString()
+      ? [new Date(startDate)]
+      : getDateRange(new Date(startDate), new Date(endDate));
+
     // Email content
-    const subject = `Your Leave Request has updated to ${leaveStatus}`;
+    const subject = `Your Leave Request has been updated to ${leaveStatus}`;
     const htmlContent = `<p>Dear ${leaveRequest.employee.name},</p>
-                         <p>Your leave request from ${startDate.toString()} to ${endDate.toString()} has been updated to <strong>${leaveStatus}</strong>.</p>
+                         <p>Your leave request from ${new Date(startDate).toLocaleDateString('en-GB')} to ${new Date(endDate).toLocaleDateString('en-GB')} has been updated to <strong>${leaveStatus}</strong>.</p>
                          <p>Regards,<br/>HR Team</p>`;
 
     // If leave status is "Approved", handle the approval and attendance marking
@@ -241,11 +235,6 @@ export const updateLeaveApproval = async (req, res) => {
       leaveRequest.leaveStatus = "Approved";
       leaveRequest.leaveApprovedBy = approverId;
       await leaveRequest.save();
-
-      // If it is a single day leave, set the date range to just the start date otherwise not
-      const datesToUpdate = startDate.toString() === endDate.toString()
-        ? [new Date(startDate)]
-        : getDateRange(new Date(startDate), new Date(endDate));
 
       const updateAttendancePromises = datesToUpdate.map(async (date) => {
         const formattedDate = date.toISOString().split('T')[0];
@@ -295,12 +284,7 @@ export const updateLeaveApproval = async (req, res) => {
       // If the leave status is changed from "Approved" to "Rejected" or "Pending", delete all associated attendance records
       if (leaveRequest.leaveStatus === "Approved" && (leaveStatus === "Rejected" || leaveStatus === "Pending")) {
 
-        // Get the date range for attendance deletion
-        const datesToDelete = startDate.toString() === endDate.toString()
-          ? [new Date(startDate)]
-          : getDateRange(new Date(startDate), new Date(endDate));
-
-        const deleteAttendancePromises = datesToDelete.map(async (date) => {
+        const deleteAttendancePromises = datesToUpdate.map(async (date) => {
           const formattedDate = date.toISOString().split('T')[0];
           await Attendance.deleteOne({ employee, attendanceDate: formattedDate, status: "On Leave" });
         });

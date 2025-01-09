@@ -20,9 +20,10 @@ const LeaveRequest = () => {
   const [singleEmployee, setSingleEmployee] = useState("");
   const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(true);
+  const [approving, setApproving] = useState(false);
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
-    month: new Date().getMonth() + 1,
+    month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
     sort: "Descending",
     page: 1,
     limit: 15,
@@ -131,8 +132,8 @@ const LeaveRequest = () => {
     const exportData = data?.map((entry, index) => ({
       "#": index + 1 || "1",
       "Employee Name": entry?.employee?.name || "N/A",
-      "From": formatDate(entry?.startDate) || "N/A",
-      "To": formatDate(entry?.endDate) || "N/A",
+      "Start Date": formatDate(entry?.startDate) || "N/A",
+      "End Date": formatDate(entry?.endDate) || "N/A",
       "Duration": `${entry?.leaveDuration} Days` || "N/A",
       "Reason": entry?.reason || "N/A",
       "Status": entry?.status || "N/A",
@@ -176,18 +177,13 @@ const LeaveRequest = () => {
 
   const handleUpdateLeaveStatus = async (e, leaveId) => {
     e.preventDefault();
+
     try {
+      setApproving(true);
+
       // Validation
-      if (!leaveId) {
-        return toast.error("leaveId");
-      };
-
-      if (!team?._id) {
-        return toast.error("teamId");
-      };
-
       if (!leaveStatus) {
-        return toast.error("leaveStatus");
+        return toast.error("Select leave status");
       };
 
       const response = await axios.put(`${base_url}/api/v1/leaveApproval/update-leaveApproval`,
@@ -207,6 +203,8 @@ const LeaveRequest = () => {
     } catch (error) {
       console.log("Error while updating:", error.message);
       toast.error(error?.response?.data?.message || "Error while updating");
+    } finally {
+      setApproving(false);
     };
   };
 
@@ -284,7 +282,6 @@ const LeaveRequest = () => {
                           >
                             <option value="">All</option>
                             {
-                              // Generate the years dynamically, starting from the current year and going backwards 10 year
                               Array.from({ length: 10 }, (_, i) => {
                                 const year = new Date().getFullYear() - i;
                                 return <option key={year} value={year}>{year}</option>;
@@ -401,12 +398,21 @@ const LeaveRequest = () => {
                                       onChange={(e) => setLeaveStatus(e.target.value)}
                                       className="form-select"
                                     >
-                                      <option value="" disabled>Select</option>
                                       <option value="Approved">Approved</option>
                                       <option value="Rejected">Rejected</option>
                                       <option value="Pending">Pending</option>
                                     </select>
-                                    <button type="submit" className="btn btn-primary">Update</button>
+                                    {
+                                      approving ? (
+                                        <h6 style={{ textAlign: "center", color: "#ffb300" }}>
+                                          <div className="spinner-border" role="status">
+                                            <span className="visually-hidden">Loading...</span>
+                                          </div>
+                                        </h6>
+                                      ) : (
+                                        <button type="submit" className="btn btn-primary">Update</button>
+                                      )
+                                    }
                                   </form>
                                 </td>
                                 <td>{d?.leaveApprovedBy?.name || "N/A"}</td>
