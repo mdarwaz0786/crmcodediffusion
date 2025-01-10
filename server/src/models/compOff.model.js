@@ -17,6 +17,10 @@ const compOffSchema = new mongoose.Schema(
       enum: ["Pending", "Approved", "Rejected"],
       default: "Pending",
     },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Team",
+    },
   },
   {
     timestamps: true,

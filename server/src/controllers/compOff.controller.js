@@ -6,10 +6,14 @@ import { sendEmail } from "../services/emailService.js";
 // Create a new comp off
 export const createCompOff = async (req, res) => {
   try {
-    const { employee, attendanceDate, status } = req.body;
+    const { employee, attendanceDate, approvedBy, status } = req.body;
 
-    if (!employee || !attendanceDate) {
-      return res.status(400).json({ success: false, message: "Employee and attendance date are required." });
+    if (!employee) {
+      return res.status(400).json({ success: false, message: "Employee is required." });
+    };
+
+    if (!attendanceDate) {
+      return res.status(400).json({ success: false, message: "Attendance date is required." });
     };
 
     const existingCompOff = await CompOff.findOne({ employee, attendanceDate });
@@ -18,18 +22,19 @@ export const createCompOff = async (req, res) => {
       return res.status(400).json({ success: false, message: `Comp off already exists for this date ${attendanceDate}` });
     };
 
-    const compOff = new CompOff({ employee, attendanceDate, status });
+    const compOff = new CompOff({ employee, attendanceDate, approvedBy, status });
     await compOff.save();
 
-    const emp = await Team.findOne({ employee });
+    const emp = await Team.findById(employee);
 
-    // Send email to when comp off is created
-    await sendEmail(
-      process.env.RECEIVER_EMAIL_ID,
-      `${emp.name} apply comp off for date ${attendanceDate}`,
+    // Send email after comp off is created
+    const subject = `${emp.name} apply comp off for date ${attendanceDate}`;
+
+    const htmlContent =
       `<p>Comp off request has been submitted by ${emp.name} for date ${attendanceDate}.</p>
       <p>Pleave review the request.</p>`
-    );
+
+    await sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
     res.status(201).json({ success: true, message: "Comp off created successfully.", data: compOff });
   } catch (error) {
@@ -40,8 +45,72 @@ export const createCompOff = async (req, res) => {
 // Read (Get all Comp offs)
 export const getAllCompOffs = async (req, res) => {
   try {
-    const compOffs = await CompOff.find().populate("employee");
-    res.status(200).json({ success: true, data: compOffs });
+    const { employeeId } = req.query;
+    const query = {};
+    let sort = {};
+
+    // Filter by year only (all month)
+    if (req.query.year && !req.query.month) {
+      const year = req.query.year;
+      query.attendanceDate = {
+        $gte: `${year}-01-01`,
+        $lte: `${year}-12-31`,
+      };
+    };
+
+    // Filter by month only (all years)
+    if (req.query.month && !req.query.year) {
+      const month = req.query.month;
+      query.attendanceDate = { $regex: `-${month}-`, $options: "i" };
+    };
+
+    // Filter by both year and month
+    if (req.query.year && req.query.month) {
+      const year = req.query.year;
+      const month = req.query.month;
+
+      query.attendanceDate = {
+        $gte: `${year}-${month}-01`,
+        $lte: `${year}-${month}-31`,
+      };
+    };
+
+    // Filter by employee ID if provided
+    if (employeeId) {
+      if (mongoose.Types.ObjectId.isValid(employeeId)) {
+        query.employee = employeeId;
+      } else {
+        return res.status(400).json({ success: false, message: 'Invalid employee ID' });
+      };
+    };
+
+    // Handle pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Handle sorting
+    if (req.query.sort === 'Ascending') {
+      sort = { attendanceDate: 1 };
+    } else {
+      sort = { attendanceDate: -1 };
+    };
+
+    const compOffs = await CompOff.find(query)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .populate("employee")
+      .exec();
+
+    if (!compOffs) {
+      return res.status(404).json({ success: false, message: 'Comp off not found' });
+    };
+
+    // Calculate total count
+    const total = await CompOff.countDocuments(query);
+
+    res.status(200).json({ success: true, data: compOffs, totalCount: total });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   };
@@ -64,7 +133,7 @@ export const getCompOffById = async (req, res) => {
 export const updateCompOff = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, approvedBy } = req.body;
 
     const compOff = await CompOff.findById(id).populate("employee");
 
@@ -92,6 +161,7 @@ export const updateCompOff = async (req, res) => {
     // Handle status transitions
     if (status === "Pending") {
       compOff.status = "Pending";
+      compOff.approvedBy = approvedBy;
       await compOff.save();
       await sendEmail(
         compOff.employee.email,
@@ -104,6 +174,7 @@ export const updateCompOff = async (req, res) => {
 
     if (status === "Rejected") {
       compOff.status = "Rejected";
+      compOff.approvedBy = approvedBy;
       await compOff.save();
       await sendEmail(
         compOff.employee.email,
@@ -141,6 +212,7 @@ export const updateCompOff = async (req, res) => {
       };
 
       compOff.status = "Approved";
+      compOff.approvedBy = approvedBy;
       await compOff.save();
 
       await sendEmail(

@@ -65,6 +65,8 @@ import AddOnService from "./Components/AddOnService/AddOnService.jsx";
 import AddAddOnService from "./Components/AddOnService/AddAddOnService.jsx";
 import EditAddOnService from "./Components/AddOnService/EditAddOnService.jsx";
 import SalarySlip from "./SalarySlip.jsx";
+import CompOff from "./Components/CompOff/CompOff.jsx";
+import MissedPunchOut from "./Components/MissedPunchOut/MissedPunchOut.jsx";
 
 const App = () => {
   return (
@@ -134,6 +136,8 @@ const App = () => {
           <Route path="add-add-on-service" element={<AddAddOnService />} />
           <Route path="edit-add-on-service/:id" element={<EditAddOnService />} />
           <Route path="salary" element={<SalarySlip />} />
+          <Route path="comp-off" element={<CompOff />} />
+          <Route path="missed-punch-out" element={<MissedPunchOut />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />

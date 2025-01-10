@@ -36,6 +36,7 @@ export const createLeaveApproval = async (req, res) => {
 
     // Check if the employee exist
     const existingEmployee = await Team.findById(employee);
+
     if (!existingEmployee) {
       return res.status(400).json({ success: false, message: "Employee not found" });
     };

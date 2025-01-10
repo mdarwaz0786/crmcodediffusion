@@ -6,7 +6,7 @@ import { sendEmail } from "../services/emailService.js";
 // Create a new missed punch-out entry
 export const createMissedPunchOut = async (req, res) => {
   try {
-    const { employee, attendanceDate, punchOutTime } = req.body;
+    const { employee, attendanceDate, approvedBy, punchOutTime } = req.body;
 
     if (!employee || !attendanceDate || !punchOutTime) {
       return res.status(400).json({ success: false, message: "All fields are required." });
@@ -28,19 +28,21 @@ export const createMissedPunchOut = async (req, res) => {
       employee,
       attendanceDate,
       punchOutTime,
+      approvedBy,
     });
 
     await newMissedPunchOut.save();
 
-    const emp = await Team.findOne({ employee });
+    const emp = await Team.findById(employee);
 
-    // Send email to when comp off is created
-    await sendEmail(
-      process.env.RECEIVER_EMAIL_ID,
-      `${emp.name} apply missed punch out for date ${attendanceDate}`,
+    // Send email after comp off is created
+    const subject = `${emp.name} apply missed punch out for date ${attendanceDate}`;
+
+    const htmlContent =
       `<p>Missed punch out request has been submitted by ${emp.name} for date ${attendanceDate}.</p>
-          <p>Pleave review the request.</p>`
-    );
+       <p>Pleave review the request.</p>`;
+
+    await sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
     res.status(201).json({ success: true, message: "Missed punch out created successfully", data: newMissedPunchOut });
   } catch (error) {
@@ -51,8 +53,73 @@ export const createMissedPunchOut = async (req, res) => {
 // Get all missed punch out entries
 export const getAllMissedPunchOuts = async (req, res) => {
   try {
-    const missedPunchOuts = await MissedPunchOut.find().populate("employee", "name email");
-    res.status(200).json({ success: true, data: missedPunchOuts });
+    const { employeeId } = req.query;
+    const query = {};
+    let sort = {};
+
+    // Filter by year only (all month)
+    if (req.query.year && !req.query.month) {
+      const year = req.query.year;
+      query.attendanceDate = {
+        $gte: `${year}-01-01`,
+        $lte: `${year}-12-31`,
+      };
+    };
+
+    // Filter by month only (all years)
+    if (req.query.month && !req.query.year) {
+      const month = req.query.month;
+      query.attendanceDate = { $regex: `-${month}-`, $options: "i" };
+    };
+
+    // Filter by both year and month
+    if (req.query.year && req.query.month) {
+      const year = req.query.year;
+      const month = req.query.month;
+
+      query.attendanceDate = {
+        $gte: `${year}-${month}-01`,
+        $lte: `${year}-${month}-31`,
+      };
+    };
+
+    // Filter by employee ID if provided
+    if (employeeId) {
+      if (mongoose.Types.ObjectId.isValid(employeeId)) {
+        query.employee = employeeId;
+      } else {
+        return res.status(400).json({ success: false, message: 'Invalid employee ID' });
+      };
+    };
+
+    // Handle pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Handle sorting
+    if (req.query.sort === 'Ascending') {
+      sort = { attendanceDate: 1 };
+    } else {
+      sort = { attendanceDate: -1 };
+    };
+
+    const missedPunchOuts = await MissedPunchOut.find(query)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .populate("employee")
+      .populate("approvedBy")
+      .exec();
+
+    if (!missedPunchOuts) {
+      return res.status(404).json({ success: false, message: 'Missed puch out not found' });
+    };
+
+    // Calculate total count
+    const total = await MissedPunchOut.countDocuments(query);
+
+    res.status(200).json({ success: true, data: missedPunchOuts, totalCount: total });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   };
@@ -62,7 +129,7 @@ export const getAllMissedPunchOuts = async (req, res) => {
 export const getMissedPunchOutById = async (req, res) => {
   try {
     const { id } = req.params;
-    const missedPunchOut = await MissedPunchOut.findById(id).populate("employee", "name email");
+    const missedPunchOut = await MissedPunchOut.findById(id).populate("employee").populate("approvedBy");
 
     if (!missedPunchOut) {
       return res.status(404).json({ success: false, message: "Missed punch out not found." });
@@ -78,7 +145,7 @@ export const getMissedPunchOutById = async (req, res) => {
 export const updateMissedPunchOut = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, approvedBy } = req.body;
 
     const missedPunchOut = await MissedPunchOut.findById(id);
 
@@ -103,12 +170,14 @@ export const updateMissedPunchOut = async (req, res) => {
 
     if (status === "Pending") {
       missedPunchOut.status = "Pending";
+      missedPunchOut.approvedBy = approvedBy;
       await missedPunchOut.save();
       return res.status(200).json({ success: true, message: "Request marked as pending." });
     };
 
     if (status === "Rejected") {
       missedPunchOut.status = "Rejected";
+      missedPunchOut.approvedBy = approvedBy;
       await missedPunchOut.save();
       return res.status(200).json({ success: true, message: "Request marked as rejected." });
     };
@@ -123,6 +192,7 @@ export const updateMissedPunchOut = async (req, res) => {
       await attendance.save();
 
       missedPunchOut.status = "Approved";
+      missedPunchOut.approvedBy = approvedBy;
       await missedPunchOut.save();
       return res.status(200).json({ success: true, message: "Punch out approved and attendance updated." });
     };

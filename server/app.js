@@ -32,6 +32,7 @@ import projectDeploymentRoute from "./src/routes/projectDeployment.route.js";
 import serviceRoute from "./src/routes/service.route.js";
 import addOnServiceRoute from "./src/routes/addOnService.route.js";
 import missedPunchOutRoute from "./src/routes/missedPunchOut.route.js";
+import compOffRoute from "./src/routes/compOff.route.js";
 
 // Directory name for serving index.html file
 const __dirname = path.resolve();
@@ -98,6 +99,8 @@ server.use("/api/v1/service", serviceRoute);
 server.use("/api/v1/addOnService", addOnServiceRoute);
 // Miss punch out route
 server.use("/api/v1/missedPunchOut", missedPunchOutRoute);
+// Comp off route
+server.use("/api/v1/compOff", compOffRoute);
 
 // Middleware for serving client index.html file
 server.use(express.static(path.join(__dirname, "../client/dist")), (req, res, next) => next());
