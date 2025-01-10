@@ -1,5 +1,7 @@
 import MissedPunchOut from "../models/missedPunchOut.model.js";
 import Attendance from "../models/attendance.model.js";
+import Team from "../models/team.model.js";
+import { sendEmail } from "../services/emailService.js";
 
 // Create a new missed punch-out entry
 export const createMissedPunchOut = async (req, res) => {
@@ -29,6 +31,16 @@ export const createMissedPunchOut = async (req, res) => {
     });
 
     await newMissedPunchOut.save();
+
+    const emp = await Team.findOne({ employee });
+
+    // Send email to when comp off is created
+    await sendEmail(
+      process.env.RECEIVER_EMAIL_ID,
+      `${emp.name} apply missed punch out for date ${attendanceDate}`,
+      `<p>Missed punch out request has been submitted by ${emp.name} for date ${attendanceDate}.</p>
+          <p>Pleave review the request.</p>`
+    );
 
     res.status(201).json({ success: true, message: "Missed punch out created successfully", data: newMissedPunchOut });
   } catch (error) {
@@ -71,7 +83,7 @@ export const updateMissedPunchOut = async (req, res) => {
     const missedPunchOut = await MissedPunchOut.findById(id);
 
     if (!missedPunchOut) {
-      return res.status(404).json({ success: false, message: "Request not found." });
+      return res.status(404).json({ success: false, message: "Missed punch out request not found." });
     };
 
     const attendance = await Attendance.findOne({
