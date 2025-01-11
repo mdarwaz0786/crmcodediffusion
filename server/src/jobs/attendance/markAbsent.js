@@ -31,17 +31,17 @@ cron.schedule("0 20 * * *", async () => {
         attendanceDate: today,
         status: "Absent",
         punchInTime: null,
-        punchIn: true,
+        punchIn: false,
         punchOutTime: null,
-        punchOut: true,
-        hoursWorked: null,
-        lateIn: null,
+        punchOut: false,
+        hoursWorked: "00:00",
+        lateIn: "00:00",
       });
     });
 
     // Wait for all attendance updates to be completed
     await Promise.all(updateAttendancePromises);
   } catch (error) {
-    console.log("Error while marking attendance as Absent:", error.message);
+    console.log("Error while marking attendance as absent:", error.message);
   };
 });

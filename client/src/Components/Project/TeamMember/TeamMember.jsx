@@ -24,7 +24,7 @@ const TeamMember = () => {
     nameFilter: [],
     sort: "Descending",
     page: 1,
-    limit: 15,
+    limit: 20,
   });
   const permissions = team?.role?.permissions?.team;
   const fieldPermissions = team?.role?.permissions?.team?.fields;

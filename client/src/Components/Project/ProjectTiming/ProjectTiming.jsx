@@ -22,7 +22,7 @@ const ProjectTiming = () => {
     nameFilter: [],
     sort: "Descending",
     page: 1,
-    limit: 15,
+    limit: 20,
   });
   const permissions = team?.role?.permissions?.projectTiming;
   const filedPermissions = team?.role?.permissions?.projectTiming?.fields;

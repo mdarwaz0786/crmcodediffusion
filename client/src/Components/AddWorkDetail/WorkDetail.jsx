@@ -28,7 +28,7 @@ const WorkDetail = () => {
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
     page: 1,
-    limit: 15,
+    limit: 20,
   });
 
   const fetchAllProject = async () => {

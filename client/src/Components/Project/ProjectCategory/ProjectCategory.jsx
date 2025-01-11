@@ -22,7 +22,7 @@ const ProjectCategory = () => {
     nameFilter: [],
     sort: "Descending",
     page: 1,
-    limit: 15,
+    limit: 20,
   });
   const permissions = team?.role?.permissions?.projectType;
   const filedPermissions = team?.role?.permissions?.projectType?.fields;

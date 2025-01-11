@@ -13,7 +13,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const CompOff = () => {
   const { validToken, team, isLoading } = useAuth();
-  const [leaveStatus, setLeaveStatus] = useState();
+  const [status, setStatus] = useState({});
   const [data, setData] = useState([]);
   const [employee, setEmployee] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
@@ -26,7 +26,7 @@ const CompOff = () => {
     month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
     sort: "Descending",
     page: 1,
-    limit: 15,
+    limit: 20,
   });
 
   const fetchAllEmployee = async () => {
@@ -76,7 +76,7 @@ const CompOff = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${base_url}/api/v1/compOff/all-compOff`, {
+      const response = await axios.get(`${base_url}/api/v1/CompOff/all-CompOff`, {
         headers: {
           Authorization: validToken,
         },
@@ -123,7 +123,7 @@ const CompOff = () => {
     };
   }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team]);
 
-  const exportLeaveRequestListAsExcel = () => {
+  const exportCompOffListAsExcel = () => {
     if (data?.length === 0) {
       alert("No data available to export");
       return;
@@ -132,12 +132,9 @@ const CompOff = () => {
     const exportData = data?.map((entry, index) => ({
       "#": index + 1 || "1",
       "Employee Name": entry?.employee?.name || "N/A",
-      "Start Date": formatDate(entry?.startDate) || "N/A",
-      "End Date": formatDate(entry?.endDate) || "N/A",
-      "Duration": `${entry?.leaveDuration} Days` || "N/A",
-      "Reason": entry?.reason || "N/A",
+      "Date": formatDate(entry?.attendanceDate) || "N/A",
       "Status": entry?.status || "N/A",
-      "Approved By": entry?.leaveApprovedBy || "N/A",
+      "Approved By": entry?.approvedBy || "N/A",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -150,15 +147,15 @@ const CompOff = () => {
     worksheet["!cols"] = columnWidths;
 
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "LeaveRequest");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "CompOff");
 
-    XLSX.writeFile(workbook, `${filters.month || ""}-${filters.year || ""}-${singleEmployee?.name || ""}-Leave-Request.xlsx`);
+    XLSX.writeFile(workbook, `${filters.month || ""}-${filters.year || ""}-${singleEmployee?.name || ""}-Comp-Off.xlsx`);
   };
 
-  const exportLeaveRequestListAsPdf = () => {
-    const element = document.querySelector("#exportLeaveRequestList");
+  const exportCompOffListAsPdf = () => {
+    const element = document.querySelector("#exportCompOffList");
     const options = {
-      filename: `${filters.month || ""}-${filters.year || ""}-${singleEmployee?.name || ""}-Leave-Request`,
+      filename: `${filters.month || ""}-${filters.year || ""}-${singleEmployee?.name || ""}-Comp-Off`,
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
@@ -175,19 +172,19 @@ const CompOff = () => {
     };
   };
 
-  const handleUpdateLeaveStatus = async (e, leaveId) => {
+  const handleUpdateStatus = async (e, id) => {
     e.preventDefault();
 
     try {
       setApproving(true);
 
       // Validation
-      if (!leaveStatus) {
-        return toast.error("Select leave status");
+      if (!status[id]) {
+        return toast.error("Select status");
       };
 
-      const response = await axios.put(`${base_url}/api/v1/compOff/update-compOff`,
-        { leaveStatus, leaveId, approverId: team?._id },
+      const response = await axios.put(`${base_url}/api/v1/CompOff/update-CompOff/${id}`,
+        { status: status[id], approvedBy: team?._id },
         {
           headers: {
             Authorization: validToken,
@@ -196,7 +193,7 @@ const CompOff = () => {
       );
 
       if (response?.data?.success) {
-        setLeaveStatus();
+        setStatus((prev) => ({ ...prev, [id]: "" }));
         fetchAllData();
         toast.success("Updated Successfully");
       };
@@ -220,14 +217,14 @@ const CompOff = () => {
     <>
       {/* Page Wrapper */}
       <div className="page-wrapper">
-        <div className="content" id="exportLeaveRequestList">
+        <div className="content" id="exportCompOffList">
           <div className="row">
             <div className="col-md-12">
               {/* Page Header */}
               <div className="page-header">
                 <div className="row align-items-center">
                   <div className="col-4">
-                    <h4 className="page-title">Comp Offs<span className="count-title">{total}</span></h4>
+                    <h4 className="page-title">Comp Off<span className="count-title">{total}</span></h4>
                   </div>
                   <div className="col-8 text-end">
                     <div className="head-icons">
@@ -334,13 +331,13 @@ const CompOff = () => {
                             <div className="dropdown-menu  dropdown-menu-end">
                               <ul>
                                 <li>
-                                  <Link to="#" onClick={() => setTimeout(() => { exportLeaveRequestListAsPdf() }, 0)}>
+                                  <Link to="#" onClick={() => setTimeout(() => { exportCompOffListAsPdf() }, 0)}>
                                     <i className="ti ti-file-type-pdf text-danger" />
                                     Export as PDF
                                   </Link>
                                 </li>
                                 <li>
-                                  <Link to="#" onClick={() => setTimeout(() => { exportLeaveRequestListAsExcel() }, 0)}>
+                                  <Link to="#" onClick={() => setTimeout(() => { exportCompOffListAsExcel() }, 0)}>
                                     <i className="ti ti-file-spreadsheet text-success" />
                                     Export as EXCEL
                                   </Link>
@@ -365,9 +362,7 @@ const CompOff = () => {
                             </th>
                             <th>#</th>
                             <th>Employee Name</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Reason</th>
+                            <th>Date</th>
                             <th>Status</th>
                             <th>Approved By</th>
                           </tr>
@@ -381,41 +376,33 @@ const CompOff = () => {
                                 </td>
                                 <td>{(filters.page - 1) * filters.limit + index + 1}</td>
                                 <td>{d?.employee?.name}</td>
-                                <td>{formatDate(d?.startDate)}</td>
-                                <td>{formatDate(d?.endDate)}</td>
-                                <td
-                                  style={{ cursor: "pointer" }}
-                                  title={d?.reason.length > 30 && d?.reason}
-                                >
-                                  {d?.reason.length > 30
-                                    ? `${d?.reason.substring(0, 30)}...`
-                                    : d?.reason || "N/A"}
-                                </td>
+                                <td>{formatDate(d?.attendanceDate)}</td>
                                 <td>
-                                  <form style={{ display: "flex", columnGap: "0.5rem" }} onSubmit={(e) => handleUpdateLeaveStatus(e, d?._id)}>
+                                  <form style={{ display: "flex", columnGap: "0.5rem" }} onSubmit={(e) => handleUpdateStatus(e, d?._id)}>
                                     <select
-                                      value={leaveStatus || d?.leaveStatus}
-                                      onChange={(e) => setLeaveStatus(e.target.value)}
+                                      value={status[d?._id] || d?.status}
+                                      onChange={(e) => setStatus({ ...status, [d?._id]: e.target.value })}
                                       className="form-select"
                                     >
+                                      <option value="">Select Status</option>
+                                      <option value="Pending">Pending</option>
                                       <option value="Approved">Approved</option>
                                       <option value="Rejected">Rejected</option>
-                                      <option value="Pending">Pending</option>
                                     </select>
                                     {
                                       approving ? (
-                                        <h6 style={{ textAlign: "center", color: "#ffb300" }}>
+                                        <div style={{ textAlign: "center", color: "#ffb300" }}>
                                           <div className="spinner-border" role="status">
                                             <span className="visually-hidden">Loading...</span>
                                           </div>
-                                        </h6>
+                                        </div>
                                       ) : (
                                         <button type="submit" className="btn btn-primary">Update</button>
                                       )
                                     }
                                   </form>
                                 </td>
-                                <td>{d?.leaveApprovedBy?.name || "N/A"}</td>
+                                <td>{d?.approvedBy?.name || "N/A"}</td>
                               </tr>
                             ))
                           }
@@ -475,7 +462,7 @@ const CompOff = () => {
                               ))
                             }
                             <li className="paginate_button page-item page-number-mobile active">
-                              {filters.page}
+                              {/* {filters.page} */}
                             </li>
                             <li className={`paginate_button page-item next ${filters.page === Math.ceil(total / filters.limit) ? "disabled" : ""}`} id="project-list_next">
                               <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page + 1 }))} className="page-link" aria-controls="project-list" role="link" data-dt-idx="next" tabIndex="0">
@@ -487,7 +474,7 @@ const CompOff = () => {
                       </div>
                     </div>
                   </div>
-                  {/* /Comp off List */}
+                  {/* /Comp Off List */}
                 </div>
               </div>
             </div>

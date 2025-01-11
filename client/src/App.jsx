@@ -67,6 +67,7 @@ import EditAddOnService from "./Components/AddOnService/EditAddOnService.jsx";
 import SalarySlip from "./SalarySlip.jsx";
 import CompOff from "./Components/CompOff/CompOff.jsx";
 import MissedPunchOut from "./Components/MissedPunchOut/MissedPunchOut.jsx";
+import PaySalary from "./Components/Salary/PaySalary.jsx";
 
 const App = () => {
   return (
@@ -138,6 +139,7 @@ const App = () => {
           <Route path="salary" element={<SalarySlip />} />
           <Route path="comp-off" element={<CompOff />} />
           <Route path="missed-punch-out" element={<MissedPunchOut />} />
+          <Route path="pay-salary" element={<PaySalary />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />

@@ -13,16 +13,17 @@ export const createCompOff = async (req, res) => {
     };
 
     if (!attendanceDate) {
-      return res.status(400).json({ success: false, message: "Attendance date is required." });
+      return res.status(400).json({ success: false, message: "Date is required." });
     };
 
     const existingCompOff = await CompOff.findOne({ employee, attendanceDate });
 
     if (existingCompOff) {
-      return res.status(400).json({ success: false, message: `Comp off already exists for this date ${attendanceDate}` });
+      return res.status(400).json({ success: false, message: `Comp off already applied for date ${attendanceDate}` });
     };
 
     const compOff = new CompOff({ employee, attendanceDate, approvedBy, status });
+
     await compOff.save();
 
     const emp = await Team.findById(employee);
@@ -34,7 +35,7 @@ export const createCompOff = async (req, res) => {
       `<p>Comp off request has been submitted by ${emp.name} for date ${attendanceDate}.</p>
       <p>Pleave review the request.</p>`
 
-    await sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+    sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
     res.status(201).json({ success: true, message: "Comp off created successfully.", data: compOff });
   } catch (error) {
@@ -45,7 +46,6 @@ export const createCompOff = async (req, res) => {
 // Read (Get all Comp offs)
 export const getAllCompOffs = async (req, res) => {
   try {
-    const { employeeId } = req.query;
     const query = {};
     let sort = {};
 
@@ -76,12 +76,8 @@ export const getAllCompOffs = async (req, res) => {
     };
 
     // Filter by employee ID if provided
-    if (employeeId) {
-      if (mongoose.Types.ObjectId.isValid(employeeId)) {
-        query.employee = employeeId;
-      } else {
-        return res.status(400).json({ success: false, message: 'Invalid employee ID' });
-      };
+    if (req.query.employeeId) {
+      query.employee = req.query.employeeId;;
     };
 
     // Handle pagination
@@ -91,9 +87,9 @@ export const getAllCompOffs = async (req, res) => {
 
     // Handle sorting
     if (req.query.sort === 'Ascending') {
-      sort = { attendanceDate: 1 };
+      sort = { createdAt: 1 };
     } else {
-      sort = { attendanceDate: -1 };
+      sort = { createdAt: -1 };
     };
 
     const compOffs = await CompOff.find(query)
@@ -101,6 +97,7 @@ export const getAllCompOffs = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .populate("employee")
+      .populate("approvedBy")
       .exec();
 
     if (!compOffs) {
@@ -119,7 +116,7 @@ export const getAllCompOffs = async (req, res) => {
 // Read (Get a single comp off by ID)
 export const getCompOffById = async (req, res) => {
   try {
-    const compOff = await CompOff.findById(req.params.id).populate("employee");
+    const compOff = await CompOff.findById(req.params.id).populate("employee").populate("approvedBy");
     if (!compOff) {
       return res.status(404).json({ success: false, message: "Comp off not found." });
     };
@@ -138,7 +135,7 @@ export const updateCompOff = async (req, res) => {
     const compOff = await CompOff.findById(id).populate("employee");
 
     if (!compOff) {
-      return res.status(404).json({ success: false, message: "Comp off request not found." });
+      return res.status(404).json({ success: false, message: "Comp off not found." });
     };
 
     const attendance = await Attendance.findOne({
@@ -163,9 +160,9 @@ export const updateCompOff = async (req, res) => {
       compOff.status = "Pending";
       compOff.approvedBy = approvedBy;
       await compOff.save();
-      await sendEmail(
+      sendEmail(
         compOff.employee.email,
-        "CompOff Request Update to Pending",
+        "Comp Off Request Update to Pending",
         `<p>Your comp off request dated ${compOff.attendanceDate} has been marked as Pending.</p>
         <p>Regards,<br/>HR Team</p>`
       );
@@ -176,22 +173,22 @@ export const updateCompOff = async (req, res) => {
       compOff.status = "Rejected";
       compOff.approvedBy = approvedBy;
       await compOff.save();
-      await sendEmail(
+      sendEmail(
         compOff.employee.email,
         "Your Comp Off Request Rejected",
         `<p>Your comp off request dated ${compOff.attendanceDate} has been rejected.</p>
          <p>Regards,<br/>HR Team</p>`
       );
-      return res.status(200).json({ success: true, message: "Comp off request marked as rejected." });
+      return res.status(200).json({ success: true, message: "Comp off rejected." });
     };
 
     if (status === "Approved") {
       // Check if attendance already marked as comp off
       if (attendance && attendance.status === "CompOff") {
-        return res.status(400).json({ success: false, message: "Attendance already marked as comp off." });
+        return res.status(400).json({ success: false, message: "Attendance already exist as comp off." });
       };
 
-      // Mark attendance as comp off or create a new record if not exists
+      // Mark existing attendance as comp off or create a new if not exists
       if (!attendance) {
         await Attendance.create({
           employee: compOff.employee,
@@ -199,15 +196,19 @@ export const updateCompOff = async (req, res) => {
           status: "CompOff",
           punchInTime: null,
           punchOutTime: null,
-          punchIn: true,
-          punchOut: true,
+          punchIn: false,
+          punchOut: false,
+          hoursWorked: "00:00",
+          lateIn: "00:00",
         });
       } else {
         attendance.status = "CompOff";
         attendance.punchInTime = null;
         attendance.punchOutTime = null;
-        attendance.punchIn = true;
-        attendance.punchOut = true;
+        attendance.punchIn = false;
+        attendance.punchOut = false;
+        attendance.hoursWorked = "00:00";
+        attendance.lateIn = "00:00";
         await attendance.save();
       };
 
@@ -215,13 +216,13 @@ export const updateCompOff = async (req, res) => {
       compOff.approvedBy = approvedBy;
       await compOff.save();
 
-      await sendEmail(
+      sendEmail(
         compOff.employee.email,
-        "Ypur Comp Off Request Approved",
+        "Your Comp Off Request Approved",
         `<p>Your comp off request dated ${compOff.attendanceDate} has been approved.</p>
          <p>Regards,<br/>HR Team</p>`
       );
-      return res.status(200).json({ success: true, message: "Comp off approved and attendance updated." });
+      return res.status(200).json({ success: true, message: "Comp off approved and attendance marked as comp off." });
     };
 
     res.status(400).json({ success: false, message: "Invalid status provided." });

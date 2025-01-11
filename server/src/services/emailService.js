@@ -22,10 +22,13 @@ export const sendEmail = async (to, subject, htmlContent) => {
     html: htmlContent,
   };
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log("email sent to", to)
-  } catch (error) {
-    console.log('Error while sending email:', error.message);
-  };
+  setImmediate(async () => {
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log("Email sent to:", to);
+    } catch (error) {
+      console.log('Error while sending email:', error.message);
+    };
+  });
 };
+

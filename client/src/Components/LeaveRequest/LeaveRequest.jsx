@@ -26,7 +26,7 @@ const LeaveRequest = () => {
     month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
     sort: "Descending",
     page: 1,
-    limit: 15,
+    limit: 20,
   });
 
   const fetchAllEmployee = async () => {

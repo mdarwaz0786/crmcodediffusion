@@ -3,6 +3,26 @@ import Attendance from "../models/attendance.model.js";
 import Team from "../models/team.model.js";
 import { sendEmail } from "../services/emailService.js";
 
+// Helper: Calculate time difference in HH:mm format
+const calculateTimeDifference = (startTime, endTime) => {
+  // Check if either startTime or endTime is empty
+  if (!startTime || !endTime) {
+    return "00:00";
+  };
+
+  const [startHours, startMinutes] = startTime.split(":").map(Number);
+  const [endHours, endMinutes] = endTime.split(":").map(Number);
+
+  const startTotalMinutes = startHours * 60 + startMinutes;
+  const endTotalMinutes = endHours * 60 + endMinutes;
+
+  const differenceMinutes = Math.max(endTotalMinutes - startTotalMinutes, 0);
+  const hours = Math.floor(differenceMinutes / 60);
+  const minutes = differenceMinutes % 60;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+};
+
 // Create a new missed punch-out entry
 export const createMissedPunchOut = async (req, res) => {
   try {
@@ -13,6 +33,10 @@ export const createMissedPunchOut = async (req, res) => {
     };
 
     const attendance = await Attendance.findOne({ employee, attendanceDate });
+
+    if (attendance && !attendance.punchIn) {
+      return res.status(400).json({ success: false, message: "Punch in missing for this date." });
+    };
 
     if (attendance && attendance.punchOut) {
       return res.status(400).json({ success: false, message: "Punch out already marked for this date." });
@@ -35,14 +59,14 @@ export const createMissedPunchOut = async (req, res) => {
 
     const emp = await Team.findById(employee);
 
-    // Send email after comp off is created
+    // Send email after missed punch out is created
     const subject = `${emp.name} apply missed punch out for date ${attendanceDate}`;
 
     const htmlContent =
       `<p>Missed punch out request has been submitted by ${emp.name} for date ${attendanceDate}.</p>
        <p>Pleave review the request.</p>`;
 
-    await sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+    sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
     res.status(201).json({ success: true, message: "Missed punch out created successfully", data: newMissedPunchOut });
   } catch (error) {
@@ -53,7 +77,6 @@ export const createMissedPunchOut = async (req, res) => {
 // Get all missed punch out entries
 export const getAllMissedPunchOuts = async (req, res) => {
   try {
-    const { employeeId } = req.query;
     const query = {};
     let sort = {};
 
@@ -84,12 +107,8 @@ export const getAllMissedPunchOuts = async (req, res) => {
     };
 
     // Filter by employee ID if provided
-    if (employeeId) {
-      if (mongoose.Types.ObjectId.isValid(employeeId)) {
-        query.employee = employeeId;
-      } else {
-        return res.status(400).json({ success: false, message: 'Invalid employee ID' });
-      };
+    if (req.query.employeeId) {
+      query.employee = req.query.employeeId;;
     };
 
     // Handle pagination
@@ -99,9 +118,9 @@ export const getAllMissedPunchOuts = async (req, res) => {
 
     // Handle sorting
     if (req.query.sort === 'Ascending') {
-      sort = { attendanceDate: 1 };
+      sort = { createdAt: 1 };
     } else {
-      sort = { attendanceDate: -1 };
+      sort = { createdAt: -1 };
     };
 
     const missedPunchOuts = await MissedPunchOut.find(query)
@@ -116,7 +135,6 @@ export const getAllMissedPunchOuts = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Missed puch out not found' });
     };
 
-    // Calculate total count
     const total = await MissedPunchOut.countDocuments(query);
 
     res.status(200).json({ success: true, data: missedPunchOuts, totalCount: total });
@@ -147,24 +165,26 @@ export const updateMissedPunchOut = async (req, res) => {
     const { id } = req.params;
     const { status, approvedBy } = req.body;
 
-    const missedPunchOut = await MissedPunchOut.findById(id);
+    const missedPunchOut = await MissedPunchOut.findById(id).populate("employee").exec();
 
     if (!missedPunchOut) {
-      return res.status(404).json({ success: false, message: "Missed punch out request not found." });
+      return res.status(404).json({ success: false, message: "Missed punch out not found." });
     };
 
     const attendance = await Attendance.findOne({
       employee: missedPunchOut.employee,
       attendanceDate: missedPunchOut.attendanceDate,
+      punchIn: true,
     });
 
     if (!attendance) {
-      return res.status(404).json({ success: false, message: "Attendance record not found." });
+      return res.status(404).json({ success: false, message: `Punch in missing` });
     };
 
     if (missedPunchOut.status === "Approved" && (status === "Pending" || status === "Rejected")) {
       attendance.punchOutTime = null;
       attendance.punchOut = false;
+      attendance.hoursWorked = "00:00";
       await attendance.save();
     };
 
@@ -172,14 +192,26 @@ export const updateMissedPunchOut = async (req, res) => {
       missedPunchOut.status = "Pending";
       missedPunchOut.approvedBy = approvedBy;
       await missedPunchOut.save();
-      return res.status(200).json({ success: true, message: "Request marked as pending." });
+      sendEmail(
+        missedPunchOut.employee.email,
+        "Your Punch Out Request Marked as Pending",
+        `<p>Your punch out request dated ${missedPunchOut.attendanceDate} has been marked as Pending.</p>
+        <p>Regards,<br/>Hr Team</p>`
+      );
+      return res.status(200).json({ success: true, message: "Punch out request marked as pending." });
     };
 
     if (status === "Rejected") {
       missedPunchOut.status = "Rejected";
       missedPunchOut.approvedBy = approvedBy;
       await missedPunchOut.save();
-      return res.status(200).json({ success: true, message: "Request marked as rejected." });
+      sendEmail(
+        missedPunchOut.employee.email,
+        "Your Punch Out Request Rejected",
+        `<p>Your punch out request dated ${missedPunchOut.attendanceDate} has been rejected.</p>
+        <p>Regards,<br/>Hr Team</p>`
+      );
+      return res.status(200).json({ success: true, message: "Punch out request rejected." });
     };
 
     if (status === "Approved") {
@@ -189,17 +221,25 @@ export const updateMissedPunchOut = async (req, res) => {
 
       attendance.punchOutTime = missedPunchOut.punchOutTime;
       attendance.punchOut = true;
+      attendance.hoursWorked = calculateTimeDifference(attendance.punchInTime, missedPunchOut.punchOutTime);
       await attendance.save();
 
       missedPunchOut.status = "Approved";
       missedPunchOut.approvedBy = approvedBy;
       await missedPunchOut.save();
+
+      sendEmail(
+        missedPunchOut.employee.email,
+        "Your Punch Out Request Approved",
+        `<p>Your punch out request dated ${missedPunchOut.attendanceDate} has been approved and punch out time ${missedPunchOut.punchOutTime} is marked.</p>
+        <p>Regards,<br/>Hr Team</p>`
+      );
       return res.status(200).json({ success: true, message: "Punch out approved and attendance updated." });
     };
 
     res.status(400).json({ success: false, message: "Invalid status provided." });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error while updating request.", error: error.message });
+    res.status(500).json({ success: false, message: "Error while updating missed punch out.", error: error.message });
   };
 };
 

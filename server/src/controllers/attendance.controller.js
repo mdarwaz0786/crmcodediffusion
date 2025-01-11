@@ -112,7 +112,7 @@ export const fetchAllAttendance = async (req, res) => {
 
         // Fetch attendance with the constructed query
         const attendance = await Attendance.find(query)
-            .sort({ attendanceDate: -1 })
+            .sort({ attendanceDate: 1 })
             .populate('employee', 'name')
             .exec();
 
@@ -290,7 +290,7 @@ export const updateAttendance = async (req, res) => {
         });
 
         if (!attendance) {
-            return res.status(400).json({ success: false, message: `Punch in not found for today ${attendanceDate}` });
+            return res.status(400).json({ success: false, message: `Punch in not found for date ${attendanceDate}` });
         };
 
         // Update punch out details

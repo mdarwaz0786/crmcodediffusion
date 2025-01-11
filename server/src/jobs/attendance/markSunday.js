@@ -21,7 +21,7 @@ cron.schedule("0 20 * * 0", async () => {
         attendanceDate: today,
       });
 
-      // If attendance already exists for the employee and date, skip creation
+      // If attendance already exists for the employee, skip creation
       if (existingAttendance) {
         return;
       };
@@ -32,11 +32,11 @@ cron.schedule("0 20 * * 0", async () => {
         attendanceDate: today,
         status: "Sunday",
         punchInTime: null,
-        punchIn: true,
+        punchIn: false,
         punchOutTime: null,
-        punchOut: true,
-        hoursWorked: null,
-        lateIn: null,
+        punchOut: false,
+        hoursWorked: "00:00",
+        lateIn: "00:00",
       });
     });
 

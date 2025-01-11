@@ -22,7 +22,7 @@ const ProjectStatus = () => {
     statusFilter: [],
     sort: "Descending",
     page: 1,
-    limit: 15,
+    limit: 20,
   });
   const permissions = team?.role?.permissions?.projectStatus;
   const FiledPermissions = team?.role?.permissions?.projectStatus?.fields;

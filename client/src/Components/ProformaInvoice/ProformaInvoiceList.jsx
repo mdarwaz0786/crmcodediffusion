@@ -25,7 +25,7 @@ const ProformaInvoiceList = () => {
     nameFilter: [],
     sort: "Descending",
     page: 1,
-    limit: 15,
+    limit: 20,
     year: "",
     month: "",
   });
