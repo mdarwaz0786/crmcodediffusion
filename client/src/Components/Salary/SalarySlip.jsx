@@ -1,4 +1,4 @@
-import logo from "./Assets/logo.png";
+import logo from "../../Assets/logo.png";
 
 const SalarySlip = () => {
   const salaryData = {
@@ -121,6 +121,7 @@ const SalarySlip = () => {
             <div className="row py-2" style={{ color: "black" }}>
               <div className="col-2">Present</div>
               <div className="col-2">Absent</div>
+              <div className="col-2">Comp Off</div>
               <div className="col-2">Weekly Off</div>
               <div className="col-2">Holiday</div>
               <div className="col-2">Leave</div>
@@ -130,10 +131,11 @@ const SalarySlip = () => {
               <div className="col-2">2</div>
               <div className="col-2">4</div>
               <div className="col-2">1</div>
+              <div className="col-2">1</div>
               <div className="col-2">0</div>
             </div>
           </div>
-          <p className="text-center mt-5">Downloaded at 01 June 2024 01:25 PM. This is a digitally generated document and does not require a signature or seal.</p>
+          <p className="text-center mt-5">This is a digitally generated document and does not require a signature or seal.</p>
         </div>
       </div>
     </div>

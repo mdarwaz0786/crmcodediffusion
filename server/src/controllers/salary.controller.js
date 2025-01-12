@@ -7,6 +7,17 @@ export const createSalary = async (req, res) => {
     try {
         const { employee, month, year, salaryPaid, amountPaid } = req.body;
 
+        // Check if a salary record already exists for the employee, month, and year
+        const existingSalary = await Salary.findOne({ employee, month, year });
+
+        if (existingSalary) {
+            return res.status(400).json({
+                success: false,
+                message: "Salary record for this employee, month, and year already exists.",
+            });
+        };
+
+        // Create a new salary record
         const newSalary = new Salary({
             employee,
             month,
@@ -25,11 +36,12 @@ export const createSalary = async (req, res) => {
 // Get all salary records (with sorting and pagination)
 export const getAllSalaries = async (req, res) => {
     try {
-        const query = {};
+        let query = {};
+        let sort = {};
 
         // Filtering logic
-        if (req.query.employee) {
-            query.employee = req.query.employee;
+        if (req.query.employeeId) {
+            query.employee = req.query.employeeId;
         };
 
         if (req.query.month) {
@@ -41,9 +53,11 @@ export const getAllSalaries = async (req, res) => {
         };
 
         // Sorting logic
-        const sortField = req.query.sortField || 'createdAt';
-        const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
-        const sort = { [sortField]: sortOrder };
+        if (req.query.sort === 'Ascending') {
+            sort = { createdAt: 1 };
+        } else {
+            sort = { createdAt: -1 };
+        };
 
         // Pagination logic
         const page = parseInt(req.query.page);
@@ -67,7 +81,7 @@ export const getAllSalaries = async (req, res) => {
             totalCount: total,
             currentPage: page,
             pageLimit: limit,
-            totalPages: Math.ceil(totalCount / limit)
+            totalPages: Math.ceil(total / limit)
         });
 
     } catch (error) {
@@ -133,8 +147,12 @@ export const fetchMonthlySalary = async (req, res) => {
     try {
         const { employeeId, month } = req.query;
 
-        if (!employeeId || !month) {
-            return res.status(400).json({ message: "Employee ID and month (YYYY-MM) are required." });
+        if (!employeeId) {
+            return res.status(400).json({ message: "Employee Id is required." });
+        };
+
+        if (!month) {
+            return res.status(400).json({ message: "Month (yyyy-mm) is required." });
         };
 
         const employee = await Team.findById(employeeId);
@@ -170,22 +188,22 @@ export const fetchMonthlySalary = async (req, res) => {
         });
 
         let totalMinutesWorked = 0;
-        let absentDays = 0;
+        let onLeave = 0;
 
         attendanceRecords.forEach((record) => {
             if (record.status === "Present") {
                 totalMinutesWorked += timeToMinutes(record.hoursWorked);
-            } else if (record.status === "Absent") {
-                absentDays += 1;
+            } else if (record.status === "On Leave") {
+                onLeave += 1;
             };
         });
 
         // Deduction calculations
-        const effectiveAbsentDays = Math.min(2, Math.max(0, absentDays)); // Allow up to 2 absent days without salary deduction
+        const effectiveLeaveDays = Math.min(2, Math.max(0, onLeave)); // Allow up to 2 leave days without salary deduction
         const hoursShortfall = totalCompanyMinutes - totalMinutesWorked;
         const additionalDeductionDays = hoursShortfall > 0 ? (hoursShortfall / dailyThreshold) : 0;
 
-        const totalDeductionDays = additionalDeductionDays - effectiveAbsentDays;
+        const totalDeductionDays = additionalDeductionDays - effectiveLeaveDays;
 
         // Calculate salary
         const dailySalary = monthlySalary / companyWorkingDays;

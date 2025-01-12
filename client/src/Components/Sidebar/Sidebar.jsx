@@ -141,6 +141,11 @@ const Sidebar = () => {
                     )
                   }
                   {
+                    (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr") && (
+                      <li><Link to="/salary" className={currentPath === "/salary" ? "active" : ""} id={isMobile && active === "salary" ? "mobile_btn" : ""} onClick={() => handleActive("salary")}><i style={{ color: currentPath === "/salary" ? "" : "#FFA201" }} className="ti ti-wallet"></i><span>Salary</span></Link></li>
+                    )
+                  }
+                  {
                     (team?.role?.name.toLowerCase() === "admin") && (
                       <li><Link to="/holiday" className={currentPath === "/holiday" ? "active" : ""} id={isMobile && active === "holiday" ? "mobile_btn" : ""} onClick={() => handleActive("holiday")}><i style={{ color: currentPath === "/holiday" ? "" : "#FFA201" }} className="ti ti-sun"></i><span>Holiday</span></Link></li>
                     )
@@ -157,12 +162,12 @@ const Sidebar = () => {
                   }
                   {
                     (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr") && (
-                      <li><Link to="/comp-off" className={currentPath === "/comp-off" ? "active" : ""} id={isMobile && active === "CompOff" ? "mobile_btn" : ""} onClick={() => handleActive("CompOff")}><i style={{ color: currentPath === "/comp-off" ? "" : "#FFA201" }} className="ti ti-user-plus"></i><span>Comp Off</span></Link></li>
+                      <li><Link to="/missed-punch-out" className={currentPath === "/missed-punch-out" ? "active" : ""} id={isMobile && active === "missedPunchOut" ? "mobile_btn" : ""} onClick={() => handleActive("missedPunchOut")}><i style={{ color: currentPath === "/missed-punch-out" ? "" : "#FFA201" }} className="ti ti-clock-exclamation"></i><span>Missed Punch Out</span></Link></li>
                     )
                   }
                   {
                     (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr") && (
-                      <li><Link to="/missed-punch-out" className={currentPath === "/missed-punch-out" ? "active" : ""} id={isMobile && active === "missedPunchOut" ? "mobile_btn" : ""} onClick={() => handleActive("missedPunchOut")}><i style={{ color: currentPath === "/missed-punch-out" ? "" : "#FFA201" }} className="ti ti-clock-exclamation"></i><span>Missed Punch Out</span></Link></li>
+                      <li><Link to="/comp-off" className={currentPath === "/comp-off" ? "active" : ""} id={isMobile && active === "CompOff" ? "mobile_btn" : ""} onClick={() => handleActive("CompOff")}><i style={{ color: currentPath === "/comp-off" ? "" : "#FFA201" }} className="ti ti-user-plus"></i><span>Comp Off</span></Link></li>
                     )
                   }
                 </ul>
