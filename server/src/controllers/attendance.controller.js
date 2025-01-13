@@ -183,6 +183,7 @@ export const fetchMonthlyStatistic = async (req, res) => {
         let totalSundays = 0;
         let totalMinutesWorked = 0;
         let totalLateIn = 0;
+        let totalCompOff = 0;
 
         // Variables to calculate punch-in and punch-out averages
         let totalPunchInMinutes = 0;
@@ -216,7 +217,9 @@ export const fetchMonthlyStatistic = async (req, res) => {
                 totalHolidays++;
             } else if (record.status === "Sunday") {
                 totalSundays++;
-            };
+            } else if (record.status === "Comp Off") {
+                totalCompOff++;
+            }
         });
 
         // Calculate average punch-in and punch-out times
@@ -259,6 +262,7 @@ export const fetchMonthlyStatistic = async (req, res) => {
             employeePresentDays: totalPresent,
             employeeAbsentDays: totalAbsent,
             employeeLeaveDays: totalLeave,
+            employeeCompOffDays: totalCompOff,
             employeeWorkingHours: totalHoursWorked,
             employeeRequiredWorkingHours: requiredWorkingHours,
             employeeLateInDays: totalLateIn,
