@@ -64,7 +64,7 @@ const ProjectPermissionSchema = new mongoose.Schema(
   },
 );
 
-// Invoice permission Schema
+// Tax Invoice permission Schema
 const InvoicePermissionSchema = new mongoose.Schema(
   {
     access: {
@@ -173,6 +173,13 @@ const AttendancePermissionSchema = new mongoose.Schema(
       employee: { type: FieldPermissionSchema, default: () => ({}) },
       holiday: { type: FieldPermissionSchema, default: () => ({}) },
       settings: { type: FieldPermissionSchema, default: () => ({}) },
+      writeWorkSummary: { type: FieldPermissionSchema, default: () => ({}) },
+      applyLeave: { type: FieldPermissionSchema, default: () => ({}) },
+      applyMissedPunchOut: { type: FieldPermissionSchema, default: () => ({}) },
+      applyCompOff: { type: FieldPermissionSchema, default: () => ({}) },
+      aboutUs: { type: FieldPermissionSchema, default: () => ({}) },
+      contactUs: { type: FieldPermissionSchema, default: () => ({}) },
+      helpAndSupport: { type: FieldPermissionSchema, default: () => ({}) },
     },
   },
 );
@@ -499,10 +506,19 @@ const TeamPermissionSchema = new mongoose.Schema(
       joining: { type: FieldPermissionSchema, default: () => ({}) },
       dob: { type: FieldPermissionSchema, default: () => ({}) },
       monthlySalary: { type: FieldPermissionSchema, default: () => ({}) },
+      UAN: { type: FieldPermissionSchema, default: () => ({}) },
+      PAN: { type: FieldPermissionSchema, default: () => ({}) },
+      bankAccount: { type: FieldPermissionSchema, default: () => ({}) },
       workingHoursPerDay: { type: FieldPermissionSchema, default: () => ({}) },
       designation: { type: FieldPermissionSchema, default: () => ({}) },
-      reportingTo: { type: FieldPermissionSchema, default: () => ({}) },
+      office: { type: FieldPermissionSchema, default: () => ({}) },
+      department: { type: FieldPermissionSchema, default: () => ({}) },
+      leaveBalance: { type: FieldPermissionSchema, default: () => ({}) },
+      leaves: { type: FieldPermissionSchema, default: () => ({}) },
+      compOff: { type: FieldPermissionSchema, default: () => ({}) },
       role: { type: FieldPermissionSchema, default: () => ({}) },
+      reportingTo: { type: FieldPermissionSchema, default: () => ({}) },
+      isActive: { type: FieldPermissionSchema, default: () => ({}) },
     },
   },
 );
@@ -533,6 +549,231 @@ const TechnologyPermissionSchema = new mongoose.Schema(
     fields: {
       name: { type: FieldPermissionSchema, default: () => ({}) },
       description: { type: FieldPermissionSchema, default: () => ({}) },
+    },
+  },
+);
+
+// Add on service permission Schema
+const AddOnServicePermissionSchema = new mongoose.Schema(
+  {
+    access: {
+      type: Boolean,
+      default: false,
+    },
+    export: {
+      type: Boolean,
+      default: false,
+    },
+    create: {
+      type: Boolean,
+      default: false,
+    },
+    update: {
+      type: Boolean,
+      default: false,
+    },
+    delete: {
+      type: Boolean,
+      default: false,
+    },
+    fields: {
+      clientName: { type: FieldPermissionSchema, default: () => ({}) },
+      projectName: { type: FieldPermissionSchema, default: () => ({}) },
+      serviceName: { type: FieldPermissionSchema, default: () => ({}) },
+      totalProjectCost: { type: FieldPermissionSchema, default: () => ({}) },
+    },
+  },
+);
+
+// Service permission Schema
+const ServicePermissionSchema = new mongoose.Schema(
+  {
+    access: {
+      type: Boolean,
+      default: false,
+    },
+    export: {
+      type: Boolean,
+      default: false,
+    },
+    create: {
+      type: Boolean,
+      default: false,
+    },
+    update: {
+      type: Boolean,
+      default: false,
+    },
+    delete: {
+      type: Boolean,
+      default: false,
+    },
+    fields: {
+      name: { type: FieldPermissionSchema, default: () => ({}) },
+      permissions: { type: FieldPermissionSchema, default: () => ({}) },
+    },
+  },
+);
+
+// Salary permission Schema
+const SalaryPermissionSchema = new mongoose.Schema(
+  {
+    access: {
+      type: Boolean,
+      default: false,
+    },
+    export: {
+      type: Boolean,
+      default: false,
+    },
+    create: {
+      type: Boolean,
+      default: false,
+    },
+    update: {
+      type: Boolean,
+      default: false,
+    },
+    delete: {
+      type: Boolean,
+      default: false,
+    },
+    fields: {
+      employee: { type: FieldPermissionSchema, default: () => ({}) },
+      month: { type: FieldPermissionSchema, default: () => ({}) },
+      year: { type: FieldPermissionSchema, default: () => ({}) },
+      salaryPaid: { type: FieldPermissionSchema, default: () => ({}) },
+      amountPaid: { type: FieldPermissionSchema, default: () => ({}) },
+    },
+  },
+);
+
+// Comp Off permission Schema
+const compOffPermissionSchema = new mongoose.Schema(
+  {
+    access: {
+      type: Boolean,
+      default: false,
+    },
+    export: {
+      type: Boolean,
+      default: false,
+    },
+    create: {
+      type: Boolean,
+      default: false,
+    },
+    update: {
+      type: Boolean,
+      default: false,
+    },
+    delete: {
+      type: Boolean,
+      default: false,
+    },
+    fields: {
+      employee: { type: FieldPermissionSchema, default: () => ({}) },
+      attendanceDate: { type: FieldPermissionSchema, default: () => ({}) },
+      status: { type: FieldPermissionSchema, default: () => ({}) },
+      approvedBy: { type: FieldPermissionSchema, default: () => ({}) },
+    },
+  },
+);
+
+// Missed punch out permission Schema
+const missedPunchOutPermissionSchema = new mongoose.Schema(
+  {
+    access: {
+      type: Boolean,
+      default: false,
+    },
+    export: {
+      type: Boolean,
+      default: false,
+    },
+    create: {
+      type: Boolean,
+      default: false,
+    },
+    update: {
+      type: Boolean,
+      default: false,
+    },
+    delete: {
+      type: Boolean,
+      default: false,
+    },
+    fields: {
+      employee: { type: FieldPermissionSchema, default: () => ({}) },
+      attendanceDate: { type: FieldPermissionSchema, default: () => ({}) },
+      punchOutTime: { type: FieldPermissionSchema, default: () => ({}) },
+      status: { type: FieldPermissionSchema, default: () => ({}) },
+      approvedBy: { type: FieldPermissionSchema, default: () => ({}) },
+    },
+  },
+);
+
+// Holiday permission Schema
+const HolidayPermissionSchema = new mongoose.Schema(
+  {
+    access: {
+      type: Boolean,
+      default: false,
+    },
+    export: {
+      type: Boolean,
+      default: false,
+    },
+    create: {
+      type: Boolean,
+      default: false,
+    },
+    update: {
+      type: Boolean,
+      default: false,
+    },
+    delete: {
+      type: Boolean,
+      default: false,
+    },
+    fields: {
+      reason: { type: FieldPermissionSchema, default: () => ({}) },
+      date: { type: FieldPermissionSchema, default: () => ({}) },
+    },
+  },
+);
+
+// Leave approval permission Schema
+const LaeveApprovalPermissionSchema = new mongoose.Schema(
+  {
+    access: {
+      type: Boolean,
+      default: false,
+    },
+    export: {
+      type: Boolean,
+      default: false,
+    },
+    create: {
+      type: Boolean,
+      default: false,
+    },
+    update: {
+      type: Boolean,
+      default: false,
+    },
+    delete: {
+      type: Boolean,
+      default: false,
+    },
+    fields: {
+      employee: { type: FieldPermissionSchema, default: () => ({}) },
+      startDate: { type: FieldPermissionSchema, default: () => ({}) },
+      endDate: { type: FieldPermissionSchema, default: () => ({}) },
+      leaveApprovedBy: { type: FieldPermissionSchema, default: () => ({}) },
+      leaveStatus: { type: FieldPermissionSchema, default: () => ({}) },
+      leaveDuration: { type: FieldPermissionSchema, default: () => ({}) },
+      reason: { type: FieldPermissionSchema, default: () => ({}) },
     },
   },
 );
@@ -587,6 +828,12 @@ const RoleSchema = new mongoose.Schema(
       role: { type: RolePermissionSchema, default: () => ({}) },
       designation: { type: DesignationPermissionSchema, default: () => ({}) },
       technology: { type: TechnologyPermissionSchema, default: () => ({}) },
+      holiday: { type: HolidayPermissionSchema, default: () => ({}) },
+      addOnService: { type: AddOnServicePermissionSchema, default: () => ({}) },
+      service: { type: ServicePermissionSchema, default: () => ({}) },
+      salary: { type: SalaryPermissionSchema, default: () => ({}) },
+      compOff: { type: compOffPermissionSchema, default: () => ({}) },
+      missedPunchOut: { type: missedPunchOutPermissionSchema, default: () => ({}) },
       projectType: { type: ProjectTypePermissionSchema, default: () => ({}) },
       projectStatus: { type: ProjectStatusPermissionSchema, default: () => ({}) },
       projectCategory: { type: ProjectCategoryPermissionSchema, default: () => ({}) },
@@ -600,9 +847,10 @@ const RoleSchema = new mongoose.Schema(
 );
 
 RoleSchema.pre("save", function (next) {
-  // Helper function to capitalize first letter of each word
-  const capitalizeWords = (str) => {
-    return str.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
+  const capitalizeWords = (string) => {
+    return string
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
   };
 
   if (this.name) {

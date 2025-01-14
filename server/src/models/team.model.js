@@ -37,7 +37,7 @@ const teamSchema = new mongoose.Schema(
     PAN: {
       type: String,
     },
-    BankAccount: {
+    bankAccount: {
       type: String,
     },
     workingHoursPerDay: {
@@ -86,8 +86,10 @@ const teamSchema = new mongoose.Schema(
 
 teamSchema.pre("save", async function (next) {
   try {
-    const capitalizeWords = (str) => {
-      return str.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
+    const capitalizeWords = (string) => {
+      return string
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
     };
 
     if (this.name) {
