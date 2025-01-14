@@ -120,6 +120,29 @@ const Sidebar = () => {
 
               <li>
                 {
+                  (permissions?.customer?.access ||
+                    team?.role?.name.toLowerCase() === "admin" ||
+                    team?.role?.name.toLowerCase() === "hr"
+                  ) && (
+                    <h6 className="submenu-hdr">Client</h6>
+                  )
+                }
+                <ul>
+                  {
+                    (permissions?.customer?.access) && (
+                      <li><Link to="/client" className={currentPath === "/client" ? "active" : ""} id={isMobile && active === "client" ? "mobile_btn" : ""} onClick={() => handleActive("client")}><i style={{ color: currentPath === "/client" ? "" : "#FFA201" }} className="ti ti-user-circle"></i><span>Client</span></Link></li>
+                    )
+                  }
+                  {
+                    (team?.role?.name.toLowerCase() === "admin") && (
+                      <li><Link to="/add-on-service" className={currentPath === "/add-on-service" ? "active" : ""} id={isMobile && active === "addOnService" ? "mobile_btn" : ""} onClick={() => handleActive("addOnService")}><i style={{ color: currentPath === "/add-on-service" ? "" : "#FFA201" }} className="ti ti-layers-union"></i><span>Add On Service</span></Link></li>
+                    )
+                  }
+                </ul>
+              </li>
+
+              <li>
+                {
                   (permissions?.team?.access ||
                     permissions?.attendance?.access ||
                     permissions?.project?.fields?.workDetail?.show ||
@@ -189,11 +212,6 @@ const Sidebar = () => {
                 }
                 <ul>
                   {
-                    (permissions?.customer?.access) && (
-                      <li><Link to="/client" className={currentPath === "/client" ? "active" : ""} id={isMobile && active === "client" ? "mobile_btn" : ""} onClick={() => handleActive("client")}><i style={{ color: currentPath === "/client" ? "" : "#FFA201" }} className="ti ti-user-circle"></i><span>Client</span></Link></li>
-                    )
-                  }
-                  {
                     (permissions?.role?.access) && (
                       <li><Link to="/role" className={currentPath === "/role" ? "active" : ""} id={isMobile && active === "role" ? "mobile_btn" : ""} onClick={() => handleActive("role")}><i style={{ color: currentPath === "/role" ? "" : "#FFA201" }} className="ti ti-shield-check"></i><span>Role & Permission</span></Link></li>
                     )
@@ -211,11 +229,6 @@ const Sidebar = () => {
                   {
                     (team?.role?.name.toLowerCase() === "admin") && (
                       <li><Link to="/service" className={currentPath === "/service" ? "active" : ""} id={isMobile && active === "service" ? "mobile_btn" : ""} onClick={() => handleActive("service")}><i style={{ color: currentPath === "/service" ? "" : "#FFA201" }} className="ti ti-briefcase"></i><span>Service</span></Link></li>
-                    )
-                  }
-                  {
-                    (team?.role?.name.toLowerCase() === "admin") && (
-                      <li><Link to="/add-on-service" className={currentPath === "/add-on-service" ? "active" : ""} id={isMobile && active === "addOnService" ? "mobile_btn" : ""} onClick={() => handleActive("addOnService")}><i style={{ color: currentPath === "/add-on-service" ? "" : "#FFA201" }} className="ti ti-layers-union"></i><span>Add On Service</span></Link></li>
                     )
                   }
                   {
