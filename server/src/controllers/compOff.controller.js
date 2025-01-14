@@ -193,7 +193,7 @@ export const updateCompOff = async (req, res) => {
         await Attendance.create({
           employee: compOff.employee,
           attendanceDate: compOff.attendanceDate,
-          status: "CompOff",
+          status: "Comp Off",
           punchInTime: null,
           punchOutTime: null,
           punchIn: false,
@@ -202,7 +202,7 @@ export const updateCompOff = async (req, res) => {
           lateIn: "00:00",
         });
       } else {
-        attendance.status = "CompOff";
+        attendance.status = "Comp Off";
         attendance.punchInTime = null;
         attendance.punchOutTime = null;
         attendance.punchIn = false;

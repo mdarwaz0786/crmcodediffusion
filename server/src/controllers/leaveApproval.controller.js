@@ -82,7 +82,7 @@ export const createLeaveApproval = async (req, res) => {
       <p>Please review the request.</p>
     `;
 
-    await sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+    sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
     res.status(201).json({ success: true, message: "Leave approval request created successfully", data: newLeaveApproval });
   } catch (error) {
@@ -278,7 +278,7 @@ export const updateLeaveApproval = async (req, res) => {
       await Promise.all(updateAttendancePromises);
 
       // Send leave status email to employee
-      await sendEmail(employeeEmail, subject, htmlContent);
+      sendEmail(employeeEmail, subject, htmlContent);
 
       return res.status(200).json({ success: true, message: "Leave approved, email sent and marked attendance as On Leave" });
     } else {
@@ -300,7 +300,7 @@ export const updateLeaveApproval = async (req, res) => {
       await leaveRequest.save();
 
       // Send leave status email to employee
-      await sendEmail(employeeEmail, subject, htmlContent);
+      sendEmail(employeeEmail, subject, htmlContent);
 
       return res.status(200).json({ success: true, message: "Leave status updated, email sent to employee and attendance records cleared if applicable." });
     };
