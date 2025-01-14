@@ -70,6 +70,9 @@ import Salary from "./Components/Salary/Salary.jsx";
 import SalarySlip from "./Components/Salary/SalarySlip.jsx";
 import AddSalary from "./Components/Salary/AddSalary.jsx";
 import EditSalary from "./Components/Salary/EditSalary.jsx";
+import Holiday from "./Components/Holiday/Holiday.jsx";
+import AddHoliday from "./Components/Holiday/AddHoliday.jsx";
+import EditHoliday from "./Components/Holiday/EditHoliday.jsx";
 
 const App = () => {
   return (
@@ -144,6 +147,9 @@ const App = () => {
           <Route path="add-salary" element={<AddSalary />} />
           <Route path="edit-salary/:id" element={<EditSalary />} />
           <Route path="salary-slip/:id" element={<SalarySlip />} />
+          <Route path="holiday" element={<Holiday />} />
+          <Route path="add-holiday" element={<AddHoliday />} />
+          <Route path="edit-holiday/:id" element={<EditHoliday />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />

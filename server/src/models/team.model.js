@@ -48,13 +48,17 @@ const teamSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Designation",
     },
+    office: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "OfficeLocation",
+    },
     department: {
       type: String,
       default: "IT",
     },
     leaveBalance: {
       type: String,
-      default: "2",
+      default: "0",
     },
     leaves: [{
       type: String,
@@ -70,6 +74,10 @@ const teamSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Team",
     }],
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,

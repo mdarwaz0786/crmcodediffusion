@@ -10,7 +10,6 @@ const holidaySchema = new mongoose.Schema(
     type: {
       type: String,
       default: "Holiday",
-      required: true,
     },
     date: {
       type: String,

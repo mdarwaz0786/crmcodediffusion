@@ -58,6 +58,10 @@ export const createLeaveApproval = async (req, res) => {
 
     const leaveDuration = getDateRange(startDate, endDate);
 
+    if (parseFloat(existingEmployee.leaveBalance) < 0) {
+      return res.status(400).json({ success: false, message: "Insufficient leave balance" });
+    };
+
     const newLeaveApproval = new LeaveApproval({
       employee,
       startDate,
@@ -133,8 +137,8 @@ export const fetchAllLeaveApproval = async (req, res) => {
     };
 
     // Handle pagination
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
     const skip = (page - 1) * limit;
 
     // Handle sorting
@@ -203,7 +207,7 @@ export const updateLeaveApproval = async (req, res) => {
 
     // Fetch the leave request
     const leaveRequest = await LeaveApproval.findById(leaveId)
-      .populate("employee", "email name")
+      .populate("employee", "email name leaveBalance")
       .populate("leaveApprovedBy", "name")
       .exec();
 
@@ -213,6 +217,9 @@ export const updateLeaveApproval = async (req, res) => {
 
     const { employee, startDate, endDate } = leaveRequest;
     const employeeEmail = leaveRequest.employee.email;
+    const employeeId = leaveRequest.employee._id;
+
+    const emp = await Team.findById(employeeId);
 
     // If it is a single day leave, set the date range to just the start date otherwise not
     const datesToUpdate = startDate.toString() === endDate.toString()
@@ -227,12 +234,10 @@ export const updateLeaveApproval = async (req, res) => {
 
     // If leave status is "Approved", handle the approval and attendance marking
     if (leaveStatus === "Approved") {
-      // Check if the leave is already approved or rejected
       if (leaveRequest.leaveStatus === "Approved") {
         return res.status(400).json({ success: false, message: "Leave request is already processed." });
       };
 
-      // Update the leave status to "Approved" and save
       leaveRequest.leaveStatus = "Approved";
       leaveRequest.leaveApprovedBy = approverId;
       await leaveRequest.save();
@@ -245,12 +250,10 @@ export const updateLeaveApproval = async (req, res) => {
           attendanceDate: formattedDate,
         });
 
-        // If attendance already exists and the status is "Sunday" or "Holiday", or "Present" skip
         if (existingAttendance && ["Sunday", "Holiday", "Present"].includes(existingAttendance.status)) {
           return;
         };
 
-        // Create or update the attendance record
         await Attendance.findOneAndUpdate(
           {
             employee,
@@ -270,39 +273,38 @@ export const updateLeaveApproval = async (req, res) => {
           {
             upsert: true,
             new: true,
-          },
+          }
         );
       });
 
-      // Wait for all attendance updates to be completed
       await Promise.all(updateAttendancePromises);
+      emp.leaveBalance = parseFloat(emp.leaveBalance) - parseFloat(leaveRequest.leaveDuration);
+      await emp.save();
 
-      // Send leave status email to employee
       sendEmail(employeeEmail, subject, htmlContent);
 
-      return res.status(200).json({ success: true, message: "Leave approved, email sent and marked attendance as On Leave" });
+      return res.status(200).json({ success: true, message: "Leave approved, email sent, and attendance marked as On Leave." });
     } else {
-      // If the leave status is changed from "Approved" to "Rejected" or "Pending", delete all associated attendance records
       if (leaveRequest.leaveStatus === "Approved" && (leaveStatus === "Rejected" || leaveStatus === "Pending")) {
-
         const deleteAttendancePromises = datesToUpdate.map(async (date) => {
           const formattedDate = date.toISOString().split('T')[0];
           await Attendance.deleteOne({ employee, attendanceDate: formattedDate, status: "On Leave" });
         });
 
-        // Wait for all attendance deletions to be completed
+        let leaveBalanceUpdated = parseFloat(emp.leaveBalance) + parseFloat(leaveRequest.leaveDuration);
+        emp.leaveBalance = leaveBalanceUpdated;
+        await emp.save();
+
         await Promise.all(deleteAttendancePromises);
       };
 
-      // Update the leave status and save
       leaveRequest.leaveStatus = leaveStatus;
       leaveRequest.leaveApprovedBy = approverId;
       await leaveRequest.save();
 
-      // Send leave status email to employee
       sendEmail(employeeEmail, subject, htmlContent);
 
-      return res.status(200).json({ success: true, message: "Leave status updated, email sent to employee and attendance records cleared if applicable." });
+      return res.status(200).json({ success: true, message: "Leave status updated, email sent, and attendance records cleared if applicable." });
     };
   } catch (error) {
     console.log(error.message);

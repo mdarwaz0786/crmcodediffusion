@@ -16,14 +16,12 @@ cron.schedule("0 0 1 * *", async () => {
         employee.leaveBalance = parseFloat(employee.leaveBalance) + 2;
         await employee.save();
       } catch (error) {
-        console.log(`Error while updating leave balance for employee ${employee.name}:`, error.message);
+        console.log(`Error while updating leave balance all employee`, error.message);
       };
     });
 
     // Wait for all leave balance updates to be completed
     await Promise.all(updateLeaveBalancePromises);
-
-    console.log("Monthly leave balance updated successfully.");
   } catch (error) {
     console.log("Error while updating monthly leave balance:", error.message);
   };

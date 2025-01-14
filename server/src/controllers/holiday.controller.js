@@ -5,7 +5,7 @@ export const createHoliday = async (req, res) => {
   try {
     const { reason, type, date } = req.body;
 
-    if (!reason || !type || !date) {
+    if (!reason || !date) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     };
 
@@ -44,8 +44,61 @@ export const fetchUpcomingHoliday = async (req, res) => {
 // Get all holidays
 export const fetchAllHoliday = async (req, res) => {
   try {
-    const holiday = await Holiday.find();
-    res.status(200).json({ successs: true, holiday });
+    let query = {};
+    let sort = {};
+
+    // Filter by year only (all month)
+    if (req.query.year && !req.query.month) {
+      const year = req.query.year;
+      query.date = {
+        $gte: `${year}-01-01`,
+        $lte: `${year}-12-31`,
+      };
+    };
+
+    // Filter by month only (all years)
+    if (req.query.month && !req.query.year) {
+      const month = req.query.month;
+      query.date = { $regex: `-${month}-`, $options: "i" };
+    };
+
+    // Filter by both year and month
+    if (req.query.year && req.query.month) {
+      const year = req.query.year;
+      const month = req.query.month;
+
+      query.date = {
+        $gte: `${year}-${month}-01`,
+        $lte: `${year}-${month}-31`,
+      };
+    };
+
+    // Handle pagination
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+    const skip = (page - 1) * limit;
+
+    // Handle sorting
+    if (req.query.sort === 'Ascending') {
+      sort = { date: 1 };
+    } else {
+      sort = { date: -1 };
+    };
+
+    const holiday = await Holiday.find(query)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
+    if (!holiday) {
+      return res.status(404).json({ success: false, message: 'Holiday not found' });
+    };
+
+    // Calculate total count
+    const total = await Holiday.countDocuments(query);
+
+    res.status(200).json({ success: true, holiday, totalCount: total });
   } catch (error) {
     console.log(error.message);
     res.status(500).json({ success: false, error: error.message });
@@ -72,9 +125,9 @@ export const fetchSingleHoliday = async (req, res) => {
 export const updateHoliday = async (req, res) => {
   try {
     const { id } = req.params;
-    const { reason, type, date } = req.body;
+    const { reason, date } = req.body;
 
-    if (!reason || !type || !date) {
+    if (!reason || !date) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     };
 
@@ -85,7 +138,6 @@ export const updateHoliday = async (req, res) => {
     };
 
     holiday.reason = reason;
-    holiday.type = type;
     holiday.date = date;
 
     await holiday.save();

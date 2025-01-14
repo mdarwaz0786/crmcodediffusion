@@ -465,7 +465,7 @@ const MissedPunchOut = () => {
                               ))
                             }
                             <li className="paginate_button page-item page-number-mobile active">
-                              {/* {filters.page} */}
+                              {filters.page}
                             </li>
                             <li className={`paginate_button page-item next ${filters.page === Math.ceil(total / filters.limit) ? "disabled" : ""}`} id="project-list_next">
                               <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page + 1 }))} className="page-link" aria-controls="project-list" role="link" data-dt-idx="next" tabIndex="0">
