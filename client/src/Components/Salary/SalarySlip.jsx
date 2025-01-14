@@ -127,13 +127,13 @@ const SalarySlip = () => {
 
   return (
     <div className="page-wrapper">
-      <div className="content" id="exportSalary">
+      <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h4>Salary Slip</h4>
           <button className="btn btn-secondary" onClick={exportSalaryAsPdf}>Download</button>
           <Link to="#" onClick={() => navigate(-1)}><button className="btn btn-primary">Back</button></Link>
         </div>
-        <div className="p-5 bg-white mt-2 mb-3">
+        <div className="p-5 bg-white mt-2 mb-3" id="exportSalary">
           <div style={{ marginBottom: "2rem" }}>
             <img style={{ width: "150px", height: "30px" }} src={logo} alt="logo" />
           </div>
