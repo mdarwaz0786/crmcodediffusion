@@ -24,4 +24,7 @@ const salarySchema = new mongoose.Schema({
   },
 });
 
+// Compound index to prevent duplicates
+salarySchema.index({ employee: 1, month: 1, year: 1 }, { unique: true });
+
 export default mongoose.model("Salary", salarySchema);

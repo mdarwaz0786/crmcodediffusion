@@ -8,7 +8,7 @@ import { useAuth } from "../../context/authContext.jsx";
 import Preloader from '../../Preloader.jsx';
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-const PaySalary = () => {
+const AddSalary = () => {
   const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
   const currentYear = new Date().getFullYear();
   const [amountPaid, setAmountPaid] = useState("");
@@ -36,10 +36,10 @@ const PaySalary = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && team?.role?.name.toLowerCase() === "admin") {
+    if (!isLoading && team && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
       fetchAllEmployee();
     };
-  }, [isLoading, team, team?.role?.name.toLowerCase() === "admin"]);
+  }, [isLoading, team]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -67,7 +67,7 @@ const PaySalary = () => {
       };
     } catch (error) {
       console.error("Error while creating salary:", error.message);
-      toast.error("Error while submitting salary");
+      toast.error("Error while submitting salary record");
     };
   };
 
@@ -98,7 +98,7 @@ const PaySalary = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name.toLowerCase() !== "admin") {
+  if (team?.role?.name.toLowerCase() !== "admin" && team?.role?.name.toLowerCase() !== "hr") {
     return <Navigate to="/" />;
   };
 
@@ -183,4 +183,4 @@ const PaySalary = () => {
   );
 };
 
-export default PaySalary;
+export default AddSalary;

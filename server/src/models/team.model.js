@@ -31,6 +31,15 @@ const teamSchema = new mongoose.Schema(
     monthlySalary: {
       type: String,
     },
+    UAN: {
+      type: String,
+    },
+    PAN: {
+      type: String,
+    },
+    BankAccount: {
+      type: String,
+    },
     workingHoursPerDay: {
       type: String,
       default: "08:30",
@@ -39,26 +48,36 @@ const teamSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Designation",
     },
+    department: {
+      type: String,
+      default: "IT",
+    },
+    leaveBalance: {
+      type: String,
+      default: "2",
+    },
+    leaves: [{
+      type: String,
+    }],
+    compOff: [{
+      type: String,
+    }],
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
     },
-    reportingTo: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Team",
-      },
-    ],
+    reportingTo: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Team",
+    }],
   },
   {
     timestamps: true,
   },
 );
 
-// Hash the password before saving the document
 teamSchema.pre("save", async function (next) {
   try {
-    // Helper function to capitalize first letter of each word
     const capitalizeWords = (str) => {
       return str.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
     };

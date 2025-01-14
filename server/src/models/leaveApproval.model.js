@@ -29,7 +29,7 @@ const leaveApprovalSchema = new mongoose.Schema(
     },
     reason: {
       type: String,
-    }
+    },
   },
   {
     timestamps: true,

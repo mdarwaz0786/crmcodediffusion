@@ -64,10 +64,12 @@ import EditService from "./Components/Service/EditService.jsx";
 import AddOnService from "./Components/AddOnService/AddOnService.jsx";
 import AddAddOnService from "./Components/AddOnService/AddAddOnService.jsx";
 import EditAddOnService from "./Components/AddOnService/EditAddOnService.jsx";
-import SalarySlip from "./SalarySlip.jsx";
 import CompOff from "./Components/CompOff/CompOff.jsx";
 import MissedPunchOut from "./Components/MissedPunchOut/MissedPunchOut.jsx";
-import PaySalary from "./Components/Salary/PaySalary.jsx";
+import Salary from "./Components/Salary/Salary.jsx";
+import SalarySlip from "./Components/Salary/SalarySlip.jsx";
+import AddSalary from "./Components/Salary/AddSalary.jsx";
+import EditSalary from "./Components/Salary/EditSalary.jsx";
 
 const App = () => {
   return (
@@ -136,10 +138,12 @@ const App = () => {
           <Route path="add-on-service" element={<AddOnService />} />
           <Route path="add-add-on-service" element={<AddAddOnService />} />
           <Route path="edit-add-on-service/:id" element={<EditAddOnService />} />
-          <Route path="salary" element={<SalarySlip />} />
           <Route path="comp-off" element={<CompOff />} />
           <Route path="missed-punch-out" element={<MissedPunchOut />} />
-          <Route path="pay-salary" element={<PaySalary />} />
+          <Route path="salary" element={<Salary />} />
+          <Route path="add-salary" element={<AddSalary />} />
+          <Route path="edit-salary/:id" element={<EditSalary />} />
+          <Route path="salary-slip/:id" element={<SalarySlip />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
