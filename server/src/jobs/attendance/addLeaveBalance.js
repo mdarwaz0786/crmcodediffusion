@@ -16,7 +16,7 @@ cron.schedule("0 0 1 * *", async () => {
         employee.leaveBalance = parseFloat(employee.leaveBalance) + 2;
         await employee.save();
       } catch (error) {
-        console.log(`Error while updating leave balance all employee`, error.message);
+        console.log(`Error while updating leave balance for all employee`, error.message);
       };
     });
 

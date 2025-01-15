@@ -109,6 +109,7 @@ const EditProformaInvoice = () => {
         GSTNumber,
         shipTo,
         state,
+        date,
       };
 
       const response = await axios.put(`${base_url}/api/v1/proformaInvoice/update-proformaInvoice/${id}`, invoiceData, {

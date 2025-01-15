@@ -198,11 +198,6 @@ const ProformaInvoiceList = () => {
       };
     });
 
-    if (exportData?.length === 0) {
-      alert("No proforma invoice found to export");
-      return;
-    };
-
     const worksheet = XLSX.utils.json_to_sheet(exportData);
 
     const columnWidths = Object.keys(exportData[0] || {}).map((key) => ({
@@ -710,8 +705,8 @@ const ProformaInvoiceList = () => {
                   {/* Invoice Header */}
                   <div className="invoice-heading">
                     <div className="col-md-6">
-                      <div className="logo mt-4">
-                        <img src={logo} width="250px" alt="logo" />
+                      <div className="logo mt-4 ps-4 mb-3">
+                        <img src={logo} width="150px" alt="logo" />
                       </div>
                     </div>
                     <div className="col-md-6 px-4">

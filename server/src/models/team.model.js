@@ -33,12 +33,15 @@ const teamSchema = new mongoose.Schema(
     },
     UAN: {
       type: String,
+      trim: true,
     },
     PAN: {
       type: String,
+      trim: true,
     },
     bankAccount: {
       type: String,
+      trim: true,
     },
     workingHoursPerDay: {
       type: String,
@@ -58,7 +61,7 @@ const teamSchema = new mongoose.Schema(
     },
     leaveBalance: {
       type: String,
-      default: "0",
+      default: "2",
     },
     leaves: [{
       type: String,

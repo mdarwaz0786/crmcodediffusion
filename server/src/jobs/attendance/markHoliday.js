@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import Attendance from "../../models/attendance.model.js";
 import Team from "../../models/team.model.js";
+import Holiday from "../../models/holiday.model.js";
 
 // Schedule a task to run every day at 20:00
 cron.schedule("0 20 * * *", async () => {
@@ -8,6 +9,12 @@ cron.schedule("0 20 * * *", async () => {
     const employees = await Team.find();
 
     if (!employees) {
+      return;
+    };
+
+    const holidays = await Holiday.find({ date: new Date().toISOString().split("T")[0] });
+
+    if (!holidays) {
       return;
     };
 
@@ -25,11 +32,11 @@ cron.schedule("0 20 * * *", async () => {
         return;
       };
 
-      // Create a new attendance record with status Absent
+      // Create a new attendance record with status Holiday
       await Attendance.create({
         employee: employee._id,
         attendanceDate: today,
-        status: "Absent",
+        status: "Holiday",
         punchInTime: null,
         punchIn: false,
         punchOutTime: null,
@@ -39,9 +46,9 @@ cron.schedule("0 20 * * *", async () => {
       });
     });
 
-    // Wait for all attendance to be marked
+    // Wait for all attendance marked as Holiday
     await Promise.all(updateAttendancePromises);
   } catch (error) {
-    console.log("Error while marking attendance as absent:", error.message);
+    console.log("Error while marking attendance as holiday:", error.message);
   };
 });

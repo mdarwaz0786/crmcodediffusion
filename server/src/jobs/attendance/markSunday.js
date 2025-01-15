@@ -5,7 +5,6 @@ import Team from "../../models/team.model.js";
 // Schedule a task to run every Sunday at 20:00
 cron.schedule("0 20 * * 0", async () => {
   try {
-    // Get all employees from the Team model
     const employees = await Team.find();
 
     if (!employees) {
@@ -14,14 +13,14 @@ cron.schedule("0 20 * * 0", async () => {
 
     const today = new Date().toISOString().split("T")[0];
 
-    // Loop through each employee and create a new attendance record for Sunday
+    // Loop through each employee
     const updateAttendancePromises = employees.map(async (employee) => {
       const existingAttendance = await Attendance.findOne({
         employee: employee._id,
         attendanceDate: today,
       });
 
-      // If attendance already exists for the employee, skip creation
+      // If attendance already exists, skip creation
       if (existingAttendance) {
         return;
       };

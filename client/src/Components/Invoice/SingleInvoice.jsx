@@ -90,8 +90,8 @@ const SingleInvoice = () => {
           <div className="bg-white" style={{ margin: '20px auto', paddingBottom: "32px" }}>
             <div className="invoice-heading">
               <div className="col-md-6">
-                <div className="logo mt-4">
-                  <img src={logo} width="250px" alt="logo" />
+                <div className="logo mt-4 ps-4 mb-3">
+                  <img src={logo} width="150px" alt="logo" />
                 </div>
               </div>
               <div className="col-md-6 px-4">
