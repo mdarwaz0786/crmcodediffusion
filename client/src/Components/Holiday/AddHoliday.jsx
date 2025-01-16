@@ -22,7 +22,7 @@ const AddHoliday = () => {
         return toast.error("Please fill all fields");
       };
 
-      const response = await axios.post(`${base_url}/api/v1/Holiday/create-Holiday`,
+      const response = await axios.post(`${base_url}/api/v1/holiday/create-holiday`,
         { date, reason },
         {
           headers: {

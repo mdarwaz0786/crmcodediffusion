@@ -1,6 +1,7 @@
 import Holiday from "../models/holiday.model.js";
+import XLSX from 'xlsx';
 
-// Create a new holiday
+// Create or update holiday based on date
 export const createHoliday = async (req, res) => {
   try {
     const { reason, type, date } = req.body;
@@ -9,19 +10,92 @@ export const createHoliday = async (req, res) => {
       return res.status(400).json({ success: false, message: "All fields are required" });
     };
 
-    const existingHoliday = await Holiday.findOne({ date });
+    // Check if a holiday already exists with the same date
+    const existingHoliday = await Holiday.findOne({ date: date });
 
     if (existingHoliday) {
-      return res.status(400).json({ success: false, message: `Holiday already exists for date ${date}` });
+      existingHoliday.reason = reason;
+      await existingHoliday.save();
+      return res.status(200).json({ success: true, holiday: existingHoliday });
+    } else {
+      const newHoliday = new Holiday({ reason, type, date, });
+      await newHoliday.save();
+      return res.status(201).json({ success: true, holiday: newHoliday });
+    };
+  } catch (error) {
+    console.log("Error:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  };
+};
+
+// Upload multiple holidays via Excel
+export const uploadHolidays = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "Please upload an Excel file" });
     };
 
-    const holiday = new Holiday({ reason, type, date });
-    await holiday.save();
+    const allowedExtensions = ['xls', 'xlsx'];
+    const fileExtension = req.file.originalname.split('.').pop();
 
-    res.status(200).json({ success: true, message: "Holiday created successfully", holiday });
+    if (!allowedExtensions.includes(fileExtension)) {
+      return res.status(400).json({ success: false, message: "Only Excel files are allowed." });
+    };
+
+    // Proceed with Excel processing if valid
+    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+    const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+    if (!sheetData.length) {
+      return res.status(400).json({ success: false, message: "Excel file is empty" });
+    };
+
+    // Function to convert Excel date and dd-mm-yyyy string to yyyy-mm-dd format
+    const convertToDBDateFormat = (date) => {
+      if (typeof date === 'number') {
+        const convertedDate = XLSX.SSF.parse_date_code(date);
+        const year = convertedDate.y;
+        const month = String(convertedDate.m).padStart(2, '0');
+        const day = String(convertedDate.d).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      } else if (typeof date === 'string' && date.includes('-')) {
+        const [day, month, year] = date.split('-');
+        return `${year}-${month}-${day}`;
+      };
+      return date;
+    };
+
+    const holidays = sheetData.map((item) => ({
+      reason: item.reason?.trim(),
+      type: item.type?.trim() || "Holiday",
+      date: convertToDBDateFormat(item.date),
+    }));
+
+    const invalidRows = holidays.filter((holiday) => !holiday.reason || !holiday.date);
+
+    if (invalidRows.length > 0) {
+      return res.status(400).json({ success: false, message: `All fields (reason and date) are required` });
+    };
+
+    // Insert or update holidays if exits
+    const promises = holidays.map(async (holiday) => {
+      const { date, reason, type } = holiday;
+      const existingHoliday = await Holiday.findOne({ date });
+      if (existingHoliday) {
+        existingHoliday.reason = reason;
+        await existingHoliday.save();
+      } else {
+        await Holiday.create({ reason, type, date });
+      };
+    });
+
+    // Wait for all promises to complete
+    await Promise.all(promises);
+
+    res.status(200).json({ success: true, holiday: holidays });
   } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ success: false, error: error.message });
+    console.log("Error while uploading holidays:", error);
+    res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -71,6 +145,12 @@ export const fetchAllHoliday = async (req, res) => {
         $gte: `${year}-${month}-01`,
         $lte: `${year}-${month}-31`,
       };
+    };
+
+    // Search by reason field
+    if (req.query.search) {
+      const searchQuerey = req.query.search.trim();
+      query.reason = { $regex: searchQuerey, $options: "i" };
     };
 
     // Handle pagination

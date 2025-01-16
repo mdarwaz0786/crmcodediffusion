@@ -27,9 +27,8 @@ const EditHoliday = () => {
         setReason(response.data.holiday.reason);
       };
     } catch (error) {
-      console.error("Error fetching holiday details:", error.message);
-      toast.error("Error fetching holiday details");
-    }
+      console.log("Error fetching holiday details:", error.message);
+    };
   };
 
   useEffect(() => {
@@ -46,7 +45,7 @@ const EditHoliday = () => {
         return toast.error("Please fill all fields");
       };
 
-      const response = await axios.put(`${base_url}/api/v1/Holiday/update-Holiday/${id}`,
+      const response = await axios.put(`${base_url}/api/v1/holiday/update-holiday/${id}`,
         { date, reason },
         {
           headers: {

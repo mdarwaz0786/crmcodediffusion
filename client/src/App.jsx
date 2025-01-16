@@ -73,6 +73,7 @@ import EditSalary from "./Components/Salary/EditSalary.jsx";
 import Holiday from "./Components/Holiday/Holiday.jsx";
 import AddHoliday from "./Components/Holiday/AddHoliday.jsx";
 import EditHoliday from "./Components/Holiday/EditHoliday.jsx";
+import HolidayUpload from "./Components/Holiday/UploadHoliday.jsx";
 
 const App = () => {
   return (
@@ -149,6 +150,7 @@ const App = () => {
           <Route path="salary-slip/:id" element={<SalarySlip />} />
           <Route path="holiday" element={<Holiday />} />
           <Route path="add-holiday" element={<AddHoliday />} />
+          <Route path="upload-holiday" element={<HolidayUpload />} />
           <Route path="edit-holiday/:id" element={<EditHoliday />} />
         </Route>
         <Route path="/login" element={<Login />} />

@@ -13,6 +13,7 @@ const holidaySchema = new mongoose.Schema(
     },
     date: {
       type: String,
+      trim: true,
       required: true,
       index: true,
     },
@@ -37,8 +38,5 @@ holidaySchema.pre("save", function (next) {
   next();
 });
 
-holidaySchema.index({ date: 1 }, { unique: true });
+export default mongoose.model("Holiday", holidaySchema);
 
-const Holiday = mongoose.model("Holiday", holidaySchema);
-
-export default Holiday;

@@ -1,12 +1,17 @@
 import express from "express";
-import { createHoliday, deleteHoliday, fetchAllHoliday, fetchSingleHoliday, fetchUpcomingHoliday, updateHoliday } from "../controllers/holiday.controller.js";
+import multer from 'multer';
+import { createHoliday, deleteHoliday, fetchAllHoliday, fetchSingleHoliday, fetchUpcomingHoliday, updateHoliday, uploadHolidays } from "../controllers/holiday.controller.js";
 import { isLoggedIn } from "../middleware/auth.middleware.js";
 
 // router object
 const router = express.Router();
 
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
 // routes
 router.post("/create-holiday", isLoggedIn, createHoliday);
+router.post("/upload-holiday", isLoggedIn, upload.single('file'), uploadHolidays);
 router.get("/upcoming-holiday", isLoggedIn, fetchUpcomingHoliday);
 router.get("/all-holiday", isLoggedIn, fetchAllHoliday);
 router.get("/single-holiday/:id", isLoggedIn, fetchSingleHoliday);

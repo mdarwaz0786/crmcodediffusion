@@ -78,10 +78,9 @@ const Holiday = () => {
       return;
     };
 
-    const exportData = data?.map((entry, index) => ({
-      "#": index + 1 || "1",
-      "Reason": entry?.reason || "N/A",
-      "Date": formatDate(entry?.date) || "N/A",
+    const exportData = data?.map((entry) => ({
+      "date": formatDate(entry?.date) || "N/A",
+      "reason": entry?.reason || "N/A",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -249,7 +248,10 @@ const Holiday = () => {
                           </div>
                         </li>
                         <li>
-                          <Link to="/add-Holiday"><button className="btn btn-primary">Add Holiday</button></Link>
+                          <Link to="/add-holiday"><button className="btn btn-primary">Add Holiday</button></Link>
+                        </li>
+                        <li>
+                          <Link to="/upload-holiday"><button className="btn btn-danger">Upload Holiday</button></Link>
                         </li>
                       </ul>
                     </div>
