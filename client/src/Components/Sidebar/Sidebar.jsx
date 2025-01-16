@@ -201,6 +201,7 @@ const Sidebar = () => {
                   (permissions?.customer?.access ||
                     permissions?.role?.access ||
                     permissions?.designation?.access ||
+                    permissions?.department?.access ||
                     permissions?.technology?.access ||
                     permissions?.projectType?.access ||
                     permissions?.projectStatus?.access ||
@@ -219,6 +220,11 @@ const Sidebar = () => {
                   {
                     (permissions?.designation?.access) && (
                       <li><Link to="/designation" className={currentPath === "/designation" ? "active" : ""} id={isMobile && active === "designation" ? "mobile_btn" : ""} onClick={() => handleActive("designation")}><i style={{ color: currentPath === "/designation" ? "" : "#FFA201" }} className="ti ti-id-badge"></i><span>Designation</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.department?.access) && (
+                      <li><Link to="/department" className={currentPath === "/department" ? "active" : ""} id={isMobile && active === "department" ? "mobile_btn" : ""} onClick={() => handleActive("department")}><i style={{ color: currentPath === "/department" ? "" : "#FFA201" }} className="ti ti-organization"></i><span>Department</span></Link></li>
                     )
                   }
                   {

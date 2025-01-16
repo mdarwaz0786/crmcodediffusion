@@ -324,6 +324,36 @@ const DesignationPermissionSchema = new mongoose.Schema(
   },
 );
 
+// Department permission Schema
+const DepartmentPermissionSchema = new mongoose.Schema(
+  {
+    access: {
+      type: Boolean,
+      default: false,
+    },
+    export: {
+      type: Boolean,
+      default: false,
+    },
+    create: {
+      type: Boolean,
+      default: false,
+    },
+    update: {
+      type: Boolean,
+      default: false,
+    },
+    delete: {
+      type: Boolean,
+      default: false,
+    },
+    fields: {
+      name: { type: FieldPermissionSchema, default: () => ({}) },
+      description: { type: FieldPermissionSchema, default: () => ({}) },
+    },
+  },
+);
+
 // Project category permission Schema
 const ProjectCategoryPermissionSchema = new mongoose.Schema(
   {
@@ -744,7 +774,7 @@ const HolidayPermissionSchema = new mongoose.Schema(
 );
 
 // Leave approval permission Schema
-const LaeveApprovalPermissionSchema = new mongoose.Schema(
+const LeaveApprovalPermissionSchema = new mongoose.Schema(
   {
     access: {
       type: Boolean,
@@ -827,6 +857,7 @@ const RoleSchema = new mongoose.Schema(
       team: { type: TeamPermissionSchema, default: () => ({}) },
       role: { type: RolePermissionSchema, default: () => ({}) },
       designation: { type: DesignationPermissionSchema, default: () => ({}) },
+      department: { type: DepartmentPermissionSchema, default: () => ({}) },
       technology: { type: TechnologyPermissionSchema, default: () => ({}) },
       holiday: { type: HolidayPermissionSchema, default: () => ({}) },
       addOnService: { type: AddOnServicePermissionSchema, default: () => ({}) },
@@ -834,6 +865,7 @@ const RoleSchema = new mongoose.Schema(
       salary: { type: SalaryPermissionSchema, default: () => ({}) },
       compOff: { type: compOffPermissionSchema, default: () => ({}) },
       missedPunchOut: { type: missedPunchOutPermissionSchema, default: () => ({}) },
+      leaveApproval: { type: LeaveApprovalPermissionSchema, default: () => ({}) },
       projectType: { type: ProjectTypePermissionSchema, default: () => ({}) },
       projectStatus: { type: ProjectStatusPermissionSchema, default: () => ({}) },
       projectCategory: { type: ProjectCategoryPermissionSchema, default: () => ({}) },

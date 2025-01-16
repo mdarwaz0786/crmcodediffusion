@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const designationSchema = new mongoose.Schema(
+const departmentSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -17,11 +17,11 @@ const designationSchema = new mongoose.Schema(
   },
 );
 
-designationSchema.pre("save", function (next) {
+departmentSchema.pre("save", function (next) {
   const capitalizeWords = (string) => {
     return string
       .split(" ")
-      .map((word) => word.charAt(0).toUpperCase()).join(" ");
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
   };
 
   if (this.name) {
@@ -32,4 +32,4 @@ designationSchema.pre("save", function (next) {
 });
 
 
-export default mongoose.model("Designation", designationSchema);
+export default mongoose.model("Department", departmentSchema);

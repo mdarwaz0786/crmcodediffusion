@@ -74,6 +74,9 @@ import Holiday from "./Components/Holiday/Holiday.jsx";
 import AddHoliday from "./Components/Holiday/AddHoliday.jsx";
 import EditHoliday from "./Components/Holiday/EditHoliday.jsx";
 import HolidayUpload from "./Components/Holiday/UploadHoliday.jsx";
+import Department from "./Components/Project/Department/Department.jsx";
+import AddDepartment from "./Components/Project/Department/AddDepartment.jsx";
+import EditDepartment from "./Components/Project/Department/EditDepartment.jsx";
 
 const App = () => {
   return (
@@ -115,6 +118,9 @@ const App = () => {
           <Route path="designation" element={<Designation />} />
           <Route path="add-designation" element={<AddDesignation />} />
           <Route path="edit-designation/:id" element={<EditDesignation />} />
+          <Route path="department" element={<Department />} />
+          <Route path="add-department" element={<AddDepartment />} />
+          <Route path="edit-department/:id" element={<EditDepartment />} />
           <Route path="technology" element={<TechnologyList />} />
           <Route path="add-technology" element={<AddTechnology />} />
           <Route path="edit-technology/:id" element={<EditTechnology />} />

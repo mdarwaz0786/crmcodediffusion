@@ -201,6 +201,17 @@ const AddRole = () => {
         description: { read: true, show: true },
       },
     },
+    department: {
+      access: false,
+      export: false,
+      create: false,
+      update: false,
+      delete: false,
+      fields: {
+        name: { read: true, show: true },
+        description: { read: true, show: true },
+      },
+    },
     technology: {
       access: false,
       export: false,
@@ -541,6 +552,17 @@ const AddRole = () => {
               description: { read: true, show: true },
             },
           },
+          department: {
+            access: false,
+            export: false,
+            create: false,
+            update: false,
+            delete: false,
+            fields: {
+              name: { read: true, show: true },
+              description: { read: true, show: true },
+            },
+          },
           technology: {
             access: false,
             export: false,
@@ -628,6 +650,7 @@ const AddRole = () => {
     team: "Employee",
     role: "Role & Permission",
     designation: "Designation",
+    department: "Department",
     technology: "Technology",
     projectType: "Project Type",
     projectStatus: "Project Status",
@@ -647,6 +670,8 @@ const AddRole = () => {
     CGST: "CGST",
     SGST: "SGST",
     IGST: "IGST",
+    UAN: "UAN",
+    PAN: "PAN",
     GSTNumber: "GST Number",
     email: "Email ID",
     mobile: "Mobile No",

@@ -193,7 +193,18 @@ const EditRole = () => {
         permissions: { read: true, show: true },
       },
     },
-    Designation: {
+    designation: {
+      access: false,
+      export: false,
+      create: false,
+      update: false,
+      delete: false,
+      fields: {
+        name: { read: true, show: true },
+        description: { read: true, show: true },
+      },
+    },
+    department: {
       access: false,
       export: false,
       create: false,
@@ -578,7 +589,18 @@ const EditRole = () => {
               permissions: { read: true, show: true },
             },
           },
-          Designation: {
+          designation: {
+            access: false,
+            export: false,
+            create: false,
+            update: false,
+            delete: false,
+            fields: {
+              name: { read: true, show: true },
+              description: { read: true, show: true },
+            },
+          },
+          department: {
             access: false,
             export: false,
             create: false,
@@ -676,6 +698,7 @@ const EditRole = () => {
     team: "Employee",
     role: "Role & Permission",
     designation: "Designation",
+    department: "Department",
     technology: "Technology",
     projectType: "Project Type",
     projectStatus: "Project Status",
@@ -695,6 +718,8 @@ const EditRole = () => {
     CGST: "CGST",
     SGST: "SGST",
     IGST: "IGST",
+    UAN: "UAN",
+    PAN: "PAN",
     GSTNumber: "GST Number",
     email: "Email ID",
     mobile: "Mobile No",
@@ -796,7 +821,7 @@ const EditRole = () => {
                           onClick={() => openModal(master)}
                           style={{ background: "#CC8100", color: "white" }}
                         >
-                          Input Field Permission
+                          Permission
                         </button>
                       </div>
                     </div>

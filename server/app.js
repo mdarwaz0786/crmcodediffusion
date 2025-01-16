@@ -19,6 +19,7 @@ import teamRoute from "./src/routes/team.route.js";
 import projectTimingRoute from "./src/routes/projectTiming.route.js";
 import roleRoute from "./src/routes/role.route.js";
 import designationRoute from "./src/routes/designation.route.js";
+import departmentRoute from "./src/routes/department.route.js";
 import projectPriorityRoute from "./src/routes/projectPriority.route.js";
 import invoiceRoute from "./src/routes/invoice.route.js";
 import proformaInvoiceRoute from "./src/routes/proformaInvoice.route.js";
@@ -72,6 +73,8 @@ server.use("/api/v1/projectTiming", projectTimingRoute);
 server.use("/api/v1/role", roleRoute);
 // Designation route
 server.use("/api/v1/designation", designationRoute);
+// Department route
+server.use("/api/v1/department", departmentRoute);
 // Project priority route
 server.use("/api/v1/projectPriority", projectPriorityRoute);
 // Invoice route
