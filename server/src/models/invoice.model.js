@@ -5,20 +5,6 @@ const invoiceSchema = new mongoose.Schema(
     invoiceId: {
       type: String,
     },
-    projects: [
-      {
-        project: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Project",
-          required: true,
-        },
-        amount: {
-          type: String,
-          required: true,
-          trim: true,
-        },
-      },
-    ],
     tax: {
       type: String,
       enum: ["Inclusive", "Exclusive"],
@@ -27,6 +13,16 @@ const invoiceSchema = new mongoose.Schema(
     date: {
       type: String,
       required: true,
+    },
+    project: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Project",
+      required: true,
+    },
+    amount: {
+      type: String,
+      required: true,
+      trim: true,
     },
     subtotal: {
       type: String,

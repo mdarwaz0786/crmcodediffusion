@@ -10,8 +10,12 @@ import Select from "react-select";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddInvoice = () => {
-  const [projects, setProjects] = useState([{ project: "", amount: "" }]);
+  const [project, setProject] = useState("");
+  const [amount, setAmount] = useState("");
   const [allProjects, setAllProjects] = useState([]);
+  const [projectId, setProjectId] = useState("");
+  const [totalReceived, setTotalReceived] = useState("");
+  const [projectCost, setProjectCost] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [tax, setTax] = useState("Exclusive");
   const { validToken, team, isLoading } = useAuth();
@@ -30,7 +34,7 @@ const AddInvoice = () => {
         setAllProjects(response?.data?.project);
       };
     } catch (error) {
-      console.log("Error while fetching projects:", error.message);
+      console.log("Error while fetching all projects:", error.message);
     };
   };
 
@@ -40,35 +44,35 @@ const AddInvoice = () => {
     };
   }, [permissions, isLoading, team]);
 
-  const handleAddProject = () => {
-    setProjects([...projects, { project: "", amount: "" }]);
-  };
-
-  const handleRemoveProject = (index) => {
-    const newProjects = projects?.filter((_, i) => i !== index);
-    setProjects(newProjects);
-    toast.success("Project removed");
-  };
-
   const projectOptions = allProjects?.map((p) => ({
     value: p?._id,
     label: p?.projectName,
   }));
 
-  const handleProjectChange = (index, selectedOption) => {
-    const newProjects = [...projects];
-    newProjects[index].project = selectedOption.value;
-    setProjects(newProjects);
-    fetchProjectDetails(selectedOption.value, index);
+  const handleProjectChange = (selectedOption) => {
+    setProject(selectedOption.value)
+    setProjectId(selectedOption.value);
   };
 
-  const handleAmountChange = (index, field, value) => {
-    const newProjects = [...projects];
-    newProjects[index][field] = value;
-    setProjects(newProjects);
+  const fetchInvoiceDetails = async (projectId) => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/invoice/byProject/${projectId}`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        setTotalReceived(response?.data?.totalReceived);
+      };
+    } catch (error) {
+      if (error?.response?.data?.success === false) {
+        setTotalReceived("");
+      };
+    };
   };
 
-  const fetchProjectDetails = async (projectId, index) => {
+  const fetchProjectDetails = async (projectId) => {
     try {
       const response = await axios.get(`${base_url}/api/v1/project/single-project/${projectId}`, {
         headers: {
@@ -77,16 +81,21 @@ const AddInvoice = () => {
       });
 
       if (response?.data?.success) {
-        const updatedProjects = [...projects];
-        updatedProjects[index].amount = response?.data?.project?.projectPrice;
-        setProjects(updatedProjects);
+        setProjectCost(response?.data?.project?.projectPrice);
       };
     } catch (error) {
       console.log("Error while fetching single project:", error.message);
     };
   };
 
-  const handleFetchAddOnService = async (projectId, index) => {
+  useEffect(() => {
+    if (projectId && permissions?.create && !isLoading && team) {
+      fetchProjectDetails(projectId);
+      fetchInvoiceDetails(projectId);
+    };
+  }, [projectId, permissions, isLoading, team]);
+
+  const handleFetchAddOnService = async (projectId) => {
     try {
       const response = await axios.get(`${base_url}/api/v1/addOnService/single-addOnService-byProjectId/${projectId}`, {
         headers: {
@@ -95,33 +104,29 @@ const AddInvoice = () => {
       });
 
       if (response?.data?.success) {
-        const addOnCost = parseFloat(response?.data?.data?.totalProjectCost);
-        const updatedProjects = [...projects];
-        updatedProjects[index].amount = addOnCost;
-        setProjects(updatedProjects);
-        toast.success("Add on service cost added");
+        setAmount(parseFloat(response?.data?.data?.totalProjectCost));
       };
     } catch (error) {
       toast.info(error?.response?.data?.message || "No add on service for this project");
     };
   };
 
+  const totalDues = parseFloat(projectCost - totalReceived);
+
   const handleCreate = async (e) => {
     e.preventDefault();
 
-    // Validation
-    for (const project of projects) {
-      if (!project?.project) {
-        return toast.error("Select project");
-      };
+    // Validations
+    if (!project) {
+      return toast.error("Select project");
+    };
 
-      if (!project?.amount) {
-        return toast.error("Enter project cost");
-      };
+    if (!amount) {
+      return toast.error("Enter amount");
+    };
 
-      if (parseFloat(project?.amount) < 1) {
-        return toast.error("Project cost should not be less than 1");
-      };
+    if (parseFloat(amount) < 1) {
+      return toast.error("Project cost should not be less than 1");
     };
 
     if (!date) {
@@ -134,10 +139,8 @@ const AddInvoice = () => {
 
     try {
       const invoiceData = {
-        projects: projects?.map((project) => ({
-          project: project?.project,
-          amount: project?.amount,
-        })),
+        project,
+        amount,
         date,
         tax,
       };
@@ -202,67 +205,85 @@ const AddInvoice = () => {
           </div>
         </div>
 
-        {
-          projects?.map((project, index) => (
-            <div key={index} className="row">
-              <div className="col-md-6">
-                <div className="form-wrap">
-                  <div style={{ marginTop: "1.3rem" }}>
-                    <label className="col-form-label" htmlFor={`project-${index}`}>Project Name <span className="text-danger">*</span></label>
-                  </div>
-                  <Select
-                    styles={selectStyle}
-                    className="form-select p-0"
-                    name={`project-${index}`}
-                    id={`project-${index}`}
-                    options={projectOptions}
-                    value={projectOptions?.find((option) => option?.value === project?.project)}
-                    onChange={(selectedOption) => handleProjectChange(index, selectedOption)}
-                    isSearchable
-                  />
-                </div>
-              </div>
-
-              <div className="col-md-6">
-                <div className="form-wrap">
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                    <label className="col-form-label" style={{ marginBottom: "-1.5rem" }} htmlFor={`amount-${index}`}>Project Cost <span className="text-danger">*</span></label>
-                    <button
-                      className="btn btn-info"
-                      onClick={() => handleFetchAddOnService(project?.project, index)}
-                    >
-                      Add On Service
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name={`amount-${index}`}
-                    id={`amount-${index}`}
-                    value={project?.amount}
-                    onChange={(e) => handleAmountChange(index, "amount", e.target.value)}
-                  />
-                  {
-                    (parseFloat(project?.amount) < 1) && (
-                      <div className="col-form-label" style={{ color: "red" }}>Project Cost should not less than 1. <i className="fas fa-times"></i></div>
-                    )
-                  }
-                </div>
-              </div>
-
-              <div className="col-md-12 mb-5 mt-0">
-                {
-                  projects?.length > 1 && (
-                    <button className="btn btn-danger" onClick={() => handleRemoveProject(index)}>Remove Project</button>
-                  )
-                }
-              </div>
+        <div className="row">
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="project">Project Name <span className="text-danger">*</span></label>
+              <Select
+                styles={selectStyle}
+                className="form-select p-0"
+                name="project"
+                id="project"
+                options={projectOptions}
+                value={projectOptions?.find((option) => option?.value === project?.project)}
+                onChange={(selectedOption) => handleProjectChange(selectedOption)}
+                isSearchable
+              />
             </div>
-          ))
-        }
+          </div>
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="amount">Project Cost</label>
+              <input
+                type="text"
+                className="form-control"
+                value={projectCost}
+              />
+            </div>
+          </div>
+        </div>
 
-        <div className="text-center">
-          <button className="btn btn-secondary" onClick={handleAddProject}>Add Project</button>
+        <div className="row">
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="amount">Total Received</label>
+              <input
+                type="text"
+                className="form-control"
+                value={totalReceived}
+              />
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="amount">Total Dues</label>
+              <input
+                type="text"
+                className="form-control"
+                value={totalDues}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="row">
+          <div className="col-md-12">
+            <div className="form-wrap">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                <label className="col-form-label" style={{ marginBottom: "-1.5rem" }} htmlFor="amount">Amount <span className="text-danger">*</span></label>
+                <button
+                  className="btn btn-info"
+                  onClick={() => handleFetchAddOnService(projectId)}
+                >
+                  Add On Service
+                </button>
+              </div>
+              <input
+                type="text"
+                className="form-control"
+                name="amount"
+                id="amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+              {
+                (parseFloat(amount) < 1) && (
+                  <div className="col-form-label" style={{ color: "red" }}>Amount should not less than 1. <i className="fas fa-times"></i></div>
+                )
+              }
+            </div>
+          </div>
         </div>
 
         <div className="submit-button text-end">

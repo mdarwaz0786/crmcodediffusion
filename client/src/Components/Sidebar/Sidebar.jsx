@@ -168,6 +168,7 @@ const Sidebar = () => {
                       <li><Link to="/salary" className={currentPath === "/salary" ? "active" : ""} id={isMobile && active === "salary" ? "mobile_btn" : ""} onClick={() => handleActive("salary")}><i style={{ color: currentPath === "/salary" ? "" : "#FFA201" }} className="ti ti-wallet"></i><span>Salary</span></Link></li>
                     )
                   }
+                  <li><Link to="/send-notification" className={currentPath === "/send-notification" ? "active" : ""} id={isMobile && active === "sendNotification" ? "mobile_btn" : ""} onClick={() => handleActive("sendNotification")}><i style={{ color: currentPath === "/send-notification" ? "" : "#FFA201" }} className="ti ti-bell"></i><span>Send Notification</span></Link></li>
                   {
                     (team?.role?.name.toLowerCase() === "admin") && (
                       <li><Link to="/holiday" className={currentPath === "/holiday" ? "active" : ""} id={isMobile && active === "holiday" ? "mobile_btn" : ""} onClick={() => handleActive("holiday")}><i style={{ color: currentPath === "/holiday" ? "" : "#FFA201" }} className="ti ti-sun"></i><span>Holiday</span></Link></li>
@@ -224,7 +225,7 @@ const Sidebar = () => {
                   }
                   {
                     (permissions?.department?.access) && (
-                      <li><Link to="/department" className={currentPath === "/department" ? "active" : ""} id={isMobile && active === "department" ? "mobile_btn" : ""} onClick={() => handleActive("department")}><i style={{ color: currentPath === "/department" ? "" : "#FFA201" }} className="ti ti-organization"></i><span>Department</span></Link></li>
+                      <li><Link to="/department" className={currentPath === "/department" ? "active" : ""} id={isMobile && active === "department" ? "mobile_btn" : ""} onClick={() => handleActive("department")}><i style={{ color: currentPath === "/department" ? "" : "#FFA201" }} className="ti ti-building"></i><span>Department</span></Link></li>
                     )
                   }
                   {

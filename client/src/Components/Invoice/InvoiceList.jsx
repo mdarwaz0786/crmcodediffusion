@@ -406,7 +406,6 @@ const InvoiceList = () => {
                           >
                             <option value="">All</option>
                             {
-                              // Generate the years dynamically, starting from the current year and going backwards 10 year
                               Array.from({ length: 10 }, (_, i) => {
                                 const year = new Date().getFullYear() - i;
                                 return <option key={year} value={year}>{year}</option>;
@@ -529,18 +528,18 @@ const InvoiceList = () => {
                             )
                           }
                           {
-                            (filedPermissions?.projects?.show) && (
+                            (filedPermissions?.project?.show) && (
                               <th>Project Name</th>
                             )
                           }
                           {
-                            (filedPermissions?.projects?.show) && (
+                            (filedPermissions?.project?.show) && (
                               <th>Client Name</th>
                             )
                           }
                           {
-                            (filedPermissions?.subtotal.show) && (
-                              <th>Total Cost</th>
+                            (filedPermissions?.amount?.show) && (
+                              <th>Total Amount</th>
                             )
                           }
                           {
@@ -570,13 +569,13 @@ const InvoiceList = () => {
                                 )
                               }
                               {
-                                (filedPermissions?.projects?.show) && (
-                                  <td>{d?.projects?.map((value) => value?.project?.projectName).join(", ")}</td>
+                                (filedPermissions?.project?.show) && (
+                                  <td>{d?.project?.projectName}</td>
                                 )
                               }
                               {
-                                (filedPermissions?.projects?.show) && (
-                                  <td>{d?.projects[0]?.project?.customer?.name}</td>
+                                (filedPermissions?.amount?.show) && (
+                                  <td>{d?.project?.customer?.name}</td>
                                 )
                               }
                               {
@@ -744,10 +743,10 @@ const InvoiceList = () => {
                           <h5 style={{ color: "#262a2a7a" }}>Bill To:</h5>
                           <div>
                             <strong style={{ color: "#000" }}>
-                              {invoice?.projects[0]?.project?.customer?.companyName}
+                              {invoice?.project.customer?.companyName}
                             </strong>
                           </div>
-                          <div><strong>GST No: {invoice?.projects[0]?.project?.customer?.GSTNumber}</strong></div>
+                          <div><strong>GST No: {invoice?.project.customer?.GSTNumber}</strong></div>
                         </div>
                       </div>
                       <div className="content w-100">
@@ -755,7 +754,7 @@ const InvoiceList = () => {
                           <h5 style={{ color: "#262a2a7a" }}>Ship To:</h5>
                           <p>
                             <strong style={{ color: "#000" }}>
-                              {invoice?.projects[0]?.project?.customer?.address}
+                              {invoice?.project.customer?.address}
                             </strong>
                           </p>
                         </div>

@@ -77,6 +77,7 @@ import HolidayUpload from "./Components/Holiday/UploadHoliday.jsx";
 import Department from "./Components/Project/Department/Department.jsx";
 import AddDepartment from "./Components/Project/Department/AddDepartment.jsx";
 import EditDepartment from "./Components/Project/Department/EditDepartment.jsx";
+import AddNotification from "./Components/Notification/AddNotification.jsx";
 
 const App = () => {
   return (
@@ -158,6 +159,7 @@ const App = () => {
           <Route path="add-holiday" element={<AddHoliday />} />
           <Route path="upload-holiday" element={<HolidayUpload />} />
           <Route path="edit-holiday/:id" element={<EditHoliday />} />
+          <Route path="send-notification" element={<AddNotification />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />

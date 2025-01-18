@@ -60,8 +60,8 @@ const EditRole = () => {
       delete: false,
       fields: {
         invoiceId: { read: true, show: true },
-        projects: { read: true, show: true },
-        quantity: { read: true, show: true },
+        project: { read: true, show: true },
+        amount: { read: true, show: true },
         tax: { read: true, show: true },
         CGST: { read: true, show: true },
         SGST: { read: true, show: true },
@@ -456,8 +456,8 @@ const EditRole = () => {
             delete: false,
             fields: {
               invoiceId: { read: true, show: true },
-              projects: { read: true, show: true },
-              quantity: { read: true, show: true },
+              project: { read: true, show: true },
+              amount: { read: true, show: true },
               tax: { read: true, show: true },
               CGST: { read: true, show: true },
               SGST: { read: true, show: true },

@@ -130,10 +130,10 @@ const SingleInvoice = () => {
                     <h5 style={{ color: "#262a2a7a" }}>Bill To:</h5>
                     <div>
                       <strong style={{ color: "#000" }}>
-                        {data?.projects[0]?.project?.customer?.companyName}
+                        {data?.project?.customer?.companyName}
                       </strong>
                     </div>
-                    <div><strong>GST No: {data?.projects[0]?.project?.customer?.GSTNumber}</strong></div>
+                    <div><strong>GST No: {data?.project?.customer?.GSTNumber}</strong></div>
                   </div>
                 </div>
                 <div className="content w-100">
@@ -141,7 +141,7 @@ const SingleInvoice = () => {
                     <h5 style={{ color: "#262a2a7a" }}>Ship To:</h5>
                     <p>
                       <strong style={{ color: "#000" }}>
-                        {data?.projects[0]?.project?.customer?.address}
+                        {data?.project?.customer?.address}
                       </strong>
                     </p>
                   </div>
@@ -163,16 +163,12 @@ const SingleInvoice = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {
-                      data?.projects?.map((d) => (
-                        <tr className="text-start" key={d?._id}>
-                          <th scope="col">{d?.project?.projectName}</th>
-                          <th scope="col" className="ps-5">1</th>
-                          <th scope="col">₹{d?.amount}</th>
-                          <th scope="col" className="text-end">₹{d?.amount}</th>
-                        </tr>
-                      ))
-                    }
+                    <tr className="text-start">
+                      <th scope="col">{data?.project?.projectName}</th>
+                      <th scope="col" className="ps-5">1</th>
+                      <th scope="col">₹{data?.amount}</th>
+                      <th scope="col" className="text-end">₹{data?.amount}</th>
+                    </tr>
                   </tbody>
                   <tbody className="text-end mt-5 pt-5">
                     <tr>

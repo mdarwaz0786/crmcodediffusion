@@ -89,8 +89,8 @@ const InvoicePermissionSchema = new mongoose.Schema(
     },
     fields: {
       invoiceId: { type: FieldPermissionSchema, default: () => ({}) },
-      projects: { type: FieldPermissionSchema, default: () => ({}) },
-      quantity: { type: FieldPermissionSchema, default: () => ({}) },
+      project: { type: FieldPermissionSchema, default: () => ({}) },
+      amount: { type: FieldPermissionSchema, default: () => ({}) },
       tax: { type: FieldPermissionSchema, default: () => ({}) },
       CGST: { type: FieldPermissionSchema, default: () => ({}) },
       SGST: { type: FieldPermissionSchema, default: () => ({}) },

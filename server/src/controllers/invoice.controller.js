@@ -5,45 +5,33 @@ import mongoose from "mongoose";
 
 // Helper function to generate the next invoiceId
 const getNextInvoiceId = async () => {
-  const counter = await InvoiceId.findOneAndUpdate({ _id: "invoiceId" }, { $inc: { sequence: 1 } }, { new: true, upsert: true });
+  const counter = await InvoiceId.findOneAndUpdate(
+    { _id: "invoiceId" },
+    { $inc: { sequence: 1 } },
+    { new: true, upsert: true },
+  );
   return `#CD${1818 + counter.sequence}`;
 };
 
 // Controller for creating an invoice
 export const createInvoice = async (req, res) => {
   try {
-    const { projects, date, tax } = req.body;
+    const { project, date, tax, amount } = req.body;
 
-    let total = 0;
-    let subtotal = 0;
-    let CGST = 0;
-    let SGST = 0;
-    let IGST = 0;
+    let subtotal = parseFloat(amount);
+    let CGST = 0, SGST = 0, IGST = 0, total = 0;
 
-    // Calculate subtotal by summing up the amount of all projects
-    const invoiceProjects = await Promise.all(
-      projects.map(async (projectData) => {
-        const { project, amount } = projectData;
+    if (tax === "Inclusive") {
+      subtotal = subtotal / 1.18;
+    };
 
-        let originalAmount = parseFloat(amount);
+    const projectDetails = await Project.findById(project).populate("customer", "state");
 
-        // Adjust amount for inclusive tax
-        if (tax === "Inclusive") {
-          originalAmount = parseFloat(amount) / 1.18;
-        };
+    if (!projectDetails) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    };
 
-        subtotal += originalAmount;
-
-        return {
-          project,
-          amount: originalAmount.toFixed(2),
-        };
-      })
-    );
-
-    // Determine whether to apply CGST/SGST or IGST based on customer's state
-    const firstProjectDetails = await Project.findById(projects[0].project).populate({ path: "customer", select: "state" });
-    const customerState = firstProjectDetails.customer.state;
+    const customerState = projectDetails.customer.state;
 
     if (customerState === "Delhi") {
       CGST = subtotal * 0.09;
@@ -55,30 +43,25 @@ export const createInvoice = async (req, res) => {
     };
 
     const newInvoice = new Invoice({
-      projects: invoiceProjects,
+      project,
       tax,
       date,
+      amount: subtotal.toFixed(2),
       subtotal: subtotal.toFixed(2),
       CGST: CGST.toFixed(2),
       SGST: SGST.toFixed(2),
       IGST: IGST.toFixed(2),
       total: total.toFixed(2),
-      balanceDue: total.toFixed(2),
+      balanceDue: total.toFixed(2)
     });
 
-    await newInvoice.save();
-
-    // Generate the next invoiceId only after successful save
     const invoiceId = await getNextInvoiceId();
-
-    // Update the invoice document with the generated invoiceId
     newInvoice.invoiceId = invoiceId;
     await newInvoice.save();
 
-    return res.status(200).json({ success: true, message: "Invoice created successfully", invoice: newInvoice });
+    res.status(201).json({ success: true, invoice: newInvoice });
   } catch (error) {
-    console.log("Error while creating invoice:", error.message);
-    return res.status(500).json({ success: false, message: `Error while creating invoice: ${error.message}` });
+    res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -129,6 +112,13 @@ const filterFields = (invoice, projection) => {
   return filteredInvoice;
 };
 
+// Helper function to find ObjectId by string in referenced models
+const findObjectIdByString = async (modelName, fieldName, searchString) => {
+  const Model = mongoose.model(modelName);
+  const result = await Model.findOne({ [fieldName]: { $regex: new RegExp(searchString, 'i') } }).select('_id');
+  return result ? result._id : null;
+};
+
 // Controller for fetching all invoice
 export const fetchAllInvoice = async (req, res) => {
   try {
@@ -137,36 +127,9 @@ export const fetchAllInvoice = async (req, res) => {
 
     // Handle universal searching across all fields
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search, 'i');
-      const customers = await mongoose.model('Customer').find({
-        $or: [
-          { name: searchRegex },
-          { email: searchRegex },
-          { mobile: searchRegex },
-          { GSTNumber: searchRegex },
-          { companyName: searchRegex },
-          { state: searchRegex },
-          { address: searchRegex },
-        ]
-      }).select('_id');
-
-      // Find projects associated with these customers
-      const projectIds = await mongoose.model('Project').find({
-        $or: [
-          { projectName: searchRegex },
-          { projectId: searchRegex },
-          { customer: { $in: customers.map((customer) => customer._id) } },
-        ]
-      }).select('_id');
-
-      filter = {
-        $or: [
-          { invoiceId: searchRegex },
-          { tax: searchRegex },
-          { date: searchRegex },
-          { 'projects.project': { $in: projectIds.map((project) => project._id) } },
-        ],
-      };
+      filter.$or = [
+        { project: await findObjectIdByString('Project', 'projectName', req.query.search) },
+      ];
     };
 
     // Handle invoice id search
@@ -192,7 +155,7 @@ export const fetchAllInvoice = async (req, res) => {
     // Handle month-wise filtering
     if (req.query.month && !req.query.year) {
       const month = req.query.month.padStart(2, "0");
-      const currentYear = new Date().getFullYear();  // Default to current year if only month is provided
+      const currentYear = new Date().getFullYear();
 
       filter.date = {
         $gte: `${currentYear}-${month}-01`,
@@ -228,15 +191,14 @@ export const fetchAllInvoice = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .populate({
-        path: "projects.project",
-        select: "customer projectName projectId projectPrice totalPaid totalDues",
-        populate: [
-          {
-            path: "customer",
-            select: "",
-          },
-        ],
-      }).exec();
+        path: "project",
+        select: "",
+        populate: {
+          path: "customer",
+          select: "",
+        },
+      })
+      .exec();
 
     if (!invoice) {
       return res.status(404).json({ success: false, message: "Invoice not found" });
@@ -260,15 +222,14 @@ export const fetchSingleInvoice = async (req, res) => {
     const invoiceId = req.params.id;
     const invoice = await Invoice.findById(invoiceId)
       .populate({
-        path: "projects.project",
-        select: "customer projectName projectId projectPrice totalPaid totalDues",
-        populate: [
-          {
-            path: "customer",
-            select: "",
-          },
-        ],
-      }).exec();
+        path: "project",
+        select: "",
+        populate: {
+          path: "customer",
+          select: "",
+        },
+      })
+      .exec();
 
     if (!invoice) {
       return res.status(404).json({ success: false, message: "Invoice not found" });
@@ -285,48 +246,61 @@ export const fetchSingleInvoice = async (req, res) => {
   };
 };
 
+// Fetch invoice by project
+export const fetchInvoiceByProject = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+
+    const invoices = await Invoice.find({ project: projectId })
+      .populate({
+        path: "project",
+        select: "",
+        populate: {
+          path: "customer",
+          select: "",
+        },
+      })
+      .exec();
+
+    if (!invoices.length) {
+      return res.status(404).json({ success: false, message: "Invoices not found" });
+    };
+
+    const totalReceived = invoices.reduce((sum, invoice) => {
+      const received = invoice.tax === "Inclusive"
+        ? parseFloat(invoice.total) || 0
+        : parseFloat(invoice.subtotal) || 0;
+      return sum + received;
+    }, 0);
+
+    return res.status(200).json({ success: true, invoices, totalReceived });
+  } catch (error) {
+    console.error("Error while fetching invoice by project:", error.message);
+    return res.status(500).json({ success: false, message: error.message });
+  };
+};
+
 // Controller for update an invoice by ID
 export const updateInvoice = async (req, res) => {
   try {
-    const invoiceId = req.params.id;
-    const { projects, date, tax } = req.body;
+    const { id } = req.params;
+    const { project, date, tax, amount } = req.body;
 
-    const invoice = await Invoice.findById(invoiceId).populate("projects.project");
+    const invoice = await Invoice.findById(id);
 
     if (!invoice) {
       return res.status(404).json({ success: false, message: "Invoice not found" });
     };
 
-    let total = 0;
-    let subtotal = 0;
-    let CGST = 0;
-    let SGST = 0;
-    let IGST = 0;
+    let subtotal = parseFloat(amount);
+    let CGST = 0, SGST = 0, IGST = 0, total = 0;
 
-    // Calculate subtotal by summing up the amount of all projects
-    const invoiceProjects = await Promise.all(
-      projects.map(async (projectData) => {
-        const { project, amount } = projectData;
+    if (tax === "Inclusive") {
+      subtotal = subtotal / 1.18;
+    };
 
-        let originalAmount = parseFloat(amount);
-
-        // Adjust amount for inclusive tax
-        if (tax === "Inclusive") {
-          originalAmount = parseFloat(amount) / 1.18;
-        };
-
-        subtotal += originalAmount;
-
-        return {
-          project,
-          amount: originalAmount.toFixed(2),
-        };
-      })
-    );
-
-    // Determine whether to apply CGST/SGST or IGST based on customer's state
-    const firstProjectDetails = await Project.findById(projects[0].project).populate("customer");
-    const customerState = firstProjectDetails.customer.state;
+    const projectDetails = await Project.findById(project).populate("customer", "state");
+    const customerState = projectDetails.customer.state;
 
     if (customerState === "Delhi") {
       CGST = subtotal * 0.09;
@@ -337,10 +311,10 @@ export const updateInvoice = async (req, res) => {
       total = subtotal + IGST;
     };
 
-    // Update invoice details
-    invoice.projects = invoiceProjects;
+    invoice.project = project;
     invoice.tax = tax;
     invoice.date = date;
+    invoice.amount = subtotal.toFixed(2);
     invoice.subtotal = subtotal.toFixed(2);
     invoice.CGST = CGST.toFixed(2);
     invoice.SGST = SGST.toFixed(2);
@@ -350,10 +324,9 @@ export const updateInvoice = async (req, res) => {
 
     await invoice.save();
 
-    return res.status(200).json({ success: true, message: "Invoice updated successfully", invoice });
+    res.status(200).json({ success: true, invoice });
   } catch (error) {
-    console.log("Error while updating invoice:", error.message);
-    return res.status(500).json({ success: false, message: "Error while updating invoice", error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   };
 };
 
