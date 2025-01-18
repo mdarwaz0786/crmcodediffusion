@@ -191,6 +191,11 @@ const Sidebar = () => {
                   }
                   {
                     (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr") && (
+                      <li><Link to="/late-punch-in" className={currentPath === "/late-punch-in" ? "active" : ""} id={isMobile && active === "latePunchIn" ? "mobile_btn" : ""} onClick={() => handleActive("latePunchIn")}><i style={{ color: currentPath === "/late-punch-in" ? "" : "#FFA201" }} className="ti ti-clock-hour-3"></i><span>Late Punch In</span></Link></li>
+                    )
+                  }
+                  {
+                    (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr") && (
                       <li><Link to="/comp-off" className={currentPath === "/comp-off" ? "active" : ""} id={isMobile && active === "CompOff" ? "mobile_btn" : ""} onClick={() => handleActive("CompOff")}><i style={{ color: currentPath === "/comp-off" ? "" : "#FFA201" }} className="ti ti-user-plus"></i><span>Comp Off</span></Link></li>
                     )
                   }

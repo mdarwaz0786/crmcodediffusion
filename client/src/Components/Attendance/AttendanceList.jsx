@@ -27,6 +27,7 @@ const AttendanceList = () => {
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
     month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
+    sort: "Ascending",
   });
 
   const fetchAllEmployee = async () => {
@@ -87,6 +88,7 @@ const AttendanceList = () => {
           year: filters.year,
           month: filters.month,
           employeeId: selectedEmployee,
+          sort: filters.sort,
         },
       });
 
@@ -121,7 +123,7 @@ const AttendanceList = () => {
     if (!isLoading && team && selectedEmployee && filters.month && filters.year && permissions?.access) {
       fetchAllData();
     };
-  }, [filters.month, filters.year, selectedEmployee, isLoading, team, permissions]);
+  }, [filters.month, filters.year, filters.sort, selectedEmployee, isLoading, team, permissions]);
 
   const exportAttendanceListAsExcel = () => {
     if (data?.length === 0) {

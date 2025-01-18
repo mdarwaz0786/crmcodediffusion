@@ -2,9 +2,8 @@ import Attendance from '../models/attendance.model.js';
 import Team from "../models/team.model.js";
 import mongoose from 'mongoose';
 
-// Helper: Calculate time difference in HH:mm format
+// Calculate time difference in HH:MM format
 const calculateTimeDifference = (startTime, endTime) => {
-    // Check if either startTime or endTime is empty
     if (!startTime || !endTime) {
         return "00:00";
     };
@@ -22,6 +21,35 @@ const calculateTimeDifference = (startTime, endTime) => {
     return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 };
 
+// Helper function to compare two times
+function compareTime(time1, time2) {
+    const [hours1, minutes1] = time1.split(":").map(Number);
+    const [hours2, minutes2] = time2.split(":").map(Number);
+
+    if (hours1 > hours2 || (hours1 === hours2 && minutes1 > minutes2)) {
+        return 1;
+    };
+
+    if (hours1 === hours2 && minutes1 === minutes2) {
+        return 0;
+    };
+
+    return -1;
+};
+
+// Helper function to convert time (HH:MM) into minutes
+function timeToMinutes(time) {
+    const [hours, minutes] = time.split(":").map(Number);
+    return hours * 60 + minutes;
+};
+
+// Helper function to convert minutes into time (HH:MM)
+function minutesToTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+};
+
 // Create or Update Attendance with Punch-in
 export const createAttendance = async (req, res) => {
     try {
@@ -32,9 +60,13 @@ export const createAttendance = async (req, res) => {
         };
 
         const EXPECTED_PUNCH_IN = "10:00";
+        const HALF_DAY_THRESHOLD = "11:00";
 
         // Calculate lateIn
         const lateIn = calculateTimeDifference(EXPECTED_PUNCH_IN, punchInTime);
+
+        // Determine attendance status based on punch-in time
+        const attendanceStatus = compareTime(punchInTime, HALF_DAY_THRESHOLD) === 1 ? "Half Day" : "Present";
 
         // Use atomic operation to ensure no duplicate punch-in
         const result = await Attendance.findOneAndUpdate(
@@ -43,11 +75,14 @@ export const createAttendance = async (req, res) => {
                 $set: {
                     punchInTime,
                     punchIn: true,
-                    status: "Present",
+                    status: attendanceStatus,
                     lateIn,
                 },
             },
-            { upsert: true, new: true }
+            {
+                upsert: true,
+                new: true,
+            },
         );
 
         if (result.punchIn && result.punchInTime !== punchInTime) {
@@ -66,6 +101,7 @@ export const fetchAllAttendance = async (req, res) => {
     try {
         const { date, employeeId } = req.query;
         const query = {};
+        let sort = {};
 
         // Filter by exact date if provided
         if (date) {
@@ -107,13 +143,20 @@ export const fetchAllAttendance = async (req, res) => {
             };
         };
 
+        // Handle sorting
+        if (req.query.sort === 'Ascending') {
+            sort = { attendanceDate: 1 };
+        } else {
+            sort = { attendanceDate: -1 };
+        };
+
         // Calculate total count
         const totalCount = await Attendance.countDocuments(query);
 
         // Fetch attendance with the constructed query
         const attendance = await Attendance.find(query)
-            .sort({ attendanceDate: 1 })
-            .populate('employee', 'name')
+            .sort(sort)
+            .populate('employee')
             .exec();
 
         if (!attendance) {
@@ -130,7 +173,7 @@ export const fetchAllAttendance = async (req, res) => {
 // Get a single attendance record by ID
 export const fetchSingleAttendance = async (req, res) => {
     try {
-        const attendance = await Attendance.findById(req.params.id).populate('employee', 'name');
+        const attendance = await Attendance.findById(req.params.id).populate('employee');
 
         if (!attendance) {
             return res.status(404).json({ success: false, message: 'Attendance not found' });
@@ -141,19 +184,6 @@ export const fetchSingleAttendance = async (req, res) => {
         console.log(error.message);
         return res.status(500).json({ success: false, message: error.message });
     };
-};
-
-// Helper function to convert time (HH:MM) into minutes
-function timeToMinutes(time) {
-    const [hours, minutes] = time.split(":").map(Number);
-    return hours * 60 + minutes;
-};
-
-// Helper function to convert minutes into time (HH:MM)
-function minutesToTime(minutes) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 };
 
 // Fetch monthly statistic
@@ -168,19 +198,21 @@ export const fetchMonthlyStatistic = async (req, res) => {
         // Fetch attendance records for the specified employee and month
         const attendanceRecords = await Attendance.find({
             employee: employeeId,
-            attendanceDate: { $regex: `^${month}-` }, // Matches month in "YYYY-MM" format
+            attendanceDate: { $regex: `^${month}-` },
         });
 
-        if (!attendanceRecords) {
+        if (!attendanceRecords || attendanceRecords.length === 0) {
             return res.status(400).json({ success: false, message: "Attendance not found" });
         };
 
         // Initialize counters
         let totalPresent = 0;
+        let totalHalfDays = 0;
         let totalAbsent = 0;
         let totalLeave = 0;
         let totalHolidays = 0;
         let totalSundays = 0;
+        let totalSaturDays = 0;
         let totalMinutesWorked = 0;
         let totalLateIn = 0;
         let totalCompOff = 0;
@@ -193,8 +225,13 @@ export const fetchMonthlyStatistic = async (req, res) => {
 
         // Iterate over attendance records to calculate statistics
         attendanceRecords.forEach((record) => {
-            if (record.status === "Present") {
-                totalPresent++;
+            if (["Present", "Half Day"].includes(record.status)) {
+                if (record.status === "Present") {
+                    totalPresent++;
+                };
+                if (record.status === "Half Day") {
+                    totalHalfDays++;
+                };
                 if (record.hoursWorked) {
                     totalMinutesWorked += timeToMinutes(record.hoursWorked);
                 };
@@ -217,6 +254,8 @@ export const fetchMonthlyStatistic = async (req, res) => {
                 totalHolidays++;
             } else if (record.status === "Sunday") {
                 totalSundays++;
+            } else if (record.status === "Saturday") {
+                totalSaturDays++;
             } else if (record.status === "Comp Off") {
                 totalCompOff++;
             }
@@ -259,7 +298,9 @@ export const fetchMonthlyStatistic = async (req, res) => {
             companyWorkingHours: totalWorkingHours,
             totalHolidays,
             totalSundays,
+            totalSaturDays,
             employeePresentDays: totalPresent,
+            employeeHalfDays: totalHalfDays,
             employeeAbsentDays: totalAbsent,
             employeeLeaveDays: totalLeave,
             employeeCompOffDays: totalCompOff,
@@ -273,7 +314,7 @@ export const fetchMonthlyStatistic = async (req, res) => {
         return res.status(200).json({ success: true, attendance });
     } catch (error) {
         console.log(error.message);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, message: error.message });
     };
 };
 
@@ -312,7 +353,7 @@ export const updateAttendance = async (req, res) => {
 
         return res.status(200).json({ success: true, attendance: updatedAttendance });
     } catch (error) {
-        console.log(error);
+        console.log(error.message);
         return res.status(500).json({ success: false, message: error.message });
     };
 };

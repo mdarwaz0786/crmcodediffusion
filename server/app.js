@@ -34,6 +34,7 @@ import projectDeploymentRoute from "./src/routes/projectDeployment.route.js";
 import serviceRoute from "./src/routes/service.route.js";
 import addOnServiceRoute from "./src/routes/addOnService.route.js";
 import missedPunchOutRoute from "./src/routes/missedPunchOut.route.js";
+import latePunchInRoute from "./src/routes/latePunchIn.route.js";
 import compOffRoute from "./src/routes/compOff.route.js";
 import workSummaryRoute from "./src/routes/workSummary.route.js";
 import notificationRoute from "./src/routes/notification.route.js";
@@ -103,8 +104,10 @@ server.use("/api/v1/projectDeployment", projectDeploymentRoute);
 server.use("/api/v1/service", serviceRoute);
 // Add on service route
 server.use("/api/v1/addOnService", addOnServiceRoute);
-// Miss punch out route
+// Missed punch out route
 server.use("/api/v1/missedPunchOut", missedPunchOutRoute);
+// Late punch in out route
+server.use("/api/v1/latePunchIn", latePunchInRoute);
 // Comp off route
 server.use("/api/v1/compOff", compOffRoute);
 // Work summary route

@@ -66,6 +66,7 @@ const Calender = ({ attendanceData, month, year, employeeId }) => {
               <div>{day}</div>
               <div style={{ color: attendanceColors[attendance?.status] }}>{attendance?.status}</div>
               <div>{attendance?.punchInTime} {" "} {attendance?.punchOutTime}</div>
+              <div>{attendance?.hoursWorked}</div>
             </div>
           );
         })}

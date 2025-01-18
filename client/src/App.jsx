@@ -78,6 +78,7 @@ import Department from "./Components/Project/Department/Department.jsx";
 import AddDepartment from "./Components/Project/Department/AddDepartment.jsx";
 import EditDepartment from "./Components/Project/Department/EditDepartment.jsx";
 import AddNotification from "./Components/Notification/AddNotification.jsx";
+import LatePunchIn from "./Components/LatePunchIn/LatePunchIn.jsx";
 
 const App = () => {
   return (
@@ -151,6 +152,7 @@ const App = () => {
           <Route path="edit-add-on-service/:id" element={<EditAddOnService />} />
           <Route path="comp-off" element={<CompOff />} />
           <Route path="missed-punch-out" element={<MissedPunchOut />} />
+          <Route path="late-punch-in" element={<LatePunchIn />} />
           <Route path="salary" element={<Salary />} />
           <Route path="add-salary" element={<AddSalary />} />
           <Route path="edit-salary/:id" element={<EditSalary />} />

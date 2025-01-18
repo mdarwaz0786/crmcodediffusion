@@ -49,6 +49,8 @@ const AttendanceSummary = ({ attendance }) => {
       <div style={itemStyle}><span style={boldText}>Company&apos;s Working Days:</span> <span>{attendance?.companyWorkingDays}</span></div>
       <div style={itemStyle}><span style={boldText}>Company&apos;s Working Hours:</span> <span>{formatTimeToHoursMinutes(attendance?.companyWorkingHours)}</span></div>
       <div style={itemStyle}><span style={boldText}>Present Days:</span> <span style={highlightStyle}>{attendance?.employeePresentDays}</span></div>
+      <div style={itemStyle}><span style={boldText}>Half Days:</span> <span style={highlightStyle}>{attendance?.employeeHalfDays}</span></div>
+      <div style={itemStyle}><span style={boldText}>Comp Off Days:</span> <span style={highlightStyle}>{attendance?.employeeCompOffDays}</span></div>
       <div style={itemStyle}><span style={boldText}>Absent Days:</span> <span style={{ color: 'red', fontWeight: 'bold' }}>{attendance?.employeeAbsentDays}</span></div>
       <div style={itemStyle}><span style={boldText}>On Leave Days:</span> <span style={{ color: 'orange', fontWeight: 'bold' }}>{attendance?.employeeLeaveDays}</span></div>
       <div style={itemStyle}><span style={boldText}>Late In Days:</span> <span style={{ color: '#dc3545', fontWeight: 'bold' }}>{attendance?.employeeLateInDays}</span></div>
