@@ -56,18 +56,80 @@ const teamSchema = new mongoose.Schema(
       ref: "OfficeLocation",
     },
     department: {
-      type: String,
-      default: "IT",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Department",
     },
-    leaveBalance: {
+    allotedLeaveBalance: {
       type: String,
       default: "2",
     },
-    leaves: [{
+    currentLeaveBalance: {
       type: String,
+      default: "2",
+    },
+    usedLeaveBalance: {
+      type: String,
+      default: "0",
+    },
+    approvedLeaves: [{
+      date: {
+        type: String,
+      },
+      reason: {
+        type: String,
+      },
+      approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Team",
+      },
+      isUtilized: {
+        type: Boolean,
+        default: false,
+      },
     }],
-    compOff: [{
-      type: String,
+    leaveBalanceUsedHistory: [{
+      date: {
+        type: String,
+      },
+      previousBalance: {
+        type: String,
+      },
+      deductedBalance: {
+        type: String,
+      },
+      updatedBalance: {
+        type: String,
+      },
+      reason: {
+        type: String,
+      },
+    }],
+    eligibleCompOffDate: [{
+      date: {
+        type: String,
+      },
+      reason: {
+        type: String,
+      },
+      isApplied: {
+        type: Boolean,
+        default: false,
+      },
+      isApproved: {
+        type: Boolean,
+        default: false,
+      },
+      approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Team",
+      },
+      isUtilized: {
+        type: Boolean,
+        default: false,
+      },
+      utilizedDate: {
+        type: String,
+      },
     }],
     role: {
       type: mongoose.Schema.Types.ObjectId,
@@ -90,9 +152,8 @@ const teamSchema = new mongoose.Schema(
 teamSchema.pre("save", async function (next) {
   try {
     const capitalizeWords = (string) => {
-      return string
-        .split(" ")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
+      if (!string) return "";
+      return string.charAt(0).toUpperCase() + string.slice(1);
     };
 
     if (this.name) {
@@ -110,4 +171,7 @@ teamSchema.pre("save", async function (next) {
   };
 });
 
-export default mongoose.model("Team", teamSchema);
+const Team = mongoose.model("Team", teamSchema);
+
+export default Team;
+

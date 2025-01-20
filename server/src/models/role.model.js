@@ -543,9 +543,12 @@ const TeamPermissionSchema = new mongoose.Schema(
       designation: { type: FieldPermissionSchema, default: () => ({}) },
       office: { type: FieldPermissionSchema, default: () => ({}) },
       department: { type: FieldPermissionSchema, default: () => ({}) },
-      leaveBalance: { type: FieldPermissionSchema, default: () => ({}) },
-      leaves: { type: FieldPermissionSchema, default: () => ({}) },
-      compOff: { type: FieldPermissionSchema, default: () => ({}) },
+      allotedLeaveBalance: { type: FieldPermissionSchema, default: () => ({}) },
+      currentLeaveBalance: { type: FieldPermissionSchema, default: () => ({}) },
+      usedLeaveBalance: { type: FieldPermissionSchema, default: () => ({}) },
+      approvedLeaves: { type: FieldPermissionSchema, default: () => ({}) },
+      leaveBalanceUsedHistory: { type: FieldPermissionSchema, default: () => ({}) },
+      eligibleCompOffDate: { type: FieldPermissionSchema, default: () => ({}) },
       role: { type: FieldPermissionSchema, default: () => ({}) },
       reportingTo: { type: FieldPermissionSchema, default: () => ({}) },
       isActive: { type: FieldPermissionSchema, default: () => ({}) },
@@ -882,7 +885,8 @@ RoleSchema.pre("save", function (next) {
   const capitalizeWords = (string) => {
     return string
       .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
+      .map((word) => word.charAt(0).toUpperCase())
+      .join(" ");
   };
 
   if (this.name) {

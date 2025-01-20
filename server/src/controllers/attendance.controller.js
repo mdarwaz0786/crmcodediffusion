@@ -1,5 +1,6 @@
 import Attendance from '../models/attendance.model.js';
 import Team from "../models/team.model.js";
+import Holiday from "../models/holiday.model.js";
 import mongoose from 'mongoose';
 
 // Calculate time difference in HH:MM format
@@ -50,13 +51,28 @@ function minutesToTime(minutes) {
     return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 };
 
+// Helper function to get the day name from a date string
+const getDayName = (dateString) => {
+    const date = new Date(dateString);
+    const options = { weekday: 'long' };
+    return date.toLocaleDateString('en-US', options);
+};
+
 // Create or Update Attendance with Punch-in
 export const createAttendance = async (req, res) => {
     try {
         const { employee, attendanceDate, punchInTime } = req.body;
 
-        if (!employee || !attendanceDate || !punchInTime) {
-            return res.status(400).json({ success: false, message: "All fields are required" });
+        if (!employee) {
+            return res.status(400).json({ success: false, message: "Employee is required" });
+        };
+
+        if (!attendanceDate) {
+            return res.status(400).json({ success: false, message: "Date is required" });
+        };
+
+        if (!punchInTime) {
+            return res.status(400).json({ success: false, message: "Punch in time is required" });
         };
 
         const EXPECTED_PUNCH_IN = "10:00";
@@ -68,6 +84,12 @@ export const createAttendance = async (req, res) => {
         // Determine attendance status based on punch-in time
         const attendanceStatus = compareTime(punchInTime, HALF_DAY_THRESHOLD) === 1 ? "Half Day" : "Present";
 
+        // Check if the attendance date is a holiday
+        const holiday = await Holiday.findOne({ date: attendanceDate });
+
+        // Get the day name from attendanceDate
+        const dayName = getDayName(attendanceDate);
+
         // Use atomic operation to ensure no duplicate punch-in
         const result = await Attendance.findOneAndUpdate(
             { employee, attendanceDate, punchIn: false },
@@ -77,6 +99,8 @@ export const createAttendance = async (req, res) => {
                     punchIn: true,
                     status: attendanceStatus,
                     lateIn,
+                    dayName,
+                    isHoliday: holiday ? true : false,
                 },
             },
             {
@@ -85,14 +109,38 @@ export const createAttendance = async (req, res) => {
             },
         );
 
-        if (result.punchIn && result.punchInTime !== punchInTime) {
-            return res.status(400).json({ success: false, message: "Punch in already exists" });
+        // Check if the day is Sunday or if it is a holiday
+        if (dayName === "Sunday" || holiday) {
+            let reason = "";
+
+            // If both conditions are true
+            if (dayName === "Sunday" && holiday) {
+                reason = `Worked on ${dayName}, ${holiday.reason}`;
+            } else if (dayName === "Sunday") {
+                reason = `Worked on ${dayName}`;
+            } else if (holiday) {
+                reason = `Worked on ${holiday.reason}`;
+            };
+
+            const compOffEntry = {
+                date: attendanceDate,
+                isApplied: false,
+                isApproved: false,
+                isUtilized: false,
+                reason,
+            };
+
+            // Update the eligibleCompOffDate in the employee collection
+            await Team.findOneAndUpdate(
+                { _id: employee },
+                { $addToSet: { eligibleCompOffDate: compOffEntry } },
+            );
         };
 
         return res.status(201).json({ success: true, message: "Punch in successful", attedance: result });
     } catch (error) {
         console.log(error.message);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, message: error.message });
     };
 };
 
@@ -323,8 +371,16 @@ export const updateAttendance = async (req, res) => {
     try {
         const { employee, attendanceDate, punchOutTime } = req.body;
 
-        if (!employee || !attendanceDate || !punchOutTime) {
-            return res.status(400).json({ success: false, message: "All fields are required" });
+        if (!employee) {
+            return res.status(400).json({ success: false, message: "Employee is required" });
+        };
+
+        if (!attendanceDate) {
+            return res.status(400).json({ success: false, message: "Date is required" });
+        };
+
+        if (!punchOutTime) {
+            return res.status(400).json({ success: false, message: "Punch out time is required" });
         };
 
         // Find punch in record
@@ -348,7 +404,10 @@ export const updateAttendance = async (req, res) => {
                     hoursWorked: calculateTimeDifference(attendance.punchInTime, punchOutTime),
                 },
             },
-            { new: true },
+            {
+                new: true,
+                upsert: true,
+            },
         );
 
         return res.status(200).json({ success: true, attendance: updatedAttendance });
