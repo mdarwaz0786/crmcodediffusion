@@ -6,38 +6,58 @@ import { sendEmail } from "../services/emailService.js";
 // Create a new comp off
 export const createCompOff = async (req, res) => {
   try {
-    const { employee, attendanceDate, approvedBy, status } = req.body;
+    const { employee, attendanceDate, date, approvedBy, status } = req.body;
+
+    if (!date) {
+      return res.status(400).json({ success: false, message: "Date is required." });
+    };
+
+    if (!attendanceDate) {
+      return res.status(400).json({ success: false, message: "Attendance date is required." });
+    };
 
     if (!employee) {
       return res.status(400).json({ success: false, message: "Employee is required." });
     };
 
-    if (!attendanceDate) {
-      return res.status(400).json({ success: false, message: "Date is required." });
-    };
-
-    const existingCompOff = await CompOff.findOne({ employee, attendanceDate });
+    const existingCompOff = await CompOff.findOne({ employee, attendanceDate, date });
 
     if (existingCompOff) {
-      return res.status(400).json({ success: false, message: `Comp off already applied for date ${attendanceDate}` });
+      return res.status(400).json({ success: false, message: `Comp off already applied` });
     };
 
-    const compOff = new CompOff({ employee, attendanceDate, approvedBy, status });
+    const compOff = new CompOff({ employee, attendanceDate, date, approvedBy, status });
 
     await compOff.save();
 
-    const emp = await Team.findById(employee);
+    // Update comp off
+    await Team.findOneAndUpdate(
+      {
+        _id: employee,
+        "eligibleCompOffDate.date": date,
+      },
+      {
+        $set: {
+          "eligibleCompOffDate.$.isApplied": true,
+        },
+      },
+      {
+        new: true,
+      },
+    );
+
+    const appliedBy = await Team.findById(employee);
 
     // Send email after comp off is created
-    const subject = `${emp.name} apply comp off for date ${attendanceDate}`;
+    const subject = `${appliedBy?.name} apply comp off for date ${attendanceDate}`;
 
     const htmlContent =
-      `<p>Comp off request has been submitted by ${emp.name} for date ${attendanceDate}.</p>
+      `<p>Comp off request has been submitted by ${appliedBy?.name} for date ${attendanceDate}.</p>
       <p>Pleave review the request.</p>`
 
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
-    res.status(201).json({ success: true, message: "Comp off created successfully.", data: compOff });
+    res.status(201).json({ success: true, data: compOff });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   };

@@ -12,6 +12,10 @@ const compOffSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    date: {
+      type: String,
+      index: true,
+    },
     status: {
       type: String,
       enum: ["Pending", "Approved", "Rejected"],
