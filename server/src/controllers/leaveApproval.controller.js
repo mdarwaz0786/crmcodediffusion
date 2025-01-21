@@ -1,6 +1,5 @@
 import LeaveApproval from "../models/leaveApproval.model.js";
 import Team from "../models/team.model.js";
-import Attendance from "../models/attendance.model.js";
 import mongoose from "mongoose";
 import { sendEmail } from '../services/emailService.js';
 
@@ -31,7 +30,7 @@ export const createLeaveApproval = async (req, res) => {
     };
 
     if (new Date(startDate) > new Date(endDate)) {
-      return res.status(400).json({ success: false, message: "Start date cannot be later than the end date" });
+      return res.status(400).json({ success: false, message: "Start date cannot be later than end date" });
     };
 
     // Check if the employee exist
@@ -41,26 +40,19 @@ export const createLeaveApproval = async (req, res) => {
       return res.status(400).json({ success: false, message: "Employee not found" });
     };
 
-    // Check for overlapping leave request
-    const overlappingLeave = await LeaveApproval.findOne({
-      employee,
-      $or: [
-        {
-          startDate: { $lte: new Date(endDate) },
-          endDate: { $gte: new Date(startDate) }
-        },
-      ],
-    });
+    if (parseFloat(existingEmployee?.currentLeaveBalance) < 0) {
+      return res.status(400).json({ success: false, message: "Insufficient leave balance" });
+    };
 
-    if (overlappingLeave) {
-      return res.status(400).json({ success: false, message: `Leave already exists between ${startDate} and ${endDate}` });
+    const existingLeaveApproval = await LeaveApproval.findOne({ employee, startDate, endDate });
+
+    if (existingLeaveApproval) {
+      if (existingLeaveApproval?.status === "Approved" || existingLeaveApproval?.status === "Pending") {
+        return res.status(400).json({ success: false, message: `Leave request for start date ${startDate} and end date ${endDate} is already applied and status is ${existingLeaveApproval?.status}.` });
+      };
     };
 
     const leaveDuration = getDateRange(startDate, endDate);
-
-    if (parseFloat(existingEmployee.leaveBalance) < 0) {
-      return res.status(400).json({ success: false, message: "Insufficient leave balance" });
-    };
 
     const newLeaveApproval = new LeaveApproval({
       employee,
@@ -74,11 +66,11 @@ export const createLeaveApproval = async (req, res) => {
 
     await newLeaveApproval.save();
 
-    const subject = `${existingEmployee.name} Applied Leave for ${leaveDuration.length} Days`;
+    const subject = `${existingEmployee?.name} Applied Leave for ${leaveDuration.length} Days`;
 
-    // Send email to HR using the updated service
+    // Send email
     const htmlContent = `
-      <p><strong>Employee Name:</strong> ${existingEmployee.name}</p>
+      <p><strong>Employee Name:</strong> ${existingEmployee?.name}</p>
       <p><strong>Start Date:</strong> ${new Date(startDate).toLocaleDateString('en-GB')}</p>
       <p><strong>End Date:</strong> ${new Date(endDate).toLocaleDateString('en-GB')}</p>
       <p><strong>Leave Duration:</strong> ${leaveDuration.length} Days</p>
@@ -88,9 +80,9 @@ export const createLeaveApproval = async (req, res) => {
 
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
-    res.status(201).json({ success: true, message: "Leave approval request created successfully", data: newLeaveApproval });
+    return res.status(201).json({ success: true, data: newLeaveApproval });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error while creating leave approval request", error: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -98,7 +90,7 @@ export const createLeaveApproval = async (req, res) => {
 export const fetchAllLeaveApproval = async (req, res) => {
   try {
     const { employeeId } = req.query;
-    const query = {};
+    let query = {};
     let sort = {};
 
     // Filter by year only (all month)
@@ -127,7 +119,7 @@ export const fetchAllLeaveApproval = async (req, res) => {
       };
     };
 
-    // Filter by employee ID if provided
+    // Filter by employee ID
     if (employeeId) {
       if (mongoose.Types.ObjectId.isValid(employeeId)) {
         query.employee = employeeId;
@@ -156,8 +148,8 @@ export const fetchAllLeaveApproval = async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .populate("employee", "name")
-      .populate("leaveApprovedBy", "name")
+      .populate("employee")
+      .populate("leaveApprovedBy")
       .exec();
 
     if (!leaveApprovals) {
@@ -166,7 +158,6 @@ export const fetchAllLeaveApproval = async (req, res) => {
 
     return res.status(200).json({ success: true, data: leaveApprovals, totalCount });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -176,15 +167,17 @@ export const fetchSingleLeaveApproval = async (req, res) => {
   try {
     const { id } = req.params;
     const leaveApproval = await LeaveApproval.findById(id)
-      .populate("employee", "name")
-      .populate("leaveApprovedBy", "name");
+      .populate("employee")
+      .populate("leaveApprovedBy")
+      .exec();
 
     if (!leaveApproval) {
       return res.status(404).json({ success: false, message: "Leave approval request not found" });
     };
-    res.status(200).json({ success: true, data: leaveApproval });
+
+    return res.status(200).json({ success: true, data: leaveApproval });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error while fetching leave approval request", error: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -193,122 +186,77 @@ export const updateLeaveApproval = async (req, res) => {
   try {
     const { leaveId, approverId, leaveStatus } = req.body;
 
-    // Validate user role
-    const userRole = req.team?.role?.name;
-
-    if (userRole.toLowerCase() !== "admin" && userRole.toLowerCase() !== "hr") {
-      return res.status(403).json({ success: false, message: "You do not have permission to update leave request." });
+    // Validations
+    if (!leaveId) {
+      return res.status(400).json({ success: false, message: "Leave ID is required." });
     };
 
-    // Validations
-    if (!leaveId || !approverId || !leaveStatus) {
-      return res.status(400).json({ success: false, message: "Leave ID, approver ID, and leave status are required." });
+    if (!approverId) {
+      return res.status(400).json({ success: false, message: "Approver ID is required." });
+    };
+
+    if (!leaveStatus) {
+      return res.status(400).json({ success: false, message: "Leave status is required." });
     };
 
     // Fetch the leave request
     const leaveRequest = await LeaveApproval.findById(leaveId)
-      .populate("employee", "email name leaveBalance")
-      .populate("leaveApprovedBy", "name")
+      .populate("employee")
       .exec();
 
     if (!leaveRequest) {
       return res.status(404).json({ success: false, message: "Leave request not found." });
     };
 
-    const { employee, startDate, endDate } = leaveRequest;
-    const employeeEmail = leaveRequest.employee.email;
-    const employeeId = leaveRequest.employee._id;
+    if (leaveRequest?.status === "Approved" || leaveRequest?.status === "Rejected") {
+      return res.status(400).json({ success: false, message: "This leave request has already been processed." });
+    };
 
-    const emp = await Team.findById(employeeId);
+    if (leaveRequest?.status === "Pending" && leaveStatus === "Pending") {
+      return res.status(400).json({ success: false, message: "This leave request is already in pending." });
+    };
 
-    // If it is a single day leave, set the date range to just the start date otherwise not
-    const datesToUpdate = startDate.toString() === endDate.toString()
-      ? [new Date(startDate)]
-      : getDateRange(new Date(startDate), new Date(endDate));
+    const employee = await Team.findById(leaveRequest?.employee?._id);
+    const approveBy = await Team.findById(approverId);
 
-    // Email content
-    const subject = `Your Leave Request has been updated to ${leaveStatus}`;
-    const htmlContent = `<p>Dear ${leaveRequest.employee.name},</p>
-                         <p>Your leave request from ${new Date(startDate).toLocaleDateString('en-GB')} to ${new Date(endDate).toLocaleDateString('en-GB')} has been updated to <strong>${leaveStatus}</strong>.</p>
-                         <p>Regards,<br/>HR Team</p>`;
+    if (leaveStatus === "Rejected") {
+      leaveRequest.leaveStatus = "Rejected";
+      leaveRequest.leaveApprovedBy = approverId;
+      await leaveRequest.save();
+      sendEmail(employee?.email, "Your Leave Request Rejected", `<p>Your leave request from date ${leaveRequest?.startDate} to ${leaveRequest?.startDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      return res.status(200).json({ success: true, message: "Leave request rejected." });
+    };
 
-    // If leave status is "Approved", handle the approval and attendance marking
     if (leaveStatus === "Approved") {
-      if (leaveRequest.leaveStatus === "Approved") {
-        return res.status(400).json({ success: false, message: "Leave request is already processed." });
-      };
-
       leaveRequest.leaveStatus = "Approved";
       leaveRequest.leaveApprovedBy = approverId;
       await leaveRequest.save();
 
-      const updateAttendancePromises = datesToUpdate.map(async (date) => {
-        const formattedDate = date.toISOString().split('T')[0];
+      const leaveDates = leaveRequest?.startDate.toString() === leaveRequest?.endDate.toString()
+        ? [new Date(leaveRequest?.startDate)]
+        : getDateRange(new Date(leaveRequest?.startDate), new Date(leaveRequest?.endDate));
 
-        const existingAttendance = await Attendance.findOne({
-          employee,
-          attendanceDate: formattedDate,
-        });
+      // Map leaveDates to create objects for approvedLeaves
+      const approvedLeaveEntries = leaveDates.map((date) => ({
+        date: date.toISOString().split("T")[0],
+        approvedBy: approverId,
+        reason: leaveRequest?.reason,
+        isUtilized: false,
+      }));
 
-        if (existingAttendance && ["Sunday", "Holiday", "Present"].includes(existingAttendance.status)) {
-          return;
-        };
+      // Update the approvedLeaves field in the `Team` schema
+      await Team.findOneAndUpdate(
+        { _id: employee?._id },
+        { $push: { approvedLeaves: { $each: approvedLeaveEntries } } }
+      );
 
-        await Attendance.findOneAndUpdate(
-          {
-            employee,
-            attendanceDate: formattedDate,
-          },
-          {
-            $set: {
-              status: "On Leave",
-              punchInTime: null,
-              punchIn: true,
-              punchOutTime: null,
-              punchOut: true,
-              hoursWorked: null,
-              lateIn: null,
-            },
-          },
-          {
-            upsert: true,
-            new: true,
-          }
-        );
-      });
-
-      await Promise.all(updateAttendancePromises);
-      emp.leaveBalance = parseFloat(emp.leaveBalance) - parseFloat(leaveRequest.leaveDuration);
-      await emp.save();
-
-      sendEmail(employeeEmail, subject, htmlContent);
-
-      return res.status(200).json({ success: true, message: "Leave approved, email sent, and attendance marked as On Leave." });
-    } else {
-      if (leaveRequest.leaveStatus === "Approved" && (leaveStatus === "Rejected" || leaveStatus === "Pending")) {
-        const deleteAttendancePromises = datesToUpdate.map(async (date) => {
-          const formattedDate = date.toISOString().split('T')[0];
-          await Attendance.deleteOne({ employee, attendanceDate: formattedDate, status: "On Leave" });
-        });
-
-        let leaveBalanceUpdated = parseFloat(emp.leaveBalance) + parseFloat(leaveRequest.leaveDuration);
-        emp.leaveBalance = leaveBalanceUpdated;
-        await emp.save();
-
-        await Promise.all(deleteAttendancePromises);
-      };
-
-      leaveRequest.leaveStatus = leaveStatus;
-      leaveRequest.leaveApprovedBy = approverId;
-      await leaveRequest.save();
-
-      sendEmail(employeeEmail, subject, htmlContent);
-
-      return res.status(200).json({ success: true, message: "Leave status updated, email sent, and attendance records cleared if applicable." });
+      // Send email
+      sendEmail(employee?.email, "Your Leave Request Approved", `<p>Your leave request from ${leaveRequest?.startDate} to ${leaveRequest?.endDate} has been approved.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      return res.status(200).json({ success: true, message: "Leave request approved." });
     };
+
   } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ success: false, error: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -317,11 +265,13 @@ export const deleteLeaveApproval = async (req, res) => {
   try {
     const { id } = req.params;
     const deletedLeaveApproval = await LeaveApproval.findByIdAndDelete(id);
+
     if (!deletedLeaveApproval) {
       return res.status(404).json({ success: false, message: "Leave approval request not found" });
     };
-    res.status(200).json({ success: true, message: "Leave approval request deleted successfully" });
+
+    return res.status(200).json({ success: true, message: "Leave approval request deleted successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error while deleting leave approval request", error: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };

@@ -1,9 +1,8 @@
 import CompOff from "../models/compOff.model.js";
-import Attendance from "../models/attendance.model.js";
 import Team from "../models/team.model.js";
 import { sendEmail } from "../services/emailService.js";
 
-// Create a new comp off
+// Create new comp off
 export const createCompOff = async (req, res) => {
   try {
     const { employee, attendanceDate, date, approvedBy, status } = req.body;
@@ -20,17 +19,26 @@ export const createCompOff = async (req, res) => {
       return res.status(400).json({ success: false, message: "Employee is required." });
     };
 
+    const today = new Date();
+    const appliedDate = new Date(attendanceDate);
+    today.setHours(0, 0, 0, 0);
+    appliedDate.setHours(0, 0, 0, 0);
+
+    if (appliedDate <= today) {
+      return res.status(400).json({ success: false, message: "Attendance date must be a future date." });
+    };
+
     const existingCompOff = await CompOff.findOne({ employee, attendanceDate, date });
 
     if (existingCompOff) {
-      return res.status(400).json({ success: false, message: `Comp off already applied` });
+      if (existingCompOff?.status === "Approved" || existingCompOff?.status === "Pending") {
+        return res.status(400).json({ success: false, message: `Comp off request for date ${attendanceDate} is already applied and status is ${existingCompOff?.status}.` });
+      };
     };
 
     const compOff = new CompOff({ employee, attendanceDate, date, approvedBy, status });
-
     await compOff.save();
 
-    // Update comp off
     await Team.findOneAndUpdate(
       {
         _id: employee,
@@ -48,25 +56,20 @@ export const createCompOff = async (req, res) => {
 
     const appliedBy = await Team.findById(employee);
 
-    // Send email after comp off is created
     const subject = `${appliedBy?.name} apply comp off for date ${attendanceDate}`;
-
-    const htmlContent =
-      `<p>Comp off request has been submitted by ${appliedBy?.name} for date ${attendanceDate}.</p>
-      <p>Pleave review the request.</p>`
-
+    const htmlContent = `<p>Comp off request has been applied by ${appliedBy?.name} for date ${attendanceDate}.</p><p>Pleave review the request.</p>`
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
-    res.status(201).json({ success: true, data: compOff });
+    return res.status(201).json({ success: true, data: compOff });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
-// Read (Get all Comp offs)
+// Get all Comp offs
 export const getAllCompOffs = async (req, res) => {
   try {
-    const query = {};
+    let query = {};
     let sort = {};
 
     // Filter by year only (all month)
@@ -95,7 +98,7 @@ export const getAllCompOffs = async (req, res) => {
       };
     };
 
-    // Filter by employee ID if provided
+    // Filter by employee ID
     if (req.query.employeeId) {
       query.employee = req.query.employeeId;;
     };
@@ -124,130 +127,94 @@ export const getAllCompOffs = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Comp off not found' });
     };
 
-    // Calculate total count
     const total = await CompOff.countDocuments(query);
 
-    res.status(200).json({ success: true, data: compOffs, totalCount: total });
+    return res.status(200).json({ success: true, data: compOffs, totalCount: total });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
-// Read (Get a single comp off by ID)
+// Get a single comp off by ID
 export const getCompOffById = async (req, res) => {
   try {
-    const compOff = await CompOff.findById(req.params.id).populate("employee").populate("approvedBy");
+    const compOff = await CompOff
+      .findById(req.params.id)
+      .populate("employee")
+      .populate("approvedBy")
+      .exec();
+
     if (!compOff) {
       return res.status(404).json({ success: false, message: "Comp off not found." });
     };
-    res.status(200).json({ success: true, data: compOff });
+
+    return res.status(200).json({ success: true, data: compOff });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
-// Update comp off request and handle attendance based on status
+// Update comp off request
 export const updateCompOff = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, approvedBy } = req.body;
 
-    const compOff = await CompOff.findById(id).populate("employee");
+    const compOff = await CompOff
+      .findById(id)
+      .populate("employee")
+      .exec();
 
     if (!compOff) {
       return res.status(404).json({ success: false, message: "Comp off not found." });
     };
 
-    const attendance = await Attendance.findOne({
-      employee: compOff.employee,
-      attendanceDate: compOff.attendanceDate,
-    });
-
-    // If approved and changing to pending or rejected, revert attendance
-    if (compOff.status === "Approved" && (status === "Pending" || status === "Rejected")) {
-      if (attendance) {
-        attendance.status = "Absent";
-        attendance.punchInTime = null;
-        attendance.punchOutTime = null;
-        attendance.punchIn = false;
-        attendance.punchOut = false;
-        await attendance.save();
-      };
+    if (compOff?.status === "Approved" || compOff?.status === "Rejected") {
+      return res.status(400).json({ success: false, message: "This comp off request has already been processed." });
     };
 
-    // Handle status transitions
-    if (status === "Pending") {
-      compOff.status = "Pending";
-      compOff.approvedBy = approvedBy;
-      await compOff.save();
-      sendEmail(
-        compOff.employee.email,
-        "Comp Off Request Update to Pending",
-        `<p>Your comp off request dated ${compOff.attendanceDate} has been marked as Pending.</p>
-        <p>Regards,<br/>HR Team</p>`
-      );
-      return res.status(200).json({ success: true, message: "Comp off request marked as pending." });
+    if (compOff?.status === "Pending" && status === "Pending") {
+      return res.status(400).json({ success: false, message: "This comp off request is already in pending." });
     };
+
+    const approveBy = await Team.findById(approvedBy);
 
     if (status === "Rejected") {
       compOff.status = "Rejected";
       compOff.approvedBy = approvedBy;
       await compOff.save();
-      sendEmail(
-        compOff.employee.email,
-        "Your Comp Off Request Rejected",
-        `<p>Your comp off request dated ${compOff.attendanceDate} has been rejected.</p>
-         <p>Regards,<br/>HR Team</p>`
-      );
+      sendEmail(compOff?.employee?.email, "Your Comp Off Request Rejected", `<p>Your comp off request date ${compOff?.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
       return res.status(200).json({ success: true, message: "Comp off rejected." });
     };
 
     if (status === "Approved") {
-      // Check if attendance already marked as comp off
-      if (attendance && attendance.status === "CompOff") {
-        return res.status(400).json({ success: false, message: "Attendance already exist as comp off." });
-      };
-
-      // Mark existing attendance as comp off or create a new if not exists
-      if (!attendance) {
-        await Attendance.create({
-          employee: compOff.employee,
-          attendanceDate: compOff.attendanceDate,
-          status: "Comp Off",
-          punchInTime: null,
-          punchOutTime: null,
-          punchIn: false,
-          punchOut: false,
-          hoursWorked: "00:00",
-          lateIn: "00:00",
-        });
-      } else {
-        attendance.status = "Comp Off";
-        attendance.punchInTime = null;
-        attendance.punchOutTime = null;
-        attendance.punchIn = false;
-        attendance.punchOut = false;
-        attendance.hoursWorked = "00:00";
-        attendance.lateIn = "00:00";
-        await attendance.save();
-      };
-
       compOff.status = "Approved";
       compOff.approvedBy = approvedBy;
       await compOff.save();
 
-      sendEmail(
-        compOff.employee.email,
-        "Your Comp Off Request Approved",
-        `<p>Your comp off request dated ${compOff.attendanceDate} has been approved.</p>
-         <p>Regards,<br/>HR Team</p>`
+      await Team.findOneAndUpdate(
+        {
+          _id: compOff?.employee?._id,
+          "eligibleCompOffDate.date": compOff?.date,
+        },
+        {
+          $set: {
+            "eligibleCompOffDate.$.isApproved": true,
+            "eligibleCompOffDate.$.approvedBy": approvedBy,
+          },
+        },
+        {
+          new: true,
+        },
       );
-      return res.status(200).json({ success: true, message: "Comp off approved and attendance marked as comp off." });
+
+      sendEmail(compOff?.employee?.email, "Your Comp Off Request Approved", `<p>Your comp off request date ${compOff?.attendanceDate} has been approved.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      return res.status(200).json({ success: true, message: "Comp off approved." });
     };
 
-    res.status(400).json({ success: false, message: "Invalid status provided." });
+    return res.status(400).json({ success: false, message: "Invalid status provided." });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -260,8 +227,8 @@ export const deleteCompOff = async (req, res) => {
       return res.status(404).json({ success: false, message: "Comp off not found." });
     };
 
-    res.status(200).json({ success: true, message: "Comp off deleted successfully." });
+    return res.status(200).json({ success: true, message: "Comp off deleted successfully." });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };

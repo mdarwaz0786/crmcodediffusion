@@ -51,14 +51,27 @@ export const createLatePunchIn = async (req, res) => {
 
     // Check if the requested date is within the last two days and same day
     if (requestedDate < formattedTwoDaysBefore || requestedDate > currentDate) {
-      return res.status(400).json({ success: false, message: "Late punch in can only be applied for the last two days." });
+      return res.status(400).json({ success: false, message: "Late punch in request can only be applied for the last two days." });
+    };
+
+    // Prevent applying for the current date before 7 PM
+    if (requestedDate === currentDate) {
+      const currentTime = new Date();
+      const cutoffTime = new Date();
+      cutoffTime.setHours(19, 0, 0, 0);
+
+      if (currentTime < cutoffTime) {
+        return res.status(400).json({ success: false, message: "Late punch in request for today can only be applied after 7 PM." });
+      };
     };
 
     // Check if a late punch-in request already exists
     const existingLatePunchIn = await LatePunchIn.findOne({ employee, attendanceDate });
 
     if (existingLatePunchIn) {
-      return res.status(400).json({ success: false, message: `Late punch in already applied for date ${attendanceDate}` });
+      if (existingLatePunchIn?.status === "Approved" || existingLatePunchIn?.status === "Pending") {
+        return res.status(400).json({ success: false, message: `Late punch in request for date ${attendanceDate} is already applied and status is ${existingLatePunchIn?.status}.` });
+      };
     };
 
     // Check if attendance exists and punch-in is valid
@@ -77,23 +90,23 @@ export const createLatePunchIn = async (req, res) => {
 
     await newLatePunchIn.save();
 
-    // Send email notification
+    // Send email
     const sendBy = await Team.findById(employee);
     const subject = `${sendBy?.name} applied for late punch in for date ${attendanceDate} and punch time ${punchInTime}`;
     const htmlContent = `<p>Late punch in request has been applied by ${sendBy?.name} for date ${attendanceDate}.</p><p>Please review the request.</p>`;
 
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
-    res.status(201).json({ success: true, data: newLatePunchIn });
+    return res.status(201).json({ success: true, data: newLatePunchIn });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
 // Get all late punch in entries
 export const getAllLatePunchIns = async (req, res) => {
   try {
-    const query = {};
+    let query = {};
     let sort = {};
 
     // Filter by year only (all month)
@@ -122,7 +135,7 @@ export const getAllLatePunchIns = async (req, res) => {
       };
     };
 
-    // Filter by employee ID if provided
+    // Filter by employee ID
     if (req.query.employeeId) {
       query.employee = req.query.employeeId;;
     };
@@ -153,9 +166,9 @@ export const getAllLatePunchIns = async (req, res) => {
 
     const total = await LatePunchIn.countDocuments(query);
 
-    res.status(200).json({ success: true, data: latePunchIns, totalCount: total });
+    return res.status(200).json({ success: true, data: latePunchIns, totalCount: total });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -172,9 +185,9 @@ export const getLatePunchInById = async (req, res) => {
       return res.status(404).json({ success: false, message: "Late punch in not found." });
     };
 
-    res.status(200).json({ success: true, data: latePunchIn });
+    return res.status(200).json({ success: true, data: latePunchIn });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -184,13 +197,12 @@ export const updateLatePunchIn = async (req, res) => {
     const { id } = req.params;
     const { status, approvedBy } = req.body;
 
-    // Validate required fields
     if (!status) {
       return res.status(400).json({ success: false, message: "Status is required" });
     };
 
     if (!approvedBy) {
-      return res.status(400).json({ success: false, message: "Approved by is required" });
+      return res.status(400).json({ success: false, message: "ApprovedBy is required" });
     };
 
     const latePunchIn = await LatePunchIn
@@ -216,12 +228,7 @@ export const updateLatePunchIn = async (req, res) => {
       latePunchIn.status = "Rejected";
       latePunchIn.approvedBy = approvedBy;
       await latePunchIn.save();
-      sendEmail(
-        latePunchIn.employee.email,
-        "Your Late Punch In Request Rejected",
-        `<p>Your late punch in request for date ${missedPunchOut?.attendanceDate} has been rejected.</p>
-        <p>Regards,<br/>${approveBy?.name}</p>`
-      );
+      sendEmail(latePunchIn.employee.email, "Your Late Punch In Request Rejected", `<p>Your late punch in request for date ${missedPunchOut?.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
       return res.status(200).json({ success: true, message: "Late punch in request rejected." });
     };
 
@@ -244,18 +251,13 @@ export const updateLatePunchIn = async (req, res) => {
       latePunchIn.approvedBy = approvedBy;
       await latePunchIn.save();
 
-      sendEmail(
-        latePunchIn?.employee?.email,
-        "Your Late Punch In Request Approved",
-        `<p>Your late punch in request date ${latePunchIn?.attendanceDate} has been approved and punch in time ${latePunchIn?.punchInTime} is marked.</p>
-        <p>Regards,<br/>${approveBy?.name}</p>`
-      );
+      sendEmail(latePunchIn?.employee?.email, "Your Late Punch In Request Approved", `<p>Your late punch in request date ${latePunchIn?.attendanceDate} has been approved and punch in time ${latePunchIn?.punchInTime} is marked.</p><p>Regards,<br/>${approveBy?.name}</p>`);
       return res.status(200).json({ success: true, message: `Late punch in request approved and punch in time ${latePunchIn?.punchInTime} is marked` });
     };
 
-    res.status(400).json({ success: false, message: "Invalid status provided." });
+    return res.status(400).json({ success: false, message: "Invalid status provided." });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -269,8 +271,8 @@ export const deleteLatePunchIn = async (req, res) => {
       return res.status(404).json({ success: false, message: "Late punch in not found." });
     };
 
-    res.status(200).json({ success: true, message: "Late punch in deleted successfully." });
+    return res.status(200).json({ success: true, message: "Late punch in deleted successfully." });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };

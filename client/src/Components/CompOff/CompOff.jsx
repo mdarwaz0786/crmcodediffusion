@@ -132,7 +132,8 @@ const CompOff = () => {
     const exportData = data?.map((entry, index) => ({
       "#": index + 1 || "1",
       "Employee Name": entry?.employee?.name || "N/A",
-      "Date": formatDate(entry?.attendanceDate) || "N/A",
+      "Worked Date": formatDate(entry?.date) || "N/A",
+      "Comp Off Date": formatDate(entry?.attendanceDate) || "N/A",
       "Status": entry?.status || "N/A",
       "Approved By": entry?.approvedBy || "N/A",
     }));
@@ -362,7 +363,8 @@ const CompOff = () => {
                             </th>
                             <th>#</th>
                             <th>Employee Name</th>
-                            <th>Date</th>
+                            <th>Worked Date</th>
+                            <th>Comp Off Date</th>
                             <th>Status</th>
                             <th>Approved By</th>
                           </tr>
@@ -376,6 +378,7 @@ const CompOff = () => {
                                 </td>
                                 <td>{(filters.page - 1) * filters.limit + index + 1}</td>
                                 <td>{d?.employee?.name}</td>
+                                <td>{formatDate(d?.date)}</td>
                                 <td>{formatDate(d?.attendanceDate)}</td>
                                 <td>
                                   <form style={{ display: "flex", columnGap: "0.5rem" }} onSubmit={(e) => handleUpdateStatus(e, d?._id)}>

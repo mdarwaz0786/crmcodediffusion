@@ -27,7 +27,6 @@ export const createMissedPunchOut = async (req, res) => {
   try {
     const { employee, attendanceDate, approvedBy, punchOutTime } = req.body;
 
-    // Validate required fields
     if (!employee) {
       return res.status(400).json({ success: false, message: "Employee is required" });
     };
@@ -51,14 +50,27 @@ export const createMissedPunchOut = async (req, res) => {
 
     // Check if the requested date is within the last two days
     if (requestedDate < formattedTwoDaysBefore || requestedDate > currentDate) {
-      return res.status(400).json({ success: false, message: "Missed punch out can only be applied for the last two days." });
+      return res.status(400).json({ success: false, message: "Missed punch out request can only be applied for the last two days." });
+    };
+
+    // Prevent applying for the current date before 7 PM
+    if (requestedDate === currentDate) {
+      const currentTime = new Date();
+      const cutoffTime = new Date();
+      cutoffTime.setHours(19, 0, 0, 0);
+
+      if (currentTime < cutoffTime) {
+        return res.status(400).json({ success: false, message: "Missed punch out request for today can only be applied after 7 PM." });
+      };
     };
 
     // Check if a missed punch-out request already exists
     const existingMissedPunchOut = await MissedPunchOut.findOne({ employee, attendanceDate });
 
     if (existingMissedPunchOut) {
-      return res.status(400).json({ success: false, message: `Missed punch out already applied for date ${attendanceDate}` });
+      if (existingMissedPunchOut?.status === "Approved" || existingMissedPunchOut?.status === "Pending") {
+        return res.status(400).json({ success: false, message: `Missed punch out request for date ${attendanceDate} is already applied and status is ${existingMissedPunchOut?.status}.` });
+      };
     };
 
     // Check if attendance exists and if punch-in and punch-out are valid
@@ -82,22 +94,22 @@ export const createMissedPunchOut = async (req, res) => {
     await newMissedPunchOut.save();
 
     // Send email notification
-    const emp = await Team.findById(employee);
-    const subject = `${emp.name} applied for missed punch out on ${attendanceDate}`;
-    const htmlContent = `<p>Missed punch out request has been applied by ${emp.name} for date ${attendanceDate}.</p><p>Please review the request.</p>`;
+    const appliedBy = await Team.findById(employee);
+    const subject = `${appliedBy?.name} applied for missed punch out on ${attendanceDate}`;
+    const htmlContent = `<p>Missed punch out request has been applied by ${appliedBy?.name} for date ${attendanceDate}.</p><p>Please review the request.</p>`;
 
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
-    res.status(201).json({ success: true, data: newMissedPunchOut });
+    return res.status(201).json({ success: true, data: newMissedPunchOut });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
 // Get all missed punch out entries
 export const getAllMissedPunchOuts = async (req, res) => {
   try {
-    const query = {};
+    let query = {};
     let sort = {};
 
     // Filter by year only (all month)
@@ -157,9 +169,9 @@ export const getAllMissedPunchOuts = async (req, res) => {
 
     const total = await MissedPunchOut.countDocuments(query);
 
-    res.status(200).json({ success: true, data: missedPunchOuts, totalCount: total });
+    return res.status(200).json({ success: true, data: missedPunchOuts, totalCount: total });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -167,15 +179,19 @@ export const getAllMissedPunchOuts = async (req, res) => {
 export const getMissedPunchOutById = async (req, res) => {
   try {
     const { id } = req.params;
-    const missedPunchOut = await MissedPunchOut.findById(id).populate("employee").populate("approvedBy");
+    const missedPunchOut = await MissedPunchOut
+      .findById(id)
+      .populate("employee")
+      .populate("approvedBy")
+      .exec();
 
     if (!missedPunchOut) {
       return res.status(404).json({ success: false, message: "Missed punch out not found." });
     };
 
-    res.status(200).json({ success: true, data: missedPunchOut });
+    return res.status(200).json({ success: true, data: missedPunchOut });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -208,12 +224,7 @@ export const updateMissedPunchOut = async (req, res) => {
       missedPunchOut.status = "Rejected";
       missedPunchOut.approvedBy = approvedBy;
       await latePunchIn.save();
-      sendEmail(
-        missedPunchOut.employee.email,
-        "Your Late Punch In Request Rejected",
-        `<p>Your late punch in request date ${missedPunchOut?.attendanceDate} has been rejected.</p>
-        <p>Regards,<br/>${approveBy?.name}</p>`
-      );
+      sendEmail(missedPunchOut?.employee?.email, "Your Late Punch In Request Rejected", `<p>Your late punch in request date ${missedPunchOut?.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
       return res.status(200).json({ success: true, message: "Punch out request rejected." });
     };
 
@@ -241,18 +252,13 @@ export const updateMissedPunchOut = async (req, res) => {
       missedPunchOut.approvedBy = approvedBy;
       await missedPunchOut.save();
 
-      sendEmail(
-        missedPunchOut?.employee?.email,
-        "Your Missed Punch Out Request Approved",
-        `<p>Your missed punch out request date ${missedPunchOut?.attendanceDate} has been approved and punch out time ${missedPunchOut?.punchOutTime} is marked.</p>
-        <p>Regards,<br/>${approveBy?.name}</p>`
-      );
+      sendEmail(missedPunchOut?.employee?.email, "Your Missed Punch Out Request Approved", `<p>Your missed punch out request date ${missedPunchOut?.attendanceDate} has been approved and punch out time ${missedPunchOut?.punchOutTime} is marked.</p><p>Regards,<br/>${approveBy?.name}</p>`);
       return res.status(200).json({ success: true, message: `Missed punch out request approved and punch out time ${missedPunchOut?.punchOutTime} is marked` });
     };
 
-    res.status(400).json({ success: false, message: "Invalid status provided." });
+    return res.status(400).json({ success: false, message: "Invalid status provided." });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -266,8 +272,8 @@ export const deleteMissedPunchOut = async (req, res) => {
       return res.status(404).json({ success: false, message: "Missed punch out not found." });
     };
 
-    res.status(200).json({ success: true, message: "Missed punch out deleted successfully." });
+    return res.status(200).json({ success: true, message: "Missed punch out deleted successfully." });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
