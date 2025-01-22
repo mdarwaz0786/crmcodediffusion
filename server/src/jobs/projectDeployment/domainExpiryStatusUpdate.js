@@ -15,7 +15,7 @@ const calculateExpiry = (expiryDate) => {
 };
 
 // Running daily at 8 AM to update expiration fields
-cron.schedule('0 8 * * *', async () => {
+cron.schedule('00 08 * * *', async () => {
   try {
     console.log("expiry status update runs");
     const projectDeployments = await ProjectDeployment.find();
@@ -34,7 +34,7 @@ cron.schedule('0 8 * * *', async () => {
       const { expireIn: sslExpireIn, expiryStatus: sslExpiryStatus } = calculateExpiry(sslExpiryDate);
 
       // Update the project deployment with calculated values
-      await ProjectDeployment.findByIdAndUpdate(project._id, {
+      await ProjectDeployment.findByIdAndUpdate(project?._id, {
         domainExpireIn,
         domainExpiryStatus,
         hostingExpireIn,

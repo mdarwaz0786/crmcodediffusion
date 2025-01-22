@@ -2,10 +2,12 @@ import cron from "node-cron";
 import Attendance from "../../models/attendance.model.js";
 import Team from "../../models/team.model.js";
 
-// Schedule a task to run every day at 20:00
-cron.schedule("0 20 * * *", async () => {
+// Schedule a task to run every day at 19:30
+cron.schedule("30 19 * * *", async () => {
   try {
-    const employees = await Team.find();
+    const employees = await Team
+      .find()
+      .select("_id name");
 
     if (!employees || employees.length === 0) {
       return;
@@ -13,35 +15,39 @@ cron.schedule("0 20 * * *", async () => {
 
     const today = new Date().toISOString().split("T")[0];
 
-    // Loop through each employee
-    const updateAttendancePromises = employees.map(async (employee) => {
-      const existingAttendance = await Attendance.findOne({
-        employee: employee._id,
-        attendanceDate: today,
-      });
+    // Loop through each emplyee
+    const updateAttendancePromises = employees?.map(async (employee) => {
+      try {
+        const existingAttendance = await Attendance.findOne({
+          employee: employee?._id,
+          attendanceDate: today,
+        });
 
-      // If attendance already exists, skip creation
-      if (existingAttendance) {
-        return;
+        // Skip if attendance already exists, skip creation
+        if (existingAttendance) {
+          return;
+        };
+
+        // Create a new attendance record with status Absent
+        await Attendance.create({
+          employee: employee?._id,
+          attendanceDate: today,
+          status: "Absent",
+          punchInTime: null,
+          punchIn: false,
+          punchOutTime: null,
+          punchOut: false,
+          hoursWorked: "00:00",
+          lateIn: "00:00",
+        });
+      } catch (error) {
+        console.log(`Error while marking atendance as Absent for employee ${employee?.name}:`, error.message);
       };
-
-      // Create a new attendance record with status Absent
-      await Attendance.create({
-        employee: employee._id,
-        attendanceDate: today,
-        status: "Absent",
-        punchInTime: null,
-        punchIn: false,
-        punchOutTime: null,
-        punchOut: false,
-        hoursWorked: "00:00",
-        lateIn: "00:00",
-      });
     });
 
-    // Wait for all attendance to be marked
+    // Wait for all task to be completed
     await Promise.all(updateAttendancePromises);
   } catch (error) {
-    console.log("Error while marking attendance as Absent:", error.message);
+    console.error("Error while marking attendance as Absent:", error.message);
   };
 });

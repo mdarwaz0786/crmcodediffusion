@@ -1,24 +1,42 @@
 import cron from "node-cron";
+import mongoose from "mongoose";
 import Attendance from "../../models/attendance.model.js";
 import Team from "../../models/team.model.js";
 
-// Schedule a task to run every day at 20:00
-cron.schedule("0 20 * * *", async () => {
-  try {
-    const employees = await Team.find();
+// Schedule a task to run every day at 19:00
+cron.schedule("00 19 * * *", async () => {
+  const session = await mongoose.startSession();
 
-    if (!employees) {
+  try {
+    session.startTransaction();
+
+    const employees = await Team
+      .find()
+      .select("_id name eligibleCompOffDate");
+
+    if (!employees || employees.length === 0) {
       return;
     };
 
     const today = new Date().toISOString().split("T")[0];
 
     // Loop through each employee
-    const updateAttendancePromises = employees.map(async (employee) => {
-      // Check if today's date is in the employee's comp off
-      if (employee.compOff.includes(today)) {
+    const updateAttendancePromises = employees?.map(async (employee) => {
+      const compOffIndex = employee?.eligibleCompOffDate?.findIndex((compOff) =>
+        compOff?.date === today &&
+        compOff?.isApplied === true &&
+        compOff?.isApproved === true &&
+        compOff?.isUtilized === false
+      );
+
+      if (compOffIndex !== -1) {
+        employee.eligibleCompOffDate[compOffIndex].isUtilized = true;
+        employee.eligibleCompOffDate[compOffIndex].utilizedDate = today;
+
+        await employee.save({ session });
+
         const existingAttendance = await Attendance.findOne({
-          employee: employee._id,
+          employee: employee?._id,
           attendanceDate: today,
         });
 
@@ -27,24 +45,29 @@ cron.schedule("0 20 * * *", async () => {
           return;
         };
 
-        // Create a new attendance record with status On Leave
-        await Attendance.create({
-          employee: employee._id,
+        // Create a new attendance record with status Comp Off
+        await Attendance.create([{
+          employee: employee?._id,
           attendanceDate: today,
-          status: "On Leave",
+          status: "Comp Off",
           punchInTime: null,
           punchIn: false,
           punchOutTime: null,
           punchOut: false,
           hoursWorked: "00:00",
           lateIn: "00:00",
-        });
-      }
+        }], { session });
+      };
     });
 
-    // Wait for all attendance marked as On Leave
+    // Wait for all task to be completed
     await Promise.all(updateAttendancePromises);
+
+    await session.commitTransaction();
   } catch (error) {
-    console.log("Error while marking attendance as on leave:", error.message);
+    console.log("Error while marking attendance as Comp Off:", error.message);
+    await session.abortTransaction();
+  } finally {
+    session.endSession();
   };
 });

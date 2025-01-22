@@ -72,22 +72,26 @@ const teamSchema = new mongoose.Schema(
       type: String,
       default: "0",
     },
-    approvedLeaves: {
+    leaveBalanceAllotedHistory: {
       type: [{
         date: { type: String },
-        reason: { type: String },
-        approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
-        isUtilized: { type: Boolean, default: false },
+        alloted: { type: String, default: "2" },
       }],
       default: [],
     },
     leaveBalanceUsedHistory: {
       type: [{
         date: { type: String },
-        previousBalance: { type: String },
-        deductedBalance: { type: String },
-        updatedBalance: { type: String },
         reason: { type: String, trim: true },
+      }],
+      default: [],
+    },
+    approvedLeaves: {
+      type: [{
+        date: { type: String },
+        reason: { type: String },
+        approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
+        isUtilized: { type: Boolean, default: false },
       }],
       default: [],
     },

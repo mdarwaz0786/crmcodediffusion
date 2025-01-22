@@ -3,50 +3,54 @@ import Attendance from "../../models/attendance.model.js";
 import Team from "../../models/team.model.js";
 import Holiday from "../../models/holiday.model.js";
 
-// Schedule a task to run every day at 20:00
-cron.schedule("0 20 * * *", async () => {
+// Schedule a task to run every day at 18:30
+cron.schedule("30 18 * * *", async () => {
   try {
-    const employees = await Team.find();
-
-    if (!employees) {
-      return;
-    };
-
-    const holidays = await Holiday.find({ date: new Date().toISOString().split("T")[0] });
-
-    if (!holidays) {
-      return;
-    };
-
     const today = new Date().toISOString().split("T")[0];
 
+    const holidays = await Holiday.find({ date: today });
+
+    if (!holidays || holidays.length === 0) {
+      return;
+    };
+
+    const employees = await Team.find().select("_id name");;
+
+    if (!employees || employees.length === 0) {
+      return;
+    };
+
     // Loop through each employee
-    const updateAttendancePromises = employees.map(async (employee) => {
-      const existingAttendance = await Attendance.findOne({
-        employee: employee._id,
-        attendanceDate: today,
-      });
+    const updateAttendancePromises = employees?.map(async (employee) => {
+      try {
+        const existingAttendance = await Attendance.findOne({
+          employee: employee?._id,
+          attendanceDate: today,
+        });
 
-      // If attendance already exists, skip creation
-      if (existingAttendance) {
-        return;
+        // If attendance already exists, skip
+        if (existingAttendance) {
+          return;
+        };
+
+        // Create a new attendance record with status Holiday
+        await Attendance.create({
+          employee: employee?._id,
+          attendanceDate: today,
+          status: "Holiday",
+          punchInTime: null,
+          punchIn: false,
+          punchOutTime: null,
+          punchOut: false,
+          hoursWorked: "00:00",
+          lateIn: "00:00",
+        });
+      } catch (error) {
+        console.log(`Error while marking attendance as Holiday for employee ${employee?.name}:`, error.message);
       };
-
-      // Create a new attendance record with status Holiday
-      await Attendance.create({
-        employee: employee._id,
-        attendanceDate: today,
-        status: "Holiday",
-        punchInTime: null,
-        punchIn: false,
-        punchOutTime: null,
-        punchOut: false,
-        hoursWorked: "00:00",
-        lateIn: "00:00",
-      });
     });
 
-    // Wait for all attendance marked as Holiday
+    // Wait for all task to be completed
     await Promise.all(updateAttendancePromises);
   } catch (error) {
     console.log("Error while marking attendance as holiday:", error.message);

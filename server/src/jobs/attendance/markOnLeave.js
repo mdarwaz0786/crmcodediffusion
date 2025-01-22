@@ -1,50 +1,78 @@
 import cron from "node-cron";
+import mongoose from "mongoose";
 import Attendance from "../../models/attendance.model.js";
 import Team from "../../models/team.model.js";
 
-// Schedule a task to run every day at 20:00
-cron.schedule("0 20 * * *", async () => {
+// Schedule a task to run every day at 19:15
+cron.schedule("15 19 * * *", async () => {
+  const session = await mongoose.startSession();
   try {
-    const employees = await Team.find();
+    session.startTransaction();
 
-    if (!employees) {
+    const employees = await Team
+      .find()
+      .select("_id name currentLeaveBalance usedLeaveBalance leaveBalanceUsedHistory approvedLeaves");
+
+    if (!employees || employees.length === 0) {
       return;
     };
 
     const today = new Date().toISOString().split("T")[0];
 
     // Loop through each employee
-    const updateAttendancePromises = employees.map(async (employee) => {
-      // Check if today's date is in the employee's leave list
-      if (employee.leaves.includes(today)) {
-        const existingAttendance = await Attendance.findOne({
-          employee: employee._id,
-          attendanceDate: today,
-        });
+    const updateAttendancePromises = employees?.map(async (employee) => {
+      const leaveIndex = employee?.approvedLeaves?.findIndex((leave) =>
+        leave?.date === today &&
+        leave?.isUtilized === false
+      );
 
-        // If attendance already exists, skip creation
-        if (existingAttendance) {
-          return;
-        };
+      if (leaveIndex !== -1) {
+        employee.approvedLeaves[leaveIndex].isUtilized = true;
+        await employee.save({ session });
 
         // Create a new attendance record with status On Leave
-        await Attendance.create({
-          employee: employee._id,
+        const existingAttendance = await Attendance.findOne({
+          employee: employee?._id,
           attendanceDate: today,
-          status: "On Leave",
-          punchInTime: null,
-          punchIn: false,
-          punchOutTime: null,
-          punchOut: false,
-          hoursWorked: "00:00",
-          lateIn: "00:00",
+        }).session(session);
+
+        // Skip if attendance already exists
+        if (!existingAttendance) {
+          await Attendance.create(
+            [{
+              employee: employee?._id,
+              attendanceDate: today,
+              status: "On Leave",
+              punchInTime: null,
+              punchIn: false,
+              punchOutTime: null,
+              punchOut: false,
+              hoursWorked: "00:00",
+              lateIn: "00:00",
+            }], { session },
+          );
+        };
+
+        employee.currentLeaveBalance = (parseFloat(employee?.currentLeaveBalance) - 1).toString();
+        employee.usedLeaveBalance = (parseFloat(employee?.usedLeaveBalance) + 1).toString();
+
+        employee?.leaveBalanceUsedHistory?.push({
+          date: today,
+          reason: employee?.approvedLeaves[leaveIndex]?.reason,
         });
-      }
+
+        await employee.save({ session });
+      };
     });
 
-    // Wait for all attendance marked as On Leave
+    // Wait for all task to be completed
     await Promise.all(updateAttendancePromises);
+
+    await session.commitTransaction();
   } catch (error) {
-    console.log("Error while marking attendance as holiday:", error.message);
+    console.log("Error while processing leave and attendance:", error.message);
+    await session.abortTransaction();
+  } finally {
+    session.endSession();
   };
 });
