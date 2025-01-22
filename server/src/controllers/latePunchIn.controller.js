@@ -87,14 +87,12 @@ export const createLatePunchIn = async (req, res) => {
 
     // Create new late punch-in request
     const newLatePunchIn = new LatePunchIn({ employee, attendanceDate, punchInTime, approvedBy });
-
     await newLatePunchIn.save();
 
     // Send email
     const sendBy = await Team.findById(employee);
     const subject = `${sendBy?.name} applied for late punch in for date ${attendanceDate} and punch time ${punchInTime}`;
     const htmlContent = `<p>Late punch in request has been applied by ${sendBy?.name} for date ${attendanceDate}.</p><p>Please review the request.</p>`;
-
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
     return res.status(201).json({ success: true, data: newLatePunchIn });

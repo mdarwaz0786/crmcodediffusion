@@ -2,19 +2,19 @@ import cron from "node-cron";
 import Attendance from "../../models/attendance.model.js";
 import Team from "../../models/team.model.js";
 
-// Schedule a task to run every Sunday at 20:00
-cron.schedule("0 20 * * 0", async () => {
+// Schedule a task to run every Sunday at 19:30
+cron.schedule("30 19 * * 0", async () => {
   try {
     const employees = await Team.find();
 
-    if (!employees) {
+    if (!employees || employees.length === 0) {
       return;
     };
 
     const today = new Date().toISOString().split("T")[0];
 
     // Loop through each employee
-    const updateAttendancePromises = employees.map(async (employee) => {
+    const updateAttendancePromises = employees?.map(async (employee) => {
       const existingAttendance = await Attendance.findOne({
         employee: employee._id,
         attendanceDate: today,
@@ -27,7 +27,7 @@ cron.schedule("0 20 * * 0", async () => {
 
       // Create a new attendance record with status "Sunday"
       await Attendance.create({
-        employee: employee._id,
+        employee: employee?._id,
         attendanceDate: today,
         status: "Sunday",
         punchInTime: null,
@@ -39,7 +39,7 @@ cron.schedule("0 20 * * 0", async () => {
       });
     });
 
-    // Wait for all attendance creations to complete
+    // Wait for all attendance creations to be complete
     await Promise.all(updateAttendancePromises);
   } catch (error) {
     console.log("Error while marking attendance as Sunday:", error.message);

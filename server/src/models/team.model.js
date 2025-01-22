@@ -30,6 +30,7 @@ const teamSchema = new mongoose.Schema(
     },
     monthlySalary: {
       type: String,
+      trim: true,
     },
     UAN: {
       type: String,
@@ -71,74 +72,45 @@ const teamSchema = new mongoose.Schema(
       type: String,
       default: "0",
     },
-    approvedLeaves: [{
-      date: {
-        type: String,
-      },
-      reason: {
-        type: String,
-      },
-      approvedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Team",
-      },
-      isUtilized: {
-        type: Boolean,
-        default: false,
-      },
-    }],
-    leaveBalanceUsedHistory: [{
-      date: {
-        type: String,
-      },
-      previousBalance: {
-        type: String,
-      },
-      deductedBalance: {
-        type: String,
-      },
-      updatedBalance: {
-        type: String,
-      },
-      reason: {
-        type: String,
-      },
-    }],
-    eligibleCompOffDate: [{
-      date: {
-        type: String,
-      },
-      reason: {
-        type: String,
-      },
-      isApplied: {
-        type: Boolean,
-        default: false,
-      },
-      isApproved: {
-        type: Boolean,
-        default: false,
-      },
-      approvedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Team",
-      },
-      isUtilized: {
-        type: Boolean,
-        default: false,
-      },
-      utilizedDate: {
-        type: String,
-      },
-    }],
+    approvedLeaves: {
+      type: [{
+        date: { type: String },
+        reason: { type: String },
+        approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
+        isUtilized: { type: Boolean, default: false },
+      }],
+      default: [],
+    },
+    leaveBalanceUsedHistory: {
+      type: [{
+        date: { type: String },
+        previousBalance: { type: String },
+        deductedBalance: { type: String },
+        updatedBalance: { type: String },
+        reason: { type: String, trim: true },
+      }],
+      default: [],
+    },
+    eligibleCompOffDate: {
+      type: [{
+        date: { type: String },
+        reason: { type: String, trim: true },
+        isApplied: { type: Boolean, default: false },
+        isApproved: { type: Boolean, default: false },
+        approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
+        isUtilized: { type: Boolean, default: false },
+        utilizedDate: { type: String },
+      }],
+      default: [],
+    },
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
     },
-    reportingTo: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Team",
-    }],
+    reportingTo: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Team" }],
+      default: [],
+    },
     isActive: {
       type: Boolean,
       default: true,

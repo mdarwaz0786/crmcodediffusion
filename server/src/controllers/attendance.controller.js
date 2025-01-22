@@ -60,7 +60,10 @@ const getDayName = (dateString) => {
 
 // Create or Update Attendance with Punch-in
 export const createAttendance = async (req, res) => {
+    const session = await mongoose.startSession();
+
     try {
+        session.startTransaction();
         const { employee, attendanceDate, punchInTime } = req.body;
 
         if (!employee) {
@@ -85,12 +88,12 @@ export const createAttendance = async (req, res) => {
         const attendanceStatus = compareTime(punchInTime, HALF_DAY_THRESHOLD) === 1 ? "Half Day" : "Present";
 
         // Check if the attendance date is a holiday
-        const holiday = await Holiday.findOne({ date: attendanceDate });
+        const holiday = await Holiday.findOne({ date: attendanceDate }).session(session);
 
         // Get the day name from attendanceDate
         const dayName = getDayName(attendanceDate);
 
-        // Use atomic operation to ensure no duplicate punch-in
+        // Upsert attendance record with atomic operation
         const result = await Attendance.findOneAndUpdate(
             { employee, attendanceDate, punchIn: false },
             {
@@ -107,7 +110,7 @@ export const createAttendance = async (req, res) => {
                 upsert: true,
                 new: true,
             },
-        );
+        ).session(session);
 
         // Check if the day is Sunday or if it is a holiday
         if (dayName === "Sunday" || holiday) {
@@ -130,15 +133,20 @@ export const createAttendance = async (req, res) => {
                 reason,
             };
 
-            // Update the eligibleCompOffDate in the employee collection
+            // Update the eligibleCompOffDate
             await Team.findOneAndUpdate(
                 { _id: employee },
-                { $addToSet: { eligibleCompOffDate: compOffEntry } },
-            );
+                { $addToSet: { eligibleCompOffDate: compOffEntry } }
+            ).session(session);
         };
 
-        return res.status(201).json({ success: true, message: "Punch in successful", attedance: result });
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(201).json({ success: true, attendance: result });
     } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
         console.log(error.message);
         return res.status(500).json({ success: false, message: error.message });
     };
@@ -148,15 +156,15 @@ export const createAttendance = async (req, res) => {
 export const fetchAllAttendance = async (req, res) => {
     try {
         const { date, employeeId } = req.query;
-        const query = {};
+        let query = {};
         let sort = {};
 
-        // Filter by exact date if provided
+        // Filter by exact date
         if (date) {
             query.attendanceDate = date;
         };
 
-        // Filter by year only
+        // Filter by year only (all months)
         if (req.query.year && !req.query.month) {
             const year = req.query.year;
             query.attendanceDate = {
@@ -184,11 +192,7 @@ export const fetchAllAttendance = async (req, res) => {
 
         // Filter by employee ID if provided
         if (employeeId) {
-            if (mongoose.Types.ObjectId.isValid(employeeId)) {
-                query.employee = employeeId;
-            } else {
-                return res.status(400).json({ success: false, message: 'Invalid employee ID' });
-            };
+            query.employee = employeeId;
         };
 
         // Handle sorting
@@ -202,7 +206,8 @@ export const fetchAllAttendance = async (req, res) => {
         const totalCount = await Attendance.countDocuments(query);
 
         // Fetch attendance with the constructed query
-        const attendance = await Attendance.find(query)
+        const attendance = await Attendance
+            .find(query)
             .sort(sort)
             .populate('employee')
             .exec();
@@ -221,7 +226,10 @@ export const fetchAllAttendance = async (req, res) => {
 // Get a single attendance record by ID
 export const fetchSingleAttendance = async (req, res) => {
     try {
-        const attendance = await Attendance.findById(req.params.id).populate('employee');
+        const attendance = await Attendance
+            .findById(req.params.id)
+            .populate('employee')
+            .exec();
 
         if (!attendance) {
             return res.status(404).json({ success: false, message: 'Attendance not found' });
@@ -306,7 +314,7 @@ export const fetchMonthlyStatistic = async (req, res) => {
                 totalSaturDays++;
             } else if (record.status === "Comp Off") {
                 totalCompOff++;
-            }
+            };
         });
 
         // Calculate average punch-in and punch-out times
@@ -322,7 +330,7 @@ export const fetchMonthlyStatistic = async (req, res) => {
         const [year, monthIndex] = month.split("-").map(Number);
         const daysInMonth = new Date(year, monthIndex, 0).getDate();
 
-        const totalWorkingDays = totalPresent + totalAbsent;
+        const totalWorkingDays = totalPresent + totalAbsent + totalLeave + totalHalfDays;
 
         const employee = await Team.findById(employeeId);
 
@@ -334,7 +342,7 @@ export const fetchMonthlyStatistic = async (req, res) => {
         const dailyThreshold = requiredHours * 60 + requiredMinutes;
 
         const totalWorkingHours = minutesToTime(totalWorkingDays * dailyThreshold);
-        const requiredWorkingHours = minutesToTime(totalPresent * dailyThreshold);
+        const requiredWorkingHours = minutesToTime(totalPresent + totalHalfDays * dailyThreshold);
         const totalHoursWorked = minutesToTime(totalMinutesWorked);
 
         // Prepare the response

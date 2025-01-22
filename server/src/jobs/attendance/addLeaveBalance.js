@@ -6,23 +6,23 @@ cron.schedule("0 0 1 * *", async () => {
   try {
     const employees = await Team.find();
 
-    if (!employees) {
+    if (!employees || employees.length === 0) {
       return;
     };
 
     // Loop through each employee
     const updateLeaveBalancePromises = employees.map(async (employee) => {
       try {
-        employee.leaveBalance = parseFloat(employee.leaveBalance) + 2;
+        employee.currentLeaveBalance = parseFloat(employee?.currentLeaveBalance) + 2;
         await employee.save();
       } catch (error) {
-        console.log(`Error while updating leave balance for all employee`, error.message);
+        console.log(`Error while updating current leave balance for all employee`, error.message);
       };
     });
 
-    // Wait for all leave balance updates to be completed
+    // Wait for all current leave balance updates to be completed
     await Promise.all(updateLeaveBalancePromises);
   } catch (error) {
-    console.log("Error while updating monthly leave balance:", error.message);
+    console.log("Error while updating monthly current leave balance:", error.message);
   };
 });

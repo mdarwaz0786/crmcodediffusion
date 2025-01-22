@@ -7,7 +7,7 @@ cron.schedule("0 20 * * *", async () => {
   try {
     const employees = await Team.find();
 
-    if (!employees) {
+    if (!employees || employees.length === 0) {
       return;
     };
 
@@ -42,6 +42,6 @@ cron.schedule("0 20 * * *", async () => {
     // Wait for all attendance to be marked
     await Promise.all(updateAttendancePromises);
   } catch (error) {
-    console.log("Error while marking attendance as absent:", error.message);
+    console.log("Error while marking attendance as Absent:", error.message);
   };
 });

@@ -4,15 +4,18 @@ import { sendEmail } from "../services/emailService.js";
 
 // Create new comp off
 export const createCompOff = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { employee, attendanceDate, date, approvedBy, status } = req.body;
 
     if (!date) {
-      return res.status(400).json({ success: false, message: "Date is required." });
+      return res.status(400).json({ success: false, message: "Worked date is required." });
     };
 
     if (!attendanceDate) {
-      return res.status(400).json({ success: false, message: "Attendance date is required." });
+      return res.status(400).json({ success: false, message: "Comp off date is required." });
     };
 
     if (!employee) {
@@ -20,12 +23,12 @@ export const createCompOff = async (req, res) => {
     };
 
     const today = new Date();
-    const appliedDate = new Date(attendanceDate);
     today.setHours(0, 0, 0, 0);
+    const appliedDate = new Date(attendanceDate);
     appliedDate.setHours(0, 0, 0, 0);
 
     if (appliedDate <= today) {
-      return res.status(400).json({ success: false, message: "Attendance date must be a future date." });
+      return res.status(400).json({ success: false, message: "Comp off date must be a future date." });
     };
 
     const existingCompOff = await CompOff.findOne({ employee, attendanceDate, date });
@@ -37,31 +40,31 @@ export const createCompOff = async (req, res) => {
     };
 
     const compOff = new CompOff({ employee, attendanceDate, date, approvedBy, status });
-    await compOff.save();
+    await compOff.save({ session });
 
-    await Team.findOneAndUpdate(
-      {
-        _id: employee,
-        "eligibleCompOffDate.date": date,
-      },
-      {
-        $set: {
-          "eligibleCompOffDate.$.isApplied": true,
-        },
-      },
-      {
-        new: true,
-      },
+    const updatedTeam = await Team.findOneAndUpdate(
+      { _id: employee, "eligibleCompOffDate.date": date },
+      { $set: { "eligibleCompOffDate.$.isApplied": true } },
+      { new: true, session },
     );
 
-    const appliedBy = await Team.findById(employee);
+    if (!updatedTeam) {
+      throw new Error("Failed to update eligible comp off date");
+    };
+
+    const appliedBy = await Team.findById(employee).session(session);
 
     const subject = `${appliedBy?.name} apply comp off for date ${attendanceDate}`;
-    const htmlContent = `<p>Comp off request has been applied by ${appliedBy?.name} for date ${attendanceDate}.</p><p>Pleave review the request.</p>`
+    const htmlContent = `<p>Comp off request has been applied by ${appliedBy?.name} for date ${attendanceDate}.</p><p>Please review the request.</p>`;
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+
+    await session.commitTransaction();
+    session.endSession();
 
     return res.status(201).json({ success: true, data: compOff });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -124,7 +127,7 @@ export const getAllCompOffs = async (req, res) => {
       .exec();
 
     if (!compOffs) {
-      return res.status(404).json({ success: false, message: 'Comp off not found' });
+      return res.status(404).json({ success: false, message: 'Comp off request not found' });
     };
 
     const total = await CompOff.countDocuments(query);
@@ -145,7 +148,7 @@ export const getCompOffById = async (req, res) => {
       .exec();
 
     if (!compOff) {
-      return res.status(404).json({ success: false, message: "Comp off not found." });
+      return res.status(404).json({ success: false, message: "Comp off request not found." });
     };
 
     return res.status(200).json({ success: true, data: compOff });
@@ -156,6 +159,9 @@ export const getCompOffById = async (req, res) => {
 
 // Update comp off request
 export const updateCompOff = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { id } = req.params;
     const { status, approvedBy } = req.body;
@@ -163,10 +169,11 @@ export const updateCompOff = async (req, res) => {
     const compOff = await CompOff
       .findById(id)
       .populate("employee")
+      .session(session)
       .exec();
 
     if (!compOff) {
-      return res.status(404).json({ success: false, message: "Comp off not found." });
+      return res.status(404).json({ success: false, message: "Comp off request not found." });
     };
 
     if (compOff?.status === "Approved" || compOff?.status === "Rejected") {
@@ -177,43 +184,50 @@ export const updateCompOff = async (req, res) => {
       return res.status(400).json({ success: false, message: "This comp off request is already in pending." });
     };
 
-    const approveBy = await Team.findById(approvedBy);
+    const approveBy = await Team
+      .findById(approvedBy)
+      .session(session);
+
+    if (!approveBy) {
+      throw new Error("Approver not found.");
+    };
 
     if (status === "Rejected") {
       compOff.status = "Rejected";
       compOff.approvedBy = approvedBy;
-      await compOff.save();
+      await compOff.save({ session });
+
       sendEmail(compOff?.employee?.email, "Your Comp Off Request Rejected", `<p>Your comp off request date ${compOff?.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      await session.commitTransaction();
+      session.endSession();
       return res.status(200).json({ success: true, message: "Comp off rejected." });
     };
 
     if (status === "Approved") {
       compOff.status = "Approved";
       compOff.approvedBy = approvedBy;
-      await compOff.save();
+      await compOff.save({ session });
 
-      await Team.findOneAndUpdate(
-        {
-          _id: compOff?.employee?._id,
-          "eligibleCompOffDate.date": compOff?.date,
-        },
-        {
-          $set: {
-            "eligibleCompOffDate.$.isApproved": true,
-            "eligibleCompOffDate.$.approvedBy": approvedBy,
-          },
-        },
-        {
-          new: true,
-        },
+      const updatedTeam = await Team.findOneAndUpdate(
+        { _id: compOff?.employee?._id, "eligibleCompOffDate.date": compOff?.date },
+        { $set: { "eligibleCompOffDate.$.isApproved": true, "eligibleCompOffDate.$.approvedBy": approvedBy } },
+        { new: true, session },
       );
 
+      if (!updatedTeam) {
+        throw new Error("Failed to update eligible comp off date.");
+      };
+
       sendEmail(compOff?.employee?.email, "Your Comp Off Request Approved", `<p>Your comp off request date ${compOff?.attendanceDate} has been approved.</p><p>Regards,<br/>${approveBy?.name}</p>`);
-      return res.status(200).json({ success: true, message: "Comp off approved." });
+      await session.commitTransaction();
+      session.endSession();
+      return res.status(200).json({ success: true, message: "Comp off request approved." });
     };
 
     return res.status(400).json({ success: false, message: "Invalid status provided." });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     return res.status(500).json({ success: false, message: error.message });
   };
 };

@@ -93,11 +93,10 @@ export const createMissedPunchOut = async (req, res) => {
 
     await newMissedPunchOut.save();
 
-    // Send email notification
+    // Send email
     const appliedBy = await Team.findById(employee);
     const subject = `${appliedBy?.name} applied for missed punch out on ${attendanceDate}`;
     const htmlContent = `<p>Missed punch out request has been applied by ${appliedBy?.name} for date ${attendanceDate}.</p><p>Please review the request.</p>`;
-
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
     return res.status(201).json({ success: true, data: newMissedPunchOut });
@@ -186,7 +185,7 @@ export const getMissedPunchOutById = async (req, res) => {
       .exec();
 
     if (!missedPunchOut) {
-      return res.status(404).json({ success: false, message: "Missed punch out not found." });
+      return res.status(404).json({ success: false, message: "Missed punch out request not found." });
     };
 
     return res.status(200).json({ success: true, data: missedPunchOut });
@@ -197,14 +196,18 @@ export const getMissedPunchOutById = async (req, res) => {
 
 // Update missed punch out request and handle attendance based on status
 export const updateMissedPunchOut = async (req, res) => {
+  const session = await mongoose.startSession();
+
   try {
+    session.startTransaction();
+
     const { id } = req.params;
     const { status, approvedBy } = req.body;
 
     const missedPunchOut = await MissedPunchOut
       .findById(id)
       .populate("employee")
-      .exec();
+      .session(session);
 
     if (!missedPunchOut) {
       return res.status(404).json({ success: false, message: "Missed punch out request not found." });
@@ -218,13 +221,22 @@ export const updateMissedPunchOut = async (req, res) => {
       return res.status(400).json({ success: false, message: "This missed punch out request is already in pending." });
     };
 
-    const approveBy = await Team.findById(approvedBy);
+    const approveBy = await Team
+      .findById(approvedBy)
+      .session(session);
+
+    if (!approveBy) {
+      return res.status(404).json({ success: false, message: "Approver not found." });
+    };
 
     if (status === "Rejected") {
       missedPunchOut.status = "Rejected";
       missedPunchOut.approvedBy = approvedBy;
-      await latePunchIn.save();
-      sendEmail(missedPunchOut?.employee?.email, "Your Late Punch In Request Rejected", `<p>Your late punch in request date ${missedPunchOut?.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      await missedPunchOut.save({ session });
+
+      sendEmail(missedPunchOut?.employee?.email, "Your Missed Punch Out Request Rejected", `<p>Your missed punch out request date ${missedPunchOut?.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      await session.commitTransaction();
+      session.endSession();
       return res.status(200).json({ success: true, message: "Punch out request rejected." });
     };
 
@@ -232,7 +244,7 @@ export const updateMissedPunchOut = async (req, res) => {
       employee: missedPunchOut?.employee,
       attendanceDate: missedPunchOut?.attendanceDate,
       punchIn: true,
-    });
+    }).session(session);
 
     if (!attendance) {
       return res.status(404).json({ success: false, message: `Punch in missing` });
@@ -246,33 +258,38 @@ export const updateMissedPunchOut = async (req, res) => {
       attendance.punchOutTime = missedPunchOut?.punchOutTime;
       attendance.punchOut = true;
       attendance.hoursWorked = calculateTimeDifference(attendance?.punchInTime, missedPunchOut?.punchOutTime);
-      await attendance.save();
+      await attendance.save({ session });
 
       missedPunchOut.status = "Approved";
       missedPunchOut.approvedBy = approvedBy;
-      await missedPunchOut.save();
+      await missedPunchOut.save({ session });
 
       sendEmail(missedPunchOut?.employee?.email, "Your Missed Punch Out Request Approved", `<p>Your missed punch out request date ${missedPunchOut?.attendanceDate} has been approved and punch out time ${missedPunchOut?.punchOutTime} is marked.</p><p>Regards,<br/>${approveBy?.name}</p>`);
-      return res.status(200).json({ success: true, message: `Missed punch out request approved and punch out time ${missedPunchOut?.punchOutTime} is marked` });
+      await session.commitTransaction();
+      session.endSession();
+      return res.status(200).json({ success: true, message: `Missed punch out request approved and punch out time ${missedPunchOut?.punchOutTime} is marked.` });
     };
 
     return res.status(400).json({ success: false, message: "Invalid status provided." });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
 
-// Delete a missed punch out entry
+// Delete a missed punch out request
 export const deleteMissedPunchOut = async (req, res) => {
   try {
     const { id } = req.params;
     const deletedMissedPunchOut = await MissedPunchOut.findByIdAndDelete(id);
 
     if (!deletedMissedPunchOut) {
-      return res.status(404).json({ success: false, message: "Missed punch out not found." });
+      return res.status(404).json({ success: false, message: "Missed punch out request not found." });
     };
 
-    return res.status(200).json({ success: true, message: "Missed punch out deleted successfully." });
+    return res.status(200).json({ success: true, message: "Missed punch out request deleted successfully." });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   };

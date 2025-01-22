@@ -68,7 +68,6 @@ export const createLeaveApproval = async (req, res) => {
 
     const subject = `${existingEmployee?.name} Applied Leave for ${leaveDuration.length} Days`;
 
-    // Send email
     const htmlContent = `
       <p><strong>Employee Name:</strong> ${existingEmployee?.name}</p>
       <p><strong>Start Date:</strong> ${new Date(startDate).toLocaleDateString('en-GB')}</p>
@@ -93,7 +92,7 @@ export const fetchAllLeaveApproval = async (req, res) => {
     let query = {};
     let sort = {};
 
-    // Filter by year only (all month)
+    // Filter by year only (all months)
     if (req.query.year && !req.query.month) {
       const year = req.query.year;
       query.startDate = {
@@ -119,13 +118,9 @@ export const fetchAllLeaveApproval = async (req, res) => {
       };
     };
 
-    // Filter by employee ID
+    // Filter by employeeId
     if (employeeId) {
-      if (mongoose.Types.ObjectId.isValid(employeeId)) {
-        query.employee = employeeId;
-      } else {
-        return res.status(400).json({ success: false, message: 'Invalid employee ID' });
-      };
+      query.employee = employeeId;
     };
 
     // Handle pagination
@@ -140,9 +135,6 @@ export const fetchAllLeaveApproval = async (req, res) => {
       sort = { startDate: -1 };
     };
 
-    // Calculate total count
-    const totalCount = await LeaveApproval.countDocuments(query);
-
     // Fetch leave approvals with the constructed query
     const leaveApprovals = await LeaveApproval.find(query)
       .sort(sort)
@@ -156,6 +148,9 @@ export const fetchAllLeaveApproval = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Leave approvals not found' });
     };
 
+    // Calculate total count
+    const totalCount = await LeaveApproval.countDocuments(query);
+
     return res.status(200).json({ success: true, data: leaveApprovals, totalCount });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
@@ -166,7 +161,8 @@ export const fetchAllLeaveApproval = async (req, res) => {
 export const fetchSingleLeaveApproval = async (req, res) => {
   try {
     const { id } = req.params;
-    const leaveApproval = await LeaveApproval.findById(id)
+    const leaveApproval = await LeaveApproval
+      .findById(id)
       .populate("employee")
       .populate("leaveApprovedBy")
       .exec();
@@ -181,62 +177,61 @@ export const fetchSingleLeaveApproval = async (req, res) => {
   };
 };
 
-// Update leave approval
+// Update leave approval with transaction
 export const updateLeaveApproval = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { leaveId, approverId, leaveStatus } = req.body;
 
-    // Validations
     if (!leaveId) {
-      return res.status(400).json({ success: false, message: "Leave ID is required." });
+      return res.status(400).json({ success: false, message: "Leave Id is required." });
     };
 
     if (!approverId) {
-      return res.status(400).json({ success: false, message: "Approver ID is required." });
+      return res.status(400).json({ success: false, message: "Approver Id  is required." });
     };
 
     if (!leaveStatus) {
       return res.status(400).json({ success: false, message: "Leave status is required." });
     };
 
-    // Fetch the leave request
-    const leaveRequest = await LeaveApproval.findById(leaveId)
+    const leaveRequest = await LeaveApproval
+      .findById(leaveId)
       .populate("employee")
-      .exec();
+      .session(session);
 
     if (!leaveRequest) {
       return res.status(404).json({ success: false, message: "Leave request not found." });
     };
 
-    if (leaveRequest?.status === "Approved" || leaveRequest?.status === "Rejected") {
+    if (["Approved", "Rejected"].includes(leaveRequest?.status)) {
       return res.status(400).json({ success: false, message: "This leave request has already been processed." });
     };
 
-    if (leaveRequest?.status === "Pending" && leaveStatus === "Pending") {
-      return res.status(400).json({ success: false, message: "This leave request is already in pending." });
-    };
-
-    const employee = await Team.findById(leaveRequest?.employee?._id);
-    const approveBy = await Team.findById(approverId);
+    const employee = await Team.findById(leaveRequest?.employee?._id).session(session);
+    const approveBy = await Team.findById(approverId).session(session);
 
     if (leaveStatus === "Rejected") {
       leaveRequest.leaveStatus = "Rejected";
       leaveRequest.leaveApprovedBy = approverId;
-      await leaveRequest.save();
-      sendEmail(employee?.email, "Your Leave Request Rejected", `<p>Your leave request from date ${leaveRequest?.startDate} to ${leaveRequest?.startDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      await leaveRequest.save({ session });
+
+      sendEmail(employee?.email, "Your Leave Request Rejected", `<p>Your leave request from ${leaveRequest?.startDate} to ${leaveRequest?.endDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      await session.commitTransaction();
       return res.status(200).json({ success: true, message: "Leave request rejected." });
     };
 
     if (leaveStatus === "Approved") {
       leaveRequest.leaveStatus = "Approved";
       leaveRequest.leaveApprovedBy = approverId;
-      await leaveRequest.save();
+      await leaveRequest.save({ session });
 
       const leaveDates = leaveRequest?.startDate.toString() === leaveRequest?.endDate.toString()
         ? [new Date(leaveRequest?.startDate)]
         : getDateRange(new Date(leaveRequest?.startDate), new Date(leaveRequest?.endDate));
 
-      // Map leaveDates to create objects for approvedLeaves
       const approvedLeaveEntries = leaveDates.map((date) => ({
         date: date.toISOString().split("T")[0],
         approvedBy: approverId,
@@ -244,19 +239,22 @@ export const updateLeaveApproval = async (req, res) => {
         isUtilized: false,
       }));
 
-      // Update the approvedLeaves field in the `Team` schema
       await Team.findOneAndUpdate(
         { _id: employee?._id },
-        { $push: { approvedLeaves: { $each: approvedLeaveEntries } } }
+        { $push: { approvedLeaves: { $each: approvedLeaveEntries } } },
+        { session },
       );
 
-      // Send email
       sendEmail(employee?.email, "Your Leave Request Approved", `<p>Your leave request from ${leaveRequest?.startDate} to ${leaveRequest?.endDate} has been approved.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      await session.commitTransaction();
       return res.status(200).json({ success: true, message: "Leave request approved." });
     };
 
   } catch (error) {
+    await session.abortTransaction();
     return res.status(500).json({ success: false, message: error.message });
+  } finally {
+    session.endSession();
   };
 };
 
