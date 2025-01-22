@@ -191,6 +191,9 @@ export const getLatePunchInById = async (req, res) => {
 
 // Update late punch in request and handle attendance based on status
 export const updateLatePunchIn = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { id } = req.params;
     const { status, approvedBy } = req.body;
@@ -206,7 +209,7 @@ export const updateLatePunchIn = async (req, res) => {
     const latePunchIn = await LatePunchIn
       .findById(id)
       .populate("employee")
-      .exec();
+      .session(session);
 
     if (!latePunchIn) {
       return res.status(404).json({ success: false, message: "Late punch in request not found." });
@@ -220,13 +223,22 @@ export const updateLatePunchIn = async (req, res) => {
       return res.status(400).json({ success: false, message: "This late punch in request is already in pending." });
     };
 
-    const approveBy = await Team.findById(approvedBy);
+    const approveBy = await Team
+      .findById(approvedBy)
+      .session(session);
+
+    if (!approveBy) {
+      return res.status(404).json({ success: false, message: "Approver not found." });
+    };
 
     if (status === "Rejected") {
       latePunchIn.status = "Rejected";
       latePunchIn.approvedBy = approvedBy;
-      await latePunchIn.save();
-      sendEmail(latePunchIn.employee.email, "Your Late Punch In Request Rejected", `<p>Your late punch in request for date ${missedPunchOut?.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      await latePunchIn.save({ session });
+
+      sendEmail(latePunchIn?.employee?.email, "Your Late Punch In Request Rejected", `<p>Your late punch in request for date ${latePunchIn.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy.name}</p>`);
+      await session.commitTransaction();
+      session.endSession();
       return res.status(200).json({ success: true, message: "Late punch in request rejected." });
     };
 
@@ -234,7 +246,7 @@ export const updateLatePunchIn = async (req, res) => {
       employee: latePunchIn?.employee,
       attendanceDate: latePunchIn?.attendanceDate,
       punchIn: true,
-    });
+    }).session(session);
 
     if (!attendance) {
       return res.status(404).json({ success: false, message: `Punch in missing` });
@@ -243,18 +255,23 @@ export const updateLatePunchIn = async (req, res) => {
     if (status === "Approved") {
       attendance.punchInTime = latePunchIn?.punchInTime;
       attendance.hoursWorked = calculateTimeDifference(latePunchIn?.punchInTime, attendance?.punchOutTime);
-      await attendance.save();
+      await attendance.save({ session });
 
       latePunchIn.status = "Approved";
       latePunchIn.approvedBy = approvedBy;
-      await latePunchIn.save();
+      await latePunchIn.save({ session });
 
-      sendEmail(latePunchIn?.employee?.email, "Your Late Punch In Request Approved", `<p>Your late punch in request date ${latePunchIn?.attendanceDate} has been approved and punch in time ${latePunchIn?.punchInTime} is marked.</p><p>Regards,<br/>${approveBy?.name}</p>`);
-      return res.status(200).json({ success: true, message: `Late punch in request approved and punch in time ${latePunchIn?.punchInTime} is marked` });
+      sendEmail(latePunchIn.employee.email, "Your Late Punch In Request Approved", `<p>Your late punch in request date ${latePunchIn.attendanceDate} has been approved and punch in time ${latePunchIn.punchInTime} is marked.</p><p>Regards,<br/>${approveBy.name}</p>`);
+      await session.commitTransaction();
+      session.endSession();
+      return res.status(200).json({ success: true, message: `Late punch in request approved and punch in time ${latePunchIn.punchInTime} is marked` });
     };
 
     return res.status(400).json({ success: false, message: "Invalid status provided." });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -266,10 +283,10 @@ export const deleteLatePunchIn = async (req, res) => {
     const deletedLatePunchIn = await LatePunchIn.findByIdAndDelete(id);
 
     if (!deletedLatePunchIn) {
-      return res.status(404).json({ success: false, message: "Late punch in not found." });
+      return res.status(404).json({ success: false, message: "Late punch in request not found." });
     };
 
-    return res.status(200).json({ success: true, message: "Late punch in deleted successfully." });
+    return res.status(200).json({ success: true, message: "Late punch in request deleted successfully." });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   };
