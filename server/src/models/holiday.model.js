@@ -25,10 +25,8 @@ const holidaySchema = new mongoose.Schema(
 
 holidaySchema.pre("save", function (next) {
   const capitalizeWords = (string) => {
-    return string
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase())
-      .join(" ");
+    if (!string) return "";
+    return string.charAt(0).toUpperCase() + string.slice(1);
   };
 
   if (this.reason) {

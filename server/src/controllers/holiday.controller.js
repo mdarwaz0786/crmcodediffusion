@@ -6,8 +6,12 @@ export const createHoliday = async (req, res) => {
   try {
     const { reason, type, date } = req.body;
 
-    if (!reason || !date) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+    if (!date) {
+      return res.status(400).json({ success: false, message: "Reason is required" });
+    };
+
+    if (!date) {
+      return res.status(400).json({ success: false, message: "Date is required" });
     };
 
     // Check if a holiday already exists with the same date
@@ -23,7 +27,7 @@ export const createHoliday = async (req, res) => {
       return res.status(201).json({ success: true, holiday: newHoliday });
     };
   } catch (error) {
-    console.log("Error:", error.message);
+    console.log(error.message);
     res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -66,8 +70,8 @@ export const uploadHolidays = async (req, res) => {
     };
 
     const holidays = sheetData.map((item) => ({
-      reason: item.reason?.trim(),
-      type: item.type?.trim() || "Holiday",
+      reason: item.reason.trim(),
+      type: item.type.trim() || "Holiday",
       date: convertToDBDateFormat(item.date),
     }));
 
@@ -94,7 +98,7 @@ export const uploadHolidays = async (req, res) => {
 
     res.status(200).json({ success: true, holiday: holidays });
   } catch (error) {
-    console.log("Error while uploading holidays:", error);
+    console.log(error.message);
     res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -111,7 +115,79 @@ export const fetchUpcomingHoliday = async (req, res) => {
     res.status(200).json({ success: true, holiday });
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, message: error.message });
+  };
+};
+
+export const getHolidaysByMonth = async (req, res) => {
+  try {
+    const year = req.query.year || new Date().getFullYear();
+
+    const holidaysByMonth = await Holiday.aggregate([
+      {
+        $match: {
+          date: {
+            $regex: `^${year}-`,
+          },
+        },
+      },
+      {
+        $addFields: {
+          monthNumber: { $toInt: { $substr: ["$date", 5, 2] } },
+        },
+      },
+      {
+        $addFields: {
+          monthName: {
+            $arrayElemAt: [
+              [
+                "",
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December",
+              ],
+              "$monthNumber",
+            ],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            monthName: "$monthName",
+            monthNumber: "$monthNumber",
+          },
+          holidays: {
+            $push: "$$ROOT",
+          },
+        },
+      },
+      {
+        $sort: { "_id.monthNumber": 1 },
+      },
+      {
+        $project: {
+          _id: 0,
+          monthName: "$_id.monthName",
+          monthNumber: "$_id.monthNumber",
+          holidays: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({ success: true, data: holidaysByMonth });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -165,7 +241,8 @@ export const fetchAllHoliday = async (req, res) => {
       sort = { date: -1 };
     };
 
-    const holiday = await Holiday.find(query)
+    const holiday = await Holiday
+      .find(query)
       .sort(sort)
       .skip(skip)
       .limit(limit)
@@ -181,7 +258,7 @@ export const fetchAllHoliday = async (req, res) => {
     res.status(200).json({ success: true, holiday, totalCount: total });
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -194,10 +271,11 @@ export const fetchSingleHoliday = async (req, res) => {
     if (!holiday) {
       return res.status(404).json({ success: false, message: "Holiday not found" });
     };
+
     res.status(200).json({ success: true, holiday });
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -222,10 +300,10 @@ export const updateHoliday = async (req, res) => {
 
     await holiday.save();
 
-    res.status(200).json({ success: true, message: "Holiday updated successfully", holiday });
+    res.status(200).json({ success: true, holiday });
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -243,6 +321,6 @@ export const deleteHoliday = async (req, res) => {
     res.status(200).json({ success: true, message: "Holiday deleted successfully" });
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   };
 };
