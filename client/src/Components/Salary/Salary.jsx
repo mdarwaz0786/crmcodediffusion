@@ -13,88 +13,34 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const Salary = () => {
   const { validToken, team, isLoading } = useAuth();
   const [data, setData] = useState([]);
-  const [employee, setEmployee] = useState([]);
-  const [selectedEmployee, setSelectedEmployee] = useState("");
-  const [singleEmployee, setSingleEmployee] = useState("");
-  const [total, setTotal] = useState("");
-  const [loading, setLoading] = useState(true);
+
+  // Calculate previous month and year
+  const currentDate = new Date();
+  const previousMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1);
+  const initialYear = previousMonth.getFullYear();
+  const initialMonth = (previousMonth.getMonth() + 1).toString().padStart(2, "0");
+
   const [filters, setFilters] = useState({
-    year: new Date().getFullYear(),
-    month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
-    sort: "Descending",
-    page: 1,
-    limit: 20,
+    year: initialYear,
+    month: initialMonth,
   });
-
-  const fetchAllEmployee = async () => {
-    try {
-      const response = await axios.get(`${base_url}/api/v1/team/all-team`, {
-        headers: {
-          Authorization: validToken,
-        },
-      });
-
-      if (response?.data?.success) {
-        setEmployee(response?.data?.team);
-      };
-    } catch (error) {
-      console.log(error.message);
-    };
-  };
-
-  useEffect(() => {
-    if (!isLoading && team && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
-      fetchAllEmployee();
-    };
-  }, [isLoading, team]);
-
-  const fetchSingleEmployee = async (selectedEmployee) => {
-    try {
-      const response = await axios.get(`${base_url}/api/v1/team/single-team/${selectedEmployee}`, {
-        headers: {
-          Authorization: validToken,
-        },
-      });
-
-      if (response?.data?.success) {
-        setSingleEmployee(response?.data?.team);
-      };
-    } catch (error) {
-      console.log(error.message);
-    };
-  };
-
-  useEffect(() => {
-    if (!isLoading && team && selectedEmployee && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
-      fetchSingleEmployee(selectedEmployee);
-    };
-  }, [isLoading, team, selectedEmployee]);
 
   const fetchAllData = async () => {
     try {
-      setLoading(true);
-      const response = await axios.get(`${base_url}/api/v1/Salary/all-Salary`, {
+      const response = await axios.get(`${base_url}/api/v1/Salary/monthly-salary`, {
         headers: {
           Authorization: validToken,
         },
         params: {
-          year: filters.year,
-          month: filters.month,
-          employeeId: selectedEmployee,
-          sort: filters.sort,
-          page: filters.page,
-          limit: filters.limit,
+          month: `${filters.year}-${filters.month}`,
         },
       });
 
       if (response?.data?.success) {
-        setData(response?.data?.data);
-        setTotal(response?.data?.totalCount);
-        setLoading(false);
+        setData(response?.data?.salaryData);
       };
     } catch (error) {
       console.log(error.message);
-      setLoading(false);
     };
   };
 
@@ -118,7 +64,7 @@ const Salary = () => {
     if (!isLoading && team && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
       fetchAllData();
     };
-  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team]);
+  }, [filters.month, filters.year, isLoading, team]);
 
   const exportSalaryListAsExcel = () => {
     if (data?.length === 0) {
@@ -128,10 +74,8 @@ const Salary = () => {
 
     const exportData = data?.map((entry, index) => ({
       "#": index + 1 || "1",
-      "Employee Name": entry?.employee?.name || "N/A",
-      "Month": formatDate(entry?.month) || "N/A",
-      "Year": formatDate(entry?.year) || "N/A",
-      "Amount paid": formatDate(entry?.amountPaid) || "0",
+      "Employee Name": entry?.employeeName || "N/A",
+      "Total Salary": formatDate(entry?.totalSalary) || "0",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -146,13 +90,13 @@ const Salary = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Salary");
 
-    XLSX.writeFile(workbook, `${filters.month || ""}-${filters.year || ""}-${singleEmployee?.name || ""}-Salary.xlsx`);
+    XLSX.writeFile(workbook, `${filters.month || ""}-${filters.year || ""}-Salary.xlsx`);
   };
 
   const exportSalaryListAsPdf = () => {
     const element = document.querySelector("#exportSalaryList");
     const options = {
-      filename: `${filters.month || ""}-${filters.year || ""}-${singleEmployee?.name || ""}-Salary`,
+      filename: `${filters.month || ""}-${filters.year || ""}-Salary`,
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
@@ -188,7 +132,7 @@ const Salary = () => {
               <div className="page-header">
                 <div className="row align-items-center">
                   <div className="col-4">
-                    <h4 className="page-title">Salary<span className="count-title">{total}</span></h4>
+                    <h4 className="page-title">Salary</h4>
                   </div>
                   <div className="col-8 text-end">
                     <div className="head-icons">
@@ -211,28 +155,6 @@ const Salary = () => {
                     <div className="sortby-list">
                       <ul>
                         <li>
-                          <label className="pb-1">Sort:</label>
-                          <div className="sort-dropdown drop-down">
-                            <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown"><i className="ti ti-sort-ascending-2" />{filters.sort}</Link>
-                            <div className="dropdown-menu  dropdown-menu-start">
-                              <ul>
-                                <li>
-                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, sort: "Ascending", page: 1 }))}>
-                                    <i className="ti ti-circle-chevron-right" />
-                                    Ascending
-                                  </Link>
-                                </li>
-                                <li>
-                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, sort: "Descending", page: 1 }))}>
-                                    <i className="ti ti-circle-chevron-right" />
-                                    Descending
-                                  </Link>
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                        </li>
-                        <li>
                           <label className="pb-1">Year:</label>
                           <select
                             id="year"
@@ -241,7 +163,6 @@ const Salary = () => {
                             onChange={handleYearChange}
                             className="form-select"
                           >
-                            <option value="">All</option>
                             {
                               Array.from({ length: 10 }, (_, i) => {
                                 const year = new Date().getFullYear() - i;
@@ -259,7 +180,6 @@ const Salary = () => {
                             onChange={handleMonthChange}
                             className="form-select"
                           >
-                            <option value="">All</option>
                             <option value="01">January</option>
                             <option value="02">February</option>
                             <option value="03">March</option>
@@ -272,17 +192,6 @@ const Salary = () => {
                             <option value="10">October</option>
                             <option value="11">November</option>
                             <option value="12">December</option>
-                          </select>
-                        </li>
-                        <li>
-                          <label className="pb-1">Employee:</label>
-                          <select className="form-select" name="employee" id="employee" value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)}>
-                            <option value="">All</option>
-                            {
-                              employee?.map((e) => (
-                                <option key={e?._id} value={e?._id}>{e?.name}</option>
-                              ))
-                            }
                           </select>
                         </li>
                         <li>
@@ -310,9 +219,6 @@ const Salary = () => {
                             </div>
                           </div>
                         </li>
-                        <li>
-                          <Link to="/add-salary"><button className="btn btn-primary">Add Paid Salary</button></Link>
-                        </li>
                       </ul>
                     </div>
                   </div>
@@ -329,9 +235,8 @@ const Salary = () => {
                             </th>
                             <th>#</th>
                             <th>Employee Name</th>
-                            <th>Month</th>
-                            <th>Year</th>
-                            <th>Amount Paid</th>
+                            <th>Monthly Salary</th>
+                            <th>Total Salary</th>
                             <th>Salary Slip</th>
                           </tr>
                         </thead>
@@ -342,84 +247,23 @@ const Salary = () => {
                                 <td className="no-sort">
                                   <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
                                 </td>
-                                <td>{(filters.page - 1) * filters.limit + index + 1}</td>
-                                <td>{d?.employee?.name}</td>
-                                <td>{d?.month}</td>
-                                <td>{d?.year}</td>
-                                <td>{d?.amountPaid}</td>
+                                <td>{index + 1}</td>
+                                <td>{d?.employeeName}</td>
+                                <td>{d?.monthlySalary}</td>
+                                <td>{d?.totalSalary}</td>
                                 <td style={{ padding: "0.3rem" }}>
-                                  <Link style={{ marginRight: "1rem" }} to={`/salary-slip/${d?._id}`} ><button className="btn btn-primary">View</button></Link>
-                                  <Link to={`/edit-salary/${d?._id}`} ><button className="btn btn-primary">Edit</button></Link>
+                                  <Link style={{ marginRight: "1rem" }} to={d?.salaryPaid === false ? `/pay-salary/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}` : ""}><button className="btn btn-primary">{d?.salaryPaid ? "Paid" : "Pay Salary"}</button></Link>
+                                  {
+                                    d?.salaryPaid && (
+                                      <Link style={{ marginRight: "1rem" }} to={`/salary-slip/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}/${d?.transactionId}`}><button className="btn btn-primary">View</button></Link>
+                                    )
+                                  }
                                 </td>
                               </tr>
                             ))
                           }
                         </tbody>
                       </table>
-                    </div>
-                  </div>
-                  <div className="row align-items-center">
-                    <div className="col-md-4 custom-pagination">
-                      <div className="datatable-length">
-                        <div className="dataTables_length" id="project-list_length">
-                          <label>
-                            Show
-                            <select name="project-list_length" value={filters.limit} onChange={(e) => setFilters((prev) => ({ ...prev, limit: e.target.value, page: 1 }))} aria-controls="project-list" className="form-select form-select-sm">
-                              <option value="5">5</option>
-                              <option value="10">10</option>
-                              <option value="15">15</option>
-                              <option value="20">20</option>
-                              <option value="25">25</option>
-                              <option value={total}>All</option>
-                            </select>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-4 custom-pagination">
-                      {
-                        (total === 0) ? (
-                          <span style={{ textAlign: "center", fontSize: "1rem", fontWeight: "600" }}>No Data</span>
-                        ) : loading ? (
-                          <h5 style={{ textAlign: "center", color: "#ffb300" }}>
-                            <div className="spinner-border" role="status">
-                              <span className="visually-hidden">Loading...</span>
-                            </div>
-                          </h5>
-                        ) : (
-                          null
-                        )
-                      }
-                    </div>
-                    <div className="col-md-4 custom-pagination">
-                      <div className="datatable-paginate">
-                        <div className="dataTables_paginate paging_simple_numbers" id="project-list_paginate">
-                          <ul className="pagination">
-                            <li className={`paginate_button page-item previous ${filters.page === 1 ? "disabled" : ""}`} id="project-list_previous">
-                              <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page - 1 }))} aria-controls="project-list" aria-disabled={filters.page === 1} role="link" data-dt-idx="previous" tabIndex="-1" className="page-link" >
-                                <i className="fa fa-angle-left"></i> Prev
-                              </Link>
-                            </li>
-                            {
-                              [...Array(Math.ceil(total / filters.limit)).keys()].map((num) => (
-                                <li className={`paginate_button page-item page-number ${filters.page === num + 1 ? "active" : ""}`} key={num}>
-                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: num + 1 }))} aria-controls="project-list" role="link" aria-current={filters.page === num + 1} data-dt-idx={num} tabIndex="0" className="page-link">
-                                    {num + 1}
-                                  </Link>
-                                </li>
-                              ))
-                            }
-                            <li className="paginate_button page-item page-number-mobile active">
-                              {filters.page}
-                            </li>
-                            <li className={`paginate_button page-item next ${filters.page === Math.ceil(total / filters.limit) ? "disabled" : ""}`} id="project-list_next">
-                              <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page + 1 }))} className="page-link" aria-controls="project-list" role="link" data-dt-idx="next" tabIndex="0">
-                                Next <i className="fa fa-angle-right"></i>
-                              </Link>
-                            </li>
-                          </ul>
-                        </div>
-                      </div>
                     </div>
                   </div>
                   {/* /Salary List */}

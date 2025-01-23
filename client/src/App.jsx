@@ -67,9 +67,8 @@ import EditAddOnService from "./Components/AddOnService/EditAddOnService.jsx";
 import CompOff from "./Components/CompOff/CompOff.jsx";
 import MissedPunchOut from "./Components/MissedPunchOut/MissedPunchOut.jsx";
 import Salary from "./Components/Salary/Salary.jsx";
+import PaySalary from "./Components/Salary/PaySalary.jsx";
 import SalarySlip from "./Components/Salary/SalarySlip.jsx";
-import AddSalary from "./Components/Salary/AddSalary.jsx";
-import EditSalary from "./Components/Salary/EditSalary.jsx";
 import Holiday from "./Components/Holiday/Holiday.jsx";
 import AddHoliday from "./Components/Holiday/AddHoliday.jsx";
 import EditHoliday from "./Components/Holiday/EditHoliday.jsx";
@@ -154,9 +153,8 @@ const App = () => {
           <Route path="missed-punch-out" element={<MissedPunchOut />} />
           <Route path="late-punch-in" element={<LatePunchIn />} />
           <Route path="salary" element={<Salary />} />
-          <Route path="add-salary" element={<AddSalary />} />
-          <Route path="edit-salary/:id" element={<EditSalary />} />
-          <Route path="salary-slip/:id" element={<SalarySlip />} />
+          <Route path="pay-salary/:employeeId/:month/:year/:totalSalary" element={<PaySalary />} />
+          <Route path="salary-slip/:employeeId/:month/:year/:totalSalary/:transactionId" element={<SalarySlip />} />
           <Route path="holiday" element={<Holiday />} />
           <Route path="add-holiday" element={<AddHoliday />} />
           <Route path="upload-holiday" element={<HolidayUpload />} />

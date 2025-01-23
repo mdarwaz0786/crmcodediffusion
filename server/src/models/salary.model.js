@@ -14,12 +14,17 @@ const salarySchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  salaryPaid: {
-    type: Boolean,
-    default: false,
+  transactionId: {
+    type: String,
+    required: true,
   },
   amountPaid: {
     type: Number,
+    required: true,
+  },
+  salaryPaid: {
+    type: Boolean,
+    default: false,
     required: true,
   },
 });

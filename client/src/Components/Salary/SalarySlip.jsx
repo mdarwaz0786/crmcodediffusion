@@ -6,42 +6,15 @@ import { useAuth } from "../../context/authContext";
 import axios from "axios";
 import html2pdf from "html2pdf.js";
 import { useEffect, useState } from "react";
+import numberToWords from "../../Helper/numberToWord";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const SalarySlip = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { employeeId, month, year, totalSalary, transactionId } = useParams();
   const { validToken, team, isLoading } = useAuth("");
   const [monthlyStatistic, setMonthlyStatistic] = useState("");
-  const [salary, setSalary] = useState("");
   const [employee, setEmployee] = useState("");
-  const [employeeId, setEmployeeId] = useState("");
-  const [month, setMonth] = useState("");
-  const [year, setYear] = useState("");
-
-  const fetchSalary = async (id) => {
-    try {
-      const response = await axios.get(`${base_url}/api/v1/salary/single-salary/${id}`, {
-        headers: {
-          Authorization: validToken,
-        },
-      });
-      if (response?.data?.success) {
-        setSalary(response?.data?.data);
-        setMonth(response?.data?.data?.month);
-        setYear(response?.data?.data?.year);
-        setEmployeeId(response?.data?.data?.employee?._id);
-      };
-    } catch (error) {
-      console.log("Error fetching salary detail:", error.message);
-    };
-  };
-
-  useEffect(() => {
-    if (id && validToken && !isLoading && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
-      fetchSalary(id);
-    };
-  }, [id, validToken, team, isLoading]);
 
   const fetchEmployee = async (employeeId) => {
     try {
@@ -57,6 +30,8 @@ const SalarySlip = () => {
       console.log("Error fetching employee:", error.message);
     };
   };
+
+  console.log(employeeId);
 
   useEffect(() => {
     if (employeeId && validToken && !isLoading && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
@@ -155,7 +130,7 @@ const SalarySlip = () => {
               </div>
               <div className="row mb-2">
                 <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Department</div>
-                <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.department}</div>
+                <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.department ? employee?.department : "IT"}</div>
               </div>
               <div className="row mb-2">
                 <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Date of Joining</div>
@@ -168,22 +143,39 @@ const SalarySlip = () => {
             </div>
 
             <div className="col-md-6 px-3 py-2" style={{ borderLeft: '1px solid #eee' }}>
+
               <div className="row mb-2">
-                <div className="col-5" style={{ fontWeight: "500", color: "black" }}>UAN</div>
-                <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.uan ? employee?.uan : "XXXX-XXXX"}</div>
+                <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Transaction Id</div>
+                <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{transactionId}</div>
               </div>
+              {
+                employee?.uan && (
+                  <div className="row mb-2">
+                    <div className="col-5" style={{ fontWeight: "500", color: "black" }}>UAN</div>
+                    <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.uan ? employee?.uan : "XXXX"}</div>
+                  </div>
+                )
+              }
               <div className="row mb-2">
                 <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Employee ID</div>
                 <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.employeeId}</div>
               </div>
-              <div className="row mb-2">
-                <div className="col-5" style={{ fontWeight: "500", color: "black" }}>PAN Number</div>
-                <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.pan ? employee?.pan : "XXXX-XXXX"}</div>
-              </div>
-              <div className="row mb-2">
-                <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Bank Account</div>
-                <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.bankAccount ? employee?.bankAccount : "XXXX-XXXX-XXXX-XXXX"}</div>
-              </div>
+              {
+                employee?.uan && (
+                  <div className="row mb-2">
+                    <div className="col-5" style={{ fontWeight: "500", color: "black" }}>PAN Number</div>
+                    <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.pan ? employee?.pan : "XXXX"}</div>
+                  </div>
+                )
+              }
+              {
+                employee?.bankAccount && (
+                  <div className="row mb-2">
+                    <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Bank Account</div>
+                    <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.bankAccount ? employee?.bankAccount : "XXXX"}</div>
+                  </div>
+                )
+              }
               <div className="row">
                 <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Monthly Gross</div>
                 <div className="col-7" style={{ fontWeight: "400", color: "black" }}>₹{employee?.monthlySalary}</div>
@@ -201,8 +193,8 @@ const SalarySlip = () => {
             </thead>
             <tbody>
               <tr style={{ border: "none", borderColor: "#eee" }}>
-                <td className="py-2 ps-3" style={{ color: "black" }}>Amount Paid</td>
-                <td className="py-2 ps-3" style={{ color: "black" }}>₹{salary?.amountPaid}</td>
+                <td className="py-2 ps-3" style={{ color: "black" }}>Salary Paid</td>
+                <td className="py-2 ps-3" style={{ color: "black" }}>₹{totalSalary}</td>
               </tr>
               {/* <tr style={{ border: "none", borderColor: "#eee" }}>
                 <td className="py-2 ps-3" style={{ color: "black" }}>Deduction</td>
@@ -212,7 +204,7 @@ const SalarySlip = () => {
             <tfoot>
               <tr style={{ fontWeight: "600", border: "1px solid #eee" }}>
                 <td className="py-2 ps-3" style={{ fontSize: "15px" }}>Total Earnings</td>
-                <td className="py-2 ps-3" style={{ fontSize: "15px" }}>₹{salary?.amountPaid}</td>
+                <td className="py-2 ps-3" style={{ fontSize: "15px" }}>₹{totalSalary}</td>
               </tr>
             </tfoot>
           </table>
@@ -224,11 +216,11 @@ const SalarySlip = () => {
             </div> */}
             <div className="d-flex justify-content-between px-3 py-2">
               <div style={{ fontWeight: "600", color: "black" }}>Net Payable (Total Earnings)</div>
-              <div style={{ fontWeight: "600", color: "black" }}>₹{salary?.amountPaid}</div>
+              <div style={{ fontWeight: "600", color: "black" }}>₹{totalSalary}</div>
             </div>
-            {/* <div className="d-flex justify-content-between px-3 py-2">
-              <div style={{ fontWeight: "600", color: "black" }}>Twelve Thousand Only</div>
-            </div> */}
+            <div className="d-flex justify-content-between px-3 py-2">
+              <div style={{ fontWeight: "600", color: "black" }}>{numberToWords(totalSalary)}</div>
+            </div>
           </div>
 
           <h5 className="mt-5 mb-3">Attendance Summary ({getMonthName(month)} {year})</h5>

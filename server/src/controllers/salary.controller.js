@@ -5,16 +5,13 @@ import Salary from "../models/salary.model.js";
 // Create a new salary record
 export const createSalary = async (req, res) => {
     try {
-        const { employee, month, year, salaryPaid, amountPaid } = req.body;
+        const { employee, month, year, salaryPaid, amountPaid, transactionId } = req.body;
 
-        // Check if a salary record already exists for the employee, month, and year
+        // Check if a salary record already exists for this employee, month, and year
         const existingSalary = await Salary.findOne({ employee, month, year });
 
         if (existingSalary) {
-            return res.status(400).json({
-                success: false,
-                message: "Salary record for this employee, month, and year already exists.",
-            });
+            return res.status(400).json({ success: false, message: "Salary already paid." });
         };
 
         // Create a new salary record
@@ -24,12 +21,14 @@ export const createSalary = async (req, res) => {
             year,
             salaryPaid,
             amountPaid,
+            transactionId,
         });
 
         await newSalary.save();
-        res.status(201).json({ success: true, data: newSalary });
+
+        return res.status(201).json({ success: true, data: newSalary });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        return res.status(500).json({ success: false, message: error.message });
     };
 };
 
@@ -65,7 +64,8 @@ export const getAllSalaries = async (req, res) => {
         const skip = (page - 1) * limit;
 
         // Fetching data with sorting, pagination, and population
-        const salaries = await Salary.find(query)
+        const salaries = await Salary
+            .find(query)
             .sort(sort)
             .skip(skip)
             .limit(limit)
@@ -75,7 +75,7 @@ export const getAllSalaries = async (req, res) => {
         // Counting total records
         const total = await Salary.countDocuments(query);
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             data: salaries,
             totalCount: total,
@@ -85,39 +85,40 @@ export const getAllSalaries = async (req, res) => {
         });
 
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        return res.status(500).json({ success: false, message: error.message });
     };
 };
 
 // Get a single salary record by ID
 export const getSalaryById = async (req, res) => {
     try {
-        const salary = await Salary.findById(req.params.id).populate("employee");
+        const salary = await Salary
+            .findById(req.params.id)
+            .populate("employee")
+            .exec();
+
         if (!salary) {
             return res.status(404).json({ success: false, message: "Salary record not found." });
         };
-        res.status(200).json({ success: true, data: salary });
+
+        return res.status(200).json({ success: true, data: salary });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        return res.status(500).json({ success: false, message: error.message });
     };
 };
 
 // Update a salary record by ID
 export const updateSalary = async (req, res) => {
     try {
-        const updatedSalary = await Salary.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new: true, runValidators: true }
-        );
+        const updatedSalary = await Salary.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
 
         if (!updatedSalary) {
-            return res.status(404).json({ success: false, message: "Salary not found." });
+            return res.status(404).json({ success: false, message: "Salary record not found." });
         };
 
-        res.status(200).json({ success: true, data: updatedSalary });
+        return res.status(200).json({ success: true, data: updatedSalary });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        return res.status(500).json({ success: false, message: error.message });
     };
 };
 
@@ -138,6 +139,7 @@ export const deleteSalary = async (req, res) => {
 
 // Helper function to convert time (HH:MM) into minutes
 function timeToMinutes(time) {
+    if (time === "") return;
     const [hours, minutes] = time.split(":").map(Number);
     return hours * 60 + minutes;
 };
@@ -145,85 +147,95 @@ function timeToMinutes(time) {
 // Fetch monthly salary for employee
 export const fetchMonthlySalary = async (req, res) => {
     try {
-        const { employeeId, month } = req.query;
-
-        if (!employeeId) {
-            return res.status(400).json({ message: "Employee Id is required." });
-        };
+        const { month } = req.query;
 
         if (!month) {
             return res.status(400).json({ message: "Month (yyyy-mm) is required." });
         };
 
-        const employee = await Team.findById(employeeId);
+        // Fetch all active employees
+        const employees = await Team.find({ isActive: true });
 
-        if (!employee) {
-            return res.status(404).json({ message: "Employee not found." });
-        };
+        const salaryData = await Promise.all(
+            employees?.map(async (employee) => {
+                const monthlySalary = parseFloat(employee?.monthlySalary);
+                const [requiredHours, requiredMinutes] = employee?.workingHoursPerDay.split(":").map(Number);
+                const dailyThreshold = requiredHours * 60 + requiredMinutes;
 
-        const monthlySalary = parseFloat(employee.monthlySalary);
-        const [requiredHours, requiredMinutes] = employee.workingHoursPerDay.split(":").map(Number);
-        const dailyThreshold = requiredHours * 60 + requiredMinutes;
+                // Calculate the start and end dates for the month
+                const [year, monthIndex] = month.split("-").map(Number);
+                const startDate = new Date(year, monthIndex - 1, 1);
+                const endDate = new Date(year, monthIndex, 0);
 
-        // Fetch Sunday and Holiday records
-        const sundayHolidayRecords = await Attendance.find({
-            employee: employeeId,
-            attendanceDate: { $regex: `^${month}-` },
-            status: { $in: ["Sunday", "Holiday"] },
-        });
+                // Fetch Sunday and Holiday records
+                const sundayHolidayRecords = await Attendance.find({
+                    employee: employee?._id,
+                    attendanceDate: { $gte: startDate.toISOString().split("T")[0], $lte: endDate.toISOString().split("T")[0] },
+                    status: { $in: ["Sunday", "Holiday"] },
+                });
 
-        const totalSundaysAndHolidays = sundayHolidayRecords.length;
+                const totalSundaysAndHolidays = sundayHolidayRecords.length;
 
-        // Total days in the month
-        const [year, monthIndex] = month.split("-").map(Number);
-        const daysInMonth = new Date(year, monthIndex, 0).getDate();
-        const companyWorkingDays = daysInMonth - totalSundaysAndHolidays;
+                const daysInMonth = new Date(year, monthIndex, 0).getDate();
+                const companyWorkingDays = daysInMonth - totalSundaysAndHolidays;
 
-        const totalCompanyMinutes = companyWorkingDays * dailyThreshold;
+                const totalCompanyWorkingMinutes = companyWorkingDays * dailyThreshold;
 
-        // Fetch attendance records
-        const attendanceRecords = await Attendance.find({
-            employee: employeeId,
-            attendanceDate: { $regex: `^${month}-` },
-        });
+                // Fetch attendance records
+                const attendanceRecords = await Attendance.find({
+                    employee: employee?._id,
+                    attendanceDate: { $gte: startDate.toISOString().split("T")[0], $lte: endDate.toISOString().split("T")[0] },
+                });
 
-        let totalMinutesWorked = 0;
-        let onLeave = 0;
+                let totalMinutesWorked = 0;
+                let onLeave = 0;
 
-        attendanceRecords.forEach((record) => {
-            if (record.status === "Present") {
-                totalMinutesWorked += timeToMinutes(record.hoursWorked);
-            } else if (record.status === "On Leave") {
-                onLeave += 1;
-            };
-        });
+                attendanceRecords.forEach((record) => {
+                    if (record?.status === "Present" || record?.status === "Half Day") {
+                        totalMinutesWorked += timeToMinutes(record?.hoursWorked);
+                    };
 
-        // Deduction calculations
-        const effectiveLeaveDays = Math.min(2, Math.max(0, onLeave)); // Allow up to 2 leave days without salary deduction
-        const hoursShortfall = totalCompanyMinutes - totalMinutesWorked;
-        const additionalDeductionDays = hoursShortfall > 0 ? (hoursShortfall / dailyThreshold) : 0;
+                    if (record?.status === "On Leave") {
+                        onLeave += 1;
+                    };
+                });
 
-        const totalDeductionDays = additionalDeductionDays - effectiveLeaveDays;
+                // Calculate deduction days
+                const hoursShortfall = totalCompanyWorkingMinutes - totalMinutesWorked;
+                const deductionDays = hoursShortfall > 0 ? Math.ceil(hoursShortfall / dailyThreshold) : 0;
+                const totalDeductionDays = deductionDays - onLeave;
 
-        // Calculate salary
-        const dailySalary = monthlySalary / companyWorkingDays;
-        const totalSalary = (companyWorkingDays - totalDeductionDays) * dailySalary;
+                // Calculate total salary
+                const dailySalary = monthlySalary / companyWorkingDays;
+                const totalSalary = (companyWorkingDays - totalDeductionDays) * dailySalary;
 
-        // Calculate total deduction
-        const totalDeduction = monthlySalary - totalSalary;
+                // Calculate total deduction
+                const totalDeduction = monthlySalary - totalSalary;
 
-        // Response data
-        const salary = {
-            employee: employeeId,
-            month,
-            monthlySalary,
-            totalSalary: totalSalary.toFixed(2),
-            totalDeduction: totalDeduction.toFixed(2),
-        };
+                // Check if salary has been paid
+                const salaryRecord = await Salary.findOne({
+                    employee: employee?._id,
+                    month: monthIndex.toString(),
+                    year: year.toString(),
+                });
 
-        return res.status(200).json({ success: true, salary });
+                const salaryPaid = salaryRecord ? salaryRecord?.salaryPaid : false;
+                const transactionId = salaryRecord ? salaryRecord?.transactionId : "";
+
+                return {
+                    employeeId: employee?._id,
+                    employeeName: employee?.name,
+                    monthlySalary,
+                    totalSalary: totalSalary.toFixed(2),
+                    totalDeduction: totalDeduction.toFixed(2),
+                    salaryPaid,
+                    transactionId,
+                };
+            }),
+        );
+
+        return res.status(200).json({ success: true, salaryData });
     } catch (error) {
-        console.log(error.message);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ success: false, message: error.message });
     };
 };
