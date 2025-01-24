@@ -29,7 +29,22 @@ export const createLeaveApproval = async (req, res) => {
       };
     };
 
-    if (new Date(startDate) > new Date(endDate)) {
+    // Convert startDate and endDate to Date objects
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // Ensure start date is not the current date or in the past
+    const currentDate = new Date();
+
+    if (start.setHours(0, 0, 0, 0) === currentDate.setHours(0, 0, 0, 0)) {
+      return res.status(400).json({ success: false, message: "Start date cannot be today" });
+    };
+
+    if (start.setHours(0, 0, 0, 0) < currentDate.setHours(0, 0, 0, 0)) {
+      return res.status(400).json({ success: false, message: "Start date cannot be in the past" });
+    };
+
+    if (start > end) {
       return res.status(400).json({ success: false, message: "Start date cannot be later than end date" });
     };
 

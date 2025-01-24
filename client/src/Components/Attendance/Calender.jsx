@@ -2,10 +2,13 @@
 /* eslint-disable no-extra-semi */
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 const Calender = ({ attendanceData, month, year, employeeId }) => {
   const [calendarDays, setCalendarDays] = useState([]);
   const zeroBasedMonth = parseInt(month, 10) - 1;
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   const generateCalendar = () => {
     const daysInMonth = new Date(year, zeroBasedMonth + 1, 0).getDate();
@@ -34,12 +37,18 @@ const Calender = ({ attendanceData, month, year, employeeId }) => {
   };
 
   const calendarStyle = {
-    border: '1px solid #eee',
+    border: '1px solid #ddd',
     padding: '0.625rem',
     textAlign: 'center',
-    borderRadius: '0.3125rem',
-    cursor: 'pointer',
+    background: '#fff',
+  };
+
+  const headerStyle = {
+    border: '1px solid #ddd',
+    textAlign: 'center',
+    fontWeight: 'bold',
     background: '#f4f8f4',
+    padding: '0.625rem',
   };
 
   const attendanceColors = {
@@ -48,25 +57,30 @@ const Calender = ({ attendanceData, month, year, employeeId }) => {
     Holiday: '#ffb300',
     Sunday: 'blue',
     'On Leave': 'purple',
+    'Comp Off': 'orange',
     default: 'black',
   };
 
   return (
     <>
-      <div className="d-grid" style={{ gridTemplateColumns: 'repeat(7, 1fr)', gap: '10px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0px' }}>
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-          <div key={day} className="fw-bold text-center">{day}</div>
+          <div key={day} style={headerStyle}>{day}</div>
         ))}
 
         {calendarDays.map((day, index) => {
-          if (!day) return <div key={index} />;
+          if (!day) return <div key={index} style={calendarStyle} />;
           const attendance = getAttendance(day);
           return (
-            <div key={index} style={calendarStyle} className="text-center">
+            <div key={index} style={calendarStyle}>
               <div>{day}</div>
               <div style={{ color: attendanceColors[attendance?.status] }}>{attendance?.status}</div>
-              <div>{attendance?.punchInTime} {" "} {attendance?.punchOutTime}</div>
-              <div>{attendance?.hoursWorked}</div>
+              {currentPath === "/attendance" && (
+                <>
+                  <div>{attendance?.punchInTime} {" "} {attendance?.punchOutTime}</div>
+                  <div>{attendance?.hoursWorked}</div>
+                </>
+              )}
             </div>
           );
         })}

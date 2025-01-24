@@ -1,14 +1,14 @@
+/* eslint-disable react/prop-types */
 import formatDate from "../../Helper/formatDate";
 import formatTimeToHoursMinutes from "../../Helper/formatTimeToHoursMinutes";
 import formatTimeWithAmPm from "../../Helper/formatTimeWithAmPm";
 
-/* eslint-disable react/prop-types */
 const AttendanceSummary = ({ attendance }) => {
   const summaryStyle = {
     border: '1px solid #ddd',
     borderRadius: '0.3125rem',
     padding: '1.25rem',
-    backgroundColor: '#f4f8f4',
+    background: '#f4f8f4',
     maxWidth: '40rem',
     margin: '1.25rem auto',
   };
