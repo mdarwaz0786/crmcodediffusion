@@ -76,7 +76,7 @@ const CompOff = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${base_url}/api/v1/CompOff/all-CompOff`, {
+      const response = await axios.get(`${base_url}/api/v1/compOff/all-compOff`, {
         headers: {
           Authorization: validToken,
         },
@@ -184,7 +184,7 @@ const CompOff = () => {
         return toast.error("Select status");
       };
 
-      const response = await axios.put(`${base_url}/api/v1/CompOff/update-CompOff/${id}`,
+      const response = await axios.put(`${base_url}/api/v1/compOff/update-compOff/${id}`,
         { status: status[id], approvedBy: team?._id },
         {
           headers: {

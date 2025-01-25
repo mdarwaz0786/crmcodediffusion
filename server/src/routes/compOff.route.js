@@ -1,6 +1,6 @@
 import express from "express";
 import { isLoggedIn } from "../middleware/auth.middleware.js";
-import { createCompOff, deleteCompOff, getAllCompOffs, getCompOffById, updateCompOff } from "../controllers/compOff.controller.js";
+import { createCompOff, deleteCompOff, getAllCompOffs, getCompOffById, getPendingCompOffRequests, updateCompOff } from "../controllers/compOff.controller.js";
 
 // router object
 const router = express.Router();
@@ -9,6 +9,7 @@ const router = express.Router();
 router.post("/create-compOff", isLoggedIn, createCompOff);
 router.get("/all-compOff", isLoggedIn, getAllCompOffs);
 router.get("/single-compOff/:id", isLoggedIn, getCompOffById);
+router.get("/pending-compOff", isLoggedIn, getPendingCompOffRequests);
 router.put("/update-compOff/:id", isLoggedIn, updateCompOff);
 router.delete("/delete-compOff/:id", isLoggedIn, deleteCompOff);
 

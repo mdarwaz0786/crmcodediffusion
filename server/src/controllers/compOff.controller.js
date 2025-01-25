@@ -158,6 +158,21 @@ export const getCompOffById = async (req, res) => {
   };
 };
 
+// Controller to fetch Pending status data
+export const getPendingCompOffRequests = async (req, res) => {
+  try {
+    const pendingRequests = await CompOff
+      .find({ status: 'Pending' })
+      .sort({ createdAt: -1 })
+      .populate('employee', 'name')
+      .exec();
+
+    res.status(200).json({ success: true, data: pendingRequests });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  };
+};
+
 // Update comp off request
 export const updateCompOff = async (req, res) => {
   const session = await mongoose.startSession();
