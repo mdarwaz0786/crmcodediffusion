@@ -2,6 +2,7 @@ import LatePunchIn from "../models/latePunchIn.model.js";
 import Attendance from "../models/attendance.model.js";
 import Team from "../models/team.model.js";
 import { sendEmail } from "../services/emailService.js";
+import mongoose from "mongoose";
 
 // Calculate time difference in HH:MM format
 const calculateTimeDifference = (startTime, endTime) => {
@@ -186,6 +187,21 @@ export const getLatePunchInById = async (req, res) => {
     return res.status(200).json({ success: true, data: latePunchIn });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
+  };
+};
+
+// Controller to fetch Pending status data
+export const getPendingPunchInRequests = async (req, res) => {
+  try {
+    const pendingRequests = await LatePunchIn
+      .find({ status: 'Pending' })
+      .sort({ createdAt: -1 })
+      .populate('employee', 'name')
+      .exec();
+
+    res.status(200).json({ success: true, data: pendingRequests });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   };
 };
 

@@ -192,6 +192,21 @@ export const fetchSingleLeaveApproval = async (req, res) => {
   };
 };
 
+// Controller to fetch Pending status data
+export const getPendingLeaveApprovalRequests = async (req, res) => {
+  try {
+    const pendingRequests = await LeaveApproval
+      .find({ leaveStatus: 'Pending' })
+      .sort({ createdAt: -1 })
+      .populate('employee', 'name')
+      .exec();
+
+    res.status(200).json({ success: true, data: pendingRequests });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  };
+};
+
 // Update leave approval with transaction
 export const updateLeaveApproval = async (req, res) => {
   const session = await mongoose.startSession();
@@ -221,8 +236,12 @@ export const updateLeaveApproval = async (req, res) => {
       return res.status(404).json({ success: false, message: "Leave request not found." });
     };
 
-    if (["Approved", "Rejected"].includes(leaveRequest?.status)) {
+    if (["Approved", "Rejected"].includes(leaveRequest?.leaveStatus)) {
       return res.status(400).json({ success: false, message: "This leave request has already been processed." });
+    };
+
+    if (leaveRequest?.leaveStatus === "Pending" && leaveStatus === "Pending") {
+      return res.status(400).json({ success: false, message: "This leave request is already in pending." });
     };
 
     const employee = await Team.findById(leaveRequest?.employee?._id).session(session);
@@ -265,6 +284,7 @@ export const updateLeaveApproval = async (req, res) => {
       return res.status(200).json({ success: true, message: "Leave request approved." });
     };
 
+    return res.status(400).json({ success: false, message: "Invalid leave status provided." });
   } catch (error) {
     await session.abortTransaction();
     return res.status(500).json({ success: false, message: error.message });

@@ -41,16 +41,6 @@ export const createNotification = async (req, res) => {
 
     const failedTokens = responses.filter((res) => res.status === "rejected").map((_, index) => fcmTokens[index]);
 
-    // Save notification in the database
-    const newNotification = new Notification({
-      employee: toAll ? [] : employee,
-      message,
-      toAll,
-      date: new Date().toISOString(),
-    });
-
-    await newNotification.save();
-
     return res.status(200).json({ success: true, message: "Notifications sent successfully.", failedTokens });
   } catch (error) {
     console.error(error.message);
