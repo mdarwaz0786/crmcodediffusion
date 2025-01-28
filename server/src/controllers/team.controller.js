@@ -35,7 +35,7 @@ export const createTeam = async (req, res) => {
 // controller for login team member
 export const loginTeam = async (req, res) => {
   try {
-    const { employeeId, password } = req.body;
+    const { employeeId, password, fcmToken } = req.body;
     const team = await Team.findOne({ employeeId });
 
     if (!team) {
@@ -44,6 +44,11 @@ export const loginTeam = async (req, res) => {
 
     if (password !== team.password) {
       return res.status(401).json({ success: false, message: "Invalid Password" });
+    };
+
+    if (!!fcmToken) {
+      team.fcmToken = fcmToken;
+      await team.save();
     };
 
     return res.status(200).json({

@@ -1,26 +1,60 @@
 import Notification from "../models/notification.model.js";
+import Employee from "../models/team.model.js";
+import firebase from "../firebase/index.js";
 
-// Create Notification
+// Send notification
 export const createNotification = async (req, res) => {
   try {
-    const { employee, date, sendBy, message, toAll } = req.body;
+    const { employee, message, toAll } = req.body;
 
     if (!message) {
       return res.status(400).json({ success: false, message: "Message is required." });
     };
 
-    if ((!employee || employee.length === 0) && !toAll) {
-      return res.status(400).json({ success: false, message: "Either employee or send to all must be check." });
+    let fcmTokens = [];
+
+    if (toAll) {
+      const employees = await Employee.find({ fcmToken: { $exists: true, $ne: null } });
+      fcmTokens = employees.map(emp => emp.fcmToken);
+    } else {
+      if (!employee || employee.length === 0) {
+        return res.status(400).json({ success: false, message: "Employee IDs are required." });
+      };
+      const employees = await Employee.find({ _id: { $in: employee }, fcmToken: { $exists: true, $ne: null } });
+      fcmTokens = employees.map((emp) => emp.fcmToken);
     };
 
-    const newNotification = new Notification({ employee, date, sendBy, message, toAll });
+    if (fcmTokens.length === 0) {
+      return res.status(400).json({ success: false, message: "No valid FCM tokens found." });
+    };
+
+    // Firebase Notification Payload
+    const payload = {
+      notification: {
+        title: "From Code Diffusion",
+        body: message,
+      },
+    };
+
+    // Send notifications to all FCM tokens
+    const responses = await Promise.allSettled(fcmTokens.map((token) => firebase.messaging().send({ ...payload, token })));
+
+    const failedTokens = responses.filter((res) => res.status === "rejected").map((_, index) => fcmTokens[index]);
+
+    // Save notification in the database
+    const newNotification = new Notification({
+      employee: toAll ? [] : employee,
+      message,
+      toAll,
+      date: new Date().toISOString(),
+    });
 
     await newNotification.save();
 
-    res.status(201).json({ success: true, data: newNotification });
+    return res.status(200).json({ success: true, message: "Notifications sent successfully.", failedTokens });
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: "Error in sending notifications.", error: error.message });
   };
 };
 

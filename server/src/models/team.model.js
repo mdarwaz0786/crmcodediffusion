@@ -119,6 +119,9 @@ const teamSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    fcmToken: {
+      type: String,
+    },
   },
   {
     timestamps: true,
