@@ -5,23 +5,26 @@ import firebase from "../firebase/index.js";
 // Send notification
 export const createNotification = async (req, res) => {
   try {
-    const { employee, message, toAll } = req.body;
+    const { employee, message, toAll, sendBy, seenBy, date } = req.body;
 
     if (!message) {
       return res.status(400).json({ success: false, message: "Message is required." });
     };
 
     let fcmTokens = [];
+    let employeeIds = [];
 
     if (toAll) {
       const employees = await Employee.find({ fcmToken: { $exists: true, $ne: null } });
-      fcmTokens = employees.map(emp => emp.fcmToken);
+      fcmTokens = employees.map((emp) => emp.fcmToken);
+      employeeIds = employees.map((emp) => emp._id);
     } else {
       if (!employee || employee.length === 0) {
         return res.status(400).json({ success: false, message: "Employee IDs are required." });
       };
       const employees = await Employee.find({ _id: { $in: employee }, fcmToken: { $exists: true, $ne: null } });
       fcmTokens = employees.map((emp) => emp.fcmToken);
+      employeeIds = employees.map((emp) => emp._id);
     };
 
     if (fcmTokens.length === 0) {
@@ -37,14 +40,53 @@ export const createNotification = async (req, res) => {
     };
 
     // Send notifications to all FCM tokens
-    const responses = await Promise.allSettled(fcmTokens.map((token) => firebase.messaging().send({ ...payload, token })));
+    await Promise.allSettled(fcmTokens.map((token) => firebase.messaging().send({ ...payload, token })));
 
-    const failedTokens = responses.filter((res) => res.status === "rejected").map((_, index) => fcmTokens[index]);
+    // Save notification to database
+    const newNotification = new Notification({
+      employee: employeeIds,
+      message,
+      toAll,
+      sendBy,
+      date,
+      seenBy,
+    });
 
-    return res.status(200).json({ success: true, message: "Notifications sent successfully.", failedTokens });
+    await newNotification.save();
+    return res.status(200).json({ success: true, data: newNotification });
   } catch (error) {
-    console.error(error.message);
-    return res.status(500).json({ success: false, message: "Error in sending notifications.", error: error.message });
+    console.log(error.message);
+    return res.status(500).json({ success: false, message: error.message });
+  };
+};
+
+export const getUnseenNotifications = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const unseenCount = await Notification.countDocuments({
+      employee: userId,
+      "seenBy.user": { $ne: userId },
+    });
+
+    return res.status(200).json({ success: true, unseenCount });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  };
+};
+
+export const markNotificationsAsSeen = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    await Notification.updateMany(
+      { employee: userId, "seenBy.user": { $ne: userId } },
+      { $push: { seenBy: { user: userId, seenAt: new Date() } } }
+    );
+
+    return res.status(200).json({ success: true, message: "Notifications marked as seen." });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -75,45 +117,63 @@ export const getNotificationById = async (req, res) => {
   };
 };
 
-// Get Notifications by Employee ID or toAll
-export const getNotificationsByEmployeeOrAll = async (req, res) => {
+// Get Notifications by Employee IDs
+export const getNotificationsByEmployee = async (req, res) => {
   try {
-    const { employeeId } = req.query;
+    const { employeeId, page, skip, limit } = req.query;
 
-    let filter = {};
-
-    if (employeeId) {
-      filter = {
-        $or: [
-          { employee: { $in: [employeeId] } },
-          { toAll: true },
-        ],
-      };
-    } else {
-      filter = { toAll: true };
+    if (!employeeId) {
+      return res.status(400).json({ success: false, message: "Employee ID is required." });
     };
 
-    const notifications = await Notification.find(filter).populate("employee");
+    // Filter notifications by the provided employee ID
+    const filter = { employee: { $in: [employeeId] } };
+
+    // Convert query parameters to numbers
+    const pageNumber = Number(page);
+    const skipValue = Number(skip);
+    const limitValue = Number(limit);
+
+    // Pagination and sorting logic
+    const notifications = await Notification.find(filter)
+      .populate("employee")
+      .populate("sendBy")
+      .sort({ createdAt: -1 })
+      .skip(skipValue)
+      .limit(limitValue);
+
+    const totalNotifications = await Notification.countDocuments(filter);
 
     if (!notifications) {
       return res.status(404).json({ success: false, message: "No notifications found." });
     };
 
-    res.status(200).json({ success: true, data: notifications });
+    // Response includes pagination details
+    return res.status(200).json({
+      success: true,
+      data: notifications,
+      pagination: {
+        total: totalNotifications,
+        page: pageNumber,
+        totalPages: Math.ceil(totalNotifications / limitValue),
+        limit: limitValue,
+        skip: skipValue,
+      },
+    });
   } catch (error) {
-    console.elog(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    console.log(error.message);
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
 // Update Notification by ID
 export const updateNotification = async (req, res) => {
   try {
-    const { message, employee, date, sendBy, toAll } = req.body;
+    const { message, employee, date, sendBy, seenBy, toAll } = req.body;
 
     const notification = await Notification.findByIdAndUpdate(
       req.params.id,
-      { message, employee, date, sendBy, toAll },
+      { message, employee, date, sendBy, toAll, seenBy },
       { new: true, runValidators: true }
     );
 

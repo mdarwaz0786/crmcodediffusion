@@ -21,6 +21,10 @@ const notificationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    seenBy: [{
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
+      seenAt: { type: Date, default: Date.now },
+    }],
   },
   {
     timestamps: true,
