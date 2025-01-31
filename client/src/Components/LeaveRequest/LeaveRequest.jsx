@@ -13,7 +13,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const LeaveRequest = () => {
   const { validToken, team, isLoading } = useAuth();
-  const [leaveStatus, setLeaveStatus] = useState();
+  const [leaveStatus, setLeaveStatus] = useState({});
   const [data, setData] = useState([]);
   const [employee, setEmployee] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
@@ -182,12 +182,12 @@ const LeaveRequest = () => {
       setApproving(true);
 
       // Validation
-      if (!leaveStatus) {
+      if (!leaveStatus[leaveId]) {
         return toast.error("Select leave status");
       };
 
       const response = await axios.put(`${base_url}/api/v1/leaveApproval/update-leaveApproval`,
-        { leaveStatus, leaveId, approverId: team?._id },
+        { leaveStatus: leaveStatus[leaveId], leaveId, approverId: team?._id },
         {
           headers: {
             Authorization: validToken,
@@ -196,7 +196,7 @@ const LeaveRequest = () => {
       );
 
       if (response?.data?.success) {
-        setLeaveStatus();
+        setLeaveStatus((prev) => ({ ...prev, [leaveId]: "" }));
         fetchAllData();
         toast.success("Updated Successfully");
       };
@@ -394,8 +394,8 @@ const LeaveRequest = () => {
                                 <td>
                                   <form style={{ display: "flex", columnGap: "0.5rem" }} onSubmit={(e) => handleUpdateLeaveStatus(e, d?._id)}>
                                     <select
-                                      value={leaveStatus || d?.leaveStatus}
-                                      onChange={(e) => setLeaveStatus(e.target.value)}
+                                      value={leaveStatus[d?._id] || d?.leaveStatus}
+                                      onChange={(e) => setLeaveStatus({ ...leaveStatus, [d?._id]: e.target.value })}
                                       className="form-select"
                                     >
                                       <option value="Approved">Approved</option>
