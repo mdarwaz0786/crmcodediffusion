@@ -6,7 +6,7 @@ import Team from "../../models/team.model.js";
 cron.schedule("30 19 * * *", async () => {
   try {
     const employees = await Team
-      .find()
+      .find({ isActive: true })
       .select("_id name");
 
     if (!employees || employees.length === 0) {
@@ -37,8 +37,8 @@ cron.schedule("30 19 * * *", async () => {
           punchIn: false,
           punchOutTime: null,
           punchOut: false,
-          hoursWorked: "00:00",
-          lateIn: "00:00",
+          hoursWorked: "",
+          lateIn: "",
         });
       } catch (error) {
         console.log(`Error while marking atendance as Absent for employee ${employee?.name}:`, error.message);
@@ -48,6 +48,6 @@ cron.schedule("30 19 * * *", async () => {
     // Wait for all task to be completed
     await Promise.all(updateAttendancePromises);
   } catch (error) {
-    console.error("Error while marking attendance as Absent:", error.message);
+    console.log("Error while marking attendance as Absent:", error.message);
   };
 });

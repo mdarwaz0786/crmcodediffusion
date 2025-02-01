@@ -7,6 +7,10 @@ export const createSalary = async (req, res) => {
     try {
         const { employee, month, year, salaryPaid, amountPaid, transactionId } = req.body;
 
+        if (!transactionId || !employee || !month || !year || !salaryPaid || !amountPaid) {
+            return res.status(400).json({ success: false, message: "All fields are required." });
+        };
+
         // Check if a salary record already exists for this employee, month, and year
         const existingSalary = await Salary.findOne({ employee, month, year });
 
@@ -159,7 +163,7 @@ export const fetchMonthlySalary = async (req, res) => {
         const salaryData = await Promise.all(
             employees?.map(async (employee) => {
                 const monthlySalary = parseFloat(employee?.monthlySalary);
-                const [requiredHours, requiredMinutes] = employee?.workingHoursPerDay.split(":").map(Number);
+                const [requiredHours, requiredMinutes] = employee?.workingHoursPerDay?.split(":").map(Number);
                 const dailyThreshold = requiredHours * 60 + requiredMinutes;
 
                 // Calculate the start and end dates for the month

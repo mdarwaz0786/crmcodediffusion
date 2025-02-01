@@ -5,7 +5,9 @@ import Team from "../../models/team.model.js";
 // Schedule a task to run every Sunday at 18:45
 cron.schedule("45 18 * * 0", async () => {
   try {
-    const employees = await Team.find().select("_id name");;
+    const employees = await Team
+      .find({ isActive: true })
+      .select("_id name");;
 
     if (!employees || employees.length === 0) {
       return;
@@ -35,8 +37,8 @@ cron.schedule("45 18 * * 0", async () => {
           punchIn: false,
           punchOutTime: null,
           punchOut: false,
-          hoursWorked: "00:00",
-          lateIn: "00:00",
+          hoursWorked: "",
+          lateIn: "",
         });
       } catch (error) {
         console.log(`Error while marking attendance as Sunaday for employee ${employee?.name}:`, error.message);

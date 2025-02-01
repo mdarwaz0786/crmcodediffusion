@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 // Calculate time difference in HH:MM format
 const calculateTimeDifference = (startTime, endTime) => {
     if (!startTime || !endTime) {
-        return "00:00";
+        return;
     };
 
     const [startHours, startMinutes] = startTime.split(":").map(Number);
@@ -136,7 +136,7 @@ export const createAttendance = async (req, res) => {
             // Update the eligibleCompOffDate
             await Team.findOneAndUpdate(
                 { _id: employee },
-                { $addToSet: { eligibleCompOffDate: compOffEntry } }
+                { $addToSet: { eligibleCompOffDate: compOffEntry } },
             ).session(session);
         };
 
@@ -400,6 +400,10 @@ export const updateAttendance = async (req, res) => {
 
         if (!attendance) {
             return res.status(400).json({ success: false, message: `Punch in not found for date ${attendanceDate}` });
+        };
+
+        if (attendance.punchInTime === punchOutTime) {
+            return res.status(400).json({ success: false, message: `There should be gap between punch in and punch out` });
         };
 
         // Update punch out details

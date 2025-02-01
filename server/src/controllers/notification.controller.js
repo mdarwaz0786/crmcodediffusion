@@ -34,7 +34,7 @@ export const createNotification = async (req, res) => {
     // Firebase Notification Payload
     const payload = {
       notification: {
-        title: "From Code Diffusion",
+        title: "Code Diffusion",
         body: message,
       },
     };

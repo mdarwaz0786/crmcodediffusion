@@ -11,7 +11,7 @@ cron.schedule("00 19 * * *", async () => {
     session.startTransaction();
 
     const employees = await Team
-      .find()
+      .find({ isActive: true })
       .select("_id name eligibleCompOffDate");
 
     if (!employees || employees.length === 0) {
@@ -54,8 +54,8 @@ cron.schedule("00 19 * * *", async () => {
           punchIn: false,
           punchOutTime: null,
           punchOut: false,
-          hoursWorked: "00:00",
-          lateIn: "00:00",
+          hoursWorked: "",
+          lateIn: "",
         }], { session });
       };
     });
