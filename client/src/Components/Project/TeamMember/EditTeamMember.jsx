@@ -23,6 +23,15 @@ const EditTeamMember = () => {
   const [password, setPassword] = useState("");
   const [reportingTo, setReportingTo] = useState([]);
   const [selectedReportingTo, setSelectedReportingTo] = useState([]);
+  const [isActive, setIsActive] = useState("");
+  const [UAN, setUAN] = useState("");
+  const [PAN, setPAN] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
+  const [department, setDepartment] = useState([]);
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [officeLocation, setOfficeLocation] = useState([]);
+  const [selectedOfficeLocation, setSelectedOfficeLocation] = useState("");
+  const [workingHoursPerDay, setWorkingHoursPerDay] = useState("08:30");
   const { id } = useParams();
   const navigate = useNavigate();
   const { validToken, team, isLoading } = useAuth();
@@ -39,6 +48,38 @@ const EditTeamMember = () => {
 
       if (response?.data?.success) {
         setReportingTo(response?.data?.team);
+      };
+    } catch (error) {
+      console.log(error.message);
+    };
+  };
+
+  const fetchAllDepartment = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/department/all-department`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        setDepartment(response?.data?.department);
+      };
+    } catch (error) {
+      console.log(error.message);
+    };
+  };
+
+  const fetchAllOffice = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/officeLocation/all-officeLocation`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        setOfficeLocation(response?.data?.officeLocation);
       };
     } catch (error) {
       console.log(error.message);
@@ -82,6 +123,8 @@ const EditTeamMember = () => {
       fetchAllTeamMember();
       fetchAllDesignation();
       fetchAllRole();
+      fetchAllDepartment();
+      fetchAllOffice();
     };
   }, [isLoading, team, permissions]);
 
@@ -100,8 +143,14 @@ const EditTeamMember = () => {
         setMobile(response?.data?.team?.mobile);
         setJoining(response?.data?.team?.joining);
         setDob(response?.data?.team?.dob);
+        setUAN(response?.data?.team?.UAN);
+        setPAN(response?.data?.team?.PAN);
+        setBankAccount(response?.data?.team?.bankAccount);
+        setIsActive(response?.data?.team?.isActive);
         setMonthlySalary(response?.data?.team?.monthlySalary);
         setSelectedDesignation(response?.data?.team?.designation?._id);
+        setSelectedDepartment(response?.data?.team?.department?._id);
+        setSelectedOfficeLocation(response?.data?.team?.office?._id);
         setPassword(response?.data?.team?.password);
         setSelectedRole(response?.data?.team?.role?._id);
         setSelectedReportingTo(response?.data?.team?.reportingTo?.map((r) => r?._id));
@@ -121,47 +170,22 @@ const EditTeamMember = () => {
     e.preventDefault();
 
     // Create update object
-    const updateData = {};
-
-    // Conditionally include fields based on permissions
-    if (fieldPermissions?.name?.show && !fieldPermissions?.name?.read) {
-      updateData.name = name;
-    };
-
-    if (fieldPermissions?.name?.show && !fieldPermissions?.name?.read) {
-      updateData.email = email;
-    };
-
-    if (fieldPermissions?.mobile?.show && !fieldPermissions?.mobile?.read) {
-      updateData.mobile = mobile;
-    };
-
-    if (fieldPermissions?.joining?.show && !fieldPermissions?.joining?.read) {
-      updateData.joining = joining;
-    };
-
-    if (fieldPermissions?.dob?.show && !fieldPermissions?.dob?.read) {
-      updateData.dob = dob;
-    };
-
-    if (fieldPermissions?.dob?.show && !fieldPermissions?.dob?.read) {
-      updateData.monthlySalary = monthlySalary;
-    };
-
-    if (fieldPermissions?.designation?.show && !fieldPermissions?.designation?.read) {
-      updateData.designation = selectedDesignation;
-    };
-
-    if (fieldPermissions?.password?.show && !fieldPermissions?.password?.read) {
-      updateData.password = password;
-    };
-
-    if (fieldPermissions?.reportingTo?.show && !fieldPermissions?.reportingTo?.read) {
-      updateData.reportingTo = selectedReportingTo;
-    };
-
-    if (fieldPermissions?.role?.show && !fieldPermissions?.role?.read) {
-      updateData.role = selectedRole;
+    const updateData = {
+      name,
+      email,
+      mobile,
+      joining,
+      dob,
+      monthlySalary,
+      designation: selectedDesignation,
+      password,
+      reportingTo: selectedReportingTo,
+      role: selectedRole,
+      UAN,
+      PAN,
+      bankAccount,
+      office: selectedOfficeLocation,
+      department: selectedDepartment,
     };
 
     try {
@@ -172,15 +196,6 @@ const EditTeamMember = () => {
       });
 
       if (response?.data?.success) {
-        setName("");
-        setEmail("");
-        setMobile("");
-        setJoining("");
-        setDob("");
-        setMonthlySalary("");
-        setSelectedRole("");
-        setSelectedDesignation("");
-        setSelectedReportingTo([]);
         toast.success("Submitted successfully");
         navigate(-1);
       };
@@ -268,6 +283,57 @@ const EditTeamMember = () => {
             )
           }
           {
+            (fieldPermissions?.designation?.show) && (
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label">Designation <span className="text-danger">*</span></label>
+                  <select className={`form-select ${fieldPermissions?.designation?.read ? "readonly-style" : ""}`} name="designation" value={selectedDesignation} onChange={(e) => fieldPermissions?.designation?.read ? null : setSelectedDesignation(e.target.value)} >
+                    <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
+                    {
+                      designation?.map((d) => (
+                        <option key={d?._id} value={d?._id}>{d?.name}</option>
+                      ))
+                    }
+                  </select>
+                </div>
+              </div>
+            )
+          }
+          {
+            (fieldPermissions?.department?.show) && (
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label">Department <span className="text-danger">*</span></label>
+                  <select className="form-select" name="department" value={selectedDepartment} onChange={(e) => setSelectedDepartment(e.target.value)}>
+                    <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
+                    {
+                      department?.map((d) => (
+                        <option key={d?._id} value={d?._id}>{d?.name}</option>
+                      ))
+                    }
+                  </select>
+                </div>
+              </div>
+            )
+          }
+          {
+            (fieldPermissions?.office?.show) && (
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label">Office <span className="text-danger">*</span></label>
+                  <select className="form-select" name="officeLocation" value={selectedOfficeLocation} onChange={(e) => setSelectedOfficeLocation(e.target.value)}>
+                    <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
+                    {
+                      officeLocation?.map((o) => (
+                        <option key={o?._id} value={o?._id}>{o?.name}</option>
+                      ))
+                    }
+                  </select>
+                </div>
+              </div>
+            )
+          }
+          {
             (fieldPermissions?.joining?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
@@ -298,17 +364,54 @@ const EditTeamMember = () => {
             )
           }
           {
-            (fieldPermissions?.designation?.show) && (
+            (fieldPermissions?.workingHoursPerDay?.show) && (
               <div className="col-md-6">
                 <div className="form-wrap">
-                  <label className="col-form-label">Designation <span className="text-danger">*</span></label>
-                  <select className={`form-select ${fieldPermissions?.designation?.read ? "readonly-style" : ""}`} name="designation" value={selectedDesignation} onChange={(e) => fieldPermissions?.designation?.read ? null : setSelectedDesignation(e.target.value)} >
+                  <label className="col-form-label" htmlFor="workingHoursPerDay">Working Hours Per Day <span className="text-danger">*</span></label>
+                  <input type="time" className="form-control" name="workingHoursPerDay" id="workingHoursPerDay" value={workingHoursPerDay} onChange={(e) => setWorkingHoursPerDay(e.target.value)} />
+                </div>
+              </div>
+            )
+          }
+          {
+            (fieldPermissions?.PAN?.show) && (
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label" htmlFor="PAN">PAN</label>
+                  <input type="text" className="form-control" name="PAN" id="PAN" value={PAN} onChange={(e) => setPAN(e.target.value)} />
+                </div>
+              </div>
+            )
+          }
+          {
+            (fieldPermissions?.UAN?.show) && (
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label" htmlFor="UAN">UAN</label>
+                  <input type="text" className="form-control" name="UAN" id="UAN" value={UAN} onChange={(e) => setUAN(e.target.value)} />
+                </div>
+              </div>
+            )
+          }
+          {
+            (fieldPermissions?.bankAccount?.show) && (
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label" htmlFor="bankAccount">Bank Account</label>
+                  <input type="text" className="form-control" name="bankAccount" id="bankAccount" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
+                </div>
+              </div>
+            )
+          }
+          {
+            (fieldPermissions?.isActive?.show) && (
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label">Active <span className="text-danger">*</span></label>
+                  <select className="form-select" name="isActive" value={isActive} onChange={(e) => setIsActive(e.target.value)}>
                     <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
-                    {
-                      designation?.map((d) => (
-                        <option key={d?._id} value={d?._id}>{d?.name}</option>
-                      ))
-                    }
+                    <option value={true}>Yes</option>
+                    <option value={false}>No</option>
                   </select>
                 </div>
               </div>
@@ -333,7 +436,7 @@ const EditTeamMember = () => {
           }
           {
             (fieldPermissions?.reportingTo?.show) && (
-              <div className="col-md-12">
+              <div className="col-md-6">
                 <div className="form-wrap">
                   <label className="col-form-label">Reporting To <span className="text-danger"></span></label>
                   <select className={`form-select ${fieldPermissions?.reportingTo?.read ? "readonly-style" : ""}`} name="leader" value="" onChange={(e) => fieldPermissions?.reportingTo?.read ? null : handleSelectChange(e)} >

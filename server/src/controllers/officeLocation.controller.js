@@ -54,15 +54,9 @@ export const createOfficeLocation = async (req, res) => {
 
     await officeLocation.save();
 
-    res.status(201).json({
-      success: true,
-      officeLocation,
-    });
+    return res.status(201).json({ success: true, officeLocation });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -75,9 +69,9 @@ export const fetchAllOfficeLocation = async (req, res) => {
       return res.status(404).json({ success: false, message: "Office location not found." });
     };
 
-    res.status(200).json({ success: true, officeLocation });
+    return res.status(200).json({ success: true, officeLocation });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -92,9 +86,9 @@ export const fetchSingleOfficeLocation = async (req, res) => {
       return res.status(404).json({ success: false, message: "Office location not found." });
     };
 
-    res.status(200).json({ success: true, officeLocation });
+    return res.status(200).json({ success: true, officeLocation });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -138,21 +132,12 @@ export const updateOfficeLocation = async (req, res) => {
     });
 
     if (!officeLocation) {
-      return res.status(404).json({
-        success: false,
-        message: "Office location not found.",
-      });
+      return res.status(404).json({ success: false, message: "Office location not found." });
     };
 
-    res.status(200).json({
-      success: true,
-      officeLocation,
-    });
+    return res.status(200).json({ success: true, officeLocation });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -167,8 +152,8 @@ export const deleteOfficeLocation = async (req, res) => {
       return res.status(404).json({ success: false, message: "Office location not found." });
     };
 
-    res.status(200).json({ success: true, message: "Office location deleted successfully." });
+    return res.status(200).json({ success: true, message: "Office location deleted successfully." });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };

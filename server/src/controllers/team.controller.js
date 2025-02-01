@@ -12,10 +12,8 @@ const getNextEmployeeId = async () => {
 // Controller for creating a team
 export const createTeam = async (req, res) => {
   try {
-    const { name, email, password, mobile, joining, dob, monthlySalary, workingHoursPerDay, designation, role, reportingTo } = req.body;
-
     // Create a new team without employeeId initially
-    const team = new Team({ name, email, password, mobile, joining, dob, monthlySalary, workingHoursPerDay, designation, role, reportingTo });
+    const team = new Team(req.body);
     await team.save();
 
     // Generate the next employeeId only after successful save
@@ -96,6 +94,8 @@ export const loggedInTeam = async (req, res) => {
       .populate({ path: "role", select: "" })
       .populate({ path: "designation", select: "name" })
       .populate({ path: "reportingTo", select: "name" })
+      .populate({ path: "department", select: "name" })
+      .populate({ path: "office", select: "name" })
       .exec();
 
     if (!team) {
@@ -217,13 +217,16 @@ export const fetchAllTeam = async (req, res) => {
     const limit = parseInt(req.query.limit);
     const skip = (page - 1) * limit;
 
-    const team = await Team.find(filter)
+    const team = await Team
+      .find(filter)
       .sort(sort)
       .skip(skip)
       .limit(limit)
       .populate({ path: "role", select: "" })
       .populate({ path: "designation", select: "name" })
       .populate({ path: "reportingTo", select: "name" })
+      .populate({ path: "department", select: "name" })
+      .populate({ path: "office", select: "name" })
       .exec();
 
     if (!team) {
@@ -247,10 +250,13 @@ export const fetchSingleTeam = async (req, res) => {
   try {
     const teamId = req.params.id;
 
-    const team = await Team.findById(teamId)
+    const team = await Team
+      .findById(teamId)
       .populate({ path: "role", select: "" })
       .populate({ path: "designation", select: "name" })
       .populate({ path: "reportingTo", select: "name" })
+      .populate({ path: "department", select: "name" })
+      .populate({ path: "office", select: "name" })
       .exec();
 
     if (!team) {

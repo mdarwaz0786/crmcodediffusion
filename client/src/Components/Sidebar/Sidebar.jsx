@@ -55,7 +55,7 @@ const Sidebar = () => {
                   (permissions?.project?.access ||
                     permissions?.project?.fields?.payment?.show ||
                     permissions?.projectDeployment?.access) && (
-                    <h6 className="submenu-hdr">CRM</h6>
+                    <h6 className="submenu-hdr">Project</h6>
                   )
                 }
                 <ul>

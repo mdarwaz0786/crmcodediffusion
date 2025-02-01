@@ -8,6 +8,7 @@ import html2pdf from "html2pdf.js";
 import { useEffect, useState } from "react";
 import numberToWords from "../../Helper/numberToWord.js";
 import Calender from "../Attendance/Calender.jsx";
+import formatDate from "../../Helper/formatDate.js"
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const SalarySlip = () => {
@@ -144,7 +145,7 @@ const SalarySlip = () => {
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h4>Salary Slip</h4>
-          <button className="btn btn-secondary" onClick={() => { setTimeout(() => { exportCombinedAsPdf() }, 0) }}>Download</button>
+          <button className="btn btn-secondary" onClick={() => { setTimeout(() => { exportCombinedAsPdf() }, 1000) }}>Download</button>
           <Link to="#" onClick={() => navigate(-1)}><button className="btn btn-primary">Back</button></Link>
         </div>
         <div className="p-5 bg-white mt-2 mb-3" id="exportSalary">
@@ -155,7 +156,6 @@ const SalarySlip = () => {
             <h4 className="fw-bold text-dark mb-3">CODE DIFFUSION TECHNOLOGIES</h4>
             <div style={{ borderBottom: "1px solid #aaa" }}></div>
           </div>
-
           <h5 className="text-center" style={{ marginBottom: "2rem", marginTop: "2rem" }}>Salary Slip ({getMonthName(month)} {year})</h5>
           <div className="row" style={{ border: "1px solid #eee" }}>
             <div className="col-md-6 px-3 py-2">
@@ -169,11 +169,11 @@ const SalarySlip = () => {
               </div>
               <div className="row mb-2">
                 <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Department</div>
-                <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.department ? employee?.department : "IT"}</div>
+                <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.department?.name}</div>
               </div>
               <div className="row mb-2">
                 <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Date of Joining</div>
-                <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.joining}</div>
+                <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{formatDate(employee?.joining)}</div>
               </div>
               <div className="row">
                 <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Phone Number</div>
@@ -182,39 +182,26 @@ const SalarySlip = () => {
             </div>
 
             <div className="col-md-6 px-3 py-2" style={{ borderLeft: '1px solid #eee' }}>
-
               <div className="row mb-2">
-                <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Transaction Id</div>
+                <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Transaction ID</div>
                 <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{transactionId}</div>
               </div>
-              {
-                employee?.uan && (
-                  <div className="row mb-2">
-                    <div className="col-5" style={{ fontWeight: "500", color: "black" }}>UAN</div>
-                    <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.uan ? employee?.uan : "XXXX"}</div>
-                  </div>
-                )
-              }
+              <div className="row mb-2">
+                <div className="col-5" style={{ fontWeight: "500", color: "black" }}>UAN</div>
+                <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.UAN}</div>
+              </div>
               <div className="row mb-2">
                 <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Employee ID</div>
                 <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.employeeId}</div>
               </div>
-              {
-                employee?.uan && (
-                  <div className="row mb-2">
-                    <div className="col-5" style={{ fontWeight: "500", color: "black" }}>PAN Number</div>
-                    <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.pan ? employee?.pan : "XXXX"}</div>
-                  </div>
-                )
-              }
-              {
-                employee?.bankAccount && (
-                  <div className="row mb-2">
-                    <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Bank Account</div>
-                    <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.bankAccount ? employee?.bankAccount : "XXXX"}</div>
-                  </div>
-                )
-              }
+              <div className="row mb-2">
+                <div className="col-5" style={{ fontWeight: "500", color: "black" }}>PAN Number</div>
+                <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.PAN}</div>
+              </div>
+              <div className="row mb-2">
+                <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Bank Account</div>
+                <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.bankAccount}</div>
+              </div>
               <div className="row">
                 <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Monthly Gross</div>
                 <div className="col-7" style={{ fontWeight: "400", color: "black" }}>₹{employee?.monthlySalary}</div>
@@ -225,23 +212,23 @@ const SalarySlip = () => {
           <h5 className="mt-5 mb-3">Payment & Salary ({getMonthName(month)} {year})</h5>
           <table className="table table-bordered">
             <thead>
-              <tr style={{ border: "1px solid #eee" }}>
-                <th className="py-2 ps-3">Earnings</th>
-                <th className="py-2 ps-3">Amount</th>
+              <tr>
+                <th className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}>Earnings</th>
+                <th className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}>Amount</th>
               </tr>
             </thead>
             <tbody>
-              <tr style={{ border: "none", borderColor: "#eee" }}>
-                <td className="py-2 ps-3" style={{ color: "black" }}>Salary Paid</td>
-                <td className="py-2 ps-3" style={{ color: "black" }}>₹{totalSalary}</td>
+              <tr>
+                <td className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}>Salary</td>
+                <td className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}>₹{totalSalary}</td>
               </tr>
             </tbody>
-            <tfoot>
-              <tr style={{ fontWeight: "600", border: "1px solid #eee" }}>
-                <td className="py-2 ps-3" style={{ fontSize: "15px" }}>Total Earnings</td>
-                <td className="py-2 ps-3" style={{ fontSize: "15px" }}>₹{totalSalary}</td>
+            <thead>
+              <tr>
+                <th className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}>Total Earnings</th>
+                <th className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}>₹{totalSalary}</th>
               </tr>
-            </tfoot>
+            </thead>
           </table>
 
           <div style={{ border: "1px solid #eee", marginTop: "2rem" }}>

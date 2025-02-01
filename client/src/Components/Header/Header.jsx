@@ -31,7 +31,7 @@ const Header = () => {
             const isResponsible = p?.responsiblePerson?.some((r) => r?._id === team?._id);
             return isLeader || isResponsible;
           });
-          if (team?.role?.name.toLowerCase() === "coordinator" || team?.role?.name.toLowerCase() === "admin") {
+          if (team?.role?.name?.toLowerCase() === "coordinator" || team?.role?.name?.toLowerCase() === "admin") {
             setTotal(response?.data?.totalCount);
           } else {
             setTotal(filteredProject?.length);
@@ -240,7 +240,7 @@ const Header = () => {
                                       <i className="ti ti-clipboard"></i>
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Add Daily Work Summary</p>
+                                      <p>Add Work Summary</p>
                                     </div>
                                   </div>
                                 </Link>

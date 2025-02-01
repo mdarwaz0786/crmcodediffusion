@@ -22,6 +22,15 @@ const AddTeamMember = () => {
   const [selectedRole, setSelectedRole] = useState("");
   const [reportingTo, setReportingTo] = useState([]);
   const [selectedReportingTo, setSelectedReportingTo] = useState([]);
+  const [isActive, setIsActive] = useState(true);
+  const [UAN, setUAN] = useState("");
+  const [PAN, setPAN] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
+  const [department, setDepartment] = useState([]);
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [officeLocation, setOfficeLocation] = useState([]);
+  const [selectedOfficeLocation, setSelectedOfficeLocation] = useState("");
+  const [workingHoursPerDay, setWorkingHoursPerDay] = useState("08:30");
   const navigate = useNavigate();
   const { validToken, team, isLoading } = useAuth();
   const permissions = team?.role?.permissions?.team;
@@ -58,6 +67,38 @@ const AddTeamMember = () => {
     };
   };
 
+  const fetchAllDepartment = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/department/all-department`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        setDepartment(response?.data?.department);
+      };
+    } catch (error) {
+      console.log(error.message);
+    };
+  };
+
+  const fetchAllOffice = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/officeLocation/all-officeLocation`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        setOfficeLocation(response?.data?.officeLocation);
+      };
+    } catch (error) {
+      console.log(error.message);
+    };
+  };
+
   const fetchAllRole = async () => {
     try {
       const response = await axios.get(`${base_url}/api/v1/role/all-role`, {
@@ -79,6 +120,8 @@ const AddTeamMember = () => {
       fetchAllTeamMember();
       fetchAllDesignation();
       fetchAllRole();
+      fetchAllDepartment();
+      fetchAllOffice();
     };
   }, [isLoading, team, permissions]);
 
@@ -123,11 +166,48 @@ const AddTeamMember = () => {
         return toast.error("Select role");
       };
 
-      const response = await axios.post(`${base_url}/api/v1/team/create-team`, { name, email, password, mobile, joining, dob, monthlySalary, role: selectedRole, designation: selectedDesignation, reportingTo: selectedReportingTo }, {
-        headers: {
-          Authorization: validToken,
+      if (!isActive === "") {
+        return toast.error("Select active");
+      };
+
+      if (!workingHoursPerDay) {
+        return toast.error("Select working hours per day");
+      };
+
+      if (!selectedOfficeLocation) {
+        return toast.error("Select office");
+      };
+
+      if (!selectedDepartment) {
+        return toast.error("Select department");
+      };
+
+      const response = await axios.post(`${base_url}/api/v1/team/create-team`,
+        {
+          name,
+          email,
+          password,
+          mobile,
+          joining,
+          dob,
+          monthlySalary,
+          role: selectedRole,
+          designation: selectedDesignation,
+          reportingTo: selectedReportingTo,
+          office: selectedOfficeLocation,
+          department: selectedDepartment,
+          UAN,
+          PAN,
+          bankAccount,
+          workingHoursPerDay,
+          isActive,
         },
-      });
+        {
+          headers: {
+            Authorization: validToken,
+          },
+        },
+      );
 
       if (response?.data?.success) {
         setName("");
@@ -215,6 +295,32 @@ const AddTeamMember = () => {
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
+              <label className="col-form-label">Department <span className="text-danger">*</span></label>
+              <select className="form-select" name="department" value={selectedDepartment} onChange={(e) => setSelectedDepartment(e.target.value)}>
+                <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
+                {
+                  department?.map((d) => (
+                    <option key={d?._id} value={d?._id}>{d?.name}</option>
+                  ))
+                }
+              </select>
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label">Office <span className="text-danger">*</span></label>
+              <select className="form-select" name="officeLocation" value={selectedOfficeLocation} onChange={(e) => setSelectedOfficeLocation(e.target.value)}>
+                <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
+                {
+                  officeLocation?.map((o) => (
+                    <option key={o?._id} value={o?._id}>{o?.name}</option>
+                  ))
+                }
+              </select>
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="form-wrap">
               <label className="col-form-label" htmlFor="joining">Joining Date <span className="text-danger">*</span></label>
               <input type="date" className="form-control" name="joining" id="joining" value={joining} onChange={(e) => setJoining(e.target.value)} />
             </div>
@@ -233,6 +339,30 @@ const AddTeamMember = () => {
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
+              <label className="col-form-label" htmlFor="workingHoursPerDay">Working Hours Per Day <span className="text-danger">*</span></label>
+              <input type="time" className="form-control" name="workingHoursPerDay" id="workingHoursPerDay" value={workingHoursPerDay} onChange={(e) => setWorkingHoursPerDay(e.target.value)} />
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="PAN">PAN</label>
+              <input type="text" className="form-control" name="PAN" id="PAN" value={PAN} onChange={(e) => setPAN(e.target.value)} />
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="UAN">UAN</label>
+              <input type="text" className="form-control" name="UAN" id="UAN" value={UAN} onChange={(e) => setUAN(e.target.value)} />
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="bankAccount">Bank Account</label>
+              <input type="text" className="form-control" name="bankAccount" id="bankAccount" value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} />
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="form-wrap">
               <label className="col-form-label">Role <span className="text-danger">*</span></label>
               <select className="form-select" name="role" value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)}>
                 <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
@@ -245,6 +375,16 @@ const AddTeamMember = () => {
             </div>
           </div>
           <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label">Active <span className="text-danger">*</span></label>
+              <select className="form-select" name="isActive" value={isActive} onChange={(e) => setIsActive(e.target.value)}>
+                <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
+                <option value={true}>Yes</option>
+                <option value={false}>No</option>
+              </select>
+            </div>
+          </div>
+          <div className="col-md-12">
             <div className="form-wrap">
               <label className="col-form-label">Reporting To <span className="text-danger"></span></label>
               <select className="form-select" name="leader" value="" onChange={handleSelectChange}>

@@ -15,8 +15,6 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const WorkDetail = () => {
   const [data, setData] = useState([]);
-  const [project, setProject] = useState([]);
-  const [selectedProject, setSelectProject] = useState("");
   const [employee, setEmployee] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [singleEmployee, setSingleEmployee] = useState("");
@@ -30,28 +28,6 @@ const WorkDetail = () => {
     page: 1,
     limit: 20,
   });
-
-  const fetchAllProject = async () => {
-    try {
-      const response = await axios.get(`${base_url}/api/v1/project/all-project`, {
-        headers: {
-          Authorization: validToken,
-        },
-      });
-
-      if (response?.data?.success) {
-        setProject(response?.data?.project);
-      };
-    } catch (error) {
-      console.log(error.message);
-    };
-  };
-
-  useEffect(() => {
-    if (!isLoading && team && permissions?.show) {
-      fetchAllProject();
-    };
-  }, [isLoading, team, permissions]);
 
   const fetchAllEmployee = async () => {
     try {
@@ -75,32 +51,10 @@ const WorkDetail = () => {
     };
   }, [isLoading, team, permissions]);
 
-  const fetchSingleEmployee = async (selectedEmployee) => {
-    try {
-      const response = await axios.get(`${base_url}/api/v1/team/single-team/${selectedEmployee}`, {
-        headers: {
-          Authorization: validToken,
-        },
-      });
-
-      if (response?.data?.success) {
-        setSingleEmployee(response?.data?.team);
-      };
-    } catch (error) {
-      console.log(error.message);
-    };
-  };
-
-  useEffect(() => {
-    if (!isLoading && team && permissions?.show && selectedEmployee) {
-      fetchSingleEmployee(selectedEmployee);
-    };
-  }, [isLoading, team, permissions, selectedEmployee]);
-
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${base_url}/api/v1/project//work-detail`, {
+      const response = await axios.get(`${base_url}/api/v1/workDetail/all-workDetail`, {
         headers: {
           Authorization: validToken,
         },
@@ -108,7 +62,6 @@ const WorkDetail = () => {
           year: filters.year,
           month: filters.month,
           employeeId: selectedEmployee,
-          projectId: selectedProject,
           page: filters.page,
           limit: filters.limit,
         },
@@ -145,7 +98,7 @@ const WorkDetail = () => {
     if (!isLoading && team && permissions?.show) {
       fetchAllData();
     };
-  }, [filters.month, filters.year, selectedEmployee, selectedProject, filters.limit, filters.page, isLoading, team, permissions]);
+  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, isLoading, team, permissions]);
 
   const exportWorkSummaryListAsExcel = () => {
     if (!data || data?.length === 0) {

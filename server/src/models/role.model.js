@@ -173,9 +173,12 @@ const AttendancePermissionSchema = new mongoose.Schema(
       employee: { type: FieldPermissionSchema, default: () => ({}) },
       holiday: { type: FieldPermissionSchema, default: () => ({}) },
       settings: { type: FieldPermissionSchema, default: () => ({}) },
+      salarySlip: { type: FieldPermissionSchema, default: () => ({}) },
+      leaveBalance: { type: FieldPermissionSchema, default: () => ({}) },
       writeWorkSummary: { type: FieldPermissionSchema, default: () => ({}) },
       applyLeave: { type: FieldPermissionSchema, default: () => ({}) },
       applyMissedPunchOut: { type: FieldPermissionSchema, default: () => ({}) },
+      applyLatePunchIn: { type: FieldPermissionSchema, default: () => ({}) },
       applyCompOff: { type: FieldPermissionSchema, default: () => ({}) },
       aboutUs: { type: FieldPermissionSchema, default: () => ({}) },
       contactUs: { type: FieldPermissionSchema, default: () => ({}) },
@@ -547,11 +550,13 @@ const TeamPermissionSchema = new mongoose.Schema(
       currentLeaveBalance: { type: FieldPermissionSchema, default: () => ({}) },
       usedLeaveBalance: { type: FieldPermissionSchema, default: () => ({}) },
       approvedLeaves: { type: FieldPermissionSchema, default: () => ({}) },
+      leaveBalanceAllotedHistory: { type: FieldPermissionSchema, default: () => ({}) },
       leaveBalanceUsedHistory: { type: FieldPermissionSchema, default: () => ({}) },
       eligibleCompOffDate: { type: FieldPermissionSchema, default: () => ({}) },
       role: { type: FieldPermissionSchema, default: () => ({}) },
       reportingTo: { type: FieldPermissionSchema, default: () => ({}) },
       isActive: { type: FieldPermissionSchema, default: () => ({}) },
+      fcmToken: { type: FieldPermissionSchema, default: () => ({}) },
     },
   },
 );
@@ -883,10 +888,8 @@ const RoleSchema = new mongoose.Schema(
 
 RoleSchema.pre("save", function (next) {
   const capitalizeWords = (string) => {
-    return string
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase())
-      .join(" ");
+    if (!string) return "";
+    return string.charAt(0).toUpperCase() + string.slice(1);
   };
 
   if (this.name) {

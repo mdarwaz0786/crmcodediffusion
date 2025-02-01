@@ -187,8 +187,10 @@ const AddRole = () => {
         usedLeaveBalance: { read: true, show: true },
         approvedLeaves: { read: true, show: true },
         leaveBalanceUsedHistory: { read: true, show: true },
+        leaveBalanceAllotedHistory: { read: true, show: true },
         eligibleCompOffDate: { read: true, show: true },
         isActive: { read: true, show: true },
+        fcmToken: { read: true, show: true },
       },
     },
     role: {
@@ -550,8 +552,10 @@ const AddRole = () => {
               usedLeaveBalance: { read: true, show: true },
               approvedLeaves: { read: true, show: true },
               leaveBalanceUsedHistory: { read: true, show: true },
+              leaveBalanceAllotedHistory: { read: true, show: true },
               eligibleCompOffDate: { read: true, show: true },
               isActive: { read: true, show: true },
+              fcmToken: { read: true, show: true },
             },
           },
           role: {
