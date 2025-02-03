@@ -8,14 +8,15 @@ cron.schedule("30 18 * * *", async () => {
   try {
     const today = new Date().toISOString().split("T")[0];
 
-    const holidays = await Holiday.find({ date: today });
+    const holidays = await Holiday
+      .find({ date: today });
 
     if (!holidays || holidays.length === 0) {
       return;
     };
 
     const employees = await Team
-      .find({ isActive: true })
+      .find()
       .select("_id name");
 
     if (!employees || employees.length === 0) {

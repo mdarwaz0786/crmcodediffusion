@@ -6,7 +6,7 @@ import Team from "../../models/team.model.js";
 cron.schedule("45 18 * * 0", async () => {
   try {
     const employees = await Team
-      .find({ isActive: true })
+      .find()
       .select("_id name");;
 
     if (!employees || employees.length === 0) {
