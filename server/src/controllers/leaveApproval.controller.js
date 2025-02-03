@@ -145,9 +145,9 @@ export const fetchAllLeaveApproval = async (req, res) => {
 
     // Handle sorting
     if (req.query.sort === 'Ascending') {
-      sort = { startDate: 1 };
+      sort = { createdAt: 1 };
     } else {
-      sort = { startDate: -1 };
+      sort = { createdAt: -1 };
     };
 
     // Fetch leave approvals with the constructed query

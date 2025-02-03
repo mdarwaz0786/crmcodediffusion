@@ -16,6 +16,7 @@ const notificationSchema = new mongoose.Schema(
     message: {
       type: String,
       trim: true,
+      required: true,
     },
     toAll: {
       type: Boolean,

@@ -6,10 +6,12 @@ const holidaySchema = new mongoose.Schema(
       type: String,
       trim: true,
       required: true,
+      index: true,
     },
     type: {
       type: String,
       default: "Holiday",
+      trim: true,
     },
     date: {
       type: String,

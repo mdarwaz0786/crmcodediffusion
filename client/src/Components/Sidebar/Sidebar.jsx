@@ -159,12 +159,12 @@ const Sidebar = () => {
                     )
                   }
                   {
-                    (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr") && (
+                    (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr") && (
                       <li><Link to="/salary" className={currentPath === "/salary" ? "active" : ""} id={isMobile && active === "salary" ? "mobile_btn" : ""} onClick={() => handleActive("salary")}><i style={{ color: currentPath === "/salary" ? "" : "#FFA201" }} className="ti ti-wallet"></i><span>Salary</span></Link></li>
                     )
                   }
                   {
-                    (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr") && (
+                    (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr") && (
                       <li><Link to="/send-notification" className={currentPath === "/send-notification" ? "active" : ""} id={isMobile && active === "sendNotification" ? "mobile_btn" : ""} onClick={() => handleActive("sendNotification")}><i style={{ color: currentPath === "/send-notification" ? "" : "#FFA201" }} className="ti ti-bell"></i><span>Send Notification</span></Link></li>
                     )
                   }

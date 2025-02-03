@@ -20,6 +20,7 @@ const addOnServiceSchema = new mongoose.Schema(
     totalProjectCost: {
       type: String,
       required: true,
+      trim: true,
     },
   },
   {

@@ -73,11 +73,9 @@ const projectDeploymentSchema = new mongoose.Schema(
 
 // Capitalize words in websiteName before saving
 projectDeploymentSchema.pre("save", function (next) {
-  const capitalizeWords = (str) => {
-    return str
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase())
-      .join(" ");
+  const capitalizeWords = (string) => {
+    if (!string) return "";
+    return string.charAt(0).toUpperCase() + string.slice(1);
   };
 
   if (this.websiteName) {

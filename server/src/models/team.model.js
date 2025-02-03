@@ -150,7 +150,5 @@ teamSchema.pre("save", async function (next) {
   };
 });
 
-const Team = mongoose.model("Team", teamSchema);
-
-export default Team;
+export default mongoose.model("Team", teamSchema);
 

@@ -20,10 +20,10 @@ const MissedPunchOut = () => {
   const [singleEmployee, setSingleEmployee] = useState("");
   const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(true);
-  const [approving, setApproving] = useState(false);
+  const [approving, setApproving] = useState({});
   const [filters, setFilters] = useState({
-    year: new Date().getFullYear(),
-    month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
+    year: "",
+    month: "",
     sort: "Descending",
     page: 1,
     limit: 20,
@@ -46,7 +46,7 @@ const MissedPunchOut = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
+    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
       fetchAllEmployee();
     };
   }, [isLoading, team]);
@@ -68,7 +68,7 @@ const MissedPunchOut = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && selectedEmployee && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
+    if (!isLoading && team && selectedEmployee && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
       fetchSingleEmployee(selectedEmployee);
     };
   }, [isLoading, team, selectedEmployee]);
@@ -118,7 +118,7 @@ const MissedPunchOut = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
+    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
       fetchAllData();
     };
   }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team]);
@@ -177,7 +177,7 @@ const MissedPunchOut = () => {
     e.preventDefault();
 
     try {
-      setApproving(true);
+      setApproving((prev) => ({ ...prev, [id]: true }));
 
       // Validation
       if (!status[id]) {
@@ -202,7 +202,8 @@ const MissedPunchOut = () => {
       console.log("Error while updating:", error.message);
       toast.error(error?.response?.data?.message || "Error while updating");
     } finally {
-      setApproving(false);
+      fetchAllData();
+      setApproving((prev) => ({ ...prev, [id]: false }));
     };
   };
 
@@ -210,7 +211,7 @@ const MissedPunchOut = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name.toLowerCase() !== "admin" && team?.role?.name.toLowerCase() !== "hr") {
+  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
     return <Navigate to="/" />;
   };
 
@@ -393,7 +394,7 @@ const MissedPunchOut = () => {
                                       <option value="Rejected">Rejected</option>
                                     </select>
                                     {
-                                      approving ? (
+                                      approving[d?._id] ? (
                                         <div style={{ textAlign: "center", color: "#ffb300" }}>
                                           <div className="spinner-border" role="status">
                                             <span className="visually-hidden">Loading...</span>

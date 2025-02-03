@@ -20,10 +20,10 @@ const LeaveRequest = () => {
   const [singleEmployee, setSingleEmployee] = useState("");
   const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(true);
-  const [approving, setApproving] = useState(false);
+  const [approving, setApproving] = useState({});
   const [filters, setFilters] = useState({
-    year: new Date().getFullYear(),
-    month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
+    year: "",
+    month: "",
     sort: "Descending",
     page: 1,
     limit: 20,
@@ -46,7 +46,7 @@ const LeaveRequest = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
+    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
       fetchAllEmployee();
     };
   }, [isLoading, team]);
@@ -68,7 +68,7 @@ const LeaveRequest = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && selectedEmployee && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
+    if (!isLoading && team && selectedEmployee && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
       fetchSingleEmployee(selectedEmployee);
     };
   }, [isLoading, team, selectedEmployee]);
@@ -118,7 +118,7 @@ const LeaveRequest = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
+    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
       fetchAllData();
     };
   }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team]);
@@ -179,7 +179,7 @@ const LeaveRequest = () => {
     e.preventDefault();
 
     try {
-      setApproving(true);
+      setApproving((prev) => ({ ...prev, [leaveId]: true }));
 
       // Validation
       if (!leaveStatus[leaveId]) {
@@ -204,7 +204,8 @@ const LeaveRequest = () => {
       console.log("Error while updating:", error.message);
       toast.error(error?.response?.data?.message || "Error while updating");
     } finally {
-      setApproving(false);
+      fetchAllData();
+      setApproving((prev) => ({ ...prev, [leaveId]: false }));
     };
   };
 
@@ -212,7 +213,7 @@ const LeaveRequest = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name.toLowerCase() !== "admin" && team?.role?.name.toLowerCase() !== "hr") {
+  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
     return <Navigate to="/" />;
   };
 
@@ -367,6 +368,7 @@ const LeaveRequest = () => {
                             <th>Employee Name</th>
                             <th>Start Date</th>
                             <th>End Date</th>
+                            <th>Duration</th>
                             <th>Reason</th>
                             <th>Status</th>
                             <th>Approved By</th>
@@ -383,6 +385,7 @@ const LeaveRequest = () => {
                                 <td>{d?.employee?.name}</td>
                                 <td>{formatDate(d?.startDate)}</td>
                                 <td>{formatDate(d?.endDate)}</td>
+                                <td>{d?.leaveDuration} Days</td>
                                 <td
                                   style={{ cursor: "pointer" }}
                                   title={d?.reason.length > 30 && d?.reason}
@@ -403,7 +406,7 @@ const LeaveRequest = () => {
                                       <option value="Pending">Pending</option>
                                     </select>
                                     {
-                                      approving ? (
+                                      approving[d?._id] ? (
                                         <h6 style={{ textAlign: "center", color: "#ffb300" }}>
                                           <div className="spinner-border" role="status">
                                             <span className="visually-hidden">Loading...</span>

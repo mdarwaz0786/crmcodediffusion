@@ -61,7 +61,7 @@ const Salary = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
+    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
       fetchAllData();
     };
   }, [filters.month, filters.year, isLoading, team]);
@@ -117,7 +117,7 @@ const Salary = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name.toLowerCase() !== "admin" && team?.role?.name.toLowerCase() !== "hr") {
+  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
     return <Navigate to="/" />;
   };
 

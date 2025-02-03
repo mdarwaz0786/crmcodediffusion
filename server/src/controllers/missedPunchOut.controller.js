@@ -7,7 +7,7 @@ import mongoose from "mongoose";
 // Calculate time difference in HH:MM format
 const calculateTimeDifference = (startTime, endTime) => {
   if (!startTime || !endTime) {
-    return "00:00";
+    return "";
   };
 
   const [startHours, startMinutes] = startTime.split(":").map(Number);

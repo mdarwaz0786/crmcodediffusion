@@ -146,9 +146,9 @@ export const getAllLatePunchIns = async (req, res) => {
 
     // Handle sorting
     if (req.query.sort === 'Ascending') {
-      sort = { createdAt: -1 };
-    } else {
       sort = { createdAt: 1 };
+    } else {
+      sort = { createdAt: -1 };
     };
 
     const latePunchIns = await LatePunchIn.find(query)

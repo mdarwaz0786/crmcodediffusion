@@ -4,10 +4,12 @@ const proformaInvoiceSchema = new mongoose.Schema(
   {
     proformaInvoiceId: {
       type: String,
+      unique: true,
     },
     date: {
       type: Date,
       required: true,
+      index: true,
     },
     tax: {
       type: String,
@@ -17,18 +19,22 @@ const proformaInvoiceSchema = new mongoose.Schema(
     projectName: {
       type: String,
       required: true,
+      trim: true,
     },
     projectCost: {
       type: String,
       required: true,
+      trim: true,
     },
     clientName: {
       type: String,
       required: true,
+      trim: true,
     },
     GSTNumber: {
       type: String,
       required: true,
+      trim: true,
     },
     state: {
       type: String,
@@ -37,6 +43,7 @@ const proformaInvoiceSchema = new mongoose.Schema(
     shipTo: {
       type: String,
       required: true,
+      trim: true,
     },
     subtotal: {
       type: String,

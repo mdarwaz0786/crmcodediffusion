@@ -4,6 +4,7 @@ const invoiceSchema = new mongoose.Schema(
   {
     invoiceId: {
       type: String,
+      unique: true,
     },
     tax: {
       type: String,
@@ -13,6 +14,8 @@ const invoiceSchema = new mongoose.Schema(
     date: {
       type: String,
       required: true,
+      trim: true,
+      index: true,
     },
     project: {
       type: mongoose.Schema.Types.ObjectId,

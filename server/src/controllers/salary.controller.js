@@ -158,7 +158,7 @@ export const fetchMonthlySalary = async (req, res) => {
         };
 
         // Fetch all active employees
-        const employees = await Team.find({ isActive: true });
+        const employees = await Team.find();
 
         const salaryData = await Promise.all(
             employees?.map(async (employee) => {

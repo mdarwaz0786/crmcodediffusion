@@ -32,7 +32,7 @@ const EditHoliday = () => {
   };
 
   useEffect(() => {
-    if (id && validToken && !isLoading && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
+    if (id && validToken && !isLoading && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
       fetchHoliday();
     };
   }, [id, validToken, team, isLoading]);
@@ -70,7 +70,7 @@ const EditHoliday = () => {
     return <Preloader />;
   }
 
-  if (team?.role?.name.toLowerCase() !== "admin" && team?.role?.name.toLowerCase() !== "hr") {
+  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
     return <Navigate to="/" />;
   };
 

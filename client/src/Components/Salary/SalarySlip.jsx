@@ -35,7 +35,7 @@ const SalarySlip = () => {
   };
 
   useEffect(() => {
-    if (employeeId && validToken && !isLoading && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
+    if (employeeId && validToken && !isLoading && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
       fetchEmployee(employeeId);
     };
   }, [employeeId, validToken, team, isLoading]);
@@ -68,7 +68,7 @@ const SalarySlip = () => {
   };
 
   useEffect(() => {
-    if (employeeId && validToken && !isLoading && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
+    if (employeeId && validToken && !isLoading && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
       fetchMonthlyStatistic();
     };
   }, [employeeId, month, year, validToken, team, isLoading]);

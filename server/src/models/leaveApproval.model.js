@@ -6,14 +6,17 @@ const leaveApprovalSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Team",
       required: true,
+      index: true,
     },
     startDate: {
       type: String,
       required: true,
+      indxe: true,
     },
     endDate: {
       type: String,
       required: true,
+      index: true,
     },
     leaveApprovedBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -29,6 +32,7 @@ const leaveApprovalSchema = new mongoose.Schema(
     },
     reason: {
       type: String,
+      trim: true,
     },
   },
   {

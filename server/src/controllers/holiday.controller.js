@@ -6,7 +6,7 @@ export const createHoliday = async (req, res) => {
   try {
     const { reason, type, date } = req.body;
 
-    if (!date) {
+    if (!reason) {
       return res.status(400).json({ success: false, message: "Reason is required" });
     };
 
@@ -236,9 +236,9 @@ export const fetchAllHoliday = async (req, res) => {
 
     // Handle sorting
     if (req.query.sort === 'Ascending') {
-      sort = { date: 1 };
-    } else {
       sort = { date: -1 };
+    } else {
+      sort = { date: 1 };
     };
 
     const holiday = await Holiday

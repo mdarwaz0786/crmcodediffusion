@@ -8,23 +8,18 @@ import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
 import Preloader from "../../Preloader.jsx";
 import formatDate from "../../Helper/formatDate.js";
-import formatTimeToHoursMinutes from "../../Helper/formatTimeToHoursMinutes.js";
-import formatTimeWithAmPm from "../../Helper/formatTimeWithAmPm.js";
-import calculateTimeDifference from "../../Helper/calculateTimeDifference.js";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const WorkDetail = () => {
   const [data, setData] = useState([]);
   const [employee, setEmployee] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
-  const [singleEmployee, setSingleEmployee] = useState("");
   const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(true);
   const { validToken, team, isLoading } = useAuth();
-  const permissions = team?.role?.permissions?.project?.fields?.workDetail;
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
-    month: new Date().getMonth() + 1,
+    month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
     page: 1,
     limit: 20,
   });
@@ -46,22 +41,22 @@ const WorkDetail = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && permissions?.show) {
+    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
       fetchAllEmployee();
     };
-  }, [isLoading, team, permissions]);
+  }, [isLoading, team]);
 
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${base_url}/api/v1/workDetail/all-workDetail`, {
+      const response = await axios.get(`${base_url}/api/v1/workSummary/byEmployee`, {
         headers: {
           Authorization: validToken,
         },
         params: {
           year: filters.year,
           month: filters.month,
-          employeeId: selectedEmployee,
+          employee: selectedEmployee,
           page: filters.page,
           limit: filters.limit,
         },
@@ -95,10 +90,10 @@ const WorkDetail = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && permissions?.show) {
+    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
       fetchAllData();
     };
-  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, isLoading, team, permissions]);
+  }, [filters.month, filters.year, filters.limit, filters.page, selectedEmployee, isLoading, team]);
 
   const exportWorkSummaryListAsExcel = () => {
     if (!data || data?.length === 0) {
@@ -107,21 +102,12 @@ const WorkDetail = () => {
     };
 
     const exportData = data?.flatMap((d) =>
-      d?.workDetails?.map((entry) => ({
+      d?.workSummaries?.map((entry) => ({
+        "Employee Name": d?.employeeName || "N/A",
         "Date": formatDate(entry?.date) || "N/A",
-        "Employee Name": d?.teamMember?.name || "N/A",
-        "Project Name": entry?.projectName || "N/A",
-        "Start Time": formatTimeWithAmPm(entry?.startTime) || "N/A",
-        "End Time": formatTimeWithAmPm(entry?.endTime) || "N/A",
-        "Spent Hours": formatTimeToHoursMinutes(calculateTimeDifference(entry?.startTime, entry?.endTime)) || "N/A",
-        "Work Description": entry?.workDescription || "N/A",
+        "Work Summary": entry?.summary || "N/A",
       })) || [],
     );
-
-    if (exportData?.length === 0) {
-      alert("No work summary found to export");
-      return;
-    };
 
     // Create worksheet and dynamically calculate column width
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -136,13 +122,13 @@ const WorkDetail = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Work-Summary");
 
     // Generate and download the Excel file
-    XLSX.writeFile(workbook, `${filters.month || ""}-${filters.year || ""}-${singleEmployee?.name || ""}-Work-Summary.xlsx`);
+    XLSX.writeFile(workbook, `${filters.month || ""}-${filters.year || ""}-Work-Summary.xlsx`);
   };
 
   const exportWorkSummaryListAsPdf = () => {
     const element = document.querySelector("#exportWorkSummaryList");
     const options = {
-      filename: `${filters.month || ""}-${filters.year || ""}-${singleEmployee?.name || ""}-Work-Summary`,
+      filename: `${filters.month || ""}-${filters.year || ""}-Work-Summary`,
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
@@ -163,7 +149,7 @@ const WorkDetail = () => {
     return <Preloader />;
   };
 
-  if (!permissions?.show) {
+  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
     return <Navigate to="/" />;
   };
 
@@ -211,7 +197,6 @@ const WorkDetail = () => {
                           >
                             <option value="">All</option>
                             {
-                              // Generate the years dynamically, starting from the current year and going backwards 10 year
                               Array.from({ length: 10 }, (_, i) => {
                                 const year = new Date().getFullYear() - i;
                                 return <option key={year} value={year}>{year}</option>;
@@ -255,45 +240,30 @@ const WorkDetail = () => {
                           </select>
                         </li>
                         <li>
-                          <label className="pb-1">Project:</label>
-                          <select className="form-select" name="project" id="project" value={selectedProject} onChange={(e) => setSelectProject(e.target.value)}>
-                            <option value="">All</option>
-                            {
-                              project?.map((p) => (
-                                <option key={p?._id} value={p?._id}>{p?.projectName}</option>
-                              ))
-                            }
-                          </select>
+                          <label className="pb-1">Export:</label>
+                          <div className="export-dropdwon">
+                            <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown">
+                              <i className="ti ti-package-export" />
+                              Export
+                            </Link>
+                            <div className="dropdown-menu dropdown-menu-start">
+                              <ul>
+                                <li>
+                                  <Link to="#" onClick={() => setTimeout(() => { exportWorkSummaryListAsPdf() }, 0)}>
+                                    <i className="ti ti-file-type-pdf text-danger" />
+                                    Export as PDF
+                                  </Link>
+                                </li>
+                                <li>
+                                  <Link to="#" onClick={() => setTimeout(() => { exportWorkSummaryListAsExcel() }, 0)}>
+                                    <i className="ti ti-file-spreadsheet text-success" />
+                                    Export as EXCEL
+                                  </Link>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
                         </li>
-                        {
-                          (permissions?.show) && (
-                            <li>
-                              <label className="pb-1">Export:</label>
-                              <div className="export-dropdwon">
-                                <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown">
-                                  <i className="ti ti-package-export" />
-                                  Export
-                                </Link>
-                                <div className="dropdown-menu dropdown-menu-start">
-                                  <ul>
-                                    <li>
-                                      <Link to="#" onClick={() => setTimeout(() => { exportWorkSummaryListAsPdf() }, 0)}>
-                                        <i className="ti ti-file-type-pdf text-danger" />
-                                        Export as PDF
-                                      </Link>
-                                    </li>
-                                    <li>
-                                      <Link to="#" onClick={() => setTimeout(() => { exportWorkSummaryListAsExcel() }, 0)}>
-                                        <i className="ti ti-file-spreadsheet text-success" />
-                                        Export as EXCEL
-                                      </Link>
-                                    </li>
-                                  </ul>
-                                </div>
-                              </div>
-                            </li>
-                          )
-                        }
                       </ul>
                     </div>
                   </div>
@@ -301,38 +271,30 @@ const WorkDetail = () => {
 
                   {/* Work detail List */}
                   {
-                    data?.map((w) => (
-                      <div className="table-responsive custom-table" style={{ marginBottom: "2rem" }} key={w?._id}>
-                        <h5 style={{ marginBottom: "10px" }}>{w?.teamMember?.name}</h5>
+                    data?.map((d, index) => (
+                      <div className="table-responsive custom-table" style={{ marginBottom: "2rem" }} key={index}>
+                        <h5 style={{ marginBottom: "10px" }}>{d?.employeeName}</h5>
                         <table className="table table-bordered table-striped custom-border">
                           <thead className="thead-light">
                             <tr>
                               <th>#</th>
                               <th>Date</th>
-                              <th>Project Name</th>
-                              <th>Start Time</th>
-                              <th>End Time</th>
-                              <th>Spent Hour</th>
-                              <th>Work Description</th>
+                              <th>Work Summary</th>
                             </tr>
                           </thead>
                           <tbody>
                             {
-                              w?.workDetails?.map((s, index) => (
-                                <tr key={index}>
-                                  <td style={{ padding: "0.5rem" }}>{index + 1}</td>
-                                  <td>{formatDate(s?.date) || "N/A"}</td>
-                                  <td>{s?.projectName || "N/A"}</td>
-                                  <td>{formatTimeWithAmPm(s?.startTime) || "N/A"}</td>
-                                  <td>{formatTimeWithAmPm(s?.endTime) || "N/A"}</td>
-                                  <td>{formatTimeToHoursMinutes(calculateTimeDifference(s?.startTime, s?.endTime)) || "N/A"}</td>
+                              d?.workSummaries?.map((w, i) => (
+                                <tr key={i}>
+                                  <td style={{ padding: "0.5rem" }}>{i + 1}</td>
+                                  <td>{formatDate(w?.date) || "N/A"}</td>
                                   <td
                                     style={{ cursor: "pointer" }}
-                                    title={s?.workDescription.length > 30 && s?.workDescription}
+                                    title={w?.summary?.length > 100 && w?.summary}
                                   >
-                                    {s?.workDescription.length > 30
-                                      ? `${s?.workDescription.substring(0, 30)}...`
-                                      : s?.workDescription || "N/A"}
+                                    {w?.summary?.length > 100
+                                      ? `${w?.summary?.substring(0, 100)}...`
+                                      : w?.summary || "N/A"}
                                   </td>
                                 </tr>
                               ))

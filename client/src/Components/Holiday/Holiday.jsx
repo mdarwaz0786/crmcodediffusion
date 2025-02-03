@@ -16,8 +16,8 @@ const Holiday = () => {
   const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    year: new Date().getFullYear(),
-    month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
+    year: "",
+    month: "",
     sort: "Descending",
     page: 1,
     limit: 20,
@@ -67,7 +67,7 @@ const Holiday = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name.toLowerCase() === "admin" || team?.role?.name.toLowerCase() === "hr")) {
+    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
       fetchAllData();
     };
   }, [filters.month, filters.year, filters.limit, filters.page, filters.sort, isLoading, team]);
@@ -121,7 +121,7 @@ const Holiday = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name.toLowerCase() !== "admin" && team?.role?.name.toLowerCase() !== "hr") {
+  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
     return <Navigate to="/" />;
   };
 

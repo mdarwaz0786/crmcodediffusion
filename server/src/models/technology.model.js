@@ -18,9 +18,9 @@ const technologySchema = new mongoose.Schema(
 );
 
 technologySchema.pre("save", function (next) {
-  // Helper function to capitalize first letter of each word
-  const capitalizeWords = (str) => {
-    return str.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
+  const capitalizeWords = (string) => {
+    if (!string) return "";
+    return string.charAt(0).toUpperCase() + string.slice(1);
   };
 
   if (this.name) {
