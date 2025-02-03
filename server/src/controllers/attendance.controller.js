@@ -71,7 +71,7 @@ export const createAttendance = async (req, res) => {
         };
 
         if (!attendanceDate) {
-            return res.status(400).json({ success: false, message: "Date is required" });
+            return res.status(400).json({ success: false, message: "Attendance Date is required" });
         };
 
         if (!punchInTime) {
