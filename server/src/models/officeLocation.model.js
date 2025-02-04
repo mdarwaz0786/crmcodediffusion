@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const officeLocationSchema = new mongoose.Schema(
   {
+    uniqueCode: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     name: {
       type: String,
       required: true,

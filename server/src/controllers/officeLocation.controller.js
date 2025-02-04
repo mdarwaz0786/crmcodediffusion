@@ -4,6 +4,7 @@ import OfficeLocation from "../models/officeLocation.model.js";
 export const createOfficeLocation = async (req, res) => {
   try {
     const {
+      uniqueCode,
       name,
       email,
       contact,
@@ -17,6 +18,7 @@ export const createOfficeLocation = async (req, res) => {
 
     // Check if required fields are present
     if (
+      !uniqueCode ||
       !name ||
       !email ||
       !contact ||
@@ -25,10 +27,7 @@ export const createOfficeLocation = async (req, res) => {
       !attendanceRadius ||
       !addressLine1
     ) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are required.",
-      });
+      return res.status(400).json({ success: false, message: "All fields are required." });
     };
 
     // Get the logo file from the request
@@ -40,6 +39,7 @@ export const createOfficeLocation = async (req, res) => {
     };
 
     const officeLocation = new OfficeLocation({
+      uniqueCode,
       name,
       email,
       contact,
@@ -96,7 +96,9 @@ export const fetchSingleOfficeLocation = async (req, res) => {
 export const updateOfficeLocation = async (req, res) => {
   try {
     const { id } = req.params;
+
     const {
+      uniqueCode,
       name,
       email,
       contact,
@@ -109,6 +111,7 @@ export const updateOfficeLocation = async (req, res) => {
     } = req.body;
 
     let updateData = {
+      uniqueCode,
       name,
       email,
       contact,
