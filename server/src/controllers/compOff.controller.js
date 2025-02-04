@@ -61,11 +61,14 @@ export const createCompOff = async (req, res) => {
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
     // Send push notification to admin
-    const admins = await Team.find({ role: { name: 'admin' }, fcmToken: { $exists: true, $ne: null } });
+    const teams = await Team
+      .find()
+      .populate({ path: 'role', select: "name" })
+      .exec();
 
-    if (admins?.length > 0) {
-      const adminFcmTokens = admins?.map((admin) => admin?.fcmToken);
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
 
+    if (filteredAdmins?.length > 0) {
       const payload = {
         notification: {
           title: `${appliedBy?.name} Applied for Comp Off`,
@@ -73,7 +76,7 @@ export const createCompOff = async (req, res) => {
         },
       };
 
-      await Promise.allSettled(adminFcmTokens?.map((token) => firebase.messaging().send({ ...payload, token })));
+      await Promise.allSettled(filteredAdmins?.map((admin) => firebase.messaging().send({ ...payload, token: admin?.fcmToken })));
     };
 
     await session.commitTransaction();

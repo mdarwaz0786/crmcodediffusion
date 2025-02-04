@@ -26,6 +26,10 @@ const calculateTimeDifference = (startTime, endTime) => {
 
 // Helper function to compare two times
 function compareTime(time1, time2) {
+    if (time1 === "" || time2 === "") {
+        return;
+    };
+
     const [hours1, minutes1] = time1.split(":").map(Number);
     const [hours2, minutes2] = time2.split(":").map(Number);
 
@@ -42,12 +46,20 @@ function compareTime(time1, time2) {
 
 // Helper function to convert time (HH:MM) into minutes
 function timeToMinutes(time) {
+    if (time === "") {
+        return;
+    };
+
     const [hours, minutes] = time.split(":").map(Number);
     return hours * 60 + minutes;
 };
 
 // Helper function to convert minutes into time (HH:MM)
 function minutesToTime(minutes) {
+    if (minutes === "") {
+        return;
+    };
+
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
@@ -55,6 +67,10 @@ function minutesToTime(minutes) {
 
 // Helper function to get the day name from a date string
 const getDayName = (dateString) => {
+    if (dateString) {
+        return;
+    };
+
     const date = new Date(dateString);
     const options = { weekday: 'long' };
     return date.toLocaleDateString('en-US', options);
@@ -144,24 +160,27 @@ export const createAttendance = async (req, res) => {
 
         // Send email
         const sendBy = await Team.findById(employee);
-        const subject = `${sendBy?.name} marked punch-in at ${punchInTime} for date ${attendanceDate}`;
-        const htmlContent = `<p>${sendBy?.name} marked punch-in at ${punchInTime} for date ${attendanceDate}.</p>`;
+        const subject = `${sendBy?.name} Marked Punch-In At ${punchInTime} on Date ${attendanceDate}`;
+        const htmlContent = `<p>${sendBy?.name} marked punch-in at ${punchInTime} on date ${attendanceDate}.</p>`;
         sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
         // Send push notification to admin
-        const admins = await Team.find({ role: { name: 'admin' }, fcmToken: { $exists: true, $ne: null } });
+        const teams = await Team
+            .find()
+            .populate({ path: 'role', select: "name" })
+            .exec();
 
-        if (admins?.length > 0) {
-            const adminFcmTokens = admins.map((admin) => admin?.fcmToken);
+        const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
 
+        if (filteredAdmins?.length > 0) {
             const payload = {
                 notification: {
-                    title: `${sendBy?.name} marked punch-in at ${punchInTime}`,
+                    title: `${sendBy?.name} Marked Punch-In At ${punchInTime}`,
                     body: `${sendBy?.name} marked punch-in today at ${punchInTime}`,
                 },
             };
 
-            await Promise.allSettled(adminFcmTokens?.map((token) => firebase.messaging().send({ ...payload, token })));
+            await Promise.allSettled(filteredAdmins?.map((admin) => firebase.messaging().send({ ...payload, token: admin?.fcmToken })));
         };
 
         await session.commitTransaction();
@@ -448,24 +467,27 @@ export const updateAttendance = async (req, res) => {
 
         // Send email
         const sendBy = await Team.findById(employee);
-        const subject = `${sendBy?.name} marked punch-out at ${punchOutTime} for date ${attendanceDate}`;
-        const htmlContent = `<p>${sendBy?.name} marked punch-out at ${punchOutTime} for date ${attendanceDate}.</p>`;
+        const subject = `${sendBy?.name} Marked Punch-Out At ${punchOutTime} On Date ${attendanceDate}`;
+        const htmlContent = `<p>${sendBy?.name} marked punch-out at ${punchOutTime} on date ${attendanceDate}.</p>`;
         sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
         // Send push notification to admin
-        const admins = await Team.find({ role: { name: 'admin' }, fcmToken: { $exists: true, $ne: null } });
+        const teams = await Team
+            .find()
+            .populate({ path: 'role', select: "name" })
+            .exec();
 
-        if (admins?.length > 0) {
-            const adminFcmTokens = admins.map((admin) => admin?.fcmToken);
+        const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
 
+        if (filteredAdmins?.length > 0) {
             const payload = {
                 notification: {
-                    title: `${sendBy?.name} marked punch-out at ${punchOutTime}`,
+                    title: `${sendBy?.name} Marked Punch-Out At ${punchOutTime}`,
                     body: `${sendBy?.name} marked punch-out today at ${punchOutTime}`,
                 },
             };
 
-            await Promise.allSettled(adminFcmTokens?.map((token) => firebase.messaging().send({ ...payload, token })));
+            await Promise.allSettled(filteredAdmins?.map((admin) => firebase.messaging().send({ ...payload, token: admin?.fcmToken })));
         };
 
         return res.status(200).json({ success: true, attendance: updatedAttendance });

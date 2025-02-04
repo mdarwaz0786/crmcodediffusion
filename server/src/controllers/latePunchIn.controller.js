@@ -69,7 +69,7 @@ export const createLatePunchIn = async (req, res) => {
       const cutoffMinutes = 30;
 
       if (hours < cutoffHours || (hours === cutoffHours && minutes < cutoffMinutes)) {
-        return res.status(400).json({ success: false, message: "Late punch in request for today can only be applied after 7 PM." });
+        return res.status(400).json({ success: false, message: "Late punch in request for today can only be applied after 18:30 PM." });
       };
     };
 
@@ -99,24 +99,27 @@ export const createLatePunchIn = async (req, res) => {
 
     // Send email
     const sendBy = await Team.findById(employee);
-    const subject = `${sendBy?.name} applied for late punch in for date ${attendanceDate} and punch time ${punchInTime}`;
-    const htmlContent = `<p>Late punch in request has been applied by ${sendBy?.name} for date ${attendanceDate}.</p><p>Please review the request.</p>`;
+    const subject = `${sendBy?.name} applied for late punch in for attendance date ${attendanceDate} and punch time ${punchInTime}`;
+    const htmlContent = `<p>Late punch in request has been applied by ${sendBy?.name} for attendance date ${attendanceDate} to update punch in time ${punchInTime}.</p><p>Please review the request.</p>`;
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
     // Send push notification to admin
-    const admins = await Team.find({ role: { name: 'admin' }, fcmToken: { $exists: true, $ne: null } });
+    const teams = await Team
+      .find()
+      .populate({ path: 'role', select: "name" })
+      .exec();
 
-    if (admins?.length > 0) {
-      const adminFcmTokens = admins.map((admin) => admin?.fcmToken);
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
 
+    if (filteredAdmins?.length > 0) {
       const payload = {
         notification: {
-          title: `${sendBy?.name} Applied Late Punch-in Request`,
-          body: `${sendBy?.name} has applied for late punch-in for date ${attendanceDate} for punch in time ${punchInTime}.`,
+          title: `${sendBy?.name} Applied for Late Punch-In`,
+          body: `${sendBy?.name} has applied for late punch-in for attendance date ${attendanceDate} to update punch in time ${punchInTime}.`,
         },
       };
 
-      await Promise.allSettled(adminFcmTokens?.map((token) => firebase.messaging().send({ ...payload, token })));
+      await Promise.allSettled(filteredAdmins?.map((admin) => firebase.messaging().send({ ...payload, token: admin?.fcmToken })));
     };
 
     return res.status(201).json({ success: true, data: newLatePunchIn });

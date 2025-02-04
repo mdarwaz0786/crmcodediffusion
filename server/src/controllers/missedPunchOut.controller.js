@@ -30,15 +30,15 @@ export const createMissedPunchOut = async (req, res) => {
     const { employee, attendanceDate, approvedBy, punchOutTime } = req.body;
 
     if (!employee) {
-      return res.status(400).json({ success: false, message: "Employee is required" });
+      return res.status(400).json({ success: false, message: "Employee is required." });
     };
 
     if (!attendanceDate) {
-      return res.status(400).json({ success: false, message: "Attendance date is required" });
+      return res.status(400).json({ success: false, message: "Attendance date is required." });
     };
 
     if (!punchOutTime) {
-      return res.status(400).json({ success: false, message: "Punch out time is required" });
+      return res.status(400).json({ success: false, message: "Punch out time is required." });
     };
 
     // Get current date and requested date
@@ -68,7 +68,7 @@ export const createMissedPunchOut = async (req, res) => {
       const cutoffMinutes = 30;
 
       if (hours < cutoffHours || (hours === cutoffHours && minutes < cutoffMinutes)) {
-        return res.status(400).json({ success: false, message: "Missed punch out request for today can only be applied after 7 PM." });
+        return res.status(400).json({ success: false, message: "Missed punch out request for today can only be applied after 18:30 PM." });
       };
     };
 
@@ -103,24 +103,27 @@ export const createMissedPunchOut = async (req, res) => {
 
     // Send email
     const appliedBy = await Team.findById(employee);
-    const subject = `${appliedBy?.name} applied for missed punch out on ${attendanceDate}`;
-    const htmlContent = `<p>Missed punch out request has been applied by ${appliedBy?.name} for date ${attendanceDate}.</p><p>Please review the request.</p>`;
+    const subject = `${appliedBy?.name} applied for missed punch out for attendance date ${attendanceDate}`;
+    const htmlContent = `<p>Missed punch out request has been applied by ${appliedBy?.name} for attendance date ${attendanceDate}.</p><p>Please review the request.</p>`;
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
     // Send push notification to admin
-    const admins = await Team.find({ role: { name: 'admin' }, fcmToken: { $exists: true, $ne: null } });
+    const teams = await Team
+      .find()
+      .populate({ path: 'role', select: "name" })
+      .exec();
 
-    if (admins?.length > 0) {
-      const adminFcmTokens = admins?.map((admin) => admin?.fcmToken);
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
 
+    if (filteredAdmins?.length > 0) {
       const payload = {
         notification: {
-          title: `${appliedBy?.name} Applied Missed Punch-out Request`,
-          body: `${appliedBy?.name} has applied for missed punch-out for date ${attendanceDate} for punch out time ${punchInTime}.`,
+          title: `${appliedBy?.name} Applied for Missed Punch-out`,
+          body: `${appliedBy?.name} has applied for missed punch-out for attendance date ${attendanceDate} to mark punch out time ${punchOutTime}.`,
         },
       };
 
-      await Promise.allSettled(adminFcmTokens?.map((token) => firebase.messaging().send({ ...payload, token })));
+      await Promise.allSettled(filteredAdmins?.map((admin) => firebase.messaging().send({ ...payload, token: admin?.fcmToken })));
     };
 
     return res.status(201).json({ success: true, data: newMissedPunchOut });
@@ -273,13 +276,13 @@ export const updateMissedPunchOut = async (req, res) => {
       missedPunchOut.approvedBy = approvedBy;
       await missedPunchOut.save({ session });
 
-      sendEmail(missedPunchOut?.employee?.email, "Your Missed Punch Out Request Rejected", `<p>Your missed punch out request date ${missedPunchOut?.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      sendEmail(missedPunchOut?.employee?.email, "Your Missed Punch Out Request Rejected", `<p>Your missed punch out request for attendance date ${missedPunchOut?.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
 
       if (missedPunchOut?.employee?.fcmToken) {
         const payload = {
           notification: {
             title: "Missed Punch-Out Request Rejected",
-            body: `Missed punch-out request for date ${missedPunchOut?.attendanceDate} has been rejected.`,
+            body: `Your missed punch-out request for attendance date ${missedPunchOut?.attendanceDate} has been rejected.`,
           },
         };
         await firebase.messaging().send({ ...payload, token: missedPunchOut?.employee?.fcmToken });
@@ -314,13 +317,13 @@ export const updateMissedPunchOut = async (req, res) => {
       missedPunchOut.approvedBy = approvedBy;
       await missedPunchOut.save({ session });
 
-      sendEmail(missedPunchOut?.employee?.email, "Your Missed Punch Out Request Approved", `<p>Your missed punch out request date ${missedPunchOut?.attendanceDate} has been approved and punch out time ${missedPunchOut?.punchOutTime} is marked.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      sendEmail(missedPunchOut?.employee?.email, "Your Missed Punch Out Request Approved", `<p>Your missed punch out request for attendance date ${missedPunchOut?.attendanceDate} has been approved and punch out time ${missedPunchOut?.punchOutTime} is marked.</p><p>Regards,<br/>${approveBy?.name}</p>`);
 
       if (missedPunchOut?.employee?.fcmToken) {
         const payload = {
           notification: {
             title: "Missed Punch-Out Request Approved",
-            body: `Missed punch-out request for date ${missedPunchOut?.attendanceDate} has been approved.`,
+            body: `Your missed punch-out request for attendance date ${missedPunchOut?.attendanceDate} has been approved.`,
           },
         };
         await firebase.messaging().send({ ...payload, token: missedPunchOut?.employee?.fcmToken });

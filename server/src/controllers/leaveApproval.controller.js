@@ -38,15 +38,15 @@ export const createLeaveApproval = async (req, res) => {
     const currentDate = new Date();
 
     if (start.setHours(0, 0, 0, 0) === currentDate.setHours(0, 0, 0, 0)) {
-      return res.status(400).json({ success: false, message: "Start date cannot be today" });
+      return res.status(400).json({ success: false, message: "Start date cannot be today." });
     };
 
     if (start.setHours(0, 0, 0, 0) < currentDate.setHours(0, 0, 0, 0)) {
-      return res.status(400).json({ success: false, message: "Start date cannot be in the past" });
+      return res.status(400).json({ success: false, message: "Start date cannot be in the past." });
     };
 
     if (start > end) {
-      return res.status(400).json({ success: false, message: "Start date cannot be later than end date" });
+      return res.status(400).json({ success: false, message: "Start date cannot be later than end date." });
     };
 
     // Check if the employee exist
@@ -95,13 +95,15 @@ export const createLeaveApproval = async (req, res) => {
 
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
-
     // Send push notification to admin
-    const admins = await Team.find({ role: { name: 'admin' }, fcmToken: { $exists: true, $ne: null } });
+    const teams = await Team
+      .find()
+      .populate({ path: 'role', select: "name" })
+      .exec();
 
-    if (admins?.length > 0) {
-      const adminFcmTokens = admins?.map((admin) => admin?.fcmToken);
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
 
+    if (filteredAdmins?.length > 0) {
       const payload = {
         notification: {
           title: `${existingEmployee?.name} Applied for Leave`,
@@ -109,7 +111,7 @@ export const createLeaveApproval = async (req, res) => {
         },
       };
 
-      await Promise.allSettled(adminFcmTokens?.map((token) => firebase.messaging().send({ ...payload, token })));
+      await Promise.allSettled(filteredAdmins?.map((admin) => firebase.messaging().send({ ...payload, token: admin?.fcmToken })));
     };
 
     return res.status(201).json({ success: true, data: newLeaveApproval });
@@ -313,8 +315,8 @@ export const updateLeaveApproval = async (req, res) => {
       if (employee?.fcmToken) {
         const payload = {
           notification: {
-            title: "Your Leave Request Approved",
-            body: `Your leave request from ${leaveRequest?.startDate} to ${leaveRequest?.endDate} has been approved.`,
+            title: "Leave Request Approved",
+            body: `Your Leave request from ${leaveRequest?.startDate} to ${leaveRequest?.endDate} has been approved.`,
           },
         };
         await firebase.messaging().send({ ...payload, token: employee?.fcmToken });
