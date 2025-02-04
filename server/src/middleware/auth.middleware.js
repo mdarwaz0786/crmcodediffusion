@@ -15,6 +15,8 @@ export const isLoggedIn = async (req, res, next) => {
       .populate({ path: "role", select: "" })
       .populate({ path: "designation", select: "name" })
       .populate({ path: "reportingTo", select: "name" })
+      .populate({ path: "department", select: "name" })
+      .populate({ path: "office", select: "" })
       .exec();
 
     req.team = teamData;

@@ -65,6 +65,20 @@ export const loginTeam = async (req, res) => {
       designation: team.designation._id,
       role: team.role._id,
       reportingTo: team.reportingTo._id,
+      PAN: team.PAN,
+      UAN: team.UAN,
+      bankAccount: team.bankAccount,
+      office: team.office._id,
+      department: team.department._id,
+      allotedLeaveBalance: team.allotedLeaveBalance,
+      currentLeaveBalance: team.currentLeaveBalance,
+      usedLeaveBalance: team.usedLeaveBalance,
+      leaveBalanceAllotedHistory: team.leaveBalanceAllotedHistory,
+      leaveBalanceUsedHistory: team.leaveBalanceUsedHistory,
+      approvedLeaves: team.approvedLeaves,
+      eligibleCompOffDate: team.eligibleCompOffDate,
+      isActive: team.isActive,
+      fcmToken: team.fcmToken,
       token: generateToken(
         team._id,
         team.employeeId,
@@ -79,6 +93,20 @@ export const loginTeam = async (req, res) => {
         team.designation._id,
         team.role._id,
         team.reportingTo._id,
+        team.PAN,
+        team.UAN,
+        team.bankAccount,
+        team.office._id,
+        team.department._id,
+        team.allotedLeaveBalance,
+        team.currentLeaveBalance,
+        team.usedLeaveBalance,
+        team.leaveBalanceAllotedHistory,
+        team.leaveBalanceUsedHistory,
+        team.approvedLeaves,
+        team.eligibleCompOffDate,
+        team.isActive,
+        team.fcmToken,
       ),
     });
   } catch (error) {
@@ -95,7 +123,7 @@ export const loggedInTeam = async (req, res) => {
       .populate({ path: "designation", select: "name" })
       .populate({ path: "reportingTo", select: "name" })
       .populate({ path: "department", select: "name" })
-      .populate({ path: "office", select: "name" })
+      .populate({ path: "office", select: "" })
       .exec();
 
     if (!team) {
@@ -226,7 +254,7 @@ export const fetchAllTeam = async (req, res) => {
       .populate({ path: "designation", select: "name" })
       .populate({ path: "reportingTo", select: "name" })
       .populate({ path: "department", select: "name" })
-      .populate({ path: "office", select: "name" })
+      .populate({ path: "office", select: "" })
       .exec();
 
     if (!team) {
@@ -256,7 +284,7 @@ export const fetchSingleTeam = async (req, res) => {
       .populate({ path: "designation", select: "name" })
       .populate({ path: "reportingTo", select: "name" })
       .populate({ path: "department", select: "name" })
-      .populate({ path: "office", select: "name" })
+      .populate({ path: "office", select: "" })
       .exec();
 
     if (!team) {

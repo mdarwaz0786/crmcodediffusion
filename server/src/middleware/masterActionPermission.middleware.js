@@ -24,7 +24,7 @@ const checkMasterActionPermission = (master, action) => {
 
     } catch (error) {
       console.error('Authorization error:', error.message);
-      res.status(500).json({ success: false, message: `Authorization error: ${error.message}` });
+      return res.status(500).json({ success: false, message: `Authorization error: ${error.message}` });
     };
   };
 };

@@ -1,5 +1,7 @@
 import PurchaseInvoice from "../models/purchaseInvoice.model.js";
-import upload from "../middleware/multer.middleware.js";
+import multer from "multer";
+
+const upload = multer({ storage: multer.memoryStorage() }).array("bills");
 
 // Controller for creating a purchase invoice with files uploaded as Base64
 export const createPurchaseInvoice = (req, res) => {
