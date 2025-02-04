@@ -28,7 +28,7 @@ export const createHoliday = async (req, res) => {
     };
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -96,10 +96,10 @@ export const uploadHolidays = async (req, res) => {
     // Wait for all promises to complete
     await Promise.all(promises);
 
-    res.status(200).json({ success: true, holiday: holidays });
+    return res.status(200).json({ success: true, holiday: holidays });
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -108,14 +108,15 @@ export const fetchUpcomingHoliday = async (req, res) => {
   try {
     const currentDate = new Date().toISOString().split("T")[0];
 
-    const holiday = await Holiday.find({ date: { $gte: currentDate } })
+    const holiday = await Holiday
+      .find({ date: { $gte: currentDate } })
       .sort({ date: 1 })
       .exec();
 
-    res.status(200).json({ success: true, holiday });
+    return res.status(200).json({ success: true, holiday });
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -184,10 +185,10 @@ export const getHolidaysByMonth = async (req, res) => {
       },
     ]);
 
-    res.status(200).json({ success: true, data: holidaysByMonth });
+    return res.status(200).json({ success: true, data: holidaysByMonth });
   } catch (error) {
     console.error(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -236,9 +237,9 @@ export const fetchAllHoliday = async (req, res) => {
 
     // Handle sorting
     if (req.query.sort === 'Ascending') {
-      sort = { date: -1 };
-    } else {
       sort = { date: 1 };
+    } else {
+      sort = { date: -1 };
     };
 
     const holiday = await Holiday
@@ -255,10 +256,10 @@ export const fetchAllHoliday = async (req, res) => {
     // Calculate total count
     const total = await Holiday.countDocuments(query);
 
-    res.status(200).json({ success: true, holiday, totalCount: total });
+    return res.status(200).json({ success: true, holiday, totalCount: total });
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -272,10 +273,10 @@ export const fetchSingleHoliday = async (req, res) => {
       return res.status(404).json({ success: false, message: "Holiday not found" });
     };
 
-    res.status(200).json({ success: true, holiday });
+    return res.status(200).json({ success: true, holiday });
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -300,10 +301,10 @@ export const updateHoliday = async (req, res) => {
 
     await holiday.save();
 
-    res.status(200).json({ success: true, holiday });
+    return res.status(200).json({ success: true, holiday });
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -318,9 +319,9 @@ export const deleteHoliday = async (req, res) => {
       return res.status(404).json({ success: false, message: "Holiday not found" });
     };
 
-    res.status(200).json({ success: true, message: "Holiday deleted successfully" });
+    return res.status(200).json({ success: true, message: "Holiday deleted successfully" });
   } catch (error) {
     console.log(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };

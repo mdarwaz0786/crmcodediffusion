@@ -31,15 +31,15 @@ export const createLatePunchIn = async (req, res) => {
 
     // Validate required fields
     if (!employee) {
-      return res.status(400).json({ success: false, message: "Employee is required" });
+      return res.status(400).json({ success: false, message: "Employee is required." });
     };
 
     if (!attendanceDate) {
-      return res.status(400).json({ success: false, message: "Attendance date is required" });
+      return res.status(400).json({ success: false, message: "Attendance date is required." });
     };
 
     if (!punchInTime) {
-      return res.status(400).json({ success: false, message: "Punch in time is required" });
+      return res.status(400).json({ success: false, message: "Punch in time is required." });
     };
 
     // Get current date and requested date

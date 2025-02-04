@@ -18,7 +18,7 @@ const Holiday = () => {
   const [filters, setFilters] = useState({
     year: "",
     month: "",
-    sort: "Descending",
+    sort: "Ascending",
     page: 1,
     limit: 20,
   });
