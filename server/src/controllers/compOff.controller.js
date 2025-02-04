@@ -2,6 +2,7 @@ import CompOff from "../models/compOff.model.js";
 import Team from "../models/team.model.js";
 import mongoose from "mongoose";
 import { sendEmail } from "../services/emailService.js";
+import firebase from "../firebase/index.js";
 
 // Create new comp off
 export const createCompOff = async (req, res) => {
@@ -58,6 +59,22 @@ export const createCompOff = async (req, res) => {
     const subject = `${appliedBy?.name} apply comp off for date ${attendanceDate}`;
     const htmlContent = `<p>Comp off request has been applied by ${appliedBy?.name} for date ${attendanceDate}.</p><p>Please review the request.</p>`;
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+
+    // Send push notification to admin
+    const admins = await Team.find({ role: { name: 'admin' }, fcmToken: { $exists: true, $ne: null } });
+
+    if (admins?.length > 0) {
+      const adminFcmTokens = admins?.map((admin) => admin?.fcmToken);
+
+      const payload = {
+        notification: {
+          title: `${appliedBy?.name} Applied for Comp Off`,
+          body: `${appliedBy?.name} has applied for comp off for date ${attendanceDate}`,
+        },
+      };
+
+      await Promise.allSettled(adminFcmTokens?.map((token) => firebase.messaging().send({ ...payload, token })));
+    };
 
     await session.commitTransaction();
     session.endSession();
@@ -214,6 +231,17 @@ export const updateCompOff = async (req, res) => {
       await compOff.save({ session });
 
       sendEmail(compOff?.employee?.email, "Your Comp Off Request Rejected", `<p>Your comp off request date ${compOff?.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+
+      if (compOff?.employee?.fcmToken) {
+        const payload = {
+          notification: {
+            title: "Comp Off Request Rejected",
+            body: `Comp Off request for date ${compOff?.attendanceDate} has been rejected.`,
+          },
+        };
+        await firebase.messaging().send({ ...payload, token: compOff?.employee?.fcmToken });
+      };
+
       await session.commitTransaction();
       session.endSession();
       return res.status(200).json({ success: true, message: "Comp off rejected." });
@@ -235,6 +263,17 @@ export const updateCompOff = async (req, res) => {
       };
 
       sendEmail(compOff?.employee?.email, "Your Comp Off Request Approved", `<p>Your comp off request date ${compOff?.attendanceDate} has been approved.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+
+      if (compOff?.employee?.fcmToken) {
+        const payload = {
+          notification: {
+            title: "Comp Off Request Approved",
+            body: `Comp off request for date ${compOff?.attendanceDate} has been approved.`,
+          },
+        };
+        await firebase.messaging().send({ ...payload, token: compOff?.employee?.fcmToken });
+      };
+
       await session.commitTransaction();
       session.endSession();
       return res.status(200).json({ success: true, message: "Comp off request approved." });

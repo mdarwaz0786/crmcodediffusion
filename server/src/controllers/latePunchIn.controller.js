@@ -60,7 +60,7 @@ export const createLatePunchIn = async (req, res) => {
       return res.status(400).json({ success: false, message: "Late punch in request can not be applied for future date attendance." });
     };
 
-    // Prevent applying for the current date before 7 PM
+    // Prevent applying for the current date before 18:30 PM
     if (requestedDate === currentDate) {
       const time = new Date().toTimeString().slice(0, 5);
       const [hours, minutes] = time.split(':').map(Number);
@@ -106,17 +106,17 @@ export const createLatePunchIn = async (req, res) => {
     // Send push notification to admin
     const admins = await Team.find({ role: { name: 'admin' }, fcmToken: { $exists: true, $ne: null } });
 
-    if (admins.length > 0) {
-      const adminFcmTokens = admins.map((admin) => admin.fcmToken);
+    if (admins?.length > 0) {
+      const adminFcmTokens = admins.map((admin) => admin?.fcmToken);
 
       const payload = {
         notification: {
-          title: `${sendBy?.name} Apply Late Punch-in Request`,
-          body: `${sendBy?.name} has applied for a late punch-in for date ${attendanceDate} and punch in time ${punchInTime}. Please review the request.`,
+          title: `${sendBy?.name} Applied Late Punch-in Request`,
+          body: `${sendBy?.name} has applied for late punch-in for date ${attendanceDate} for punch in time ${punchInTime}.`,
         },
       };
 
-      await Promise.allSettled(adminFcmTokens.map((token) => firebase.messaging().send({ ...payload, token })));
+      await Promise.allSettled(adminFcmTokens?.map((token) => firebase.messaging().send({ ...payload, token })));
     };
 
     return res.status(201).json({ success: true, data: newLatePunchIn });
@@ -280,8 +280,8 @@ export const updateLatePunchIn = async (req, res) => {
       if (latePunchIn?.employee?.fcmToken) {
         const payload = {
           notification: {
-            title: "Late Punch In Request Rejected",
-            body: `Your late punch in request for date ${latePunchIn?.attendanceDate} has been rejected.`,
+            title: "Late Punch-In Request Rejected",
+            body: `Late punch-in request for date ${latePunchIn?.attendanceDate} has been rejected.`,
           },
         };
         await firebase.messaging().send({ ...payload, token: latePunchIn?.employee?.fcmToken });
@@ -316,8 +316,8 @@ export const updateLatePunchIn = async (req, res) => {
       if (latePunchIn?.employee?.fcmToken) {
         const payload = {
           notification: {
-            title: "Late Punch In Request Approved",
-            body: `Your late punch in request for date ${latePunchIn?.attendanceDate} has been approved.`,
+            title: "Late Punch-In Request Approved",
+            body: `Late punch-in request for date ${latePunchIn?.attendanceDate} has been approved.`,
           },
         };
         await firebase.messaging().send({ ...payload, token: latePunchIn?.employee?.fcmToken });

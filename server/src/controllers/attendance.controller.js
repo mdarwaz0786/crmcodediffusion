@@ -1,7 +1,9 @@
 import Attendance from '../models/attendance.model.js';
 import Team from "../models/team.model.js";
 import Holiday from "../models/holiday.model.js";
-import mongoose from 'mongoose';
+import { sendEmail } from "../services/emailService.js";
+import mongoose from "mongoose";
+import firebase from "../firebase/index.js";
 
 // Calculate time difference in HH:MM format
 const calculateTimeDifference = (startTime, endTime) => {
@@ -138,6 +140,28 @@ export const createAttendance = async (req, res) => {
                 { _id: employee },
                 { $addToSet: { eligibleCompOffDate: compOffEntry } },
             ).session(session);
+        };
+
+        // Send email
+        const sendBy = await Team.findById(employee);
+        const subject = `${sendBy?.name} marked punch-in at ${punchInTime} for date ${attendanceDate}`;
+        const htmlContent = `<p>${sendBy?.name} marked punch-in at ${punchInTime} for date ${attendanceDate}.</p>`;
+        sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+
+        // Send push notification to admin
+        const admins = await Team.find({ role: { name: 'admin' }, fcmToken: { $exists: true, $ne: null } });
+
+        if (admins?.length > 0) {
+            const adminFcmTokens = admins.map((admin) => admin?.fcmToken);
+
+            const payload = {
+                notification: {
+                    title: `${sendBy?.name} marked punch-in at ${punchInTime}`,
+                    body: `${sendBy?.name} marked punch-in today at ${punchInTime}`,
+                },
+            };
+
+            await Promise.allSettled(adminFcmTokens?.map((token) => firebase.messaging().send({ ...payload, token })));
         };
 
         await session.commitTransaction();
@@ -421,6 +445,28 @@ export const updateAttendance = async (req, res) => {
                 upsert: true,
             },
         );
+
+        // Send email
+        const sendBy = await Team.findById(employee);
+        const subject = `${sendBy?.name} marked punch-out at ${punchOutTime} for date ${attendanceDate}`;
+        const htmlContent = `<p>${sendBy?.name} marked punch-out at ${punchOutTime} for date ${attendanceDate}.</p>`;
+        sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+
+        // Send push notification to admin
+        const admins = await Team.find({ role: { name: 'admin' }, fcmToken: { $exists: true, $ne: null } });
+
+        if (admins?.length > 0) {
+            const adminFcmTokens = admins.map((admin) => admin?.fcmToken);
+
+            const payload = {
+                notification: {
+                    title: `${sendBy?.name} marked punch-out at ${punchOutTime}`,
+                    body: `${sendBy?.name} marked punch-out today at ${punchOutTime}`,
+                },
+            };
+
+            await Promise.allSettled(adminFcmTokens?.map((token) => firebase.messaging().send({ ...payload, token })));
+        };
 
         return res.status(200).json({ success: true, attendance: updatedAttendance });
     } catch (error) {

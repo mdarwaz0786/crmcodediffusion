@@ -2,6 +2,7 @@ import LeaveApproval from "../models/leaveApproval.model.js";
 import Team from "../models/team.model.js";
 import mongoose from "mongoose";
 import { sendEmail } from '../services/emailService.js';
+import firebase from "../firebase/index.js";
 
 // Helper function to get a range of dates between two dates
 const getDateRange = (startDate, endDate) => {
@@ -93,6 +94,23 @@ export const createLeaveApproval = async (req, res) => {
     `;
 
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+
+
+    // Send push notification to admin
+    const admins = await Team.find({ role: { name: 'admin' }, fcmToken: { $exists: true, $ne: null } });
+
+    if (admins?.length > 0) {
+      const adminFcmTokens = admins?.map((admin) => admin?.fcmToken);
+
+      const payload = {
+        notification: {
+          title: `${existingEmployee?.name} Applied for Leave`,
+          body: `${existingEmployee?.name} has applied for leave from ${startDate} to ${endDate}.`,
+        },
+      };
+
+      await Promise.allSettled(adminFcmTokens?.map((token) => firebase.messaging().send({ ...payload, token })));
+    };
 
     return res.status(201).json({ success: true, data: newLeaveApproval });
   } catch (error) {
@@ -253,6 +271,17 @@ export const updateLeaveApproval = async (req, res) => {
       await leaveRequest.save({ session });
 
       sendEmail(employee?.email, "Your Leave Request Rejected", `<p>Your leave request from ${leaveRequest?.startDate} to ${leaveRequest?.endDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+
+      if (employee?.fcmToken) {
+        const payload = {
+          notification: {
+            title: "Your Leave Request Rejected",
+            body: `Your leave request from ${leaveRequest?.startDate} to ${leaveRequest?.endDate} has been rejected.`,
+          },
+        };
+        await firebase.messaging().send({ ...payload, token: employee?.fcmToken });
+      };
+
       await session.commitTransaction();
       return res.status(200).json({ success: true, message: "Leave request rejected." });
     };
@@ -280,6 +309,17 @@ export const updateLeaveApproval = async (req, res) => {
       );
 
       sendEmail(employee?.email, "Your Leave Request Approved", `<p>Your leave request from ${leaveRequest?.startDate} to ${leaveRequest?.endDate} has been approved.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+
+      if (employee?.fcmToken) {
+        const payload = {
+          notification: {
+            title: "Your Leave Request Approved",
+            body: `Your leave request from ${leaveRequest?.startDate} to ${leaveRequest?.endDate} has been approved.`,
+          },
+        };
+        await firebase.messaging().send({ ...payload, token: employee?.fcmToken });
+      };
+
       await session.commitTransaction();
       return res.status(200).json({ success: true, message: "Leave request approved." });
     };

@@ -3,6 +3,7 @@ import Attendance from "../models/attendance.model.js";
 import Team from "../models/team.model.js";
 import { sendEmail } from "../services/emailService.js";
 import mongoose from "mongoose";
+import firebase from "../firebase/index.js";
 
 // Calculate time difference in HH:MM format
 const calculateTimeDifference = (startTime, endTime) => {
@@ -50,17 +51,23 @@ export const createMissedPunchOut = async (req, res) => {
     const formattedTwoDaysBefore = twoDaysBefore.toISOString().split('T')[0];
 
     // Check if the requested date is within the last two days
-    if (requestedDate < formattedTwoDaysBefore || requestedDate > currentDate) {
-      return res.status(400).json({ success: false, message: "Missed punch out request can only be applied for the last two days." });
+    if (requestedDate < formattedTwoDaysBefore) {
+      return res.status(400).json({ success: false, message: "Missed punch out request can only be applied for the last two days attendance." });
     };
 
-    // Prevent applying for the current date before 7 PM
-    if (requestedDate === currentDate) {
-      const currentTime = new Date();
-      const cutoffTime = new Date();
-      cutoffTime.setHours(19, 0, 0, 0);
+    if (requestedDate > currentDate) {
+      return res.status(400).json({ success: false, message: "Missed punch out request request can not be applied for future date attendance." });
+    };
 
-      if (currentTime < cutoffTime) {
+    // Prevent applying for the current date before 18:30 PM
+    if (requestedDate === currentDate) {
+      const time = new Date().toTimeString().slice(0, 5);
+      const [hours, minutes] = time.split(':').map(Number);
+
+      const cutoffHours = 18;
+      const cutoffMinutes = 30;
+
+      if (hours < cutoffHours || (hours === cutoffHours && minutes < cutoffMinutes)) {
         return res.status(400).json({ success: false, message: "Missed punch out request for today can only be applied after 7 PM." });
       };
     };
@@ -99,6 +106,22 @@ export const createMissedPunchOut = async (req, res) => {
     const subject = `${appliedBy?.name} applied for missed punch out on ${attendanceDate}`;
     const htmlContent = `<p>Missed punch out request has been applied by ${appliedBy?.name} for date ${attendanceDate}.</p><p>Please review the request.</p>`;
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+
+    // Send push notification to admin
+    const admins = await Team.find({ role: { name: 'admin' }, fcmToken: { $exists: true, $ne: null } });
+
+    if (admins?.length > 0) {
+      const adminFcmTokens = admins?.map((admin) => admin?.fcmToken);
+
+      const payload = {
+        notification: {
+          title: `${appliedBy?.name} Applied Missed Punch-out Request`,
+          body: `${appliedBy?.name} has applied for missed punch-out for date ${attendanceDate} for punch out time ${punchInTime}.`,
+        },
+      };
+
+      await Promise.allSettled(adminFcmTokens?.map((token) => firebase.messaging().send({ ...payload, token })));
+    };
 
     return res.status(201).json({ success: true, data: newMissedPunchOut });
   } catch (error) {
@@ -251,6 +274,17 @@ export const updateMissedPunchOut = async (req, res) => {
       await missedPunchOut.save({ session });
 
       sendEmail(missedPunchOut?.employee?.email, "Your Missed Punch Out Request Rejected", `<p>Your missed punch out request date ${missedPunchOut?.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+
+      if (missedPunchOut?.employee?.fcmToken) {
+        const payload = {
+          notification: {
+            title: "Missed Punch-Out Request Rejected",
+            body: `Missed punch-out request for date ${missedPunchOut?.attendanceDate} has been rejected.`,
+          },
+        };
+        await firebase.messaging().send({ ...payload, token: missedPunchOut?.employee?.fcmToken });
+      };
+
       await session.commitTransaction();
       session.endSession();
       return res.status(200).json({ success: true, message: "Punch out request rejected." });
@@ -281,6 +315,17 @@ export const updateMissedPunchOut = async (req, res) => {
       await missedPunchOut.save({ session });
 
       sendEmail(missedPunchOut?.employee?.email, "Your Missed Punch Out Request Approved", `<p>Your missed punch out request date ${missedPunchOut?.attendanceDate} has been approved and punch out time ${missedPunchOut?.punchOutTime} is marked.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+
+      if (missedPunchOut?.employee?.fcmToken) {
+        const payload = {
+          notification: {
+            title: "Missed Punch-Out Request Approved",
+            body: `Missed punch-out request for date ${missedPunchOut?.attendanceDate} has been approved.`,
+          },
+        };
+        await firebase.messaging().send({ ...payload, token: missedPunchOut?.employee?.fcmToken });
+      };
+
       await session.commitTransaction();
       session.endSession();
       return res.status(200).json({ success: true, message: `Missed punch out request approved and punch out time ${missedPunchOut?.punchOutTime} is marked.` });
