@@ -6,6 +6,7 @@ const officeLocationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      unique: true,
     },
     name: {
       type: String,
@@ -58,6 +59,7 @@ officeLocationSchema.pre("save", function (next) {
     if (!string) return "";
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
+
   if (this.name) {
     this.name = capitalizeWords(this.name);
   };

@@ -313,7 +313,7 @@ const AddTeamMember = () => {
                 <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
                 {
                   officeLocation?.map((o) => (
-                    <option key={o?._id} value={o?._id}>{o?.name}</option>
+                    <option key={o?._id} value={o?._id}>{o?.uniqueCode}</option>
                   ))
                 }
               </select>
