@@ -72,7 +72,7 @@ export const createCompOff = async (req, res) => {
       const payload = {
         notification: {
           title: `${appliedBy?.name} Applied for Comp Off`,
-          body: `${appliedBy?.name} has applied for comp off for date ${attendanceDate}`,
+          body: `${appliedBy?.name} has applied for comp off for date ${attendanceDate}.`,
         },
       };
 

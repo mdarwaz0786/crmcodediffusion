@@ -176,7 +176,7 @@ export const createAttendance = async (req, res) => {
             const payload = {
                 notification: {
                     title: `${sendBy?.name} Marked Punch-In At ${punchInTime}`,
-                    body: `${sendBy?.name} marked punch-in today at ${punchInTime}`,
+                    body: `${sendBy?.name} marked punch-in today at ${punchInTime}.`,
                 },
             };
 
@@ -483,7 +483,7 @@ export const updateAttendance = async (req, res) => {
             const payload = {
                 notification: {
                     title: `${sendBy?.name} Marked Punch-Out At ${punchOutTime}`,
-                    body: `${sendBy?.name} marked punch-out today at ${punchOutTime}`,
+                    body: `${sendBy?.name} marked punch-out today at ${punchOutTime}.`,
                 },
             };
 
