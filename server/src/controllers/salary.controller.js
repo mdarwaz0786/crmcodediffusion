@@ -217,14 +217,16 @@ export const fetchMonthlySalary = async (req, res) => {
                 const totalDeduction = monthlySalary - totalSalary;
 
                 // Check if salary has been paid
-                const salaryRecord = await Salary.findOne({
+                const salaryRecord = await Salary.find({
                     employee: employee?._id,
                     month: monthIndex.toString(),
                     year: year.toString(),
                 });
 
-                const salaryPaid = salaryRecord ? salaryRecord?.salaryPaid : false;
-                const transactionId = salaryRecord ? salaryRecord?.transactionId : "";
+                console.log(salaryRecord);
+
+                const salaryPaid = salaryRecord.salaryPaid;
+                const transactionId = salaryRecord.transactionId;
 
                 return {
                     employeeId: employee?._id,

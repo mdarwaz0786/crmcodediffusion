@@ -23,7 +23,7 @@ const PaySalary = () => {
       };
 
       const response = await axios.post(`${base_url}/api/v1/salary/create-salary`,
-        { transactionId, amountPaid: totalSalary, month, year, employee: employeeId, salaryPaid: true },
+        { transactionId: transactionId, amountPaid: totalSalary, month, year, employee: employeeId, salaryPaid: true },
         {
           headers: {
             Authorization: validToken,

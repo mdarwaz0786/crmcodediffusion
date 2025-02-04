@@ -25,7 +25,6 @@ const salarySchema = new mongoose.Schema({
   salaryPaid: {
     type: Boolean,
     default: false,
-    required: true,
   },
 });
 
