@@ -6,7 +6,12 @@ import Holiday from "../../models/holiday.model.js";
 // Schedule a task to run every day at 18:30
 cron.schedule("30 18 * * *", async () => {
   try {
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
 
     const holidays = await Holiday
       .find({ date: today });
@@ -58,4 +63,7 @@ cron.schedule("30 18 * * *", async () => {
   } catch (error) {
     console.log("Error while marking attendance as Holiday:", error.message);
   };
+}, {
+  scheduled: true,
+  timezone: "Asia/Kolkata",
 });

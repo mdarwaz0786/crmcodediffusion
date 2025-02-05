@@ -6,6 +6,7 @@ const compOffSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Team",
       required: true,
+      index: true,
     },
     attendanceDate: {
       type: String,
@@ -20,6 +21,7 @@ const compOffSchema = new mongoose.Schema(
       type: String,
       enum: ["Pending", "Approved", "Rejected"],
       default: "Pending",
+      index: true,
     },
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,

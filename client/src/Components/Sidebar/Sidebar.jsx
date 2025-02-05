@@ -180,7 +180,7 @@ const Sidebar = () => {
                   }
                   {
                     (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr") && (
-                      <li><Link to="/leave-request" className={currentPath === "/leave-request" ? "active" : ""} id={isMobile && active === "leave-request" ? "mobile_btn" : ""} onClick={() => handleActive("leaveRequest")}><i style={{ color: currentPath === "/leave-request" ? "" : "#FFA201" }} className="ti ti-user-check"></i><span>Leave Request</span></Link></li>
+                      <li><Link to="/leave-request" className={currentPath === "/leave-request" ? "active" : ""} id={isMobile && active === "leaveRequest" ? "mobile_btn" : ""} onClick={() => handleActive("leaveRequest")}><i style={{ color: currentPath === "/leave-request" ? "" : "#FFA201" }} className="ti ti-user-check"></i><span>Leave Request</span></Link></li>
                     )
                   }
                   {

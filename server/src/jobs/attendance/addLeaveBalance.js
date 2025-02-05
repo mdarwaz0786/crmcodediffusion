@@ -13,7 +13,12 @@ cron.schedule("00 00 01 * *", async () => {
     };
 
     // Get the current date
-    const currentDate = new Date().toISOString().split("T")[0];
+    const currentDate = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
 
     // Loop through each employee
     const updateLeaveBalancePromises = employees?.map(async (employee) => {
@@ -33,4 +38,7 @@ cron.schedule("00 00 01 * *", async () => {
   } catch (error) {
     console.log("Error while updating leave balance:", error.message);
   };
+}, {
+  scheduled: true,
+  timezone: "Asia/Kolkata",
 });
