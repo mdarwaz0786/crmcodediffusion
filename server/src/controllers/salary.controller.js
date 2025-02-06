@@ -2,6 +2,26 @@ import Team from "../models/team.model.js";
 import Attendance from "../models/attendance.model.js";
 import Salary from "../models/salary.model.js";
 
+// Helper function to convert time (HH:MM) into minutes
+function timeToMinutes(time) {
+    if (!time) {
+        return;
+    };
+
+    const [hours, minutes] = time.split(":").map(Number);
+    return hours * 60 + minutes;
+};
+
+// Function to convert UTC date to IST
+const convertToIST = (date) => {
+    if (!date) {
+        return;
+    };
+
+    const IST_OFFSET = 5.5 * 60 * 60 * 1000;
+    return new Date(date.getTime() + IST_OFFSET);
+};
+
 // Create a new salary record
 export const createSalary = async (req, res) => {
     try {
@@ -141,58 +161,59 @@ export const deleteSalary = async (req, res) => {
     };
 };
 
-// Helper function to convert time (HH:MM) into minutes
-function timeToMinutes(time) {
-    if (time === "") return;
-    const [hours, minutes] = time.split(":").map(Number);
-    return hours * 60 + minutes;
-};
-
 // Fetch monthly salary for employee
 export const fetchMonthlySalary = async (req, res) => {
     try {
         const { month } = req.query;
 
         if (!month) {
-            return res.status(400).json({ message: "Month (yyyy-mm) is required." });
+            return res.status(400).json({ success: false, message: "Month is required." });
         };
 
-        // Fetch all active employees
         const employees = await Team.find();
+
+        if (!employees || employees?.length === 0) {
+            return res.status(400).json({ success: false, message: "Employees not found." });
+        };
 
         const salaryData = await Promise.all(
             employees?.map(async (employee) => {
                 const monthlySalary = parseFloat(employee?.monthlySalary);
-                const [requiredHours, requiredMinutes] = employee?.workingHoursPerDay?.split(":").map(Number);
+                const [requiredHours, requiredMinutes] = employee?.workingHoursPerDay?.split(":")?.map(Number);
                 const dailyThreshold = requiredHours * 60 + requiredMinutes;
 
                 // Calculate the start and end dates for the month
                 const [year, monthIndex] = month.split("-").map(Number);
-                const startDate = new Date(year, monthIndex - 1, 1);
-                const endDate = new Date(year, monthIndex, 0);
+                let startDate = new Date(year, monthIndex - 1, 1);
+                let endDate = new Date(year, monthIndex, 0);
 
-                // Fetch Sunday and Holiday records
-                const sundayHolidayRecords = await Attendance.find({
+                // Convert start and end dates to IST
+                startDate = convertToIST(startDate);
+                endDate = convertToIST(endDate);
+
+                // Fetch Sunday, Holiday and Comp Off records
+                const sundayHolidayCompOffRecords = await Attendance.find({
                     employee: employee?._id,
-                    attendanceDate: { $gte: startDate.toISOString().split("T")[0], $lte: endDate.toISOString().split("T")[0] },
-                    status: { $in: ["Sunday", "Holiday"] },
+                    attendanceDate: { $gte: startDate?.toISOString()?.split("T")[0], $lte: endDate?.toISOString()?.split("T")[0] },
+                    status: { $in: ["Sunday", "Holiday", "Comp Off"] },
                 });
 
-                const totalSundaysAndHolidays = sundayHolidayRecords.length;
+                const totalSundaysHolidayCompoff = sundayHolidayCompOffRecords?.length;
 
                 const daysInMonth = new Date(year, monthIndex, 0).getDate();
-                const companyWorkingDays = daysInMonth - totalSundaysAndHolidays;
+                const companyWorkingDays = daysInMonth - totalSundaysHolidayCompoff;
 
                 const totalCompanyWorkingMinutes = companyWorkingDays * dailyThreshold;
 
                 // Fetch attendance records
                 const attendanceRecords = await Attendance.find({
                     employee: employee?._id,
-                    attendanceDate: { $gte: startDate.toISOString().split("T")[0], $lte: endDate.toISOString().split("T")[0] },
+                    attendanceDate: { $gte: startDate?.toISOString()?.split("T")[0], $lte: endDate?.toISOString()?.split("T")[0] },
                 });
 
                 let totalMinutesWorked = 0;
                 let onLeave = 0;
+                let compOff = 0;
 
                 attendanceRecords.forEach((record) => {
                     if (record?.status === "Present" || record?.status === "Half Day") {
@@ -202,12 +223,16 @@ export const fetchMonthlySalary = async (req, res) => {
                     if (record?.status === "On Leave") {
                         onLeave += 1;
                     };
+
+                    if (record?.status === "Comp Off") {
+                        compOff += 1;
+                    };
                 });
 
                 // Calculate deduction days
                 const hoursShortfall = totalCompanyWorkingMinutes - totalMinutesWorked;
-                const deductionDays = hoursShortfall > 0 ? Math.ceil(hoursShortfall / dailyThreshold) : 0;
-                const totalDeductionDays = deductionDays - onLeave;
+                const deductionDays = hoursShortfall > 0 ? (hoursShortfall / dailyThreshold) : 0;
+                const totalDeductionDays = deductionDays - onLeave - compOff;
 
                 // Calculate total salary
                 const dailySalary = monthlySalary / companyWorkingDays;
@@ -216,17 +241,16 @@ export const fetchMonthlySalary = async (req, res) => {
                 // Calculate total deduction
                 const totalDeduction = monthlySalary - totalSalary;
 
+
                 // Check if salary has been paid
-                const salaryRecord = await Salary.find({
+                const salaryRecord = await Salary.findOne({
                     employee: employee?._id,
-                    month: monthIndex.toString(),
+                    month: monthIndex < 10 ? (`0${monthIndex}`)?.toString() : monthIndex?.toString(),
                     year: year.toString(),
                 });
 
-                console.log(salaryRecord);
-
-                const salaryPaid = salaryRecord.salaryPaid;
-                const transactionId = salaryRecord.transactionId;
+                const salaryPaid = salaryRecord ? salaryRecord?.salaryPaid : false;
+                const transactionId = salaryRecord ? salaryRecord?.transactionId : "";
 
                 return {
                     employeeId: employee?._id,

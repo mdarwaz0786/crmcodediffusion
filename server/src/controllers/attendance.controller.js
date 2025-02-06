@@ -26,7 +26,7 @@ const calculateTimeDifference = (startTime, endTime) => {
 
 // Helper function to compare two times
 function compareTime(time1, time2) {
-    if (time1 === "" || time2 === "") {
+    if (!time1 || !time2) {
         return;
     };
 
@@ -46,7 +46,7 @@ function compareTime(time1, time2) {
 
 // Helper function to convert time (HH:MM) into minutes
 function timeToMinutes(time) {
-    if (time === "") {
+    if (!time) {
         return;
     };
 
@@ -56,7 +56,7 @@ function timeToMinutes(time) {
 
 // Helper function to convert minutes into time (HH:MM)
 function minutesToTime(minutes) {
-    if (minutes === "") {
+    if (!minutes) {
         return;
     };
 
@@ -67,13 +67,23 @@ function minutesToTime(minutes) {
 
 // Helper function to get the day name from a date string
 const getDayName = (dateString) => {
-    if (dateString) {
+    if (!dateString) {
         return;
     };
 
     const date = new Date(dateString);
     const options = { weekday: 'long' };
     return date.toLocaleDateString('en-US', options);
+};
+
+// Function to convert UTC date to IST
+const convertToIST = (date) => {
+    if (!date) {
+        return;
+    };
+
+    const IST_OFFSET = 5.5 * 60 * 60 * 1000;
+    return new Date(date.getTime() + IST_OFFSET);
 };
 
 // Create or Update Attendance with Punch-in
@@ -290,17 +300,30 @@ export const fetchMonthlyStatistic = async (req, res) => {
     try {
         const { employeeId, month } = req.query;
 
-        if (!employeeId || !month) {
-            return res.status(400).json({ success: false, message: "Employee ID and month in YYYY-MM format are required." });
+        if (!employeeId) {
+            return res.status(400).json({ success: false, message: "Employee ID is required." });
         };
+
+        if (!month) {
+            return res.status(400).json({ success: false, message: "Month in YYYY-MM format is required." });
+        };
+
+        // Calculate the start and end dates for the month
+        const [year, monthIndex] = month?.split("-")?.map(Number);
+        let startDate = new Date(year, monthIndex - 1, 1);
+        let endDate = new Date(year, monthIndex, 0);
+
+        // Convert start and end dates to IST
+        startDate = convertToIST(startDate);
+        endDate = convertToIST(endDate);
 
         // Fetch attendance records for the specified employee and month
         const attendanceRecords = await Attendance.find({
             employee: employeeId,
-            attendanceDate: { $regex: `^${month}-` },
+            attendanceDate: { $gte: startDate?.toISOString()?.split("T")[0], $lte: endDate?.toISOString()?.split("T")[0] },
         });
 
-        if (!attendanceRecords || attendanceRecords.length === 0) {
+        if (!attendanceRecords || attendanceRecords?.length === 0) {
             return res.status(400).json({ success: false, message: "Attendance not found" });
         };
 
@@ -324,68 +347,67 @@ export const fetchMonthlyStatistic = async (req, res) => {
 
         // Iterate over attendance records to calculate statistics
         attendanceRecords.forEach((record) => {
-            if (["Present", "Half Day"].includes(record.status)) {
-                if (record.status === "Present") {
+            if (["Present", "Half Day"].includes(record?.status)) {
+                if (record?.status === "Present") {
                     totalPresent++;
                 };
-                if (record.status === "Half Day") {
+                if (record?.status === "Half Day") {
                     totalHalfDays++;
                 };
-                if (record.hoursWorked) {
-                    totalMinutesWorked += timeToMinutes(record.hoursWorked);
+                if (record?.hoursWorked) {
+                    totalMinutesWorked += timeToMinutes(record?.hoursWorked);
                 };
-                if (record.lateIn !== "00:00") {
+                if (record?.lateIn !== "00:00") {
                     totalLateIn++;
                 };
-                if (record.punchInTime) {
-                    totalPunchInMinutes += timeToMinutes(record.punchInTime);
+                if (record?.punchInTime) {
+                    totalPunchInMinutes += timeToMinutes(record?.punchInTime);
                     punchInCount++;
                 };
-                if (record.punchOutTime) {
-                    totalPunchOutMinutes += timeToMinutes(record.punchOutTime);
+                if (record?.punchOutTime) {
+                    totalPunchOutMinutes += timeToMinutes(record?.punchOutTime);
                     punchOutCount++;
                 };
-            } else if (record.status === "Absent") {
+            } else if (record?.status === "Absent") {
                 totalAbsent++;
-            } else if (record.status === "On Leave") {
+            } else if (record?.status === "On Leave") {
                 totalLeave++;
-            } else if (record.status === "Holiday") {
+            } else if (record?.status === "Holiday") {
                 totalHolidays++;
-            } else if (record.status === "Sunday") {
+            } else if (record?.status === "Sunday") {
                 totalSundays++;
-            } else if (record.status === "Saturday") {
+            } else if (record?.status === "Saturday") {
                 totalSaturDays++;
-            } else if (record.status === "Comp Off") {
+            } else if (record?.status === "Comp Off") {
                 totalCompOff++;
             };
         });
 
         // Calculate average punch-in and punch-out times
         const averagePunchInTime = punchInCount
-            ? minutesToTime(Math.floor(totalPunchInMinutes / punchInCount))
+            ? minutesToTime(totalPunchInMinutes / punchInCount)
             : null;
 
         const averagePunchOutTime = punchOutCount
-            ? minutesToTime(Math.floor(totalPunchOutMinutes / punchOutCount))
+            ? minutesToTime(totalPunchOutMinutes / punchOutCount)
             : null;
 
         // Calculate total days in the month
-        const [year, monthIndex] = month.split("-").map(Number);
         const daysInMonth = new Date(year, monthIndex, 0).getDate();
 
-        const totalWorkingDays = totalPresent + totalAbsent + totalLeave + totalHalfDays;
+        const totalWorkingDays = totalPresent + totalHalfDays + totalAbsent + totalLeave;
 
         const employee = await Team.findById(employeeId);
 
-        if (!employee) {
-            return res.status(404).json({ success: false, message: "Employee not found." });
+        if (!employee || employee?.length === 0) {
+            return res.status(404).json({ success: false, message: "Employees not found." });
         };
 
-        const [requiredHours, requiredMinutes] = employee.workingHoursPerDay.split(":").map(Number);
+        const [requiredHours, requiredMinutes] = employee?.workingHoursPerDay?.split(":")?.map(Number);
         const dailyThreshold = requiredHours * 60 + requiredMinutes;
 
         const totalWorkingHours = minutesToTime(totalWorkingDays * dailyThreshold);
-        const requiredWorkingHours = minutesToTime(totalPresent + totalHalfDays * dailyThreshold);
+        const requiredWorkingHours = minutesToTime(totalPresent + totalHalfDays) * dailyThreshold;
         const totalHoursWorked = minutesToTime(totalMinutesWorked);
 
         // Prepare the response
