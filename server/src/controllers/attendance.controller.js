@@ -276,25 +276,6 @@ export const fetchAllAttendance = async (req, res) => {
     };
 };
 
-// Get a single attendance record by ID
-export const fetchSingleAttendance = async (req, res) => {
-    try {
-        const attendance = await Attendance
-            .findById(req.params.id)
-            .populate('employee')
-            .exec();
-
-        if (!attendance) {
-            return res.status(404).json({ success: false, message: 'Attendance not found' });
-        };
-
-        return res.status(200).json({ success: true, attendance });
-    } catch (error) {
-        console.log(error.message);
-        return res.status(500).json({ success: false, message: error.message });
-    };
-};
-
 // Fetch monthly statistic
 export const fetchMonthlyStatistic = async (req, res) => {
     try {
@@ -430,6 +411,25 @@ export const fetchMonthlyStatistic = async (req, res) => {
             employeeLateInDays: totalLateIn,
             averagePunchInTime,
             averagePunchOutTime,
+        };
+
+        return res.status(200).json({ success: true, attendance });
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json({ success: false, message: error.message });
+    };
+};
+
+// Get a single attendance record by ID
+export const fetchSingleAttendance = async (req, res) => {
+    try {
+        const attendance = await Attendance
+            .findById(req.params.id)
+            .populate('employee')
+            .exec();
+
+        if (!attendance) {
+            return res.status(404).json({ success: false, message: 'Attendance not found' });
         };
 
         return res.status(200).json({ success: true, attendance });

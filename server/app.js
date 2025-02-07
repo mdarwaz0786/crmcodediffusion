@@ -27,6 +27,7 @@ import projectPriorityRoute from "./src/routes/projectPriority.route.js";
 import invoiceRoute from "./src/routes/invoice.route.js";
 import proformaInvoiceRoute from "./src/routes/proformaInvoice.route.js";
 import attendanceRoute from "./src/routes/attendance.route.js";
+import newAttendanceRoute from "./src/routes/newAttendance.route.js";
 import salaryRoute from "./src/routes/salary.route.js";
 import holidayRoute from "./src/routes/holiday.route.js";
 import leaveApprovalRoute from "./src/routes/leaveApproval.route.js";
@@ -89,6 +90,8 @@ server.use("/api/v1/invoice", invoiceRoute);
 server.use("/api/v1/proformaInvoice", proformaInvoiceRoute);
 // Attendance route
 server.use("/api/v1/attendance", attendanceRoute);
+// New attendance route
+server.use("/api/v1/newAttendance", newAttendanceRoute);
 // Salary route
 server.use("/api/v1/salary", salaryRoute);
 // Holiday route

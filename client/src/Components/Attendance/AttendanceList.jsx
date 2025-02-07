@@ -21,13 +21,11 @@ const AttendanceList = () => {
   const [employee, setEmployee] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [singleEmployee, setSingleEmployee] = useState();
-  const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(true);
   const permissions = team?.role?.permissions?.attendance;
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
     month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
-    sort: "Ascending",
   });
 
   const fetchAllEmployee = async () => {
@@ -80,7 +78,7 @@ const AttendanceList = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${base_url}/api/v1/attendance/all-attendance`, {
+      const response = await axios.get(`${base_url}/api/v1/newAttendance/monthly-newStatistic`, {
         headers: {
           Authorization: validToken,
         },
@@ -88,13 +86,10 @@ const AttendanceList = () => {
           year: filters.year,
           month: filters.month,
           employeeId: selectedEmployee,
-          sort: filters.sort,
         },
       });
-
       if (response?.data?.success) {
-        setData(response?.data?.attendance);
-        setTotal(response?.data?.totalCount);
+        setData(response?.data?.calendarData);
         setLoading(false);
       };
     } catch (error) {
@@ -102,6 +97,8 @@ const AttendanceList = () => {
       setLoading(false);
     };
   };
+
+  console.log(data);
 
   const handleYearChange = (e) => {
     setFilters((prevFilters) => ({
@@ -123,7 +120,7 @@ const AttendanceList = () => {
     if (!isLoading && team && selectedEmployee && filters.month && filters.year && permissions?.access) {
       fetchAllData();
     };
-  }, [filters.month, filters.year, filters.sort, selectedEmployee, isLoading, team, permissions]);
+  }, [filters.month, filters.year, selectedEmployee, isLoading, team, permissions]);
 
   const exportAttendanceListAsExcel = () => {
     if (data?.length === 0) {
@@ -233,7 +230,7 @@ const AttendanceList = () => {
               <div className="page-header">
                 <div className="row align-items-center">
                   <div className="col-4">
-                    <h4 className="page-title">Attendances<span className="count-title">{total}</span></h4>
+                    <h4 className="page-title">Attendances<span className="count-title"></span></h4>
                   </div>
                   <div className="col-8 text-end">
                     <div className="head-icons">

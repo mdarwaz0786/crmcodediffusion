@@ -1,0 +1,536 @@
+import Attendance from '../models/attendance.model.js';
+import Team from "../models/team.model.js";
+import Holiday from "../models/holiday.model.js";
+import { sendEmail } from "../services/emailService.js";
+import mongoose from "mongoose";
+import firebase from "../firebase/index.js";
+
+// Calculate time difference in HH:MM format
+const calculateTimeDifference = (startTime, endTime) => {
+  if (!startTime || !endTime) {
+    return;
+  };
+
+  const [startHours, startMinutes] = startTime.split(":").map(Number);
+  const [endHours, endMinutes] = endTime.split(":").map(Number);
+
+  const startTotalMinutes = startHours * 60 + startMinutes;
+  const endTotalMinutes = endHours * 60 + endMinutes;
+
+  const differenceMinutes = Math.max(endTotalMinutes - startTotalMinutes, 0);
+  const hours = Math.floor(differenceMinutes / 60);
+  const minutes = differenceMinutes % 60;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+};
+
+// Helper function to compare two times
+function compareTime(time1, time2) {
+  if (!time1 || !time2) {
+    return;
+  };
+
+  const [hours1, minutes1] = time1.split(":").map(Number);
+  const [hours2, minutes2] = time2.split(":").map(Number);
+
+  if (hours1 > hours2 || (hours1 === hours2 && minutes1 > minutes2)) {
+    return 1;
+  };
+
+  if (hours1 === hours2 && minutes1 === minutes2) {
+    return 0;
+  };
+
+  return -1;
+};
+
+// Helper function to convert time (HH:MM) into minutes
+function timeToMinutes(time) {
+  if (!time) {
+    return;
+  };
+
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+};
+
+// Helper function to convert minutes into time (HH:MM)
+function minutesToTime(minutes) {
+  if (!minutes) {
+    return;
+  };
+
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+};
+
+// Helper function to get the day name from a date string
+const getDayName = (dateString) => {
+  if (!dateString) {
+    return;
+  };
+
+  const date = new Date(dateString);
+  const options = { weekday: 'long' };
+  return date.toLocaleDateString('en-US', options);
+};
+
+// Function to convert UTC date to IST
+const convertToIST = (date) => {
+  if (!date) {
+    return;
+  };
+
+  const IST_OFFSET = 5.5 * 60 * 60 * 1000;
+  return new Date(date.getTime() + IST_OFFSET);
+};
+
+// Create or Update Attendance with Punch-in
+export const newCreateAttendance = async (req, res) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+    const { employee, attendanceDate, punchInTime } = req.body;
+
+    if (!employee) {
+      return res.status(400).json({ success: false, message: "Employee is required" });
+    };
+
+    if (!attendanceDate) {
+      return res.status(400).json({ success: false, message: "Attendance Date is required" });
+    };
+
+    if (!punchInTime) {
+      return res.status(400).json({ success: false, message: "Punch in time is required" });
+    };
+
+    const EXPECTED_PUNCH_IN = "10:00";
+    const HALF_DAY_THRESHOLD = "11:00";
+
+    // Calculate lateIn
+    const lateIn = calculateTimeDifference(EXPECTED_PUNCH_IN, punchInTime);
+
+    // Determine attendance status based on punch-in time
+    const attendanceStatus = compareTime(punchInTime, HALF_DAY_THRESHOLD) === 1 ? "Half Day" : "Present";
+
+    // Check if the attendance date is a holiday
+    const holiday = await Holiday.findOne({ date: attendanceDate }).session(session);
+
+    // Get the day name from attendanceDate
+    const dayName = getDayName(attendanceDate);
+
+    // Upsert attendance record with atomic operation
+    const result = await Attendance.findOneAndUpdate(
+      { employee, attendanceDate, punchIn: false },
+      {
+        $set: {
+          punchInTime,
+          punchIn: true,
+          status: attendanceStatus,
+          lateIn,
+          dayName,
+          isHoliday: holiday ? true : false,
+        },
+      },
+      {
+        upsert: true,
+        new: true,
+      },
+    ).session(session);
+
+    // Check if the day is Sunday or if it is a holiday
+    if (dayName === "Sunday" || holiday) {
+      let reason = "";
+
+      // If both conditions are true
+      if (dayName === "Sunday" && holiday) {
+        reason = `Worked on ${dayName}, ${holiday.reason}`;
+      } else if (dayName === "Sunday") {
+        reason = `Worked on ${dayName}`;
+      } else if (holiday) {
+        reason = `Worked on ${holiday.reason}`;
+      };
+
+      const compOffEntry = {
+        date: attendanceDate,
+        isApplied: false,
+        isApproved: false,
+        isUtilized: false,
+        reason,
+      };
+
+      // Update the eligibleCompOffDate
+      await Team.findOneAndUpdate(
+        { _id: employee },
+        { $addToSet: { eligibleCompOffDate: compOffEntry } },
+      ).session(session);
+    };
+
+    // Send email
+    const sendBy = await Team.findById(employee);
+    const subject = `${sendBy?.name} Marked Punch-In At ${punchInTime} on Date ${attendanceDate}`;
+    const htmlContent = `<p>${sendBy?.name} marked punch-in at ${punchInTime} on date ${attendanceDate}.</p>`;
+    sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+
+    // Send push notification to admin
+    const teams = await Team
+      .find()
+      .populate({ path: 'role', select: "name" })
+      .exec();
+
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
+
+    if (filteredAdmins?.length > 0) {
+      const payload = {
+        notification: {
+          title: `${sendBy?.name} Marked Punch-In At ${punchInTime}`,
+          body: `${sendBy?.name} marked punch-in today at ${punchInTime}.`,
+        },
+      };
+
+      await Promise.allSettled(filteredAdmins?.map((admin) => firebase.messaging().send({ ...payload, token: admin?.fcmToken })));
+    };
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(201).json({ success: true, attendance: result });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.log(error.message);
+    return res.status(500).json({ success: false, message: error.message });
+  };
+};
+
+// Get all attendance
+export const newFetchAllAttendance = async (req, res) => {
+  try {
+    const { date, employeeId } = req.query;
+    let query = {};
+    let sort = {};
+
+    // Filter by exact date
+    if (date) {
+      query.attendanceDate = date;
+    };
+
+    // Filter by year only (all months)
+    if (req.query.year && !req.query.month) {
+      const year = req.query.year;
+      query.attendanceDate = {
+        $gte: `${year}-01-01`,
+        $lte: `${year}-12-31`,
+      };
+    };
+
+    // Filter by month only (all years)
+    if (req.query.month && !req.query.year) {
+      const month = req.query.month;
+      query.attendanceDate = { $regex: `-${month}-`, $options: "i" };
+    };
+
+    // Filter by both year and month
+    if (req.query.year && req.query.month) {
+      const year = req.query.year;
+      const month = req.query.month;
+
+      query.attendanceDate = {
+        $gte: `${year}-${month}-01`,
+        $lte: `${year}-${month}-31`,
+      };
+    };
+
+    // Filter by employee ID if provided
+    if (employeeId) {
+      query.employee = employeeId;
+    };
+
+    // Handle sorting
+    if (req.query.sort === 'Ascending') {
+      sort = { attendanceDate: 1 };
+    } else {
+      sort = { attendanceDate: -1 };
+    };
+
+    // Calculate total count
+    const totalCount = await Attendance.countDocuments(query);
+
+    // Fetch attendance with the constructed query
+    const attendance = await Attendance
+      .find(query)
+      .sort(sort)
+      .populate('employee')
+      .exec();
+
+    if (!attendance) {
+      return res.status(404).json({ success: false, message: 'Attendance not found' });
+    };
+
+    return res.status(200).json({ success: true, attendance, totalCount });
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ success: false, message: error.message });
+  };
+};
+
+// Fetch monthly statistic
+export const newFetchMonthlyStatistic = async (req, res) => {
+  try {
+    const { employeeId, month } = req.query;
+
+    if (!employeeId) {
+      return res.status(400).json({ success: false, message: "Employee ID is required." });
+    };
+
+    if (!month) {
+      return res.status(400).json({ success: false, message: "Month in YYYY-MM format is required." });
+    };
+
+    const employee = await Team.findOne({ _id: employeeId });
+
+    if (!employee) {
+      return res.status(404).json({ success: false, message: "Employee not found." });
+    };
+
+    const [year, monthIndex] = month?.split("-")?.map(Number);
+    const totalDaysInMonth = new Date(year, monthIndex, 0).getDate();
+
+    let calendarData = [];
+
+    let totalSunday = 0;
+    let totalHoliday = 0;
+    let totalOnLeave = 0;
+    let totalCompOff = 0;
+    let totalPresent = 0;
+    let totalHalfDay = 0;
+    let totalAbsent = 0;
+
+    for (let day = 1; day <= totalDaysInMonth; day++) {
+      let status = "";
+      let punchInTime = "";
+      let punchOutTime = "";
+      let hoursWorked = "";
+
+      let date = new Date(year, monthIndex - 1, day);
+      let formattedDate = convertToIST(date).toISOString().split("T")[0];
+      let currentDate = convertToIST(new Date()).toISOString().split("T")[0];
+
+      if (formattedDate > currentDate) {
+      } else if (date.getDay() === 0) {
+        let attendanceRecord = await Attendance.findOne({
+          employee: employeeId,
+          attendanceDate: formattedDate,
+          status: { $in: ["Present", "Half Day"] },
+        }).select("attendanceDate status punchInTime punchOutTime hoursWorked");
+        if (attendanceRecord) {
+          status = attendanceRecord?.status;
+          punchInTime = attendanceRecord.punchInTime;
+          punchOutTime = attendanceRecord.punchOutTime;
+          hoursWorked = attendanceRecord.hoursWorked;
+          if (attendanceRecord?.status === "Present") {
+            totalPresent++
+          } else if (attendanceRecord?.status === "Half Day") {
+            totalHalfDay++;
+          };
+        } else {
+          status = "Sunday";
+          totalSunday++;
+        };
+      } else {
+        let holiday = await Holiday.findOne({ date: formattedDate });
+        let leaveRecord = employee?.approvedLeaves?.some((leave) => leave?.date === formattedDate);
+        let compOffRecord = employee?.eligibleCompOffDate?.some((comp) => comp?.utilizedDate === formattedDate);
+
+        if (holiday) {
+          status = "Holiday";
+          totalHoliday++;
+        } else if (compOffRecord) {
+          status = "Comp Off";
+          totalCompOff++;
+        } else if (leaveRecord) {
+          status = "On Leave";
+          totalOnLeave++;
+        } else {
+          let attendanceRecord = await Attendance.findOne({
+            employee: employeeId,
+            attendanceDate: formattedDate,
+            status: { $in: ["Present", "Half Day"] },
+          }).select("employee attendanceDate status punchInTime punchOutTime hoursWorked");
+          if (attendanceRecord) {
+            status = attendanceRecord?.status;
+            punchInTime = attendanceRecord?.punchInTime;
+            punchOutTime = attendanceRecord?.punchOutTime;
+            hoursWorked = attendanceRecord?.hoursWorked;
+            if (attendanceRecord?.status === "Present") {
+              totalPresent++
+            } else if (attendanceRecord?.status === "Half Day") {
+              totalHalfDay++;
+            };
+          } else {
+            status = "Absent";
+            totalAbsent++;
+          };
+        };
+      };
+
+      let attendanceObject = {
+        AttendanceDate: formattedDate,
+        status: status,
+      };
+
+      if (punchInTime) {
+        attendanceObject.punchInTime = punchInTime;
+      };
+
+      if (punchOutTime) {
+        attendanceObject.punchOutTime = punchOutTime;
+      };
+
+      if (hoursWorked) {
+        attendanceObject.hoursWorked = hoursWorked;
+      };
+
+      calendarData.push(attendanceObject);
+    };
+
+    let companyWorkingDays = calendarData?.length - (totalHoliday + totalSunday);
+    let companyWorkingHours = companyWorkingDays * 8.5;
+
+    const monthlyStatics = {
+      employee: employeeId,
+      month,
+      companyWorkingDays,
+      companyWorkingHours,
+      totalSunday,
+      totalHoliday,
+      totalOnLeave,
+      totalCompOff,
+      totalPresent,
+      totalHalfDay,
+      totalAbsent,
+    };
+
+    return res.status(200).json({ success: true, calendarData, monthlyStatics });
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ success: false, message: error.message });
+  };
+};
+
+// Get a single attendance record by ID
+export const newFetchSingleAttendance = async (req, res) => {
+  try {
+    const attendance = await Attendance
+      .findById(req.params.id)
+      .populate('employee')
+      .exec();
+
+    if (!attendance) {
+      return res.status(404).json({ success: false, message: 'Attendance not found' });
+    };
+
+    return res.status(200).json({ success: true, attendance });
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ success: false, message: error.message });
+  };
+};
+
+// Update attendance with punch-out
+export const newUpdateAttendance = async (req, res) => {
+  try {
+    const { employee, attendanceDate, punchOutTime } = req.body;
+
+    if (!employee) {
+      return res.status(400).json({ success: false, message: "Employee is required" });
+    };
+
+    if (!attendanceDate) {
+      return res.status(400).json({ success: false, message: "Date is required" });
+    };
+
+    if (!punchOutTime) {
+      return res.status(400).json({ success: false, message: "Punch out time is required" });
+    };
+
+    // Find punch in record
+    const attendance = await Attendance.findOne({
+      employee,
+      attendanceDate,
+      punchIn: true,
+    });
+
+    if (!attendance) {
+      return res.status(400).json({ success: false, message: `Punch in not found for date ${attendanceDate}` });
+    };
+
+    if (attendance.punchInTime === punchOutTime) {
+      return res.status(400).json({ success: false, message: `There should be gap between punch in and punch out` });
+    };
+
+    // Update punch out details
+    const updatedAttendance = await Attendance.findOneAndUpdate(
+      { _id: attendance._id },
+      {
+        $set: {
+          punchOutTime,
+          punchOut: true,
+          hoursWorked: calculateTimeDifference(attendance.punchInTime, punchOutTime),
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+      },
+    );
+
+    // Send email
+    const sendBy = await Team.findById(employee);
+    const subject = `${sendBy?.name} Marked Punch-Out At ${punchOutTime} On Date ${attendanceDate}`;
+    const htmlContent = `<p>${sendBy?.name} marked punch-out at ${punchOutTime} on date ${attendanceDate}.</p>`;
+    sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+
+    // Send push notification to admin
+    const teams = await Team
+      .find()
+      .populate({ path: 'role', select: "name" })
+      .exec();
+
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
+
+    if (filteredAdmins?.length > 0) {
+      const payload = {
+        notification: {
+          title: `${sendBy?.name} Marked Punch-Out At ${punchOutTime}`,
+          body: `${sendBy?.name} marked punch-out today at ${punchOutTime}.`,
+        },
+      };
+
+      await Promise.allSettled(filteredAdmins?.map((admin) => firebase.messaging().send({ ...payload, token: admin?.fcmToken })));
+    };
+
+    return res.status(200).json({ success: true, attendance: updatedAttendance });
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ success: false, message: error.message });
+  };
+};
+
+// Delete an attendance record by ID
+export const newDeleteAttendance = async (req, res) => {
+  try {
+    const attendance = await Attendance.findByIdAndDelete(req.params.id);
+
+    if (!attendance) {
+      return res.status(404).json({ success: false, message: 'Attendance not found' });
+    };
+
+    return res.status(204).json({ success: true });
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ success: false, message: error.message });
+  };
+};
