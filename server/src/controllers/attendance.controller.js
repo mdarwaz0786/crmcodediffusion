@@ -385,17 +385,17 @@ export const fetchMonthlyStatistic = async (req, res) => {
 
         // Calculate average punch-in and punch-out times
         const averagePunchInTime = punchInCount
-            ? minutesToTime(totalPunchInMinutes / punchInCount)
+            ? minutesToTime(Math.floor(totalPunchInMinutes / punchInCount))
             : null;
 
         const averagePunchOutTime = punchOutCount
-            ? minutesToTime(totalPunchOutMinutes / punchOutCount)
+            ? minutesToTime(Math.floor(totalPunchOutMinutes / punchOutCount))
             : null;
 
         // Calculate total days in the month
         const daysInMonth = new Date(year, monthIndex, 0).getDate();
 
-        const totalWorkingDays = totalPresent + totalHalfDays + totalAbsent + totalLeave;
+        const totalWorkingDays = daysInMonth - (totalSundays + totalHolidays + totalCompOff);
 
         const employee = await Team.findById(employeeId);
 
