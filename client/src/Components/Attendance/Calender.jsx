@@ -58,6 +58,7 @@ const Calender = ({ attendanceData, month, year, employeeId }) => {
     Sunday: 'blue',
     'On Leave': 'purple',
     'Comp Off': 'orange',
+    'Half Day': '#00ced1',
     default: 'black',
   };
 
