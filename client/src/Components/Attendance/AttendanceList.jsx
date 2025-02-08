@@ -16,11 +16,11 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AttendanceList = () => {
   const { validToken, team, isLoading } = useAuth();
-  const [attendanceSummary, setAttendanceSummary] = useState([]);
   const [data, setData] = useState([]);
+  const [monthlyStatics, setMonthlyStatics] = useState("");
   const [employee, setEmployee] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
-  const [singleEmployee, setSingleEmployee] = useState();
+  const [singleEmployee, setSingleEmployee] = useState("");
   const [loading, setLoading] = useState(true);
   const permissions = team?.role?.permissions?.attendance;
   const [filters, setFilters] = useState({
@@ -83,13 +83,13 @@ const AttendanceList = () => {
           Authorization: validToken,
         },
         params: {
-          year: filters.year,
-          month: filters.month,
+          month: `${filters.year}-${filters.month}`,
           employeeId: selectedEmployee,
         },
       });
       if (response?.data?.success) {
         setData(response?.data?.calendarData);
+        setMonthlyStatics(response?.data?.monthlyStatics);
         setLoading(false);
       };
     } catch (error) {
@@ -97,8 +97,6 @@ const AttendanceList = () => {
       setLoading(false);
     };
   };
-
-  console.log(data);
 
   const handleYearChange = (e) => {
     setFilters((prevFilters) => ({
@@ -131,7 +129,7 @@ const AttendanceList = () => {
     const exportData = data?.map((entry, index) => ({
       "#": index + 1 || "1",
       "Date": formatDate(entry?.attendanceDate) || "N/A",
-      "Name": entry?.employee?.name || "N/A",
+      "Employee Name": singleEmployee?.name || "N/A",
       "Punch in": formatTimeWithAmPm(entry?.punchInTime) || "N/A",
       "Punch out": formatTimeWithAmPm(entry?.punchOutTime) || "N/A",
       "Late in": entry?.lateIn === "00:00" ? "On Time" : formatTimeToHoursMinutes(entry?.lateIn) || "N/A",
@@ -173,43 +171,6 @@ const AttendanceList = () => {
       html2pdf().set(options).from(element).save();
     };
   };
-
-  // Get selected month and year statistic for employee
-  const fetchMonthlyStatistic = async () => {
-    try {
-      const params = {};
-
-      if (filters.month) {
-        params.month = `${filters.year}-${filters.month}`;
-      };
-
-      if (selectedEmployee) {
-        params.employeeId = selectedEmployee;
-      };
-
-      const response = await axios.get(
-        `${base_url}/api/v1/attendance/monthly-statistic`,
-        {
-          params,
-          headers: {
-            Authorization: validToken,
-          },
-        },
-      );
-
-      if (response?.data?.success) {
-        setAttendanceSummary(response?.data?.attendance);
-      };
-    } catch (error) {
-      console.log("Error while fetching monthly statistic:", error?.response?.data?.message);
-    };
-  };
-
-  useEffect(() => {
-    if (selectedEmployee && filters.month && filters.year && validToken && !isLoading) {
-      fetchMonthlyStatistic();
-    };
-  }, [selectedEmployee, filters.month, filters.year, validToken, isLoading]);
 
   if (isLoading) {
     return <Preloader />;
@@ -341,15 +302,16 @@ const AttendanceList = () => {
                   {/* Attendance List */}
                   {
                     loading ? (
-                      <h6>Loading...</h6>
+                      <h4 style={{ textAlign: "center" }}>Loading...</h4>
                     ) : (
-                      <Calendar attendanceData={data} employeeId={selectedEmployee} month={filters.month} year={filters.year} />
+                      <>
+                        <Calendar attendanceData={data} employeeId={selectedEmployee} month={filters.month} year={filters.year} />
+                        <div style={{ marginTop: "3rem" }}>
+                          <AttendanceSummary attendance={monthlyStatics} />
+                        </div>
+                      </>
                     )
                   }
-                  {/* Attendance summary */}
-                  <div style={{ marginTop: "5rem" }}>
-                    <AttendanceSummary attendance={attendanceSummary} />
-                  </div>
                 </div>
               </div>
             </div>

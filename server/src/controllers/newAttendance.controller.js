@@ -282,37 +282,52 @@ export const newFetchMonthlyStatistic = async (req, res) => {
     const { employeeId, month } = req.query;
 
     if (!employeeId) {
-      return res.status(400).json({ success: false, message: "Employee ID is required." });
+      return res.status(400).json({ success: false, message: "Employee Id is required." });
     };
 
     if (!month) {
       return res.status(400).json({ success: false, message: "Month in YYYY-MM format is required." });
     };
 
-    const employee = await Team.findOne({ _id: employeeId });
+    const employee = await Team
+      .findOne({ _id: employeeId })
+      .select("workingHoursPerDay approvedLeaves eligibleCompOffDate");
 
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee not found." });
     };
 
-    const [year, monthIndex] = month?.split("-")?.map(Number);
-    const totalDaysInMonth = new Date(year, monthIndex, 0).getDate();
+    let [requiredHours, requiredMinutes] = employee?.workingHoursPerDay?.split(":")?.map(Number);
+    let dailyThreshold = requiredHours * 60 + requiredMinutes;
+
+    let [year, monthIndex] = month?.split("-")?.map(Number);
+    let totalDaysInMonth = new Date(year, monthIndex, 0).getDate();
 
     let calendarData = [];
 
-    let totalSunday = 0;
-    let totalHoliday = 0;
-    let totalOnLeave = 0;
-    let totalCompOff = 0;
     let totalPresent = 0;
-    let totalHalfDay = 0;
+    let totalHalfDays = 0;
     let totalAbsent = 0;
+    let totalOnLeave = 0;
+    let totalHolidays = 0;
+    let totalSundays = 0;
+    let totalMinutesWorked = 0;
+    let totalLateIn = 0;
+    let totalCompOff = 0;
+
+    let totalPunchInMinutes = 0;
+    let punchInCount = 0;
+    let averagePunchInTime = 0;
+    let totalPunchOutMinutes = 0;
+    let punchOutCount = 0;
+    let averagePunchOutTime = 0;
 
     for (let day = 1; day <= totalDaysInMonth; day++) {
       let status = "";
       let punchInTime = "";
       let punchOutTime = "";
       let hoursWorked = "";
+      let lateIn = "";
 
       let date = new Date(year, monthIndex - 1, day);
       let formattedDate = convertToIST(date).toISOString().split("T")[0];
@@ -324,29 +339,44 @@ export const newFetchMonthlyStatistic = async (req, res) => {
           employee: employeeId,
           attendanceDate: formattedDate,
           status: { $in: ["Present", "Half Day"] },
-        }).select("attendanceDate status punchInTime punchOutTime hoursWorked");
+        }).select("attendanceDate status punchInTime punchOutTime hoursWorked lateIn ");
         if (attendanceRecord) {
           status = attendanceRecord?.status;
-          punchInTime = attendanceRecord.punchInTime;
-          punchOutTime = attendanceRecord.punchOutTime;
-          hoursWorked = attendanceRecord.hoursWorked;
+          punchInTime = attendanceRecord?.punchInTime;
+          punchOutTime = attendanceRecord?.punchOutTime;
+          hoursWorked = attendanceRecord?.hoursWorked;
+          lateIn = attendanceRecord?.lateIn;
           if (attendanceRecord?.status === "Present") {
             totalPresent++
-          } else if (attendanceRecord?.status === "Half Day") {
-            totalHalfDay++;
+          };
+          if (attendanceRecord?.status === "Half Day") {
+            totalHalfDays++;
+          };
+          if (attendanceRecord?.hoursWorked) {
+            totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+          };
+          if (attendanceRecord?.lateIn !== "00:00") {
+            totalLateIn++;
+          };
+          if (attendanceRecord?.punchInTime) {
+            totalPunchInMinutes += timeToMinutes(attendanceRecord?.punchInTime);
+            punchInCount++;
+          };
+          if (attendanceRecord?.punchOutTime) {
+            totalPunchOutMinutes += timeToMinutes(attendanceRecord?.punchOutTime);
+            punchOutCount++;
           };
         } else {
           status = "Sunday";
-          totalSunday++;
+          totalSundays++;
         };
       } else {
         let holiday = await Holiday.findOne({ date: formattedDate });
         let leaveRecord = employee?.approvedLeaves?.some((leave) => leave?.date === formattedDate);
         let compOffRecord = employee?.eligibleCompOffDate?.some((comp) => comp?.utilizedDate === formattedDate);
-
         if (holiday) {
           status = "Holiday";
-          totalHoliday++;
+          totalHolidays++;
         } else if (compOffRecord) {
           status = "Comp Off";
           totalCompOff++;
@@ -358,16 +388,32 @@ export const newFetchMonthlyStatistic = async (req, res) => {
             employee: employeeId,
             attendanceDate: formattedDate,
             status: { $in: ["Present", "Half Day"] },
-          }).select("employee attendanceDate status punchInTime punchOutTime hoursWorked");
+          }).select("attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
           if (attendanceRecord) {
             status = attendanceRecord?.status;
             punchInTime = attendanceRecord?.punchInTime;
             punchOutTime = attendanceRecord?.punchOutTime;
             hoursWorked = attendanceRecord?.hoursWorked;
+            lateIn = attendanceRecord?.lateIn;
             if (attendanceRecord?.status === "Present") {
-              totalPresent++
-            } else if (attendanceRecord?.status === "Half Day") {
-              totalHalfDay++;
+              totalPresent++;
+            };
+            if (attendanceRecord?.status === "Half Day") {
+              totalHalfDays++;
+            };
+            if (attendanceRecord?.hoursWorked) {
+              totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+            };
+            if (attendanceRecord?.lateIn !== "00:00") {
+              totalLateIn++;
+            };
+            if (attendanceRecord?.punchInTime) {
+              totalPunchInMinutes += timeToMinutes(attendanceRecord?.punchInTime);
+              punchInCount++;
+            };
+            if (attendanceRecord?.punchOutTime) {
+              totalPunchOutMinutes += timeToMinutes(attendanceRecord?.punchOutTime);
+              punchOutCount++;
             };
           } else {
             status = "Absent";
@@ -377,7 +423,7 @@ export const newFetchMonthlyStatistic = async (req, res) => {
       };
 
       let attendanceObject = {
-        AttendanceDate: formattedDate,
+        attendanceDate: formattedDate,
         status: status,
       };
 
@@ -393,24 +439,44 @@ export const newFetchMonthlyStatistic = async (req, res) => {
         attendanceObject.hoursWorked = hoursWorked;
       };
 
+      if (lateIn) {
+        attendanceObject.lateIn = lateIn;
+      };
+
       calendarData.push(attendanceObject);
     };
 
-    let companyWorkingDays = calendarData?.length - (totalHoliday + totalSunday);
-    let companyWorkingHours = companyWorkingDays * 8.5;
+    let companyWorkingDays = calendarData?.length - (totalHolidays + totalSundays + totalCompOff);
+    let companyWorkingHours = minutesToTime(companyWorkingDays * dailyThreshold);
+
+    let requiredWorkingHours = minutesToTime((totalPresent + totalHalfDays) * dailyThreshold);
+
+    averagePunchInTime = punchInCount
+      ? minutesToTime(Math.floor(totalPunchInMinutes / punchInCount))
+      : null;
+
+    averagePunchOutTime = punchOutCount
+      ? minutesToTime(Math.floor(totalPunchOutMinutes / punchOutCount))
+      : null;
 
     const monthlyStatics = {
       employee: employeeId,
       month,
+      totalDaysInMonth,
       companyWorkingDays,
       companyWorkingHours,
-      totalSunday,
-      totalHoliday,
-      totalOnLeave,
-      totalCompOff,
-      totalPresent,
-      totalHalfDay,
-      totalAbsent,
+      totalHolidays,
+      totalSundays,
+      employeePresentDays: totalPresent,
+      employeeHalfDays: totalHalfDays,
+      employeeAbsentDays: totalAbsent,
+      employeeLeaveDays: totalOnLeave,
+      employeeCompOffDays: totalCompOff,
+      employeeWorkingHours: minutesToTime(totalMinutesWorked),
+      employeeRequiredWorkingHours: requiredWorkingHours,
+      employeeLateInDays: totalLateIn,
+      averagePunchInTime,
+      averagePunchOutTime,
     };
 
     return res.status(200).json({ success: true, calendarData, monthlyStatics });
