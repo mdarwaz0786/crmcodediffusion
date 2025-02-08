@@ -79,31 +79,21 @@ const teamSchema = new mongoose.Schema(
       }],
       default: [],
     },
-    leaveBalanceUsedHistory: {
-      type: [{
-        date: { type: String },
-        reason: { type: String, trim: true },
-      }],
-      default: [],
-    },
     approvedLeaves: {
       type: [{
         date: { type: String },
         reason: { type: String },
         approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
-        isUtilized: { type: Boolean, default: false },
       }],
       default: [],
     },
     eligibleCompOffDate: {
       type: [{
-        date: { type: String },
+        workedDate: { type: String },
         reason: { type: String, trim: true },
-        isApplied: { type: Boolean, default: false },
         isApproved: { type: Boolean, default: false },
         approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
-        isUtilized: { type: Boolean, default: false },
-        utilizedDate: { type: String },
+        compOffDate: { type: String },
       }],
       default: [],
     },

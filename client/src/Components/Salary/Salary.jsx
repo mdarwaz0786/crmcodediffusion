@@ -13,6 +13,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const Salary = () => {
   const { validToken, team, isLoading } = useAuth();
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Calculate previous month and year
   const currentDate = new Date();
@@ -27,6 +28,7 @@ const Salary = () => {
 
   const fetchAllData = async () => {
     try {
+      setLoading(true);
       const response = await axios.get(`${base_url}/api/v1/Salary/monthly-salary`, {
         headers: {
           Authorization: validToken,
@@ -41,6 +43,8 @@ const Salary = () => {
       };
     } catch (error) {
       console.log(error.message);
+    } finally {
+      setLoading(false);
     };
   };
 
@@ -224,49 +228,53 @@ const Salary = () => {
                   </div>
                   {/* /Filter */}
 
-                  {/* Salary List */}
-                  <div className="table-responsive custom-table">
-                    <div className="table-responsive custom-table">
-                      <table className="table table-bordered table-striped custom-border">
-                        <thead className="thead-light">
-                          <tr>
-                            <th className="no-sort">
-                              <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                            </th>
-                            <th>#</th>
-                            <th>Employee Name</th>
-                            <th>Monthly Salary</th>
-                            <th>Total Salary</th>
-                            <th>Salary Slip</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {
-                            data?.map((d, index) => (
-                              <tr key={d?._id}>
-                                <td className="no-sort">
+                  {
+                    loading ? (
+                      <h4 style={{ textAlign: "center", marginTop: "1rem" }}>Calculating Salary...</h4>
+                    ) : (
+                      <div className="table-responsive custom-table">
+                        <div className="table-responsive custom-table">
+                          <table className="table table-bordered table-striped custom-border">
+                            <thead className="thead-light">
+                              <tr>
+                                <th className="no-sort">
                                   <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                                </td>
-                                <td>{index + 1}</td>
-                                <td>{d?.employeeName}</td>
-                                <td>{d?.monthlySalary}</td>
-                                <td>{d?.totalSalary}</td>
-                                <td style={{ padding: "0.3rem" }}>
-                                  <Link style={{ marginRight: "1rem" }} to={d?.salaryPaid === false ? `/pay-salary/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}` : ""}><button className="btn btn-primary">{d?.salaryPaid ? "Paid" : "Pay Salary"}</button></Link>
-                                  {
-                                    d?.salaryPaid && (
-                                      <Link style={{ marginRight: "1rem" }} to={`/salary-slip/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}/${d?.transactionId}`}><button className="btn btn-primary">View</button></Link>
-                                    )
-                                  }
-                                </td>
+                                </th>
+                                <th>#</th>
+                                <th>Employee Name</th>
+                                <th>Monthly Salary</th>
+                                <th>Total Salary</th>
+                                <th>Salary Slip</th>
                               </tr>
-                            ))
-                          }
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  {/* /Salary List */}
+                            </thead>
+                            <tbody>
+                              {
+                                data?.map((d, index) => (
+                                  <tr key={d?._id}>
+                                    <td className="no-sort">
+                                      <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
+                                    </td>
+                                    <td>{index + 1}</td>
+                                    <td>{d?.employeeName}</td>
+                                    <td>{d?.monthlySalary}</td>
+                                    <td>{d?.totalSalary}</td>
+                                    <td style={{ padding: "0.3rem" }}>
+                                      <Link style={{ marginRight: "1rem" }} to={d?.salaryPaid === false ? `/pay-salary/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}` : ""}><button className="btn btn-primary">{d?.salaryPaid ? "Paid" : "Pay Salary"}</button></Link>
+                                      {
+                                        d?.salaryPaid && (
+                                          <Link style={{ marginRight: "1rem" }} to={`/salary-slip/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}/${d?.transactionId}`}><button className="btn btn-primary">View</button></Link>
+                                        )
+                                      }
+                                    </td>
+                                  </tr>
+                                ))
+                              }
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )
+                  }
                 </div>
               </div>
             </div>

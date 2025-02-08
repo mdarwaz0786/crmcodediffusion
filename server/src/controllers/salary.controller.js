@@ -1,6 +1,7 @@
 import Team from "../models/team.model.js";
 import Attendance from "../models/attendance.model.js";
 import Salary from "../models/salary.model.js";
+import Holiday from "../models/holiday.model.js";
 
 // Helper function to convert time (HH:MM) into minutes
 function timeToMinutes(time) {
@@ -10,6 +11,17 @@ function timeToMinutes(time) {
 
     const [hours, minutes] = time.split(":").map(Number);
     return hours * 60 + minutes;
+};
+
+// Helper function to convert minutes into time (HH:MM)
+function minutesToTime(minutes) {
+    if (!minutes) {
+        return;
+    };
+
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 };
 
 // Function to convert UTC date to IST
@@ -167,7 +179,7 @@ export const fetchMonthlySalary = async (req, res) => {
         const { month } = req.query;
 
         if (!month) {
-            return res.status(400).json({ success: false, message: "Month is required." });
+            return res.status(400).json({ success: false, message: "Month in YYYY-MM format is required." });
         };
 
         const employees = await Team.find();
@@ -260,6 +272,166 @@ export const fetchMonthlySalary = async (req, res) => {
                     totalDeduction: totalDeduction.toFixed(2),
                     salaryPaid,
                     transactionId,
+                };
+            }),
+        );
+
+        return res.status(200).json({ success: true, salaryData });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    };
+};
+
+// New fetch monthly salary for employee
+export const newFetchMonthlySalary = async (req, res) => {
+    try {
+        const { month } = req.query;
+
+        if (!month) {
+            return res.status(400).json({ success: false, message: "Month in YYYY-MM format is required." });
+        };
+
+        const employees = await Team
+            .find()
+            .select("workingHoursPerDay approvedLeaves eligibleCompOffDate monthlySalary name");
+
+        if (!employees || employees?.length === 0) {
+            return res.status(400).json({ success: false, message: "Employees not found." });
+        };
+
+        const salaryData = await Promise.all(
+            employees?.map(async (employee) => {
+                let [requiredHours, requiredMinutes] = employee?.workingHoursPerDay?.split(":")?.map(Number);
+                let dailyThreshold = requiredHours * 60 + requiredMinutes;
+                let monthlySalary = employee?.monthlySalary;
+
+                let [year, monthIndex] = month?.split("-")?.map(Number);
+                let totalDaysInMonth = new Date(year, monthIndex, 0).getDate();
+
+                let totalPresent = 0;
+                let totalHalfDays = 0;
+                let totalAbsent = 0;
+                let totalCompOff = 0;
+                let totalOnLeave = 0;
+                let totalHolidays = 0;
+                let totalSundays = 0;
+                let totalMinutesWorked = 0;
+
+                for (let day = 1; day <= totalDaysInMonth; day++) {
+                    let date = new Date(year, monthIndex - 1, day);
+                    let formattedDate = convertToIST(date).toISOString().split("T")[0];
+                    let currentDate = convertToIST(new Date()).toISOString().split("T")[0];
+
+                    if (formattedDate > currentDate) {
+                    } else if (date.getDay() === 0) {
+                        let attendanceRecord = await Attendance.findOne({
+                            employee: employee?._id,
+                            attendanceDate: formattedDate,
+                            status: { $in: ["Present", "Half Day"] },
+                        }).select("hoursWorked status");
+                        if (attendanceRecord) {
+                            if (attendanceRecord?.status === "Present") {
+                                totalPresent++
+                            };
+                            if (attendanceRecord?.status === "Half Day") {
+                                totalHalfDays++;
+                            };
+                            if (attendanceRecord?.hoursWorked) {
+                                totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+                            };
+                        } else {
+                            totalSundays++;
+                        };
+                    } else {
+                        let holiday = await Holiday.findOne({ date: formattedDate });
+                        let leaveRecord = employee?.approvedLeaves?.some((leave) => leave?.date === formattedDate);
+                        let compOffRecord = employee?.eligibleCompOffDate?.some((comp) => comp?.compOffDate === formattedDate);
+                        if (holiday) {
+                            let attendanceRecord = await Attendance.findOne({
+                                employee: employee?._id,
+                                attendanceDate: formattedDate,
+                                status: { $in: ["Present", "Half Day"] },
+                            }).select("hoursWorked status");
+                            if (attendanceRecord) {
+                                if (attendanceRecord?.status === "Present") {
+                                    totalPresent++
+                                };
+                                if (attendanceRecord?.status === "Half Day") {
+                                    totalHalfDays++;
+                                };
+                                if (attendanceRecord?.hoursWorked) {
+                                    totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+                                };
+                            } else {
+                                totalHolidays++;;
+                            };
+                        } else if (compOffRecord) {
+                            totalCompOff++;
+                        } else if (leaveRecord) {
+                            totalOnLeave++;
+                        } else {
+                            let attendanceRecord = await Attendance.findOne({
+                                employee: employee?._id,
+                                attendanceDate: formattedDate,
+                                status: { $in: ["Present", "Half Day"] },
+                            }).select("hoursWorked status");
+                            if (attendanceRecord) {
+                                if (attendanceRecord?.status === "Present") {
+                                    totalPresent++;
+                                };
+                                if (attendanceRecord?.status === "Half Day") {
+                                    totalHalfDays++;
+                                };
+                                if (attendanceRecord?.hoursWorked) {
+                                    totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+                                };
+                            } else {
+                                totalAbsent++;
+                            };
+                        };
+                    };
+                };
+
+                let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalSundays);
+                let companyWorkingMinutes = companyWorkingDays * dailyThreshold;
+
+                // Calculate deduction days
+                let minutesShortfall = companyWorkingMinutes - totalMinutesWorked;
+                let deductionDays = minutesShortfall > 0 ? Math.ceil(minutesShortfall / dailyThreshold) : 0;
+
+                // Calculate total salary
+                let dailySalary = monthlySalary / companyWorkingDays;
+                let totalSalary = (companyWorkingDays - deductionDays + totalOnLeave + totalCompOff) * dailySalary;
+
+                // Calculate total deduction
+                let totalDeduction = monthlySalary - totalSalary;
+
+                // Check if salary has been paid
+                let salaryRecord = await Salary.findOne({
+                    employee: employee?._id,
+                    month: monthIndex < 10 ? (`0${monthIndex}`)?.toString() : monthIndex?.toString(),
+                    year: year.toString(),
+                });
+
+                let salaryPaid = salaryRecord ? salaryRecord?.salaryPaid : false;
+                let transactionId = salaryRecord ? salaryRecord?.transactionId : "";
+
+                return {
+                    employeeId: employee?._id,
+                    employeeName: employee?.name,
+                    monthlySalary,
+                    totalSalary: totalSalary.toFixed(2),
+                    totalDeduction: totalDeduction.toFixed(2),
+                    dailySalary,
+                    salaryPaid,
+                    transactionId,
+                    totalPresent,
+                    totalHalfDays,
+                    totalAbsent,
+                    totalCompOff,
+                    totalOnLeave,
+                    totalHolidays,
+                    totalSundays,
                 };
             }),
         );

@@ -339,7 +339,7 @@ export const newFetchMonthlyStatistic = async (req, res) => {
           employee: employeeId,
           attendanceDate: formattedDate,
           status: { $in: ["Present", "Half Day"] },
-        }).select("attendanceDate status punchInTime punchOutTime hoursWorked lateIn ");
+        }).select("attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
         if (attendanceRecord) {
           status = attendanceRecord?.status;
           punchInTime = attendanceRecord?.punchInTime;
@@ -373,10 +373,43 @@ export const newFetchMonthlyStatistic = async (req, res) => {
       } else {
         let holiday = await Holiday.findOne({ date: formattedDate });
         let leaveRecord = employee?.approvedLeaves?.some((leave) => leave?.date === formattedDate);
-        let compOffRecord = employee?.eligibleCompOffDate?.some((comp) => comp?.utilizedDate === formattedDate);
+        let compOffRecord = employee?.eligibleCompOffDate?.some((comp) => comp?.compOffDate === formattedDate);
         if (holiday) {
-          status = "Holiday";
-          totalHolidays++;
+          let attendanceRecord = await Attendance.findOne({
+            employee: employeeId,
+            attendanceDate: formattedDate,
+            status: { $in: ["Present", "Half Day"] },
+          }).select("attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
+          if (attendanceRecord) {
+            status = attendanceRecord?.status;
+            punchInTime = attendanceRecord?.punchInTime;
+            punchOutTime = attendanceRecord?.punchOutTime;
+            hoursWorked = attendanceRecord?.hoursWorked;
+            lateIn = attendanceRecord?.lateIn;
+            if (attendanceRecord?.status === "Present") {
+              totalPresent++
+            };
+            if (attendanceRecord?.status === "Half Day") {
+              totalHalfDays++;
+            };
+            if (attendanceRecord?.hoursWorked) {
+              totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+            };
+            if (attendanceRecord?.lateIn !== "00:00") {
+              totalLateIn++;
+            };
+            if (attendanceRecord?.punchInTime) {
+              totalPunchInMinutes += timeToMinutes(attendanceRecord?.punchInTime);
+              punchInCount++;
+            };
+            if (attendanceRecord?.punchOutTime) {
+              totalPunchOutMinutes += timeToMinutes(attendanceRecord?.punchOutTime);
+              punchOutCount++;
+            };
+          } else {
+            status = "Holiday";
+            totalHolidays++;
+          };
         } else if (compOffRecord) {
           status = "Comp Off";
           totalCompOff++;
@@ -446,7 +479,7 @@ export const newFetchMonthlyStatistic = async (req, res) => {
       calendarData.push(attendanceObject);
     };
 
-    let companyWorkingDays = calendarData?.length - (totalHolidays + totalSundays + totalCompOff);
+    let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalSundays + totalCompOff);
     let companyWorkingHours = minutesToTime(companyWorkingDays * dailyThreshold);
 
     let requiredWorkingHours = minutesToTime((totalPresent + totalHalfDays) * dailyThreshold);
