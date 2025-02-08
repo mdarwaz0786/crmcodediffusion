@@ -129,10 +129,10 @@ const AttendanceList = () => {
     const exportData = data?.map((entry, index) => ({
       "#": index + 1 || "1",
       "Date": formatDate(entry?.attendanceDate) || "N/A",
-      "Employee Name": singleEmployee?.name || "N/A",
-      "Punch in": formatTimeWithAmPm(entry?.punchInTime) || "N/A",
-      "Punch out": formatTimeWithAmPm(entry?.punchOutTime) || "N/A",
-      "Late in": entry?.lateIn === "00:00" ? "On Time" : formatTimeToHoursMinutes(entry?.lateIn) || "N/A",
+      "Employee": singleEmployee?.name || "N/A",
+      "Punch-in": formatTimeWithAmPm(entry?.punchInTime) || "N/A",
+      "Punch-out": formatTimeWithAmPm(entry?.punchOutTime) || "N/A",
+      "Late-in": entry?.lateIn === "00:00" ? "On Time" : formatTimeToHoursMinutes(entry?.lateIn) || "N/A",
       "Hours Worked": formatTimeToHoursMinutes(entry?.hoursWorked) || "N/A",
       "Status": entry?.status || "N/A",
     }));
@@ -191,7 +191,7 @@ const AttendanceList = () => {
               <div className="page-header">
                 <div className="row align-items-center">
                   <div className="col-4">
-                    <h4 className="page-title">Attendances<span className="count-title"></span></h4>
+                    <h4 className="page-title">Attendances</h4>
                   </div>
                   <div className="col-8 text-end">
                     <div className="head-icons">
