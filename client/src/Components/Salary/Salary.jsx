@@ -8,6 +8,7 @@ import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
 import Preloader from "../../Preloader.jsx";
 import formatDate from "../../Helper/formatDate.js";
+import formatTimeToHoursMinutes from "../../Helper/formatTimeToHoursMinutes.js";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const Salary = () => {
@@ -260,8 +261,8 @@ const Salary = () => {
                                     <td>{d?.employeeName}</td>
                                     <td>{d?.monthlySalary}</td>
                                     <td>{d?.totalSalary}</td>
-                                    <td>{d?.companyWorkingHours}</td>
-                                    <td>{d?.employeeHoursWorked}</td>
+                                    <td>{formatTimeToHoursMinutes(d?.companyWorkingHours)}</td>
+                                    <td>{formatTimeToHoursMinutes(d?.employeeHoursWorked)}</td>
                                     <td style={{ padding: "0.3rem" }}>
                                       <Link style={{ marginRight: "1rem" }} to={d?.salaryPaid === false ? `/pay-salary/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}` : ""}><button className="btn btn-primary">{d?.salaryPaid ? "Paid" : "Pay Salary"}</button></Link>
                                       {

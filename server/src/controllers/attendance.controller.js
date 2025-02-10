@@ -154,10 +154,7 @@ export const createAttendance = async (req, res) => {
             };
 
             const compOffEntry = {
-                date: attendanceDate,
-                isApplied: false,
-                isApproved: false,
-                isUtilized: false,
+                workedDate: attendanceDate,
                 reason,
             };
 

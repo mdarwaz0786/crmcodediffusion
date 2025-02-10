@@ -256,13 +256,13 @@ export const updateCompOff = async (req, res) => {
       await compOff.save({ session });
 
       const updatedTeam = await Team.findOneAndUpdate(
-        { _id: compOff?.employee?._id, "eligibleCompOffDate.date": compOff?.date },
-        { $set: { "eligibleCompOffDate.$.isApproved": true, "eligibleCompOffDate.$.approvedBy": approvedBy } },
+        { _id: compOff?.employee?._id, "eligibleCompOffDate.workedDate": compOff?.date },
+        { $set: { "eligibleCompOffDate.$.isApproved": true, "eligibleCompOffDate.$.approvedBy": approvedBy, "eligibleCompOffDate.$.compOffDate": compOff?.attendanceDate } },
         { new: true, session },
       );
 
       if (!updatedTeam) {
-        throw new Error("Failed to update eligible comp off date.");
+        throw new Error("Failed to approve comp off request.");
       };
 
       sendEmail(compOff?.employee?.email, "Your Comp Off Request Approved", `<p>Your comp off request date ${compOff?.attendanceDate} has been approved.</p><p>Regards,<br/>${approveBy?.name}</p>`);

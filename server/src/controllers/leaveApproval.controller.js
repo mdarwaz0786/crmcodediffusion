@@ -301,7 +301,6 @@ export const updateLeaveApproval = async (req, res) => {
         date: date.toISOString().split("T")[0],
         approvedBy: approverId,
         reason: leaveRequest?.reason,
-        isUtilized: false,
       }));
 
       await Team.findOneAndUpdate(

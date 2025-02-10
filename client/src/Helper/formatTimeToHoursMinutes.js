@@ -1,6 +1,8 @@
 // Function to format time as "08 hours 30 minutes" or return meaningful output
 const formatTimeToHoursMinutes = timeString => {
-  if (!timeString) return ""; // Return empty if time is not provided
+  if (!timeString) {
+    return ""; // Return empty if time is not provided
+  }
 
   const [hours, minutes] = timeString.split(":").map(Number); // Split hours and minutes
 
@@ -16,10 +18,7 @@ const formatTimeToHoursMinutes = timeString => {
     return `${String(hours).padStart(2, "0")} hours`;
   }
 
-  return `${String(hours).padStart(2, "0")} hours ${String(minutes).padStart(
-    2,
-    "0",
-  )} minutes`;
+  return `${String(hours).padStart(2, "0")} hours ${String(minutes).padStart(2, "0")} minutes`;
 };
 
 export default formatTimeToHoursMinutes;
