@@ -244,6 +244,8 @@ const Salary = () => {
                                 <th>Employee Name</th>
                                 <th>Monthly Salary</th>
                                 <th>Total Salary</th>
+                                <th>Company Working Hours</th>
+                                <th>Employee Working Hours</th>
                                 <th>Salary Slip</th>
                               </tr>
                             </thead>
@@ -258,6 +260,8 @@ const Salary = () => {
                                     <td>{d?.employeeName}</td>
                                     <td>{d?.monthlySalary}</td>
                                     <td>{d?.totalSalary}</td>
+                                    <td>{d?.companyWorkingHours}</td>
+                                    <td>{d?.employeeHoursWorked}</td>
                                     <td style={{ padding: "0.3rem" }}>
                                       <Link style={{ marginRight: "1rem" }} to={d?.salaryPaid === false ? `/pay-salary/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}` : ""}><button className="btn btn-primary">{d?.salaryPaid ? "Paid" : "Pay Salary"}</button></Link>
                                       {

@@ -231,7 +231,7 @@ const Header = () => {
                               </li>
                             )
                           }
-                          {
+                          {/* {
                             (team?.role?.permissions?.project?.fields?.workDetail?.show) && (
                               <li>
                                 <Link to="/add-work-detail">
@@ -246,7 +246,7 @@ const Header = () => {
                                 </Link>
                               </li>
                             )
-                          }
+                          } */}
                         </ul>
                       </div>
 
@@ -284,7 +284,7 @@ const Header = () => {
                               </li>
                             )
                           }
-                          {
+                          {/* {
                             (team?.role?.permissions?.projectTiming?.create) && (
                               <li>
                                 <Link to="/add-project-timeline">
@@ -299,7 +299,7 @@ const Header = () => {
                                 </Link>
                               </li>
                             )
-                          }
+                          } */}
                           {
                             (team?.role?.permissions?.projectPriority?.create) && (
                               <li>
@@ -342,22 +342,6 @@ const Header = () => {
                                     </span>
                                     <div className="menu-details-content">
                                       <p>Add Proforma Invoice</p>
-                                    </div>
-                                  </div>
-                                </Link>
-                              </li>
-                            )
-                          }
-                          {
-                            (team?.role?.permissions?.project?.fields?.payment?.show) && (
-                              <li>
-                                <Link to="/add-payment">
-                                  <div className="menu-details">
-                                    <span className="menu-list-icon" style={{ background: "grey" }}>
-                                      <i className="ti ti-credit-card"></i>
-                                    </span>
-                                    <div className="menu-details-content">
-                                      <p>Add Received Payment</p>
                                     </div>
                                   </div>
                                 </Link>

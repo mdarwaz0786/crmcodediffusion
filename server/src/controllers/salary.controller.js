@@ -253,7 +253,6 @@ export const fetchMonthlySalary = async (req, res) => {
                 // Calculate total deduction
                 const totalDeduction = monthlySalary - totalSalary;
 
-
                 // Check if salary has been paid
                 const salaryRecord = await Salary.findOne({
                     employee: employee?._id,
@@ -392,21 +391,33 @@ export const newFetchMonthlySalary = async (req, res) => {
                     };
                 };
 
-                let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalSundays);
-                let companyWorkingMinutes = companyWorkingDays * dailyThreshold;
+                // let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalSundays);
+                // let companyWorkingMinutes = companyWorkingDays * dailyThreshold;
+                // // Calculate deduction days
+                // let minutesShortfall = companyWorkingMinutes - totalMinutesWorked;
+                // let deductionDays = minutesShortfall > 0 ? Math.ceil(minutesShortfall / dailyThreshold) : 0;
+                // // Calculate total salary
+                // let dailySalary = monthlySalary / companyWorkingDays;
+                // let totalSalary = (companyWorkingDays - deductionDays + totalOnLeave + totalCompOff) * dailySalary;
 
-                // Calculate deduction days
+                let companyWorkingMinutes = (totalDaysInMonth - (totalHolidays + totalSundays)) * dailyThreshold;
+
                 let minutesShortfall = companyWorkingMinutes - totalMinutesWorked;
                 let deductionDays = minutesShortfall > 0 ? Math.ceil(minutesShortfall / dailyThreshold) : 0;
 
-                // Calculate total salary
-                let dailySalary = monthlySalary / companyWorkingDays;
-                let totalSalary = (companyWorkingDays - deductionDays + totalOnLeave + totalCompOff) * dailySalary;
+                let dailySalary = monthlySalary / totalDaysInMonth;
+                let totalDeduction = deductionDays * dailySalary;
+                let totalSalary = monthlySalary - totalDeduction;
 
-                // Calculate total deduction
-                let totalDeduction = monthlySalary - totalSalary;
+                let totalLeaveAndCompOff = totalOnLeave + totalCompOff;
+                let salaryOfLeaveAndCompOff;
 
-                // Check if salary has been paid
+                if (totalLeaveAndCompOff > 0) {
+                    salaryOfLeaveAndCompOff = dailySalary * totalLeaveAndCompOff;
+                    totalSalary = totalSalary + salaryOfLeaveAndCompOff;
+                };
+
+                // Check if salary has been paid or not
                 let salaryRecord = await Salary.findOne({
                     employee: employee?._id,
                     month: monthIndex < 10 ? (`0${monthIndex}`)?.toString() : monthIndex?.toString(),
@@ -422,9 +433,11 @@ export const newFetchMonthlySalary = async (req, res) => {
                     monthlySalary,
                     totalSalary: totalSalary.toFixed(2),
                     totalDeduction: totalDeduction.toFixed(2),
-                    dailySalary,
+                    dailySalary: dailySalary.toFixed(2),
                     salaryPaid,
                     transactionId,
+                    companyWorkingHours: minutesToTime(companyWorkingMinutes),
+                    employeeHoursWorked: minutesToTime(totalMinutesWorked),
                     totalPresent,
                     totalHalfDays,
                     totalAbsent,

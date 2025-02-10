@@ -24,6 +24,26 @@ const calculateTimeDifference = (startTime, endTime) => {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 };
 
+// Helper function to compare two times
+function compareTime(time1, time2) {
+  if (!time1 || !time2) {
+    return;
+  };
+
+  const [hours1, minutes1] = time1.split(":").map(Number);
+  const [hours2, minutes2] = time2.split(":").map(Number);
+
+  if (hours1 > hours2 || (hours1 === hours2 && minutes1 > minutes2)) {
+    return 1;
+  };
+
+  if (hours1 === hours2 && minutes1 === minutes2) {
+    return 0;
+  };
+
+  return -1;
+};
+
 // Create a new late punch-in entry
 export const createLatePunchIn = async (req, res) => {
   try {
@@ -62,7 +82,7 @@ export const createLatePunchIn = async (req, res) => {
 
     // Prevent applying for the current date before 18:30 PM
     if (requestedDate === currentDate) {
-      const time = new Date().toTimeString().slice(0, 5);
+      const time = new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: false });
       const [hours, minutes] = time.split(':').map(Number);
 
       const cutoffHours = 18;
@@ -306,7 +326,13 @@ export const updateLatePunchIn = async (req, res) => {
     };
 
     if (status === "Approved") {
+      const EXPECTED_PUNCH_IN = "10:00";
+      const HALF_DAY_THRESHOLD = "11:00";
+      const lateIn = calculateTimeDifference(EXPECTED_PUNCH_IN, latePunchIn?.punchInTime);
+      const attendanceStatus = compareTime(latePunchIn?.punchInTime, HALF_DAY_THRESHOLD) === 1 ? "Half Day" : "Present";
       attendance.punchInTime = latePunchIn?.punchInTime;
+      attendance.status = attendanceStatus;
+      attendance.lateIn = lateIn;
       attendance.hoursWorked = calculateTimeDifference(latePunchIn?.punchInTime, attendance?.punchOutTime);
       await attendance.save({ session });
 

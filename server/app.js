@@ -42,6 +42,7 @@ import latePunchInRoute from "./src/routes/latePunchIn.route.js";
 import compOffRoute from "./src/routes/compOff.route.js";
 import workSummaryRoute from "./src/routes/workSummary.route.js";
 import notificationRoute from "./src/routes/notification.route.js";
+import projectWorkRoute from "./src/routes/projectWork.route.js";
 
 // Directory name for serving index.html file
 const __dirname = path.resolve();
@@ -120,6 +121,8 @@ server.use("/api/v1/compOff", compOffRoute);
 server.use("/api/v1/workSummary", workSummaryRoute);
 // Notification route
 server.use("/api/v1/notification", notificationRoute);
+// Project work route
+server.use("/api/v1/projectWork", projectWorkRoute);
 
 // Middleware for serving client index.html file
 server.use(express.static(path.join(__dirname, "../client/dist")), (req, res, next) => next());

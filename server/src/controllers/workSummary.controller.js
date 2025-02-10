@@ -65,11 +65,9 @@ export const getWorkSummaryById = async (req, res) => {
 export const groupWorkSummaryByEmployee = async (req, res) => {
   try {
     let query = {};
-    let sort = {};
 
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
-    const skip = (page - 1) * limit;
 
     // Filter by year only (all months)
     if (req.query.year && !req.query.month) {

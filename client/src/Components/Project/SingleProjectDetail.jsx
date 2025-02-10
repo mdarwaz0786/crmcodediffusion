@@ -38,12 +38,6 @@ const SingleProjectDetail = () => {
     }
   }, [isLoading, team, permissions, id]);
 
-  function formatDate(isoDate) {
-    const date = new Date(isoDate);
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    return date.toLocaleDateString('en-GB', options);
-  };
-
   const convertToHoursAndMinutes = (hours) => {
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
@@ -128,8 +122,8 @@ const SingleProjectDetail = () => {
                     )
                   }
                   {
-                    (fieldPermissions?.projectTiming?.show) && (
-                      <p className="mb-2"><strong>Project Timeline:</strong> {data?.projectTiming?.name}</p>
+                    (fieldPermissions?.technology?.show) && (
+                      <p className="mb-0"><strong>Technology Used:</strong> {data?.technology?.map((t) => t?.name).join(', ')}</p>
                     )
                   }
                 </div>
@@ -142,13 +136,8 @@ const SingleProjectDetail = () => {
                     )
                   }
                   {
-                    (fieldPermissions?.startDate?.show) && (
-                      <p className="mb-2"><strong>Start Date:</strong> {formatDate(data?.startDate)}</p>
-                    )
-                  }
-                  {
-                    (fieldPermissions?.endDate?.show) && (
-                      <p className="mb-2"><strong>End Date:</strong> {formatDate(data?.endDate)}</p>
+                    (fieldPermissions?.totalHour?.show) && (
+                      <p className="mb-2"><strong>Total Hour:</strong> {convertToHoursAndMinutes(data?.totalHour)}</p>
                     )
                   }
                 </div>
@@ -169,49 +158,6 @@ const SingleProjectDetail = () => {
                     )
                   }
                 </div>
-              </div>
-              <div className="row">
-                <div className="col-md-6 mb-0">
-                  {
-                    (fieldPermissions?.totalHour?.show) && (
-                      <p className="mb-2"><strong>Total Hour:</strong> {convertToHoursAndMinutes(data?.totalHour)}</p>
-                    )
-                  }
-                  {
-                    (fieldPermissions?.totalSpentHour?.show) && (
-                      <p className="mb-2"><strong>Total Spent Hour:</strong> {convertToHoursAndMinutes(data?.totalSpentHour)}</p>
-                    )
-                  }
-                  {
-                    (fieldPermissions?.totalRemainingHour?.show) && (
-                      <p className="mb-2"><strong>Total Remaining Hour:</strong> {convertToHoursAndMinutes(data?.totalRemainingHour)}</p>
-                    )
-                  }
-                </div>
-                <div className="col-md-6 mb-0">
-                  {
-                    (fieldPermissions?.projectPrice?.show) && (
-                      <p className="mb-2"><strong>Project Cost:</strong> ₹{data?.projectPrice}</p>
-                    )
-                  }
-                  {
-                    (fieldPermissions?.totalPaid?.show) && (
-                      <p className="mb-2"><strong>Total Received:</strong> ₹{data?.totalPaid}</p>
-                    )
-                  }
-                  {
-                    (fieldPermissions?.totalDues?.show) && (
-                      <p className="mb-2"><strong>Total Dues:</strong> ₹{data?.totalDues}</p>
-                    )
-                  }
-                </div>
-              </div>
-              <div className="row">
-                {
-                  (fieldPermissions?.technology?.show) && (
-                    <p className="mb-0"><strong>Technology Used:</strong> {data?.technology?.map((t) => t?.name).join(', ')}</p>
-                  )
-                }
               </div>
             </div>
           </div>

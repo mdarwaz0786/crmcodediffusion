@@ -78,6 +78,7 @@ import AddDepartment from "./Components/Project/Department/AddDepartment.jsx";
 import EditDepartment from "./Components/Project/Department/EditDepartment.jsx";
 import AddNotification from "./Components/Notification/AddNotification.jsx";
 import LatePunchIn from "./Components/LatePunchIn/LatePunchIn.jsx";
+import AddProjectWork from "./Components/ProjectWork/AddProjectWork.jsx";
 
 const App = () => {
   return (
@@ -160,6 +161,7 @@ const App = () => {
           <Route path="upload-holiday" element={<HolidayUpload />} />
           <Route path="edit-holiday/:id" element={<EditHoliday />} />
           <Route path="send-notification" element={<AddNotification />} />
+          <Route path="update-project-status/:id" element={<AddProjectWork />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />

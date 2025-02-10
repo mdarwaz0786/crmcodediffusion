@@ -61,7 +61,7 @@ export const createMissedPunchOut = async (req, res) => {
 
     // Prevent applying for the current date before 18:30 PM
     if (requestedDate === currentDate) {
-      const time = new Date().toTimeString().slice(0, 5);
+      const time = new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: false });
       const [hours, minutes] = time.split(':').map(Number);
 
       const cutoffHours = 18;
