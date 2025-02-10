@@ -245,8 +245,7 @@ const Salary = () => {
                                 <th>Employee Name</th>
                                 <th>Monthly Salary</th>
                                 <th>Total Salary</th>
-                                <th>Company Working Hours</th>
-                                <th>Employee Working Hours</th>
+                                <th>Salary Detail</th>
                                 <th>Salary Slip</th>
                               </tr>
                             </thead>
@@ -261,8 +260,14 @@ const Salary = () => {
                                     <td>{d?.employeeName}</td>
                                     <td>{d?.monthlySalary}</td>
                                     <td>{d?.totalSalary}</td>
-                                    <td>{formatTimeToHoursMinutes(d?.companyWorkingHours)}</td>
-                                    <td>{formatTimeToHoursMinutes(d?.employeeHoursWorked)}</td>
+                                    <td>
+                                      <div><strong>Company Working Hours: </strong>{formatTimeToHoursMinutes(d?.companyWorkingHours)}</div>
+                                      <div><strong>Employee Working Hours: </strong>{formatTimeToHoursMinutes(d?.employeeHoursWorked)}</div>
+                                      <div><strong>Hours Shortfall: </strong>{formatTimeToHoursMinutes(d?.employeeHoursShortfall)}</div>
+                                      <div><strong>Total Deduction Days: </strong>{d?.deductionDays} Days</div>
+                                      <div><strong>Daily Salary: </strong>{d?.dailySalary}</div>
+                                      <div><strong>Total Salary Deducted: </strong>{d?.totalDeduction}</div>
+                                    </td>
                                     <td style={{ padding: "0.3rem" }}>
                                       <Link style={{ marginRight: "1rem" }} to={d?.salaryPaid === false ? `/pay-salary/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}` : ""}><button className="btn btn-primary">{d?.salaryPaid ? "Paid" : "Pay Salary"}</button></Link>
                                       {

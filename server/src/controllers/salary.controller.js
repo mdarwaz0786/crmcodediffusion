@@ -438,6 +438,8 @@ export const newFetchMonthlySalary = async (req, res) => {
                     transactionId,
                     companyWorkingHours: minutesToTime(companyWorkingMinutes),
                     employeeHoursWorked: minutesToTime(totalMinutesWorked),
+                    employeeHoursShortfall: minutesToTime(minutesShortfall),
+                    deductionDays,
                     totalPresent,
                     totalHalfDays,
                     totalAbsent,
