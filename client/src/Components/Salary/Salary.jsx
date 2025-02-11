@@ -7,7 +7,6 @@ import { useAuth } from "../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
 import Preloader from "../../Preloader.jsx";
-import formatDate from "../../Helper/formatDate.js";
 import formatTimeToHoursMinutes from "../../Helper/formatTimeToHoursMinutes.js";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -30,7 +29,7 @@ const Salary = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${base_url}/api/v1/Salary/monthly-salary`, {
+      const response = await axios.get(`${base_url}/api/v1/salary/monthly-salary`, {
         headers: {
           Authorization: validToken,
         },
@@ -79,8 +78,10 @@ const Salary = () => {
 
     const exportData = data?.map((entry, index) => ({
       "#": index + 1 || "1",
+      "Month": `${filters.month}-${filters.year}` || "N/A",
       "Employee Name": entry?.employeeName || "N/A",
-      "Total Salary": formatDate(entry?.totalSalary) || "0",
+      "Monthly Salary": entry?.monthlySalary || "N/A",
+      "Total Salary": entry?.totalSalary || "0",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -272,7 +273,7 @@ const Salary = () => {
                                       <Link style={{ marginRight: "1rem" }} to={d?.salaryPaid === false ? `/pay-salary/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}` : ""}><button className="btn btn-primary">{d?.salaryPaid ? "Paid" : "Pay Salary"}</button></Link>
                                       {
                                         d?.salaryPaid && (
-                                          <Link style={{ marginRight: "1rem" }} to={`/salary-slip/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}/${d?.transactionId}`}><button className="btn btn-primary">View</button></Link>
+                                          <Link style={{ marginRight: "1rem" }} to={`/salary-slip/${d?.employeeId}/${filters.month}/${filters.year}`}><button className="btn btn-primary">View</button></Link>
                                         )
                                       }
                                     </td>

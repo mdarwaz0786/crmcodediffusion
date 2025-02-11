@@ -2,13 +2,10 @@
 /* eslint-disable no-extra-semi */
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 
 const Calender = ({ attendanceData, month, year, employeeId }) => {
   const [calendarDays, setCalendarDays] = useState([]);
   const zeroBasedMonth = parseInt(month, 10) - 1;
-  const location = useLocation();
-  const currentPath = location.pathname;
 
   const generateCalendar = () => {
     const daysInMonth = new Date(year, zeroBasedMonth + 1, 0).getDate();
@@ -76,12 +73,8 @@ const Calender = ({ attendanceData, month, year, employeeId }) => {
             <div key={index} style={calendarStyle}>
               <div>{day}</div>
               <div style={{ color: attendanceColors[attendance?.status] }}>{attendance?.status}</div>
-              {currentPath === "/attendance" && (
-                <>
-                  <div>{attendance?.punchInTime} {" "} {attendance?.punchOutTime}</div>
-                  <div>{attendance?.hoursWorked}</div>
-                </>
-              )}
+              <div>{attendance?.punchInTime} {" "} {attendance?.punchOutTime}</div>
+              <div>{attendance?.hoursWorked}</div>
             </div>
           );
         })}

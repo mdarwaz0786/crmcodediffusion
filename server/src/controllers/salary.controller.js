@@ -391,15 +391,6 @@ export const newFetchMonthlySalary = async (req, res) => {
                     };
                 };
 
-                // let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalSundays);
-                // let companyWorkingMinutes = companyWorkingDays * dailyThreshold;
-                // // Calculate deduction days
-                // let minutesShortfall = companyWorkingMinutes - totalMinutesWorked;
-                // let deductionDays = minutesShortfall > 0 ? Math.ceil(minutesShortfall / dailyThreshold) : 0;
-                // // Calculate total salary
-                // let dailySalary = monthlySalary / companyWorkingDays;
-                // let totalSalary = (companyWorkingDays - deductionDays + totalOnLeave + totalCompOff) * dailySalary;
-
                 let companyWorkingMinutes = (totalDaysInMonth - (totalHolidays + totalSundays)) * dailyThreshold;
 
                 let minutesShortfall = companyWorkingMinutes - totalMinutesWorked;

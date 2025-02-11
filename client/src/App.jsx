@@ -155,7 +155,7 @@ const App = () => {
           <Route path="late-punch-in" element={<LatePunchIn />} />
           <Route path="salary" element={<Salary />} />
           <Route path="pay-salary/:employeeId/:month/:year/:totalSalary" element={<PaySalary />} />
-          <Route path="salary-slip/:employeeId/:month/:year/:totalSalary/:transactionId" element={<SalarySlip />} />
+          <Route path="salary-slip/:employeeId/:month/:year" element={<SalarySlip />} />
           <Route path="holiday" element={<Holiday />} />
           <Route path="add-holiday" element={<AddHoliday />} />
           <Route path="upload-holiday" element={<HolidayUpload />} />
