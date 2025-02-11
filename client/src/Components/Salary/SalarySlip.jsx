@@ -116,14 +116,14 @@ const SalarySlip = () => {
     // PDF export options
     const options = {
       filename: `${getMonthName(month)}-${year}-${employee?.name}-Salary.pdf`,
-      margin: [0, 0, 10, 0],
+      margin: [10, 0, 10, 0],
       html2canvas: {
         useCORS: true,
-        scale: 4,
+        scale: 2,
       },
       jsPDF: {
         orientation: 'portrait',
-        format: 'a4',
+        format: [1000, 800],
         unit: 'pt',
       },
     };
@@ -152,8 +152,9 @@ const SalarySlip = () => {
                   <h4 className="fw-bold text-dark mb-3">CODE DIFFUSION TECHNOLOGIES</h4>
                   <div style={{ borderBottom: "1px solid #aaa" }}></div>
                 </div>
+
                 <h5 className="text-center" style={{ marginBottom: "2rem", marginTop: "2rem" }}>Salary Slip ({getMonthName(month)} {year})</h5>
-                <div className="row" style={{ border: "1px solid #eee" }}>
+                <div className="row" style={{ border: "1px solid #eee", marginLeft: "0rem", marginRight: "0rem" }}>
                   <div className="col-md-6 px-3 py-2">
                     <div className="row mb-2">
                       <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Employee Name</div>
@@ -207,7 +208,7 @@ const SalarySlip = () => {
                       <td className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}> ₹{employee?.monthlySalary}</td>
                     </tr>
                     <tr>
-                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}>Deduction ({salary[0]?.deductionDays} × ₹{salary[0]?.dailySalary})</td>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}>Total Deduction ({salary[0]?.deductionDays} × ₹{salary[0]?.dailySalary})</td>
                       <td className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}>-₹{salary[0]?.totalDeduction}</td>
                     </tr>
                   </tbody>
@@ -230,10 +231,10 @@ const SalarySlip = () => {
                   </div>
                 </div>
 
-                <h5 className="mt-5 mb-3">Salary Deduction Detail ({getMonthName(month)} {year})</h5>
+                <h5 className="mt-5 mb-3">Salary Deduction Summary ({getMonthName(month)} {year})</h5>
                 <div className="ps-3" style={{ border: "1px solid #eee" }}>
                   <div className="row py-2" style={{ color: "black" }}>
-                    <div className="col">Total Working Hours</div>
+                    <div className="col">Required Working Hours</div>
                     <div className="col">Worked Hours</div>
                     <div className="col">Shortfall Hours</div>
                     <div className="col">Deduction Days</div>
@@ -244,29 +245,7 @@ const SalarySlip = () => {
                     <div className="col">{salary[0]?.employeeHoursWorked}</div>
                     <div className="col">{salary[0]?.employeeHoursShortfall}</div>
                     <div className="col">{salary[0]?.employeeHoursShortfall} / {employee?.workingHoursPerDay} = {salary[0]?.deductionDays}</div>
-                    <div className="col">₹{salary[0]?.totalDeduction}</div>
-                  </div>
-                </div>
-
-                <h5 className="mt-5 mb-3">Attendance Summary ({getMonthName(month)} {year})</h5>
-                <div className="ps-3" style={{ border: "1px solid #eee" }}>
-                  <div className="row py-2" style={{ color: "black" }}>
-                    <div className="col">Present</div>
-                    <div className="col">Half Day</div>
-                    <div className="col">Absent</div>
-                    <div className="col">Leave</div>
-                    <div className="col">Comp Off</div>
-                    <div className="col">Weekly Off</div>
-                    <div className="col">Holiday</div>
-                  </div>
-                  <div className="row py-2" style={{ color: "black" }}>
-                    <div className="col">{monthlyStatics?.employeePresentDays}</div>
-                    <div className="col">{monthlyStatics?.employeeHalfDays}</div>
-                    <div className="col">{monthlyStatics?.employeeAbsentDays}</div>
-                    <div className="col">{monthlyStatics?.employeeLeaveDays}</div>
-                    <div className="col">{monthlyStatics?.employeeCompOffDays}</div>
-                    <div className="col">{monthlyStatics?.totalSundays}</div>
-                    <div className="col">{monthlyStatics?.totalHolidays}</div>
+                    <div className="col">{salary[0]?.deductionDays} × ₹{salary[0]?.dailySalary} = ₹{salary[0]?.totalDeduction}</div>
                   </div>
                 </div>
                 <p className="text-center mt-5">This is a digitally generated document and does not require a signature or seal.</p>
