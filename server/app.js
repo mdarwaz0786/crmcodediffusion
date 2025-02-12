@@ -135,4 +135,4 @@ const port = process.env.PORT;
 const mode = process.env.NODE_MODE;
 
 // Server listen
-server.listen(port, () => console.log(`Server is successfully running in ${mode} mode on port number ${port} at base url http://localhost:${port}`));
+server.listen(port, () => console.log(`✅ Server is successfully running in ${mode} mode on port number ${port} at base url http://localhost:${port}`));
