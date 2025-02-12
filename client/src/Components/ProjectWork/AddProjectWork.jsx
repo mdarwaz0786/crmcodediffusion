@@ -2,18 +2,18 @@
 /* eslint-disable no-extra-semi */
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from "../../context/authContext.jsx";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddProjectWork = () => {
   const { id } = useParams();
-  const { validToken, team } = useAuth();
-  const { description, setDescription } = useState("");
-  const { projectStatus, setProjectStatus } = useState([]);
-  const { selectedProjectStatus, setSelectedProjectStatus } = useState("");
-  const currentDate = new Date().toISOString.split("T")[0];
+  const navigate = useNavigate();
+  const { validToken, team, isLoading } = useAuth();
+  const [description, setDescription] = useState("");
+  const [projectStatus, setProjectStatus] = useState([]);
+  const [selectedProjectStatus, setSelectedProjectStatus] = useState("");
 
   const fetchAllProjectStatus = async () => {
     try {
@@ -32,21 +32,30 @@ const AddProjectWork = () => {
   };
 
   useEffect(() => {
-    fetchAllProjectStatus();
-  }, []);
+    if (id && validToken && team && !isLoading) {
+      fetchAllProjectStatus();
+    };
+  }, [id, validToken, team, isLoading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!selectedProjectStatus || !description) {
+      return toast.error("All fields are required");
+    };
+
+    const date = new Date().toISOString().split("T")[0];
+    const employee = team?._id;
 
     try {
       const response = await axios.post(
         `${base_url}/api/v1/projectWork/create-projectWork`,
         {
-          employee: team?._id,
+          employee,
           project: id,
           status: selectedProjectStatus,
-          date: currentDate,
-          description: description,
+          date,
+          description,
         },
         {
           headers: {
@@ -54,15 +63,16 @@ const AddProjectWork = () => {
           },
         }
       );
+
       if (response?.data?.success) {
         setDescription("");
-        selectedProjectStatus("");
+        setSelectedProjectStatus("");
         toast.success("Submitted successfully");
-        Navigate(-1);
+        navigate(-1);
       };
     } catch (error) {
-      console.log('Error:', error?.response?.data?.message || "Try Again");
-      toast.error(error?.response?.data?.message || "Try Again");
+      console.log('Error:', error?.response?.data?.message);
+      toast.error(error?.response?.data?.message);
     };
   };
 
@@ -71,13 +81,13 @@ const AddProjectWork = () => {
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <h4>Update Project Status</h4>
-          <Link to="#" onClick={() => Navigate(-1)}>
+          <Link to="#" onClick={() => navigate(-1)}>
             <button className="btn btn-primary">Back</button>
           </Link>
         </div>
 
         <div className="row">
-          <div className="col-md-6">
+          <div className="col-md-12">
             <div className="form-wrap">
               <label className="col-form-label" htmlFor="projectStatus">Project Status <span className="text-danger">*</span></label>
               <select className="form-select" name="projectStatus" id="projectStatus" value={selectedProjectStatus} onChange={(e) => setSelectedProjectStatus(e.target.value)}>
@@ -95,7 +105,7 @@ const AddProjectWork = () => {
             <div className="form-wrap">
               <label className="col-form-label" htmlFor="description">Description <span className="text-danger">*</span></label>
               <textarea
-                rows={4}
+                rows={6}
                 type="text"
                 name="description"
                 id="description"
@@ -107,7 +117,7 @@ const AddProjectWork = () => {
           </div>
 
           <div className="text-start">
-            <Link to="#" style={{ marginRight: "1rem" }} onClick={() => Navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
+            <Link to="#" style={{ marginRight: "1rem" }} onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
             <Link to="#" className="btn btn-primary" onClick={handleSubmit}>Submit</Link>
           </div>
         </div>

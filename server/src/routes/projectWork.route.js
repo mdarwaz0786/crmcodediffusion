@@ -1,6 +1,6 @@
 import express from "express";
 import { isLoggedIn } from './../middleware/auth.middleware.js';
-import { createProjectWork, deleteProjectWork, getProjectWorkById, getProjectWorks, updateProjectWork } from "../controllers/projectWork.controller.js";
+import { createProjectWork, deleteProjectWork, getGroupedProjectWork, getProjectWorkById, getProjectWorks, updateProjectWork } from "../controllers/projectWork.controller.js";
 
 // router object
 const router = express.Router();
@@ -9,6 +9,7 @@ const router = express.Router();
 router.post("/create-projectWork", isLoggedIn, createProjectWork);
 router.get("/all-projectWork", isLoggedIn, getProjectWorks);
 router.get("/single-projectWork/:id", isLoggedIn, getProjectWorkById);
+router.get("/byEmployee", isLoggedIn, getGroupedProjectWork);
 router.put("/update-projectWork/:id", isLoggedIn, updateProjectWork);
 router.delete("/delete-projectWork/:id", isLoggedIn, deleteProjectWork);
 

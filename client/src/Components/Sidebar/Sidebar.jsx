@@ -138,9 +138,7 @@ const Sidebar = () => {
 
               <li>
                 {
-                  (permissions?.team?.access ||
-                    permissions?.attendance?.access ||
-                    permissions?.project?.fields?.workDetail?.show ||
+                  (
                     team?.role?.name.toLowerCase() === "admin" ||
                     team?.role?.name.toLowerCase() === "hr"
                   ) && (
@@ -255,11 +253,6 @@ const Sidebar = () => {
                   {
                     (permissions?.projectCategory?.access) && (
                       <li><Link to="/project-category" className={currentPath === "/project-category" ? "active" : ""} id={isMobile && active === "projectCategory" ? "mobile_btn" : ""} onClick={() => handleActive("projectCategory")}><i style={{ color: currentPath === "/project-category" ? "" : "#FFA201" }} className="ti ti-tags"></i><span>Project Category</span></Link></li>
-                    )
-                  }
-                  {
-                    (permissions?.projectTiming?.access) && (
-                      <li><Link to="/project-timeline" className={currentPath === "/project-timeline" ? "active" : ""} id={isMobile && active === "projectTimeline" ? "mobile_btn" : ""} onClick={() => handleActive("projectTimeline")}><i style={{ color: currentPath === "/project-timeline" ? "" : "#FFA201" }} className="ti ti-clock"></i><span>Project Timeline</span></Link></li>
                     )
                   }
                   {
