@@ -597,7 +597,7 @@ const ProformaInvoiceList = () => {
                                         <hr className="horizontal-line" />
                                       )
                                     }
-                                    {
+                                    {/* {
                                       (permissions?.update) && (
                                         <Link to={`/edit-proforma-invoice/${d?._id}`} className="dropdown-item">
                                           <i className="ti ti-edit text-blue"></i>
@@ -609,7 +609,7 @@ const ProformaInvoiceList = () => {
                                       (permissions?.delete) && (
                                         <hr className="horizontal-line" />
                                       )
-                                    }
+                                    } */}
                                     {
                                       (permissions?.delete) && (
                                         <Link to="#" className="dropdown-item" onClick={() => handleDelete(d?._id)}>

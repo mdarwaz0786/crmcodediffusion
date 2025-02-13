@@ -44,18 +44,10 @@ const SingleInvoice = () => {
     return date.toLocaleDateString('en-GB', options);
   };
 
-  if (isLoading) {
-    return <Preloader />;
-  };
-
-  if (!permissions?.access) {
-    return <Navigate to="/" />;
-  };
-
   const exportInvoiceAsPdf = () => {
     const element = document.querySelector("#exportInvoice");
     const options = {
-      filename: `${data?.invoiceId}-${data?.projects[0]?.project?.customer?.companyName}-Tax-Invoice.pdf`,
+      filename: `${data?.invoiceId}-${data?.project?.customer?.companyName}-Tax-Invoice.pdf`,
       margin: [0, 0, 10, 0],
       html2canvas: {
         useCORS: true,
@@ -72,6 +64,14 @@ const SingleInvoice = () => {
 
   if (!data) {
     return <div>No data available</div>;
+  };
+
+  if (isLoading) {
+    return <Preloader />;
+  };
+
+  if (!permissions?.access) {
+    return <Navigate to="/" />;
   };
 
   return (

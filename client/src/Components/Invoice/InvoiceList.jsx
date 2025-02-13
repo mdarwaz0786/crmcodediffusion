@@ -188,16 +188,13 @@ const InvoiceList = () => {
     };
 
     const exportData = data.map((entry, index) => {
-      const projectsWithAmounts = entry?.projects
-        ?.map((p) => `${p?.project?.projectName} (₹${p?.amount || 0})`)
-        .join(", ") || "N/A";
-
       return {
         "#": index + 1 || "1",
         "InvoiceId": entry?.invoiceId || "N/A",
         "Date": formatDate(entry?.date) || "N/A",
-        "Project Name (Project Cost)": projectsWithAmounts,
-        "Client Name": entry?.projects[0]?.project?.customer?.name,
+        "Project Name": entry?.project?.projectName,
+        "Project Cost": entry?.project?.projectPrice,
+        "Client Name": entry?.project?.customer?.name,
         "Sub Total": `₹${entry?.subtotal}` || "0",
         "CGST": entry?.CGST > 0 ? `₹${entry?.CGST}` : "Not Applicable",
         "SGST": entry?.SGST > 0 ? `₹${entry?.SGST}` : "Not Applicable",
@@ -246,7 +243,7 @@ const InvoiceList = () => {
     for (const invoice of data) {
       const element = document.querySelector(`#invoice-${invoice?._id}`);
       const pdfOptions = {
-        filename: `${invoice?.invoiceId}-${invoice?.projects[0]?.project?.customer?.companyName}-Tax-Invoice.pdf`,
+        filename: `${invoice?.invoiceId}-${invoice?.project?.customer?.companyName}-Tax-Invoice.pdf`,
         margin: [0, 0, 10, 0],
         html2canvas: {
           useCORS: true,
@@ -261,7 +258,7 @@ const InvoiceList = () => {
 
       // Pass pdfOptions to html2pdf
       const pdfBlob = await html2pdf().from(element).set(pdfOptions).output('blob');
-      zip.file(`${invoice?.invoiceId}-${invoice?.projects[0]?.project?.customer?.companyName}-Tax-Invoice.pdf`, pdfBlob);
+      zip.file(`${invoice?.invoiceId}-${invoice?.project?.customer?.companyName}-Tax-Invoice.pdf`, pdfBlob);
     };
 
     // Generate the ZIP file and save it
@@ -594,7 +591,7 @@ const InvoiceList = () => {
                                     <i className="fa fa-ellipsis-v"></i>
                                   </Link>
                                   <div className="dropdown-menu dropdown-menu-right">
-                                    {
+                                    {/* {
                                       (permissions?.update) && (
                                         <Link to={`/edit-invoice/${d?._id}`} className="dropdown-item">
                                           <i className="ti ti-edit text-blue"></i>
@@ -606,7 +603,7 @@ const InvoiceList = () => {
                                       permissions?.update && permissions?.delete && (
                                         <hr className="horizontal-line" />
                                       )
-                                    }
+                                    } */}
                                     {
                                       (permissions?.delete) && (
                                         <Link to="#" className="dropdown-item" onClick={() => handleDelete(d?._id)}>
