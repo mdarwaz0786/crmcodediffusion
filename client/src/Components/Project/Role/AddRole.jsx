@@ -47,6 +47,7 @@ const AddRole = () => {
         totalSpentHour: { read: true, show: true },
         totalRemainingHour: { read: true, show: true },
         description: { read: true, show: true },
+        projectDeadline: { read: true, show: true },
       },
     },
     invoice: {
@@ -412,6 +413,7 @@ const AddRole = () => {
               totalSpentHour: { read: true, show: true },
               totalRemainingHour: { read: true, show: true },
               description: { read: true, show: true },
+              projectDeadline: { read: true, show: true },
             },
           },
           invoice: {

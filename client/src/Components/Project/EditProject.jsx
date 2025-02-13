@@ -17,28 +17,21 @@ const EditProject = () => {
   const [projectCategory, setProjectCategory] = useState([]);
   const [teamMember, setTeamMember] = useState([]);
   const [technology, setTechnology] = useState([]);
-  const [projectTiming, setProjectTiming] = useState([]);
   const [projectPriority, setProjectPriority] = useState([]);
 
-  const [projectName, setProjectName] = useState("");
   const [projectId, setProjectId] = useState("");
+  const [projectName, setProjectName] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("");
   const [selectedProjectType, setSelectedProjectType] = useState("");
   const [selectedProjectCategory, setSelectedProjectCategory] = useState("");
-  const [selectedProjectTiming, setSelectedProjectTiming] = useState("");
   const [selectedProjectPriority, setSelectedProjectPriority] = useState("");
   const [selectedProjectStatus, setSelectedProjectStatus] = useState("");
   const [selectedResponsible, setSelectedResponsible] = useState([]);
   const [selectedLeader, setSelectedLeader] = useState([]);
   const [selectedTechnology, setSelectedTechnology] = useState([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [projectPrice, setProjectPrice] = useState("");
-  const [totalPaid, setTotalPaid] = useState("");
-  const [totalDues, setTotalDues] = useState("");
   const [totalHour, setTotalHour] = useState("");
-  const [totalSpentHour, setTotalSpentHour] = useState("");
-  const [totalRemainingHour, setTotalRemainingHour] = useState("");
+  const [projectDeadline, setProjectDeadline] = useState("");
   const [description, setDescription] = useState("");
   const { id } = useParams();
   const navigate = useNavigate();
@@ -72,22 +65,6 @@ const EditProject = () => {
 
       if (response?.data?.success) {
         setProjectCategory(response?.data?.projectCategory);
-      };
-    } catch (error) {
-      console.log(error.message);
-    };
-  };
-
-  const fetchAllProjectTiming = async () => {
-    try {
-      const response = await axios.get(`${base_url}/api/v1/projectTiming/all-projectTiming`, {
-        headers: {
-          Authorization: validToken,
-        },
-      });
-
-      if (response?.data?.success) {
-        setProjectTiming(response?.data?.projectTiming);
       };
     } catch (error) {
       console.log(error.message);
@@ -181,7 +158,6 @@ const EditProject = () => {
       fetchAllProjectType();
       fetchAllProjectStatus();
       fetchAllTeamMember();
-      fetchAllProjectTiming();
       fetchAllProjectPriority();
       fetchAllTechnology();
     };
@@ -201,21 +177,15 @@ const EditProject = () => {
         setSelectedCustomer(response?.data?.project?.customer?._id);
         setSelectedProjectType(response?.data?.project?.projectType?._id);
         setSelectedProjectCategory(response?.data?.project?.projectCategory?._id);
-        setSelectedProjectTiming(response?.data?.project?.projectTiming?._id);
         setSelectedProjectPriority(response?.data?.project?.projectPriority?._id);
         setSelectedProjectStatus(response?.data?.project?.projectStatus?._id);
         setSelectedResponsible(response?.data?.project?.responsiblePerson?.map((r) => r?._id));
         setSelectedLeader(response?.data?.project?.teamLeader?.map((l) => l?._id));
         setSelectedTechnology(response?.data?.project?.technology?.map((t) => t?._id));
         setProjectPrice(response?.data?.project?.projectPrice);
-        setTotalPaid(response?.data?.project?.totalPaid);
-        setTotalDues(response?.data?.project?.totalDues);
-        setStartDate(response?.data?.project?.startDate);
-        setEndDate(response?.data?.project?.endDate);
         setTotalHour(response?.data?.project?.totalHour);
-        setTotalSpentHour(response?.data?.project?.totalSpentHour);
-        setTotalRemainingHour(response?.data?.project?.totalRemainingHour);
         setDescription(response?.data?.project?.description);
+        setProjectDeadline(response?.data?.project?.projectDeadline);
       };
     } catch (error) {
       console.log("Error while fetching single project:", error.message);
@@ -251,10 +221,6 @@ const EditProject = () => {
       updateData.projectCategory = selectedProjectCategory;
     };
 
-    if (fieldPermissions?.projectTiming?.show && !fieldPermissions?.projectTiming?.read) {
-      updateData.projectTiming = selectedProjectTiming;
-    };
-
     if (fieldPermissions?.projectStatus?.show && !fieldPermissions?.projectStatus?.read) {
       updateData.projectStatus = selectedProjectStatus;
     };
@@ -275,14 +241,6 @@ const EditProject = () => {
       updateData.technology = selectedTechnology;
     };
 
-    if (fieldPermissions?.startDate?.show && !fieldPermissions?.startDate?.read) {
-      updateData.startDate = startDate;
-    };
-
-    if (fieldPermissions?.endDate?.show && !fieldPermissions?.endDate?.read) {
-      updateData.endDate = endDate;
-    };
-
     if (fieldPermissions?.projectPrice?.show && !fieldPermissions?.projectPrice?.read) {
       updateData.projectPrice = projectPrice;
     };
@@ -293,6 +251,10 @@ const EditProject = () => {
 
     if (fieldPermissions?.description?.show && !fieldPermissions?.description?.read) {
       updateData.description = description;
+    };
+
+    if (fieldPermissions?.projectDeadline && !fieldPermissions?.projectDeadline?.read) {
+      updateData.projectDeadline = projectDeadline;
     };
 
     try {
@@ -308,21 +270,15 @@ const EditProject = () => {
         setSelectedCustomer("");
         setSelectedProjectType("");
         setSelectedProjectCategory("");
-        setSelectedProjectTiming("");
         setSelectedProjectStatus("");
         setSelectedProjectPriority("");
         setSelectedResponsible([]);
         setSelectedLeader([]);
         setSelectedTechnology([]);
         setProjectPrice("");
-        setTotalDues("");
-        setTotalPaid("");
-        setStartDate("");
-        setEndDate("");
         setTotalHour("");
-        setTotalSpentHour("");
-        setTotalRemainingHour("");
         setDescription("");
+        setProjectDeadline("");
         toast.success("Submitted successfully");
         navigate(-1);
       };
@@ -387,12 +343,6 @@ const EditProject = () => {
     'link', 'image', 'video', 'color', 'background',
     'align', 'script',
   ];
-
-  const convertToHoursAndMinutes = (hours) => {
-    const h = Math.floor(hours);
-    const m = Math.round((hours - h) * 60);
-    return `${h} hour${h !== 1 ? 's' : ''} ${m} minute${m !== 1 ? 's' : ''}`;
-  };
 
   if (isLoading) {
     return <Preloader />;
@@ -483,23 +433,6 @@ const EditProject = () => {
               )
             }
             {
-              (fieldPermissions?.projectTiming?.show) && (
-                <div className="col-md-6">
-                  <div className="form-wrap">
-                    <label className="col-form-label" htmlFor="projectTiming">Project Timeline <span className="text-danger">*</span></label>
-                    <select className={`form-select ${fieldPermissions?.projectTiming?.read ? "readonly-style" : ""}`} name="projectTiming" id="projectTiming" value={selectedProjectTiming} onChange={(e) => fieldPermissions?.projectTiming?.read ? null : setSelectedProjectTiming(e.target.value)} >
-                      <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
-                      {
-                        projectTiming?.map((p) => (
-                          <option key={p?._id} value={p?._id}>{p?.name}</option>
-                        ))
-                      }
-                    </select>
-                  </div>
-                </div>
-              )
-            }
-            {
               (fieldPermissions?.projectPriority?.show) && (
                 <div className="col-md-6">
                   <div className="form-wrap">
@@ -534,28 +467,8 @@ const EditProject = () => {
               )
             }
             {
-              (fieldPermissions?.startDate?.show) && (
-                <div className="col-md-6">
-                  <div className="form-wrap">
-                    <label className="col-form-label" htmlFor="startDate">Start Date <span className="text-danger">*</span></label>
-                    <input type="date" className={`form-control ${fieldPermissions?.startDate?.read ? "readonly-style" : ""}`} name="startDate" id="startDate" value={startDate} onChange={(e) => fieldPermissions?.startDate?.read ? null : setStartDate(e.target.value)} />
-                  </div>
-                </div>
-              )
-            }
-            {
-              (fieldPermissions?.endDate?.show) && (
-                <div className="col-md-6">
-                  <div className="form-wrap">
-                    <label className="col-form-label" htmlFor="endDate">End Date <span className="text-danger">*</span></label>
-                    <input type="date" className={`form-control ${fieldPermissions?.endDate?.read ? "readonly-style" : ""}`} name="endDate" id="endDate" value={endDate} onChange={(e) => fieldPermissions?.endDate?.read ? null : setEndDate(e.target.value)} />
-                  </div>
-                </div>
-              )
-            }
-            {
               (fieldPermissions?.projectPrice?.show) && (
-                <div className="col-md-4">
+                <div className="col-md-6">
                   <div className="form-wrap">
                     <label className="col-form-label" htmlFor="projectPrice">Project Cost <span className="text-danger">*</span></label>
                     <input className={`form-control ${fieldPermissions?.projectPrice?.read ? "readonly-style" : ""}`} type="text" name="projectPrice" id="projectPrice" value={projectPrice} onChange={(e) => fieldPermissions?.projectPrice?.read ? null : setProjectPrice(e.target.value)} />
@@ -564,28 +477,18 @@ const EditProject = () => {
               )
             }
             {
-              (fieldPermissions?.totalPaid?.show) && (
-                <div className="col-md-4">
+              (fieldPermissions?.projectDeadline?.show) && (
+                <div className="col-md-6">
                   <div className="form-wrap">
-                    <label className="col-form-label" htmlFor="totalPaid">Total Received <span className="text-danger"></span></label>
-                    <input className={`form-control ${fieldPermissions?.totalPaid?.read ? "readonly-style" : ""}`} type="text" name="totalPaid" id="totalPaid" value={`₹${totalPaid}`} disabled />
-                  </div>
-                </div>
-              )
-            }
-            {
-              (fieldPermissions?.totalDues?.show) && (
-                <div className="col-md-4">
-                  <div className="form-wrap">
-                    <label className="col-form-label" htmlFor="totalDues">Total Dues <span className="text-danger"></span></label>
-                    <input className={`form-control ${fieldPermissions?.totalDues?.read ? "readonly-style" : ""}`} type="text" name="totalDues" id="totalDues" value={`₹${totalDues}`} disabled />
+                    <label className="col-form-label" htmlFor="projectDeadline">Project Deadline <span className="text-danger">*</span></label>
+                    <input type="date" className={`form-control ${fieldPermissions?.projectDeadline?.read ? "readonly-style" : ""}`} name="projectDeadline" id="projectDeadline" value={projectDeadline} onChange={(e) => fieldPermissions?.projectDeadline?.read ? null : setProjectDeadline(e.target.value)} />
                   </div>
                 </div>
               )
             }
             {
               (fieldPermissions?.totalHour?.show) && (
-                <div className="col-md-4">
+                <div className="col-md-6">
                   <div className="form-wrap">
                     <label className="col-form-label" htmlFor="totalHour">Total Hour <span className="text-danger">*</span></label>
                     <input type="text" className={`form-control ${fieldPermissions?.totalHour?.read ? "readonly-style" : ""}`} name="totalHour" id="totalHour" value={totalHour} onChange={(e) => fieldPermissions?.totalHour?.read ? null : setTotalHour(e.target.value)} />
@@ -594,44 +497,24 @@ const EditProject = () => {
               )
             }
             {
-              (fieldPermissions?.totalSpentHour?.show) && (
-                <div className="col-md-4">
+              (fieldPermissions?.technology?.show) && (
+                <div className="col-md-6">
                   <div className="form-wrap">
-                    <label className="col-form-label" htmlFor="totalSpentHour">Total Spent Hour <span className="text-danger"></span></label>
-                    <input type="text" className={`form-control ${fieldPermissions?.totalSpentHour?.read ? "readonly-style" : ""}`} name="totalSpentHour" id="totalSpentHour" value={convertToHoursAndMinutes(totalSpentHour)} disabled />
-                  </div>
-                </div>
-              )
-            }
-            {
-              (fieldPermissions?.totalRemainingHour?.show) && (
-                <div className="col-md-4">
-                  <div className="form-wrap">
-                    <label className="col-form-label" htmlFor="totalRemainingHour">Total Remaining Hour <span className="text-danger"></span></label>
-                    <input type="text" className={`form-control ${fieldPermissions?.totalRemainingHour?.read ? "readonly-style" : ""}`} name="totalRemainingHour" id="totalRemainingHour" value={convertToHoursAndMinutes(totalRemainingHour)} disabled />
-                  </div>
-                </div>
-              )
-            }
-            {
-              (fieldPermissions?.responsiblePerson?.show) && (
-                <div className="col-md-4">
-                  <div className="form-wrap">
-                    <label className="col-form-label" htmlFor="responsiblePerson">Responsible Person <span className="text-danger">*</span></label>
-                    <select className={`form-select ${fieldPermissions?.responsiblePerson?.read ? "readonly-style" : ""}`} name="responsiblePerson" id="responsiblePerson" value="" onChange={(e) => fieldPermissions?.responsiblePerson?.read ? null : handleSelectChangeResponsible(e)}>
+                    <label className="col-form-label" htmlFor="technology">Technology Used <span className="text-danger">*</span></label>
+                    <select className={`form-select ${fieldPermissions?.technology?.read ? "readonly-style" : ""}`} name="technology" id="technology" value="" onChange={(e) => fieldPermissions?.technology?.read ? null : handleSelectChangeTechnology(e)}>
                       <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
                       {
-                        teamMember?.filter((t) => !selectedResponsible.includes(t?._id)).map((t) => (
+                        technology?.filter((t) => !selectedTechnology?.includes(t?._id))?.map((t) => (
                           <option key={t?._id} value={t?._id}>{t?.name}</option>
                         ))
                       }
                     </select>
                     <div className="selected-container">
                       {
-                        selectedResponsible?.map((responsible, index) => (
+                        selectedTechnology?.map((tech, index) => (
                           <span key={index} className="selected-item">
-                            {teamMember?.find((t) => t?._id === responsible)?.name}
-                            {(fieldPermissions?.responsiblePerson?.read) ? (null) : (<button type="button" className="remove-btn" onClick={() => fieldPermissions?.responsiblePerson?.read ? null : handleRemoveResponsible(responsible)}>{"x"}</button>)}
+                            {technology?.find((t) => t?._id === tech)?.name}
+                            {(fieldPermissions?.technology?.read) ? (null) : (<button type="button" className="remove-btn" onClick={() => fieldPermissions?.technology?.read ? null : handleRemoveTechnology(tech)}>{"x"}</button>)}
                           </span>
                         ))
                       }
@@ -642,7 +525,7 @@ const EditProject = () => {
             }
             {
               (fieldPermissions?.teamLeader?.show) && (
-                <div className="col-md-4">
+                <div className="col-md-6">
                   <div className="form-wrap">
                     <label className="col-form-label" htmlFor="teamLeader">Team Leader  <span className="text-danger">*</span></label>
                     <select className={`form-select ${fieldPermissions?.teamLeader?.read ? "readonly-style" : ""}`} name="teamLeader" id="teamLeader" value="" onChange={(e) => fieldPermissions?.teamLeader?.read ? null : handleSelectChangeLeader(e)}>
@@ -668,24 +551,24 @@ const EditProject = () => {
               )
             }
             {
-              (fieldPermissions?.technology?.show) && (
-                <div className="col-md-4">
+              (fieldPermissions?.responsiblePerson?.show) && (
+                <div className="col-md-12">
                   <div className="form-wrap">
-                    <label className="col-form-label" htmlFor="technology">Technology Used <span className="text-danger">*</span></label>
-                    <select className={`form-select ${fieldPermissions?.technology?.read ? "readonly-style" : ""}`} name="technology" id="technology" value="" onChange={(e) => fieldPermissions?.technology?.read ? null : handleSelectChangeTechnology(e)}>
+                    <label className="col-form-label" htmlFor="responsiblePerson">Responsible Person <span className="text-danger">*</span></label>
+                    <select className={`form-select ${fieldPermissions?.responsiblePerson?.read ? "readonly-style" : ""}`} name="responsiblePerson" id="responsiblePerson" value="" onChange={(e) => fieldPermissions?.responsiblePerson?.read ? null : handleSelectChangeResponsible(e)}>
                       <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
                       {
-                        technology?.filter((t) => !selectedTechnology?.includes(t?._id))?.map((t) => (
+                        teamMember?.filter((t) => !selectedResponsible.includes(t?._id)).map((t) => (
                           <option key={t?._id} value={t?._id}>{t?.name}</option>
                         ))
                       }
                     </select>
                     <div className="selected-container">
                       {
-                        selectedTechnology?.map((tech, index) => (
+                        selectedResponsible?.map((responsible, index) => (
                           <span key={index} className="selected-item">
-                            {technology?.find((t) => t?._id === tech)?.name}
-                            {(fieldPermissions?.technology?.read) ? (null) : (<button type="button" className="remove-btn" onClick={() => fieldPermissions?.technology?.read ? null : handleRemoveTechnology(tech)}>{"x"}</button>)}
+                            {teamMember?.find((t) => t?._id === responsible)?.name}
+                            {(fieldPermissions?.responsiblePerson?.read) ? (null) : (<button type="button" className="remove-btn" onClick={() => fieldPermissions?.responsiblePerson?.read ? null : handleRemoveResponsible(responsible)}>{"x"}</button>)}
                           </span>
                         ))
                       }

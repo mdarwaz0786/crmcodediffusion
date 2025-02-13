@@ -6,7 +6,7 @@ import checkFieldUpdatePermission from "../middleware/checkFieldUpdatePermission
 
 const fields = [
   'projectId', 'projectName', 'customer', 'projectType', 'projectCategory', 'projectTiming', 'projectPriority', 'projectStatus', 'responsiblePerson',
-  'teamLeader', 'technology', 'projectPrice', 'payment', 'totalPaid', 'totalDues', 'startDate', 'endDate', 'totalHour', 'workDetail', 'totalSpentHour', 'totalRemainingHour', 'description',
+  'teamLeader', 'projectDeadline', 'technology', 'projectPrice', 'payment', 'totalPaid', 'totalDues', 'startDate', 'endDate', 'totalHour', 'workDetail', 'totalSpentHour', 'totalRemainingHour', 'description',
 ];
 
 // router object

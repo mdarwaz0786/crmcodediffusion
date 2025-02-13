@@ -227,6 +227,7 @@ const AddProject = () => {
         setProjectPrice("");
         setTotalHour("");
         setDescription("");
+        setProjectDeadline("");
         toast.success("Submitted Successfully");
         navigate(-1);
       };

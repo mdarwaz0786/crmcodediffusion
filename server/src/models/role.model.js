@@ -55,6 +55,7 @@ const ProjectPermissionSchema = new mongoose.Schema(
       totalDues: { type: FieldPermissionSchema, default: () => ({}) },
       startDate: { type: FieldPermissionSchema, default: () => ({}) },
       endDate: { type: FieldPermissionSchema, default: () => ({}) },
+      projectDeadline: { type: FieldPermissionSchema, default: () => ({}) },
       totalHour: { type: FieldPermissionSchema, default: () => ({}) },
       workDetail: { type: FieldPermissionSchema, default: () => ({}) },
       totalSpentHour: { type: FieldPermissionSchema, default: () => ({}) },
