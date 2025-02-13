@@ -6,13 +6,14 @@ import { useAuth } from "../../context/authContext.jsx";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import Preloader from "../../Preloader.jsx";
 import html2pdf from "html2pdf.js";
-const base_url = import.meta.env.VITE_API_BASE_URL;
 import formatDate from "../../Helper/formatDate.js";
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const SingleProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState("");
+  const [totalReceived, setTotalReceived] = useState("");
   const [projectWork, setProjectWork] = useState([]);
   const { team, validToken, isLoading } = useAuth();
   const permissions = team?.role?.permissions?.project;
@@ -53,10 +54,29 @@ const SingleProjectDetail = () => {
     };
   };
 
+  const fetchInvoiceDetails = async (id) => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/invoice/byProject/${id}`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        setTotalReceived(response?.data?.totalReceived);
+      };
+    } catch (error) {
+      if (error?.response?.data?.success === false) {
+        setTotalReceived("");
+      };
+    };
+  };
+
   useEffect(() => {
     if (!isLoading && team && permissions?.access && id) {
       fetchSingleProject(id);
       fetchProjectWork();
+      fetchInvoiceDetails(id);
     };
   }, [isLoading, team, permissions, id]);
 
@@ -146,13 +166,28 @@ const SingleProjectDetail = () => {
           <div className="row">
             <div className="col-md-6 mb-0">
               {
-                (fieldPermissions?.projectStatus?.show) && (
-                  <p className="mb-2"><strong>Project Status:</strong> {data?.projectStatus?.status}</p>
+                (fieldPermissions?.totalHour?.show) && (
+                  <p className="mb-2"><strong>Total Hour:</strong> {convertToHoursAndMinutes(data?.totalHour)}</p>
                 )
               }
               {
-                (fieldPermissions?.totalHour?.show) && (
-                  <p className="mb-2"><strong>Total Hour:</strong> {convertToHoursAndMinutes(data?.totalHour)}</p>
+                (fieldPermissions?.projectPrice?.show) && (
+                  <p className="mb-2"><strong>Project Cost:</strong> ₹{data?.projectPrice}</p>
+                )
+              }
+              {
+                (fieldPermissions?.totalPaid?.show) && (
+                  <p className="mb-2"><strong>Total Received:</strong> ₹{totalReceived || 0}</p>
+                )
+              }
+              {
+                (fieldPermissions?.totalDues?.show) && (
+                  <p className="mb-2"><strong>Total Dues:</strong> ₹{parseFloat(data?.projectPrice) - (parseFloat(totalReceived) || 0)}</p>
+                )
+              }
+              {
+                (fieldPermissions?.projectDeadline?.show) && (
+                  <p className="mb-2"><strong>Project Deadline:</strong> {(formatDate(data?.projectDeadline))}</p>
                 )
               }
             </div>
@@ -170,6 +205,11 @@ const SingleProjectDetail = () => {
               {
                 (fieldPermissions?.teamLeader?.show) && (
                   <p className="mb-2"><strong>Team Leader:</strong> {data?.teamLeader?.map((member) => member?.name).join(', ')}</p>
+                )
+              }
+              {
+                (fieldPermissions?.projectStatus?.show) && (
+                  <p className="mb-2"><strong>Project Status:</strong> {data?.projectStatus?.status}</p>
                 )
               }
             </div>
