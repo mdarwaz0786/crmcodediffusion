@@ -84,6 +84,10 @@ const Project = () => {
   }, [startDate, endDate]);
 
   function dateFormat(isoDate) {
+    if (!isoDate) {
+      return;
+    };
+
     const date = new Date(isoDate);
     const options = { day: 'numeric', month: 'long', year: 'numeric' };
     return date.toLocaleDateString('en-GB', options);
@@ -676,7 +680,7 @@ const Project = () => {
                             )
                           }
                           {
-                            (fieldPermissions?.endDate?.show) && (
+                            (fieldPermissions?.projectDeadline?.show) && (
                               <th>Deadline</th>
                             )
                           }
