@@ -91,6 +91,7 @@ const teamSchema = new mongoose.Schema(
       type: [{
         workedDate: { type: String },
         reason: { type: String, trim: true },
+        isApplied: { type: Boolean, default: false },
         isApproved: { type: Boolean, default: false },
         approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
         compOffDate: { type: String },

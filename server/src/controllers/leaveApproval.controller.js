@@ -1,17 +1,20 @@
 import LeaveApproval from "../models/leaveApproval.model.js";
 import Team from "../models/team.model.js";
+import Holiday from "../models/holiday.model.js";
 import mongoose from "mongoose";
 import { sendEmail } from '../services/emailService.js';
 import firebase from "../firebase/index.js";
 
-// Helper function to get a range of dates between two dates
+// Helper function to get a range of dates between two dates in "yyyy-mm-dd" format
 const getDateRange = (startDate, endDate) => {
   const dates = [];
   let currentDate = new Date(startDate);
+
   while (currentDate <= new Date(endDate)) {
-    dates.push(new Date(currentDate));
+    dates.push(currentDate.toISOString().split("T")[0]);
     currentDate.setDate(currentDate.getDate() + 1);
   };
+
   return dates;
 };
 
@@ -34,19 +37,19 @@ export const createLeaveApproval = async (req, res) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    // Ensure start date is not the current date or in the past
+    // Ensure start date is not the current date or in the past 
     const currentDate = new Date();
 
     if (start.setHours(0, 0, 0, 0) === currentDate.setHours(0, 0, 0, 0)) {
-      return res.status(400).json({ success: false, message: "Start date cannot be today." });
+      return res.status(400).json({ success: false, message: "Start date can not be today, select future date." });
     };
 
     if (start.setHours(0, 0, 0, 0) < currentDate.setHours(0, 0, 0, 0)) {
-      return res.status(400).json({ success: false, message: "Start date cannot be in the past." });
+      return res.status(400).json({ success: false, message: "Start date can not be in the past, select future date." });
     };
 
     if (start > end) {
-      return res.status(400).json({ success: false, message: "Start date cannot be later than end date." });
+      return res.status(400).json({ success: false, message: "Start date can not be later than end date." });
     };
 
     // Check if the employee exist
@@ -56,7 +59,7 @@ export const createLeaveApproval = async (req, res) => {
       return res.status(400).json({ success: false, message: "Employee not found" });
     };
 
-    if (parseFloat(existingEmployee?.currentLeaveBalance) < 0) {
+    if (parseFloat(existingEmployee?.currentLeaveBalance) <= 0) {
       return res.status(400).json({ success: false, message: "Insufficient leave balance" });
     };
 
@@ -240,7 +243,7 @@ export const updateLeaveApproval = async (req, res) => {
     };
 
     if (!approverId) {
-      return res.status(400).json({ success: false, message: "Approver Id  is required." });
+      return res.status(400).json({ success: false, message: "Approver Id is required." });
     };
 
     if (!leaveStatus) {
@@ -293,21 +296,37 @@ export const updateLeaveApproval = async (req, res) => {
       leaveRequest.leaveApprovedBy = approverId;
       await leaveRequest.save({ session });
 
-      const leaveDates = leaveRequest?.startDate.toString() === leaveRequest?.endDate.toString()
-        ? [new Date(leaveRequest?.startDate)]
-        : getDateRange(new Date(leaveRequest?.startDate), new Date(leaveRequest?.endDate));
+      let leaveDates = getDateRange(leaveRequest?.startDate, leaveRequest?.endDate);
+
+      const holidays = await Holiday.find({ date: { $in: leaveDates } });
+
+      leaveDates = leaveDates.filter((date) => {
+        const isHoliday = holidays?.some((holiday) => holiday?.date === date);
+        const isSunday = new Date(date).getDay() === 0;
+        return !isHoliday && !isSunday;
+      });
 
       const approvedLeaveEntries = leaveDates.map((date) => ({
-        date: date.toISOString().split("T")[0],
+        date: date,
         approvedBy: approverId,
         reason: leaveRequest?.reason,
       }));
 
-      await Team.findOneAndUpdate(
-        { _id: employee?._id },
-        { $push: { approvedLeaves: { $each: approvedLeaveEntries } } },
-        { session },
-      );
+      if (approvedLeaveEntries.length > 0) {
+        await Team.findOneAndUpdate(
+          { _id: employee?._id },
+          {
+            $push: {
+              approvedLeaves: { $each: approvedLeaveEntries },
+            },
+            $set: {
+              currentLeaveBalance: (parseFloat(employee?.currentLeaveBalance) - approvedLeaveEntries.length).toString(),
+              usedLeaveBalance: (parseFloat(employee?.usedLeaveBalance) + approvedLeaveEntries.length).toString(),
+            },
+          },
+          { session },
+        );
+      };
 
       sendEmail(employee?.email, "Your Leave Request Approved", `<p>Your leave request from ${leaveRequest?.startDate} to ${leaveRequest?.endDate} has been approved.</p><p>Regards,<br/>${approveBy?.name}</p>`);
 

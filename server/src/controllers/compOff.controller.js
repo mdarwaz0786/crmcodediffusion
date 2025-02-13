@@ -1,5 +1,6 @@
 import CompOff from "../models/compOff.model.js";
 import Team from "../models/team.model.js";
+import Holiday from "../models/holiday.model.js";
 import mongoose from "mongoose";
 import { sendEmail } from "../services/emailService.js";
 import firebase from "../firebase/index.js";
@@ -33,25 +34,33 @@ export const createCompOff = async (req, res) => {
       return res.status(400).json({ success: false, message: "Comp off date must be a future date." });
     };
 
+    if (appliedDate.getDay() === 0) {
+      return res.status(400).json({ success: false, message: "Comp off can not be applied on a Sunday." });
+    };
+
+    const isHoliday = await Holiday.findOne({ date: attendanceDate });
+
+    if (isHoliday) {
+      return res.status(400).json({ success: false, message: "Comp off can not be applied on a holiday." });
+    };
+
     const existingCompOff = await CompOff.findOne({ employee, attendanceDate, date });
 
-    if (existingCompOff) {
-      if (existingCompOff?.status === "Approved" || existingCompOff?.status === "Pending") {
-        return res.status(400).json({ success: false, message: `Comp off request for date ${attendanceDate} is already applied and status is ${existingCompOff?.status}.` });
-      };
+    if (existingCompOff && ["Approved", "Pending"].includes(existingCompOff?.status)) {
+      return res.status(400).json({ success: false, message: `Comp off request for ${attendanceDate} is already applied and status is ${existingCompOff?.status}.` });
     };
 
     const compOff = new CompOff({ employee, attendanceDate, date, approvedBy, status });
     await compOff.save({ session });
 
     const updatedTeam = await Team.findOneAndUpdate(
-      { _id: employee, "eligibleCompOffDate.date": date },
+      { _id: employee, "eligibleCompOffDate.workedDate": date },
       { $set: { "eligibleCompOffDate.$.isApplied": true } },
       { new: true, session },
     );
 
     if (!updatedTeam) {
-      throw new Error("Failed to update eligible comp off date");
+      throw new Error("Failed to apply comp off request.");
     };
 
     const appliedBy = await Team.findById(employee).session(session);
@@ -202,6 +211,14 @@ export const updateCompOff = async (req, res) => {
     const { id } = req.params;
     const { status, approvedBy } = req.body;
 
+    if (!status) {
+      return res.status(400).json({ success: false, message: "Status is required." });
+    };
+
+    if (!approvedBy) {
+      return res.status(400).json({ success: false, message: "Approver is required." });
+    };
+
     const compOff = await CompOff
       .findById(id)
       .populate("employee")
@@ -256,9 +273,21 @@ export const updateCompOff = async (req, res) => {
       await compOff.save({ session });
 
       const updatedTeam = await Team.findOneAndUpdate(
-        { _id: compOff?.employee?._id, "eligibleCompOffDate.workedDate": compOff?.date },
-        { $set: { "eligibleCompOffDate.$.isApproved": true, "eligibleCompOffDate.$.approvedBy": approvedBy, "eligibleCompOffDate.$.compOffDate": compOff?.attendanceDate } },
-        { new: true, session },
+        {
+          _id: compOff?.employee?._id,
+          "eligibleCompOffDate.workedDate": compOff?.date
+        },
+        {
+          $set: {
+            "eligibleCompOffDate.$.isApproved": true,
+            "eligibleCompOffDate.$.approvedBy": approvedBy,
+            "eligibleCompOffDate.$.compOffDate": compOff?.attendanceDate
+          },
+        },
+        {
+          new: true,
+          session,
+        },
       );
 
       if (!updatedTeam) {

@@ -80,19 +80,6 @@ export const createLatePunchIn = async (req, res) => {
       return res.status(400).json({ success: false, message: "Late punch in request can not be applied for future date attendance." });
     };
 
-    // Prevent applying for the current date before 18:30 PM
-    if (requestedDate === currentDate) {
-      const time = new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: false });
-      const [hours, minutes] = time.split(':').map(Number);
-
-      const cutoffHours = 18;
-      const cutoffMinutes = 30;
-
-      if (hours < cutoffHours || (hours === cutoffHours && minutes < cutoffMinutes)) {
-        return res.status(400).json({ success: false, message: "Late punch in request for today can only be applied after 18:30 PM." });
-      };
-    };
-
     // Check if a late punch-in request already exists
     const existingLatePunchIn = await LatePunchIn.findOne({ employee, attendanceDate });
 
@@ -119,8 +106,8 @@ export const createLatePunchIn = async (req, res) => {
 
     // Send email
     const sendBy = await Team.findById(employee);
-    const subject = `${sendBy?.name} applied for late punch in for attendance date ${attendanceDate} and punch time ${punchInTime}`;
-    const htmlContent = `<p>Late punch in request has been applied by ${sendBy?.name} for attendance date ${attendanceDate} to update punch in time ${punchInTime}.</p><p>Please review the request.</p>`;
+    const subject = `${sendBy?.name} applied for late punch-in for attendance date ${attendanceDate} and punch-in time ${punchInTime}`;
+    const htmlContent = `<p>Late punch-in request has been applied by ${sendBy?.name} for attendance date ${attendanceDate} to update punch-in time ${punchInTime}.</p><p>Please review the request.</p>`;
     sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
     // Send push notification to admin

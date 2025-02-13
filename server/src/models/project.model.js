@@ -87,6 +87,9 @@ const projectSchema = new mongoose.Schema(
     endDate: {
       type: String,
     },
+    projectDeadline: {
+      type: String,
+    },
     totalHour: {
       type: Number,
       default: 0,

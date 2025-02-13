@@ -1,8 +1,16 @@
 import mongoose from "mongoose";
 import ProjectWork from "../models/projectWork.model.js";
+import Project from "../models/project.model.js";
+import Team from "../models/team.model.js";
+import ProjectStatus from "../models/projectStatus.model.js";
+import { sendEmail } from "../services/emailService.js";
+import firebase from "../firebase/index.js";
 
-// Create a new Project Work entry
+// Create a new Project Work entry with transaction
 export const createProjectWork = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { employee, project, status, date, description } = req.body;
 
@@ -10,6 +18,7 @@ export const createProjectWork = async (req, res) => {
       return res.status(400).json({ success: false, message: "All fields are required." });
     };
 
+    // Create project work entry
     const newWork = new ProjectWork({
       employee,
       project,
@@ -18,9 +27,73 @@ export const createProjectWork = async (req, res) => {
       description,
     });
 
-    await newWork.save();
+    await newWork.save({ session });
+
+    // Find and update project status
+    const p = await Project
+      .findById(project)
+      .session(session);
+
+    if (!p) {
+      throw new Error("Project not found.");
+    };
+
+    p.projectStatus = status;
+
+    await p.save({ session });
+
+    // Fetch project status details
+    const s = await ProjectStatus
+      .findById(status)
+      .session(session);
+
+    if (!s) {
+      throw new Error("Project status not found.");
+    };
+
+    // Fetch employee details
+    const updateBy = await Team
+      .findById(employee)
+      .session(session);
+
+    if (!updateBy) {
+      throw new Error("Employee not found.");
+    };
+
+    // Send email notification
+    const subject = `${updateBy?.name} Updated Project Status on Date ${date}`;
+    const htmlContent = `<p>${updateBy?.name} updated the project status to ${s?.status} for project ${p?.projectName} on date ${date}</p><p>Status: ${s?.status}</p><p>Description: ${description}</p>`;
+    sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+
+    // Send push notification to admins
+    const teams = await Team
+      .find()
+      .populate({ path: "role", select: "name" })
+      .session(session);
+
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
+
+    if (filteredAdmins?.length > 0) {
+      const payload = {
+        notification: {
+          title: `${updateBy?.name} Updated Project Status`,
+          body: `Updated project status to ${s?.status} for project ${p?.projectName}`,
+        },
+      };
+
+      await Promise.allSettled(
+        filteredAdmins?.map((admin) => firebase.messaging().send({ ...payload, token: admin?.fcmToken }))
+      );
+    };
+
+    // Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
     return res.status(201).json({ success: true, data: newWork });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     return res.status(500).json({ success: false, message: error.message });
   };
 };

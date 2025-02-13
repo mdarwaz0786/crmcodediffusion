@@ -246,6 +246,14 @@ export const updateMissedPunchOut = async (req, res) => {
     const { id } = req.params;
     const { status, approvedBy } = req.body;
 
+    if (!status) {
+      return res.status(400).json({ success: false, message: "Status is required." });
+    };
+
+    if (!approvedBy) {
+      return res.status(400).json({ success: false, message: "Approver is required." });
+    };
+
     const missedPunchOut = await MissedPunchOut
       .findById(id)
       .populate("employee")

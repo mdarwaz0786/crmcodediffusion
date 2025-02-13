@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 import WorkSummary from "../models/workSummary.model.js";
+import Team from "../models/team.model.js";
+import { sendEmail } from "../services/emailService.js";
+import firebase from "../firebase/index.js";
 
 // Create WorkSummary
 export const createWorkSummary = async (req, res) => {
@@ -20,6 +23,31 @@ export const createWorkSummary = async (req, res) => {
 
     const newWorkSummary = new WorkSummary({ employee, date, summary });
     await newWorkSummary.save();
+
+    // Send email
+    const writeBy = await Team.findById(employee);
+    const subject = `${writeBy?.name} Work Summary for Date ${date}`;
+    const htmlContent = `</p>${summary}</p>`;
+    sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+
+    // Send push notification to admin
+    const teams = await Team
+      .find()
+      .populate({ path: 'role', select: "name" })
+      .exec();
+
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
+
+    if (filteredAdmins?.length > 0) {
+      const payload = {
+        notification: {
+          title: `${writeBy?.name} Work Summary`,
+          body: `${summary}`,
+        },
+      };
+
+      await Promise.allSettled(filteredAdmins?.map((admin) => firebase.messaging().send({ ...payload, token: admin?.fcmToken })));
+    };
 
     return res.status(201).json({ success: true, data: newWorkSummary });
   } catch (error) {
@@ -109,7 +137,7 @@ export const groupWorkSummaryByEmployee = async (req, res) => {
     // Aggregation pipeline to group work summaries by employee name
     const groupedSummaries = await WorkSummary.aggregate([
       {
-        $match: query, // Apply filters from query params
+        $match: query,
       },
       {
         $sort: {
@@ -118,18 +146,18 @@ export const groupWorkSummaryByEmployee = async (req, res) => {
       },
       {
         $lookup: {
-          from: "teams", // Join with the "teams" collection
+          from: "teams",
           localField: "employee",
           foreignField: "_id",
           as: "employeeDetails",
         },
       },
       {
-        $unwind: "$employeeDetails", // Unwind the employee details
+        $unwind: "$employeeDetails",
       },
       {
         $group: {
-          _id: "$employeeDetails.name", // Group by employee name
+          _id: "$employeeDetails.name",
           workSummaries: {
             $push: {
               date: "$date",

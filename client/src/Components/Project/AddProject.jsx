@@ -15,26 +15,21 @@ const AddProject = () => {
   const permissions = team?.role?.permissions?.project;
   const [customer, setCustomer] = useState([]);
   const [projectType, setProjectType] = useState([]);
-  const [projectStatus, setProjectStatus] = useState([]);
   const [projectCategory, setProjectCategory] = useState([]);
   const [teamMember, setTeamMember] = useState([]);
   const [technology, setTechnology] = useState([]);
-  const [projectTiming, setProjectTiming] = useState([]);
   const [projectPriority, setProjectPriority] = useState([]);
 
   const [projectName, setProjectName] = useState("");
   const [selectedProjectType, setSelectedProjectType] = useState("");
   const [selectedProjectCategory, setSelectedProjectCategory] = useState("");
-  const [selectedProjectStatus, setSelectedProjectStatus] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("");
-  const [selectedProjectTiming, setSelectedProjectTiming] = useState("");
   const [selectedProjectPriority, setSelectedProjectPriority] = useState("");
   const [selectedResponsible, setSelectedResponsible] = useState([]);
   const [selectedLeader, setSelectedLeader] = useState([]);
   const [selectedTechnology, setSelectedTechnology] = useState([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
   const [projectPrice, setProjectPrice] = useState("");
+  const [projectDeadline, setProjectDeadline] = useState("");
   const [totalHour, setTotalHour] = useState("");
   const [description, setDescription] = useState("");
   const navigate = useNavigate();
@@ -65,22 +60,6 @@ const AddProject = () => {
 
       if (response?.data?.success) {
         setProjectCategory(response?.data?.projectCategory);
-      };
-    } catch (error) {
-      console.log(error.message);
-    };
-  };
-
-  const fetchAllProjectTiming = async () => {
-    try {
-      const response = await axios.get(`${base_url}/api/v1/projectTiming/all-projectTiming`, {
-        headers: {
-          Authorization: validToken,
-        },
-      });
-
-      if (response?.data?.success) {
-        setProjectTiming(response?.data?.projectTiming);
       };
     } catch (error) {
       console.log(error.message);
@@ -119,22 +98,6 @@ const AddProject = () => {
     };
   };
 
-  const fetchAllProjectStatus = async () => {
-    try {
-      const response = await axios.get(`${base_url}/api/v1/projectStatus/all-projectStatus`, {
-        headers: {
-          Authorization: validToken,
-        },
-      });
-
-      if (response?.data?.success) {
-        setProjectStatus(response?.data?.projectStatus);
-      };
-    } catch (error) {
-      console.log(error.message);
-    };
-  };
-
   const fetchAllProjectType = async () => {
     try {
       const response = await axios.get(`${base_url}/api/v1/projectType/all-projectType`, {
@@ -167,14 +130,11 @@ const AddProject = () => {
     };
   };
 
-
   useEffect(() => {
     if (!isLoading && team && permissions?.create) {
       fetchAllCustomer();
       fetchAllProjectCatgory();
       fetchAllProjectType();
-      fetchAllProjectStatus();
-      fetchAllProjectTiming();
       fetchAllProjectPriority();
       fetchAllTeamMember();
       fetchAllTechnology();
@@ -202,16 +162,8 @@ const AddProject = () => {
         return toast.error("Select project category");
       };
 
-      if (!selectedProjectTiming) {
-        return toast.error("Select project timeline");
-      };
-
       if (!selectedProjectPriority) {
         return toast.error("Select project priority");
-      };
-
-      if (!selectedProjectStatus) {
-        return toast.error("Select project status");
       };
 
       if (selectedResponsible?.length === 0) {
@@ -230,20 +182,16 @@ const AddProject = () => {
         return toast.error("Enter project cost");
       };
 
-      if (!startDate) {
-        return toast.error("Enter start date");
-      };
-
-      if (!endDate) {
-        return toast.error("Enter end date");
-      };
-
       if (!totalHour) {
         return toast.error("Enter total hour");
       };
 
+      if (!projectDeadline) {
+        return toast.error("Enter project deadline");
+      };
+
       if (!description) {
-        return toast.error("Enter project phase description");
+        return toast.error("Enter project description");
       };
 
       const response = await axios.post(`${base_url}/api/v1/project/create-project`,
@@ -252,15 +200,12 @@ const AddProject = () => {
           customer: selectedCustomer,
           projectType: selectedProjectType,
           projectCategory: selectedProjectCategory,
-          projectTiming: selectedProjectTiming,
           projectPriority: selectedProjectPriority,
-          projectStatus: selectedProjectStatus,
           responsiblePerson: selectedResponsible,
           teamLeader: selectedLeader,
           technology: selectedTechnology,
+          projectDeadline,
           projectPrice,
-          startDate,
-          endDate,
           totalHour,
           description,
         },
@@ -276,14 +221,10 @@ const AddProject = () => {
         setSelectedCustomer("");
         setSelectedProjectType("");
         setSelectedProjectCategory("");
-        setSelectedProjectStatus("");
-        setSelectedProjectTiming("");
         setSelectedProjectPriority("");
         setSelectedResponsible([]);
         setSelectedLeader([]);
         setProjectPrice("");
-        setStartDate("");
-        setEndDate("");
         setTotalHour("");
         setDescription("");
         toast.success("Submitted Successfully");
@@ -438,38 +379,12 @@ const AddProject = () => {
             </div>
             <div className="col-md-6">
               <div className="form-wrap">
-                <label className="col-form-label" htmlFor="projectTiming">Project Timeline  <span className="text-danger">*</span></label>
-                <select className="form-select" name="projectTiming" id="projectTiming" value={selectedProjectTiming} onChange={(e) => setSelectedProjectTiming(e.target.value)}>
-                  <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
-                  {
-                    projectTiming?.map((p) => (
-                      <option key={p?._id} value={p?._id}>{p?.name}</option>
-                    ))
-                  }
-                </select>
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div className="form-wrap">
                 <label className="col-form-label" htmlFor="projectPriority">Project Priority <span className="text-danger">*</span></label>
                 <select className="form-select" name="projectPriority" id="projectPriority" value={selectedProjectPriority} onChange={(e) => setSelectedProjectPriority(e.target.value)}>
                   <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
                   {
                     projectPriority?.map((p) => (
                       <option key={p?._id} value={p?._id}>{p?.name}</option>
-                    ))
-                  }
-                </select>
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div className="form-wrap">
-                <label className="col-form-label" htmlFor="projectStatus">Project Status <span className="text-danger">*</span></label>
-                <select className="form-select" name="projectStatus" id="projectStatus" value={selectedProjectStatus} onChange={(e) => setSelectedProjectStatus(e.target.value)}>
-                  <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
-                  {
-                    projectStatus?.map((p) => (
-                      <option key={p?._id} value={p?._id}>{p?.status}</option>
                     ))
                   }
                 </select>
@@ -489,37 +404,8 @@ const AddProject = () => {
             </div>
             <div className="col-md-6">
               <div className="form-wrap">
-                <label className="col-form-label" htmlFor="startDate">Start Date <span className="text-danger">*</span></label>
-                <input type="date" className="form-control" name="startDate" id="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div className="form-wrap">
-                <label className="col-form-label" htmlFor="endDate">End Date <span className="text-danger">*</span></label>
-                <input type="date" className="form-control" name="endDate" id="endDate" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-              </div>
-            </div>
-            <div className="col-md-6">
-              <div className="form-wrap">
-                <label className="col-form-label" htmlFor="responsiblePerson">Responsible Person <span className="text-danger">*</span></label>
-                <select className="form-select" name="responsiblePerson" id="responsiblePerson" value="" onChange={handleSelectChangeResponsible}>
-                  <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
-                  {
-                    teamMember?.filter((t) => !selectedResponsible.includes(t?._id)).map((t) => (
-                      <option key={t?._id} value={t?._id}>{t?.name}</option>
-                    ))
-                  }
-                </select>
-                <div className="selected-container">
-                  {
-                    selectedResponsible?.map((responsible, index) => (
-                      <span key={index} className="selected-item">
-                        {teamMember?.find((t) => t?._id === responsible)?.name}
-                        <button type="button" className="remove-btn" onClick={() => handleRemoveResponsible(responsible)}>{"x"}</button>
-                      </span>
-                    ))
-                  }
-                </div>
+                <label className="col-form-label" htmlFor="projectDeadline">Project Deadline <span className="text-danger">*</span></label>
+                <input type="date" className="form-control" name="projectDeadline" id="projectDeadline" value={projectDeadline} onChange={(e) => setProjectDeadline(e.target.value)} />
               </div>
             </div>
             <div className="col-md-6">
@@ -539,6 +425,29 @@ const AddProject = () => {
                       <span key={index} className="selected-item">
                         {teamMember?.find((t) => t?._id === leader)?.name}
                         <button type="button" className="remove-btn" onClick={() => handleRemoveLeader(leader)}>{"x"}</button>
+                      </span>
+                    ))
+                  }
+                </div>
+              </div>
+            </div>
+            <div className="col-md-12">
+              <div className="form-wrap">
+                <label className="col-form-label" htmlFor="responsiblePerson">Responsible Person <span className="text-danger">*</span></label>
+                <select className="form-select" name="responsiblePerson" id="responsiblePerson" value="" onChange={handleSelectChangeResponsible}>
+                  <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
+                  {
+                    teamMember?.filter((t) => !selectedResponsible.includes(t?._id)).map((t) => (
+                      <option key={t?._id} value={t?._id}>{t?.name}</option>
+                    ))
+                  }
+                </select>
+                <div className="selected-container">
+                  {
+                    selectedResponsible?.map((responsible, index) => (
+                      <span key={index} className="selected-item">
+                        {teamMember?.find((t) => t?._id === responsible)?.name}
+                        <button type="button" className="remove-btn" onClick={() => handleRemoveResponsible(responsible)}>{"x"}</button>
                       </span>
                     ))
                   }
