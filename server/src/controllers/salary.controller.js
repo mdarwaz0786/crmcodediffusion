@@ -15,13 +15,19 @@ function timeToMinutes(time) {
 
 // Helper function to convert minutes into time (HH:MM)
 function minutesToTime(minutes) {
-    if (!minutes) {
-        return;
+    if (typeof minutes !== "number") {
+        minutes = Number(minutes);
+        if (isNaN(minutes)) return "Invalid input";
     };
+
+    const isNegative = minutes < 0;
+    minutes = Math.abs(minutes);
 
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+
+    const formattedTime = `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+    return isNegative ? `+${formattedTime}` : formattedTime;
 };
 
 // Function to convert UTC date to IST
@@ -425,8 +431,6 @@ export const newFetchMonthlySalary = async (req, res) => {
                     totalSalary: totalSalary.toFixed(2),
                     totalDeduction: totalDeduction.toFixed(2),
                     dailySalary: dailySalary.toFixed(2),
-                    salaryPaid,
-                    transactionId,
                     companyWorkingHours: minutesToTime(companyWorkingMinutes),
                     employeeHoursWorked: minutesToTime(totalMinutesWorked),
                     employeeHoursShortfall: minutesToTime(minutesShortfall),
@@ -438,6 +442,8 @@ export const newFetchMonthlySalary = async (req, res) => {
                     totalOnLeave,
                     totalHolidays,
                     totalSundays,
+                    salaryPaid,
+                    transactionId,
                 };
             }),
         );

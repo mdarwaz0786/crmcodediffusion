@@ -7,7 +7,6 @@ import { useAuth } from "../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
 import Preloader from "../../Preloader.jsx";
-import formatTimeToHoursMinutes from "../../Helper/formatTimeToHoursMinutes.js";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const Salary = () => {
@@ -262,9 +261,9 @@ const Salary = () => {
                                     <td>{d?.monthlySalary}</td>
                                     <td>{d?.totalSalary}</td>
                                     <td>
-                                      <div><strong>Company Working Hours: </strong>{formatTimeToHoursMinutes(d?.companyWorkingHours)}</div>
-                                      <div><strong>Employee Working Hours: </strong>{formatTimeToHoursMinutes(d?.employeeHoursWorked)}</div>
-                                      <div><strong>Hours Shortfall: </strong>{formatTimeToHoursMinutes(d?.employeeHoursShortfall)}</div>
+                                      <div><strong>Company&apos;s Working Hours: </strong>{d?.companyWorkingHours}</div>
+                                      <div><strong>Employee&apos;s Working Hours: </strong>{d?.employeeHoursWorked}</div>
+                                      <div><strong>Hours Shortfall: </strong>{d?.employeeHoursShortfall}</div>
                                       <div><strong>Total Deduction Days: </strong>{d?.deductionDays} Days</div>
                                       <div><strong>Daily Salary: </strong>{d?.dailySalary}</div>
                                       <div><strong>Total Salary Deducted: </strong>{d?.totalDeduction}</div>
