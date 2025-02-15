@@ -323,6 +323,7 @@ export const newFetchMonthlyStatistic = async (req, res) => {
     let averagePunchOutTime = 0;
 
     for (let day = 1; day <= totalDaysInMonth; day++) {
+      let _id = "";
       let status = "";
       let punchInTime = "";
       let punchOutTime = "";
@@ -339,8 +340,9 @@ export const newFetchMonthlyStatistic = async (req, res) => {
           employee: employeeId,
           attendanceDate: formattedDate,
           status: { $in: ["Present", "Half Day"] },
-        }).select("attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
+        }).select("_id attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
         if (attendanceRecord) {
+          _id = attendanceRecord?._id;
           status = attendanceRecord?.status;
           punchInTime = attendanceRecord?.punchInTime;
           punchOutTime = attendanceRecord?.punchOutTime;
@@ -379,8 +381,9 @@ export const newFetchMonthlyStatistic = async (req, res) => {
             employee: employeeId,
             attendanceDate: formattedDate,
             status: { $in: ["Present", "Half Day"] },
-          }).select("attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
+          }).select("_id attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
           if (attendanceRecord) {
+            _id = attendanceRecord?._id;
             status = attendanceRecord?.status;
             punchInTime = attendanceRecord?.punchInTime;
             punchOutTime = attendanceRecord?.punchOutTime;
@@ -421,8 +424,9 @@ export const newFetchMonthlyStatistic = async (req, res) => {
             employee: employeeId,
             attendanceDate: formattedDate,
             status: { $in: ["Present", "Half Day"] },
-          }).select("attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
+          }).select("_id attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
           if (attendanceRecord) {
+            _id = attendanceRecord?._id;
             status = attendanceRecord?.status;
             punchInTime = attendanceRecord?.punchInTime;
             punchOutTime = attendanceRecord?.punchOutTime;
@@ -458,6 +462,10 @@ export const newFetchMonthlyStatistic = async (req, res) => {
       let attendanceObject = {
         attendanceDate: formattedDate,
         status: status,
+      };
+
+      if (_id) {
+        attendanceObject._id = _id;
       };
 
       if (punchInTime) {
@@ -614,6 +622,60 @@ export const newUpdateAttendance = async (req, res) => {
     return res.status(200).json({ success: true, attendance: updatedAttendance });
   } catch (error) {
     console.log(error.message);
+    return res.status(500).json({ success: false, message: error.message });
+  };
+};
+
+// Update punch times in attendance
+export const newUpdatePunchTimeAttendance = async (req, res) => {
+  try {
+    const { id, punchOutTime, punchInTime } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Attendance id is required." });
+    };
+
+    if (!punchInTime && !punchOutTime) {
+      return res.status(400).json({ success: false, message: "At least one punch time is required." });
+    };
+
+    const attendance = await Attendance.findById(id);
+
+    if (!attendance) {
+      return res.status(404).json({ success: false, message: `Attendance not found with id ${id}` });
+    };
+
+    const EXPECTED_PUNCH_IN = "10:00";
+    const HALF_DAY_THRESHOLD = "11:00";
+
+    const lateIn = calculateTimeDifference(EXPECTED_PUNCH_IN, punchInTime);
+
+    const attendanceStatus = compareTime(punchInTime, HALF_DAY_THRESHOLD) === 1 ? "Half Day" : "Present";
+
+    let updateFields = { lateIn, status: attendanceStatus };
+
+    if (punchInTime) {
+      updateFields.punchInTime = punchInTime;
+      updateFields.punchIn = true;
+    };
+
+    if (punchOutTime) {
+      updateFields.punchOutTime = punchOutTime;
+      updateFields.punchOut = true;
+    };
+
+    if (punchInTime && punchOutTime) {
+      updateFields.hoursWorked = calculateTimeDifference(punchInTime, punchOutTime);
+    };
+
+    const updatedAttendance = await Attendance.findByIdAndUpdate(
+      id,
+      { $set: updateFields },
+      { new: true },
+    );
+
+    return res.status(200).json({ success: true, attendance: updatedAttendance });
+  } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   };
 };

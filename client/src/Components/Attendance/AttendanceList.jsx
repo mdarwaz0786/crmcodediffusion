@@ -305,9 +305,9 @@ const AttendanceList = () => {
                       <h4 style={{ textAlign: "center" }}>Loading...</h4>
                     ) : (
                       <>
-                        <Calendar attendanceData={data} employeeId={selectedEmployee} month={filters.month} year={filters.year} />
+                        <Calendar attendanceData={data} employeeId={selectedEmployee} month={filters.month} year={filters.year} fetchAllData={fetchAllData} />
                         <div style={{ marginTop: "3rem" }}>
-                          <AttendanceSummary attendance={monthlyStatics} />
+                          <AttendanceSummary attendance={monthlyStatics} fetchAllData={fetchAllData} />
                         </div>
                       </>
                     )
