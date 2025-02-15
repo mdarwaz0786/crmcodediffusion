@@ -5,61 +5,17 @@ export const createProjectCategory = async (req, res) => {
   try {
     const { name, description } = req.body;
 
+    if (!name) {
+      return res.status(400).json({ success: false, message: "Name is required." });
+    };
+
     const projectCategory = new ProjectCategory({ name, description });
     await projectCategory.save();
 
     return res.status(200).json({ success: true, message: "Project category created successfully", projectCategory });
   } catch (error) {
-    console.log("Error while creating project category:", error.message);
     return res.status(500).json({ success: false, message: `Error while creating project category: ${error.message}` });
   };
-};
-
-// Helper function to build the projection object based on user permissions
-const buildProjection = (permissions) => {
-  const projectCategoryFields = permissions.projectCategory.fields;
-  const projection = {};
-
-  for (const [key, value] of Object.entries(projectCategoryFields)) {
-    if (value.show) {
-      projection[key] = 1;
-    } else {
-      projection[key] = 0;
-    };
-  };
-
-  // Ensure _id, createdAt and updatedAt are included by default unless explicitly excluded
-  projection._id = 1;
-  projection.createdAt = 1;
-  projection.updatedAt = 1;
-
-  return projection;
-};
-
-// Helper function to filter fields based on projection
-const filterFields = (projectCategory, projection) => {
-  const filteredProjectCategory = {};
-
-  for (const key in projectCategory._doc) {
-    if (projection[key] !== 0) {  // only exclude if explicitly set to 0
-      filteredProjectCategory[key] = projectCategory[key];
-    };
-  };
-
-  // Include _id, createdAt, and updatedAt if they were not excluded
-  if (projection._id !== 0) {
-    filteredProjectCategory._id = projectCategory._id;
-  };
-
-  if (projection.createdAt !== 0) {
-    filteredProjectCategory.createdAt = projectCategory.createdAt;
-  };
-
-  if (projection.updatedAt !== 0) {
-    filteredProjectCategory.updatedAt = projectCategory.updatedAt;
-  };
-
-  return filteredProjectCategory;
 };
 
 // Controller for fetching all project category
@@ -68,9 +24,9 @@ export const fetchAllProjectCategory = async (req, res) => {
     let filter = {};
     let sort = {};
 
-    // Handle universal searching across all fields
+    // Handle searching across all fields
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search, 'i');
+      const searchRegex = new RegExp(req.query.search.trim(), 'i');
       filter.$or = [
         { name: { $regex: searchRegex } },
         { description: { $regex: searchRegex } },
@@ -79,7 +35,7 @@ export const fetchAllProjectCategory = async (req, res) => {
 
     // Handle name search
     if (req.query.name) {
-      filter.name = { $regex: new RegExp(req.query.name, 'i') };
+      filter.name = { $regex: new RegExp(req.query.name.trim(), 'i') };
     };
 
     // Handle name filter
@@ -99,7 +55,8 @@ export const fetchAllProjectCategory = async (req, res) => {
     const limit = parseInt(req.query.limit);
     const skip = (page - 1) * limit;
 
-    const projectCategory = await ProjectCategory.find(filter)
+    const projectCategory = await ProjectCategory
+      .find(filter)
       .sort(sort)
       .skip(skip)
       .limit(limit)
@@ -109,14 +66,10 @@ export const fetchAllProjectCategory = async (req, res) => {
       return res.status(404).json({ success: false, message: "Project category not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredProjectCategory = projectCategory.map((projectCategory) => filterFields(projectCategory, projection));
     const totalCount = await ProjectCategory.countDocuments(filter);
 
-    return res.status(200).json({ success: true, message: "All project category fetched successfully", projectCategory: filteredProjectCategory, totalCount });
+    return res.status(200).json({ success: true, message: "All project category fetched successfully", projectCategory, totalCount });
   } catch (error) {
-    console.log("Error while fetching all project category:", error.message);
     return res.status(500).json({ success: false, message: `Error while fetching all project category: ${error.message}` });
   };
 };
@@ -125,19 +78,16 @@ export const fetchAllProjectCategory = async (req, res) => {
 export const fetchSingleProjectCategory = async (req, res) => {
   try {
     const projectCategoryId = req.params.id;
-    const projectCategory = await ProjectCategory.findById(projectCategoryId);
+
+    const projectCategory = await ProjectCategory
+      .findById(projectCategoryId);
 
     if (!projectCategory) {
       return res.status(404).json({ success: false, message: "Project category not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredProjectCategory = filterFields(projectCategory, projection);
-
-    return res.status(200).json({ success: true, message: "Singele project category fetched successfully", projectCategory: filteredProjectCategory });
+    return res.status(200).json({ success: true, message: "Singele project category fetched successfully", projectCategory });
   } catch (error) {
-    console.log("Error while fetching single project category:", error.message);
     return res.status(500).json({ success: false, message: `Error while fetching single project category: ${error.message}` });
   };
 };
@@ -146,9 +96,11 @@ export const fetchSingleProjectCategory = async (req, res) => {
 export const updateProjectCategory = async (req, res) => {
   try {
     const projectCategoryId = req.params.id;
+
     const { name, description } = req.body;
 
-    const projectCategory = await ProjectCategory.findByIdAndUpdate(projectCategoryId, { name, description }, { new: true });
+    const projectCategory = await ProjectCategory
+      .findByIdAndUpdate(projectCategoryId, { name, description }, { new: true });
 
     if (!projectCategory) {
       return res.status(404).json({ success: false, message: "Project category not found" });
@@ -156,7 +108,6 @@ export const updateProjectCategory = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Project category updated successfully", projectCategory });
   } catch (error) {
-    console.log("Error while updating project category:", error.message);
     return res.status(500).json({ success: false, message: `Error while updating project category: ${error.message}` });
   };
 };
@@ -165,7 +116,9 @@ export const updateProjectCategory = async (req, res) => {
 export const deleteProjectCategory = async (req, res) => {
   try {
     const projectCategoryId = req.params.id;
-    const projectCategory = await ProjectCategory.findByIdAndDelete(projectCategoryId);
+
+    const projectCategory = await ProjectCategory
+      .findByIdAndDelete(projectCategoryId);
 
     if (!projectCategory) {
       return res.status(400).json({ success: false, message: "Project category not found" });
@@ -173,7 +126,6 @@ export const deleteProjectCategory = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Project category deleted successfully" });
   } catch (error) {
-    console.log("Error while deleting project category:", error.message);
     return res.status(500).json({ success: false, message: `Error while deleting project category: ${error.message}` });
   };
 };

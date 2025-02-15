@@ -5,61 +5,17 @@ export const createProjectType = async (req, res) => {
   try {
     const { name, description } = req.body;
 
+    if (!name) {
+      return res.status(400).json({ success: false, message: "Name is required." });
+    };
+
     const projectType = new ProjectType({ name, description });
     await projectType.save();
 
     return res.status(200).json({ success: true, message: "Project type created successfully", projectType });
   } catch (error) {
-    console.log("Error while creating project type:", error.message);
     return res.status(500).json({ success: false, message: `Error while creating project type: ${error.message}` });
   };
-};
-
-// Helper function to build the projection object based on user permissions
-const buildProjection = (permissions) => {
-  const projectTypeFields = permissions.projectType.fields;
-  const projection = {};
-
-  for (const [key, value] of Object.entries(projectTypeFields)) {
-    if (value.show) {
-      projection[key] = 1;
-    } else {
-      projection[key] = 0;
-    };
-  };
-
-  // Ensure _id, createdAt and updatedAt are included by default unless explicitly excluded
-  projection._id = 1;
-  projection.createdAt = 1;
-  projection.updatedAt = 1;
-
-  return projection;
-};
-
-// Helper function to filter fields based on projection
-const filterFields = (projectType, projection) => {
-  const filteredProjectType = {};
-
-  for (const key in projectType._doc) {
-    if (projection[key] !== 0) {  // only exclude if explicitly set to 0
-      filteredProjectType[key] = projectType[key];
-    };
-  };
-
-  // Include _id, createdAt, and updatedAt if they were not excluded
-  if (projection._id !== 0) {
-    filteredProjectType._id = projectType._id;
-  };
-
-  if (projection.createdAt !== 0) {
-    filteredProjectType.createdAt = projectType.createdAt;
-  };
-
-  if (projection.updatedAt !== 0) {
-    filteredProjectType.updatedAt = projectType.updatedAt;
-  };
-
-  return filteredProjectType;
 };
 
 // Controller for fetching all project type
@@ -68,9 +24,9 @@ export const fetchAllProjectType = async (req, res) => {
     let filter = {};
     let sort = {};
 
-    // Handle universal searching across all fields
+    // Handle searching across all fields
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search, 'i');
+      const searchRegex = new RegExp(req.query.search.trim(), 'i');
       filter.$or = [
         { name: { $regex: searchRegex } },
         { description: { $regex: searchRegex } },
@@ -79,7 +35,7 @@ export const fetchAllProjectType = async (req, res) => {
 
     // Handle name search
     if (req.query.name) {
-      filter.name = { $regex: new RegExp(req.query.name, 'i') };
+      filter.name = { $regex: new RegExp(req.query.name.trim(), 'i') };
     };
 
     // Handle name filter
@@ -99,7 +55,8 @@ export const fetchAllProjectType = async (req, res) => {
     const limit = parseInt(req.query.limit);
     const skip = (page - 1) * limit;
 
-    const projectType = await ProjectType.find(filter)
+    const projectType = await ProjectType
+      .find(filter)
       .sort(sort)
       .skip(skip)
       .limit(limit)
@@ -109,14 +66,10 @@ export const fetchAllProjectType = async (req, res) => {
       return res.status(404).json({ success: false, message: "Project type not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredProjectType = projectType.map((projectType) => filterFields(projectType, projection));
     const totalCount = await ProjectType.countDocuments(filter);
 
-    return res.status(200).json({ success: true, message: "All project type fetched successfully", projectType: filteredProjectType, totalCount });
+    return res.status(200).json({ success: true, message: "All project type fetched successfully", projectType, totalCount });
   } catch (error) {
-    console.log("Error while fetching all project type:", error.message);
     return res.status(500).json({ success: false, message: `Error while fetching all project type: ${error.message}` });
   };
 };
@@ -125,19 +78,16 @@ export const fetchAllProjectType = async (req, res) => {
 export const fetchSingleProjectType = async (req, res) => {
   try {
     const projectTypeId = req.params.id;
-    const projectType = await ProjectType.findById(projectTypeId);
+
+    const projectType = await ProjectType
+      .findById(projectTypeId);
 
     if (!projectType) {
       return res.status(404).json({ success: false, message: "Project type not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredProjectType = filterFields(projectType, projection);
-
-    return res.status(200).json({ success: true, message: "Single project type fetched successfully", projectType: filteredProjectType });
+    return res.status(200).json({ success: true, message: "Single project type fetched successfully", projectType });
   } catch (error) {
-    console.log("Error while fetching single project type:", error.message);
     return res.status(500).json({ success: false, message: `Error while fetching single project type: ${error.message}` });
   };
 };
@@ -146,9 +96,11 @@ export const fetchSingleProjectType = async (req, res) => {
 export const updateProjectType = async (req, res) => {
   try {
     const projectTypeId = req.params.id;
+
     const { name, description } = req.body;
 
-    const projectType = await ProjectType.findByIdAndUpdate(projectTypeId, { name, description }, { new: true });
+    const projectType = await ProjectType
+      .findByIdAndUpdate(projectTypeId, { name, description }, { new: true });
 
     if (!projectType) {
       return res.status(404).json({ success: false, message: "Project type not found" });
@@ -156,7 +108,6 @@ export const updateProjectType = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Project type updated successfully", projectType });
   } catch (error) {
-    console.log("Error while updating project type:", error.message);
     return res.status(500).json({ success: false, message: `Error while updating project type: ${error.message}` });
   };
 };
@@ -165,7 +116,9 @@ export const updateProjectType = async (req, res) => {
 export const deleteProjectType = async (req, res) => {
   try {
     const projectTypeId = req.params.id;
-    const projectType = await ProjectType.findByIdAndDelete(projectTypeId);
+
+    const projectType = await ProjectType
+      .findByIdAndDelete(projectTypeId);
 
     if (!projectType) {
       return res.status(400).json({ success: false, message: "Project type not found" });
@@ -173,7 +126,6 @@ export const deleteProjectType = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Project type deleted successfully" });
   } catch (error) {
-    console.log("Error while deleting project type:", error.message);
     return res.status(500).json({ success: false, message: `Error while deleting project type: ${error.message}` });
   };
 };

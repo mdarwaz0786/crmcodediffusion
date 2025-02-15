@@ -5,61 +5,17 @@ export const createProjectPriority = async (req, res) => {
   try {
     const { name, description } = req.body;
 
+    if (!name) {
+      return res.status(400).json({ success: false, message: "Name is required." });
+    };
+
     const projectPriority = new ProjectPriority({ name, description });
     await projectPriority.save();
 
     return res.status(200).json({ success: true, message: "Project priority created successfully", projectPriority });
   } catch (error) {
-    console.log("Error while creating project priority:", error.message);
     return res.status(500).json({ success: false, message: `Error while creating project priority: ${error.message}` });
   };
-};
-
-// Helper function to build the projection object based on user permissions
-const buildProjection = (permissions) => {
-  const projectPriorityFields = permissions.projectPriority.fields;
-  const projection = {};
-
-  for (const [key, value] of Object.entries(projectPriorityFields)) {
-    if (value.show) {
-      projection[key] = 1;
-    } else {
-      projection[key] = 0;
-    };
-  };
-
-  // Ensure _id, createdAt and updatedAt are included by default unless explicitly excluded
-  projection._id = 1;
-  projection.createdAt = 1;
-  projection.updatedAt = 1;
-
-  return projection;
-};
-
-// Helper function to filter fields based on projection
-const filterFields = (projectPriority, projection) => {
-  const filteredProjectPriority = {};
-
-  for (const key in projectPriority._doc) {
-    if (projection[key] !== 0) {  // only exclude if explicitly set to 0
-      filteredProjectPriority[key] = projectPriority[key];
-    };
-  };
-
-  // Include _id, createdAt, and updatedAt if they were not excluded
-  if (projection._id !== 0) {
-    filteredProjectPriority._id = projectPriority._id;
-  };
-
-  if (projection.createdAt !== 0) {
-    filteredProjectPriority.createdAt = projectPriority.createdAt;
-  };
-
-  if (projection.updatedAt !== 0) {
-    filteredProjectPriority.updatedAt = projectPriority.updatedAt;
-  };
-
-  return filteredProjectPriority;
 };
 
 // Controller for fetching all project priority
@@ -68,9 +24,9 @@ export const fetchAllProjectPriority = async (req, res) => {
     let filter = {};
     let sort = {};
 
-    // Handle universal searching across all fields
+    // Handle searching across all fields
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search, 'i');
+      const searchRegex = new RegExp(req.query.search.trim(), 'i');
       filter.$or = [
         { name: { $regex: searchRegex } },
         { description: { $regex: searchRegex } },
@@ -79,7 +35,7 @@ export const fetchAllProjectPriority = async (req, res) => {
 
     // Handle name search
     if (req.query.name) {
-      filter.name = { $regex: new RegExp(req.query.name, 'i') };
+      filter.name = { $regex: new RegExp(req.query.name.trim(), 'i') };
     };
 
     // Handle name filter
@@ -99,7 +55,8 @@ export const fetchAllProjectPriority = async (req, res) => {
     const limit = parseInt(req.query.limit);
     const skip = (page - 1) * limit;
 
-    const projectPriority = await ProjectPriority.find(filter)
+    const projectPriority = await ProjectPriority
+      .find(filter)
       .sort(sort)
       .skip(skip)
       .limit(limit)
@@ -109,14 +66,10 @@ export const fetchAllProjectPriority = async (req, res) => {
       return res.status(404).json({ success: false, message: "Project priority not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredProjectPriority = projectPriority.map((projectPriority) => filterFields(projectPriority, projection));
     const totalCount = await ProjectPriority.countDocuments(filter);
 
-    return res.status(200).json({ success: true, message: "All project priority fetched successfully", projectPriority: filteredProjectPriority, totalCount });
+    return res.status(200).json({ success: true, message: "All project priority fetched successfully", projectPriority, totalCount });
   } catch (error) {
-    console.log("Error while fetching all project priority:", error.message);
     return res.status(500).json({ success: false, message: `Error while fetching all project priority: ${error.message}` });
   };
 };
@@ -125,18 +78,16 @@ export const fetchAllProjectPriority = async (req, res) => {
 export const fetchSingleProjectPriority = async (req, res) => {
   try {
     const projectPriorityId = req.params.id;
-    const projectPriority = await ProjectPriority.findById(projectPriorityId);
+
+    const projectPriority = await ProjectPriority
+      .findById(projectPriorityId);
 
     if (!projectPriority) {
       return res.status(404).json({ success: false, message: "Project priority not found" });
     };
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredProjectPriority = filterFields(projectPriority, projection);
 
-    return res.status(200).json({ success: true, message: "Single project priority fetched successfully", projectPriority: filteredProjectPriority });
+    return res.status(200).json({ success: true, message: "Single project priority fetched successfully", projectPriority });
   } catch (error) {
-    console.log("Error while fetching single project priority:", error.message);
     return res.status(500).json({ success: false, message: `Error while fetching single project priority: ${error.message}` });
   };
 };
@@ -145,9 +96,11 @@ export const fetchSingleProjectPriority = async (req, res) => {
 export const updateProjectPriority = async (req, res) => {
   try {
     const projectPriorityId = req.params.id;
+
     const { name, description } = req.body;
 
-    const projectPriority = await ProjectPriority.findByIdAndUpdate(projectPriorityId, { name, description }, { new: true });
+    const projectPriority = await ProjectPriority
+      .findByIdAndUpdate(projectPriorityId, { name, description }, { new: true });
 
     if (!projectPriority) {
       return res.status(404).json({ success: false, message: "Project priority not found" });
@@ -155,7 +108,6 @@ export const updateProjectPriority = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Project priority updated successfully", projectPriority });
   } catch (error) {
-    console.log("Error while updating project priority:", error.message);
     return res.status(500).json({ success: false, message: `Error while updating project priority: ${error.message}` });
   };
 };
@@ -164,6 +116,7 @@ export const updateProjectPriority = async (req, res) => {
 export const deleteProjectPriority = async (req, res) => {
   try {
     const projectPriorityId = req.params.id;
+
     const projectPriority = await ProjectPriority.findByIdAndDelete(projectPriorityId);
 
     if (!projectPriority) {
@@ -172,7 +125,6 @@ export const deleteProjectPriority = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Project priority deleted successfully" });
   } catch (error) {
-    console.log("Error while deleting project priority:", error.message);
     return res.status(500).json({ success: false, message: `Error while deleting project priority: ${error.message}` });
   };
 };

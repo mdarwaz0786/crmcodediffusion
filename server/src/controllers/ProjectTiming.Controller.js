@@ -5,61 +5,17 @@ export const createProjectTiming = async (req, res) => {
   try {
     const { name, description } = req.body;
 
+    if (!name) {
+      return res.status(400).json({ success: false, message: "Name is required." });
+    };
+
     const projectTiming = new ProjectTiming({ name, description });
     await projectTiming.save();
 
     return res.status(200).json({ success: true, message: "Project timeline created successfully", projectTiming });
   } catch (error) {
-    console.log("Error while creating project timeline:", error.message);
     return res.status(500).json({ success: false, message: `Error while creating project timeline: ${error.message}` });
   };
-};
-
-// Helper function to build the projection object based on user permissions
-const buildProjection = (permissions) => {
-  const projectTimingFields = permissions.projectTiming.fields;
-  const projection = {};
-
-  for (const [key, value] of Object.entries(projectTimingFields)) {
-    if (value.show) {
-      projection[key] = 1;
-    } else {
-      projection[key] = 0;
-    };
-  };
-
-  // Ensure _id, createdAt and updatedAt are included by default unless explicitly excluded
-  projection._id = 1;
-  projection.createdAt = 1;
-  projection.updatedAt = 1;
-
-  return projection;
-};
-
-// Helper function to filter fields based on projection
-const filterFields = (projectTiming, projection) => {
-  const filteredProjectTiming = {};
-
-  for (const key in projectTiming._doc) {
-    if (projection[key] !== 0) {  // only exclude if explicitly set to 0
-      filteredProjectTiming[key] = projectTiming[key];
-    };
-  };
-
-  // Include _id, createdAt, and updatedAt if they were not excluded
-  if (projection._id !== 0) {
-    filteredProjectTiming._id = projectTiming._id;
-  };
-
-  if (projection.createdAt !== 0) {
-    filteredProjectTiming.createdAt = projectTiming.createdAt;
-  };
-
-  if (projection.updatedAt !== 0) {
-    filteredProjectTiming.updatedAt = projectTiming.updatedAt;
-  };
-
-  return filteredProjectTiming;
 };
 
 // Controller for fetching all project timeline
@@ -68,9 +24,9 @@ export const fetchAllProjectTiming = async (req, res) => {
     let filter = {};
     let sort = {};
 
-    // Handle universal searching across all fields
+    // Handle searching across all fields
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search, 'i');
+      const searchRegex = new RegExp(req.query.search.trim(), 'i');
       filter.$or = [
         { name: { $regex: searchRegex } },
         { description: { $regex: searchRegex } },
@@ -99,7 +55,8 @@ export const fetchAllProjectTiming = async (req, res) => {
     const limit = parseInt(req.query.limit);
     const skip = (page - 1) * limit;
 
-    const projectTiming = await ProjectTiming.find(filter)
+    const projectTiming = await ProjectTiming
+      .find(filter)
       .sort(sort)
       .skip(skip)
       .limit(limit)
@@ -109,14 +66,10 @@ export const fetchAllProjectTiming = async (req, res) => {
       return res.status(404).json({ success: false, message: "Project timeline not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredProjectTiming = projectTiming.map((projectTiming) => filterFields(projectTiming, projection));
     const totalCount = await ProjectTiming.countDocuments(filter);
 
-    return res.status(200).json({ success: true, message: "All project timeline fetched successfully", projectTiming: filteredProjectTiming, totalCount });
+    return res.status(200).json({ success: true, message: "All project timeline fetched successfully", projectTiming, totalCount });
   } catch (error) {
-    console.log("Error while fetching all project timeline:", error.message);
     return res.status(500).json({ success: false, message: `Error while fetching all project timeline: ${error.message}` });
   };
 };
@@ -125,18 +78,16 @@ export const fetchAllProjectTiming = async (req, res) => {
 export const fetchSingleProjectTiming = async (req, res) => {
   try {
     const projectTimingId = req.params.id;
-    const projectTiming = await ProjectTiming.findById(projectTimingId);
+
+    const projectTiming = await ProjectTiming
+      .findById(projectTimingId);
 
     if (!projectTiming) {
       return res.status(404).json({ success: false, message: "Project timeline not found" });
     };
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredProjectTiming = filterFields(projectTiming, projection);
 
-    return res.status(200).json({ success: true, message: "Single project timeline fetched successfully", projectTiming: filteredProjectTiming });
+    return res.status(200).json({ success: true, message: "Single project timeline fetched successfully", projectTiming });
   } catch (error) {
-    console.log("Error while fetching single project timeline:", error.message);
     return res.status(500).json({ success: false, message: `Error while fetching single project timeline: ${error.message}` });
   };
 };
@@ -145,9 +96,11 @@ export const fetchSingleProjectTiming = async (req, res) => {
 export const updateProjectTiming = async (req, res) => {
   try {
     const projectTimingId = req.params.id;
+
     const { name, description } = req.body;
 
-    const projectTiming = await ProjectTiming.findByIdAndUpdate(projectTimingId, { name, description }, { new: true });
+    const projectTiming = await ProjectTiming
+      .findByIdAndUpdate(projectTimingId, { name, description }, { new: true });
 
     if (!projectTiming) {
       return res.status(404).json({ success: false, message: "Project timeline not found" });
@@ -155,7 +108,6 @@ export const updateProjectTiming = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Project timeline updated successfully", projectTiming });
   } catch (error) {
-    console.log("Error while updating project timeline:", error.message);
     return res.status(500).json({ success: false, message: `Error while updating project timeline: ${error.message}` });
   };
 };
@@ -164,7 +116,9 @@ export const updateProjectTiming = async (req, res) => {
 export const deleteProjectTiming = async (req, res) => {
   try {
     const projectTimingId = req.params.id;
-    const projectTiming = await ProjectTiming.findByIdAndDelete(projectTimingId);
+
+    const projectTiming = await ProjectTiming
+      .findByIdAndDelete(projectTimingId);
 
     if (!projectTiming) {
       return res.status(400).json({ success: false, message: "Project timeline not found" });
@@ -172,7 +126,6 @@ export const deleteProjectTiming = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Project timeline deleted successfully" });
   } catch (error) {
-    console.log("Error while deleting project timeline:", error.message);
     return res.status(500).json({ success: false, message: `Error while deleting project timeline: ${error.message}` });
   };
 };

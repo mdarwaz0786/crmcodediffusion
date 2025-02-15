@@ -5,61 +5,17 @@ export const createRole = async (req, res) => {
   try {
     const { name, permissions } = req.body;
 
+    if (!name) {
+      return res.status(400).json({ success: false, message: "Name is required." });
+    };
+
     const role = new Role({ name, permissions });
     await role.save();
 
-    res.status(201).json({ success: true, meaasge: "Role created successfully", role });
+    return res.status(201).json({ success: true, meaasge: "Role created successfully", role });
   } catch (error) {
-    console.log("Error while creatinng role:", error.message);
-    res.status(500).json({ success: false, meaasge: `Error while creatinng role: ${error.message}` });
+    return res.status(500).json({ success: false, meaasge: `Error while creatinng role: ${error.message}` });
   };
-};
-
-// Helper function to build the projection object based on user permissions
-const buildProjection = (permissions) => {
-  const roleFields = permissions.role.fields;
-  const projection = {};
-
-  for (const [key, value] of Object.entries(roleFields)) {
-    if (value.show) {
-      projection[key] = 1;
-    } else {
-      projection[key] = 0;
-    };
-  };
-
-  // Ensure _id, createdAt and updatedAt are included by default unless explicitly excluded
-  projection._id = 1;
-  projection.createdAt = 1;
-  projection.updatedAt = 1;
-
-  return projection;
-};
-
-// Helper function to filter fields based on projection
-const filterFields = (role, projection) => {
-  const filteredRole = {};
-
-  for (const key in role._doc) {
-    if (projection[key] !== 0) {  // only exclude if explicitly set to 0
-      filteredRole[key] = role[key];
-    };
-  };
-
-  // Include _id, createdAt, and updatedAt if they were not excluded
-  if (projection._id !== 0) {
-    filteredRole._id = role._id;
-  };
-
-  if (projection.createdAt !== 0) {
-    filteredRole.createdAt = role.createdAt;
-  };
-
-  if (projection.updatedAt !== 0) {
-    filteredRole.updatedAt = role.updatedAt;
-  };
-
-  return filteredRole;
 };
 
 // Controller for fetching all role
@@ -68,14 +24,14 @@ export const fetchAllRole = async (req, res) => {
     let filter = {};
     let sort = {};
 
-    // Handle universal searching across all fields
+    // Handle searching across all fields
     if (req.query.search) {
-      filter.name = { $regex: new RegExp(req.query.search, 'i') };
+      filter.name = { $regex: new RegExp(req.query.search.trim(), 'i') };
     };
 
     // Handle name search
     if (req.query.name) {
-      filter.name = { $regex: new RegExp(req.query.name, 'i') };
+      filter.name = { $regex: new RegExp(req.query.name.trim(), 'i') };
     };
 
     // Handle name filter
@@ -95,7 +51,8 @@ export const fetchAllRole = async (req, res) => {
     const limit = parseInt(req.query.limit);
     const skip = (page - 1) * limit;
 
-    const role = await Role.find(filter)
+    const role = await Role
+      .find(filter)
       .sort(sort)
       .skip(skip)
       .limit(limit)
@@ -105,31 +62,27 @@ export const fetchAllRole = async (req, res) => {
       return res.status(404).json({ success: false, message: "Role not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredRole = role.map((role) => filterFields(role, projection));
     const totalCount = await Role.countDocuments(filter);
 
-    res.status(200).json({ success: true, meaasge: "All role fetched successfully", role: filteredRole, totalCount });
+    return res.status(200).json({ success: true, meaasge: "All role fetched successfully", role, totalCount });
   } catch (error) {
-    console.log("Error while fetching all role:", error.message);
-    res.status(500).json({ success: false, meaasge: `Error while fetching all role: ${error.message}` });
+    return res.status(500).json({ success: false, meaasge: `Error while fetching all role: ${error.message}` });
   };
 };
 
 // Controller for fetching single role
 export const fetchSingleRole = async (req, res) => {
   try {
-    const role = await Role.findById(req.params.id);
+    const role = await Role
+      .findById(req.params.id);
 
     if (!role) {
       return res.status(404).json({ success: false, message: 'Role not found' });
     };
 
-    res.status(200).json({ success: true, message: 'Single role fetched successfully', role });
+    return res.status(200).json({ success: true, message: 'Single role fetched successfully', role });
   } catch (error) {
-    console.log("Error while fetching single role:", error.message);
-    res.status(500).json({ success: false, message: `Error while fetching single role: ${error.message}` });
+    return res.status(500).json({ success: false, message: `Error while fetching single role: ${error.message}` });
   };
 };
 
@@ -138,32 +91,32 @@ export const updateRole = async (req, res) => {
   try {
     const { name, permissions } = req.body;
 
-    const role = await Role.findByIdAndUpdate(req.params.id, { name, permissions }, { new: true });
+    const role = await Role
+      .findByIdAndUpdate(req.params.id, { name, permissions }, { new: true });
 
     if (!role) {
       return res.status(404).json({ success: false, message: 'Role not found' });
     };
 
-    res.status(200).json({ success: true, message: 'Role updated successfully', role });
+    return res.status(200).json({ success: true, message: 'Role updated successfully', role });
   } catch (error) {
-    console.log("Error while updating role:", error.message);
-    res.status(500).json({ success: false, message: `Error while updating role: ${error.message}` });
+    return res.status(500).json({ success: false, message: `Error while updating role: ${error.message}` });
   };
 };
 
 // Delete a role by ID
 export const deleteRole = async (req, res) => {
   try {
-    const role = await Role.findByIdAndDelete(req.params.id);
+    const role = await Role
+      .findByIdAndDelete(req.params.id);
 
     if (!role) {
       return res.status(404).json({ success: false, message: 'Role not found' });
     };
 
-    res.status(200).json({ success: true, message: 'Role deleted successfully' });
+    return res.status(200).json({ success: true, message: 'Role deleted successfully' });
   } catch (error) {
-    console.log("Error while deleting role:", error.message);
-    res.status(500).json({ success: false, message: `Error while updating role: ${error.message}` });
+    return res.status(500).json({ success: false, message: `Error while updating role: ${error.message}` });
   };
 };
 
