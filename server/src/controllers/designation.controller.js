@@ -99,7 +99,8 @@ export const fetchAllDesignation = async (req, res) => {
     const limit = parseInt(req.query.limit);
     const skip = (page - 1) * limit;
 
-    const designation = await Designation.find(filter)
+    const designation = await Designation
+      .find(filter)
       .sort(sort)
       .skip(skip)
       .limit(limit)

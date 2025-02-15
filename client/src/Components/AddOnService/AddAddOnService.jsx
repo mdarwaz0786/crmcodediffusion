@@ -17,8 +17,8 @@ const AddAddOnService = () => {
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedService, setSelectedService] = useState("");
   const [totalProjectCost, setTotalProjectCost] = useState("");
-  const navigate = useNavigate();
   const { validToken, team, isLoading } = useAuth();
+  const navigate = useNavigate();
 
   const fetchAllCustomer = async () => {
     try {
@@ -49,7 +49,7 @@ const AddAddOnService = () => {
         setProject(filteredProjects);
       };
     } catch (error) {
-      console.error("Error while fetching all project:", error.message);
+      console.log("Error while fetching all project:", error.message);
     };
   };
 

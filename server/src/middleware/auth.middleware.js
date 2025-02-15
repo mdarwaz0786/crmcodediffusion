@@ -11,7 +11,9 @@ export const isLoggedIn = async (req, res, next) => {
 
     const jwtToken = token.replace("Bearer", "").trim();
     const isVerified = jwt.verify(jwtToken, process.env.JWT_SECRET_KEY);
-    const teamData = await Team.findOne({ employeeId: isVerified.employeeId })
+
+    const teamData = await Team
+      .findOne({ employeeId: isVerified.employeeId })
       .populate({ path: "role", select: "" })
       .populate({ path: "designation", select: "name" })
       .populate({ path: "reportingTo", select: "name" })
