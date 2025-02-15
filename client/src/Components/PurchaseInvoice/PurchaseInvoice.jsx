@@ -178,8 +178,6 @@ const PurchaseInvoice = () => {
         console.log("Error while deleting purchase invoice:", error.message);
         toast.error("Error while deleting");
       };
-    } else if (isdelete !== "") {
-      alert("Type only \"yes\".");
     };
   };
 

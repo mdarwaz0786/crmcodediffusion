@@ -149,8 +149,6 @@ const TechnologyList = () => {
         console.log("Error while deleting technology:", error.message);
         toast.error("Error while deleting");
       };
-    } else if (isdelete !== "") {
-      alert("Type only \"yes\".");
     };
   };
 

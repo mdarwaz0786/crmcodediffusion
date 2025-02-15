@@ -151,8 +151,6 @@ const TeamMember = () => {
         console.log("Error while deleting team:", error.message);
         toast.error("Error while deleting");
       };
-    } else if (isdelete !== "") {
-      alert("Type only \"yes\".");
     };
   };
 

@@ -149,8 +149,6 @@ const Customer = () => {
         console.log("Error while deleting client:", error.message);
         toast.error("Error while deleting");
       };
-    } else if (isdelete !== "") {
-      alert("Type only \"yes\".");
     };
   };
 

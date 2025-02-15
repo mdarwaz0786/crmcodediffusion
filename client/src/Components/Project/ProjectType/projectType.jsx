@@ -149,8 +149,6 @@ const ProjectType = () => {
         console.log("Error while deleting project type:", error.message);
         toast.error("Error while deleting");
       };
-    } else if (isdelete !== "") {
-      alert("Type only \"yes\".");
     };
   };
 

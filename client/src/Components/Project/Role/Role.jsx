@@ -149,8 +149,6 @@ const Role = () => {
         console.log("Error while deleting role:", error.message);
         toast.error("Error while deleting");
       };
-    } else if (isdelete !== "") {
-      alert("Type only \"yes\".");
     };
   };
 

@@ -149,8 +149,6 @@ const ProjectCategory = () => {
         console.log("Error while deleting project category:", error.message);
         toast.error("Error while deleting");
       };
-    } else if (isdelete !== "") {
-      alert("Type only \"yes\".");
     };
   };
 

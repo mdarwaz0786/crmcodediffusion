@@ -149,8 +149,6 @@ const Department = () => {
         console.log("Error while deleting department:", error.message);
         toast.error("Error while deleting");
       };
-    } else if (isdelete !== "") {
-      alert("Type only \"yes\".");
     };
   };
 

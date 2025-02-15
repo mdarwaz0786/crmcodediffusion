@@ -146,11 +146,9 @@ const ProjectPriority = () => {
           fetchAllData();
         };
       } catch (error) {
-        console.log("Error while deleting project timing:", error.message);
+        console.log("Error while deleting project priority:", error.message);
         toast.error("Error while deleting");
       };
-    } else if (isdelete !== "") {
-      alert("Type only \"yes\".");
     };
   };
 
@@ -165,14 +163,8 @@ const ProjectPriority = () => {
       "Description": entry?.description || "N/A",
     }));
 
-    if (exportData?.length === 0) {
-      alert("No project priority found to export");
-      return;
-    };
-
     const worksheet = XLSX.utils.json_to_sheet(exportData);
 
-    // Calculate column width dynamically
     const columnWidths = Object.keys(exportData[0] || {}).map((key) => ({
       wch: Math.max(key.length, ...exportData.map((row) => (row[key] ? row[key].toString().length : 0))) + 2,
     }));
@@ -228,10 +220,10 @@ const ProjectPriority = () => {
                   </div>
                   <div className="col-8 text-end">
                     <div className="head-icons">
-                      <Link to="#" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Refresh" onClick={() => window.location.reload()}>
+                      <Link to="#" onClick={() => window.location.reload()}>
                         <i className="ti ti-refresh-dot" />
                       </Link>
-                      <Link to="#" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Collapse" id="collapse-header">
+                      <Link to="#">
                         <i className="ti ti-chevrons-up" />
                       </Link>
                     </div>
@@ -262,7 +254,7 @@ const ProjectPriority = () => {
                                       <i className="ti ti-package-export" />
                                       Export
                                     </Link>
-                                    <div className="dropdown-menu  dropdown-menu-end">
+                                    <div className="dropdown-menu dropdown-menu-end">
                                       <ul>
                                         <li>
                                           <Link to="#" onClick={() => setTimeout(() => { exportProjectPriorityListAsPdf() }, 0)}>
@@ -306,7 +298,7 @@ const ProjectPriority = () => {
                         <li>
                           <div className="sort-dropdown drop-down">
                             <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown"><i className="ti ti-sort-ascending-2" />{filters.sort}</Link>
-                            <div className="dropdown-menu  dropdown-menu-start">
+                            <div className="dropdown-menu dropdown-menu-start">
                               <ul>
                                 <li>
                                   <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, sort: "Ascending", page: 1 }))}>
@@ -331,17 +323,17 @@ const ProjectPriority = () => {
                         <li>
                           <div className="form-sorts dropdown">
                             <Link to="#" data-bs-toggle="dropdown" data-bs-auto-close="false"><i className="ti ti-filter-share" />Filter</Link>
-                            <div className="filter-dropdown-menu dropdown-menu  dropdown-menu-xl-end">
+                            <div className="filter-dropdown-menu dropdown-menu dropdown-menu-xl-end">
                               <div className="filter-set-view">
                                 <div className="filter-set-head">
                                   <h4><i className="ti ti-filter-share" />Filter</h4>
                                 </div>
-                                <div className="accordion" id="accordionExample">
+                                <div className="accordion">
                                   <div className="filter-set-content">
                                     <div className="filter-set-content-head">
-                                      <Link to="#" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Project Priority Name</Link>
+                                      <Link to="#" data-bs-toggle="collapse" data-bs-target="#collapseOne">Project Priority Name</Link>
                                     </div>
-                                    <div className="filter-set-contents accordion-collapse collapse show" id="collapseTwo" data-bs-parent="#accordionExample">
+                                    <div className="filter-set-contents accordion-collapse collapse show" id="collapseOne">
                                       <div className="filter-content-list">
                                         <div className="form-wrap icon-form">
                                           <span className="form-icon"><i className="ti ti-search" /></span>
@@ -401,9 +393,6 @@ const ProjectPriority = () => {
                     <table className="table table-bordered table-striped custom-border">
                       <thead className="thead-light">
                         <tr>
-                          <th className="no-sort">
-                            <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                          </th>
                           <th>#</th>
                           {
                             (filedPermissions?.name?.show) && (
@@ -417,9 +406,6 @@ const ProjectPriority = () => {
                         {
                           data?.map((d, index) => (
                             <tr key={d?._id}>
-                              <th className="no-sort">
-                                <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
-                              </th>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
                               {
                                 (filedPermissions?.name?.show) && (
@@ -465,10 +451,10 @@ const ProjectPriority = () => {
                   <div className="row align-items-center">
                     <div className="col-md-4 custom-pagination">
                       <div className="datatable-length">
-                        <div className="dataTables_length" id="project-list_length">
+                        <div className="dataTables_length">
                           <label>
                             Show
-                            <select name="project-list_length" value={filters.limit} onChange={(e) => setFilters((prev) => ({ ...prev, limit: e.target.value, page: 1 }))} aria-controls="project-list" className="form-select form-select-sm">
+                            <select value={filters.limit} onChange={(e) => setFilters((prev) => ({ ...prev, limit: e.target.value, page: 1 }))} className="form-select form-select-sm">
                               <option value="5">5</option>
                               <option value="10">10</option>
                               <option value="15">15</option>
@@ -497,17 +483,17 @@ const ProjectPriority = () => {
                     </div>
                     <div className="col-md-4 custom-pagination">
                       <div className="datatable-paginate">
-                        <div className="dataTables_paginate paging_simple_numbers" id="project-list_paginate">
+                        <div className="dataTables_paginate paging_simple_numbers">
                           <ul className="pagination">
-                            <li className={`paginate_button page-item previous ${filters.page === 1 ? "disabled" : ""}`} id="project-list_previous">
-                              <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page - 1 }))} aria-controls="project-list" aria-disabled={filters.page === 1} role="link" data-dt-idx="previous" tabIndex="-1" className="page-link" >
+                            <li className={`paginate_button page-item previous ${filters.page === 1 ? "disabled" : ""}`}>
+                              <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page - 1 }))} className="page-link" >
                                 <i className="fa fa-angle-left"></i> Prev
                               </Link>
                             </li>
                             {
                               [...Array(Math.ceil(total / filters.limit)).keys()].map((num) => (
                                 <li className={`paginate_button page-item page-number ${filters.page === num + 1 ? "active" : ""}`} key={num}>
-                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: num + 1 }))} aria-controls="project-list" role="link" aria-current={filters.page === num + 1} data-dt-idx={num} tabIndex="0" className="page-link">
+                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: num + 1 }))} className="page-link">
                                     {num + 1}
                                   </Link>
                                 </li>
@@ -516,8 +502,8 @@ const ProjectPriority = () => {
                             <li className="paginate_button page-item page-number-mobile active">
                               {filters.page}
                             </li>
-                            <li className={`paginate_button page-item next ${filters.page === Math.ceil(total / filters.limit) ? "disabled" : ""}`} id="project-list_next">
-                              <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page + 1 }))} className="page-link" aria-controls="project-list" role="link" data-dt-idx="next" tabIndex="0">
+                            <li className={`paginate_button page-item next ${filters.page === Math.ceil(total / filters.limit) ? "disabled" : ""}`}>
+                              <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, page: filters.page + 1 }))} className="page-link">
                                 Next <i className="fa fa-angle-right"></i>
                               </Link>
                             </li>
