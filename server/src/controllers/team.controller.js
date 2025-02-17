@@ -25,7 +25,6 @@ export const createTeam = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Employee created successfully", team });
   } catch (error) {
-    console.log("Error while creating employee:", error.message);
     return res.status(500).json({ success: false, message: `Error while creating employee: ${error.message}` });
   };
 };
@@ -34,6 +33,7 @@ export const createTeam = async (req, res) => {
 export const loginTeam = async (req, res) => {
   try {
     const { employeeId, password, fcmToken } = req.body;
+
     const team = await Team.findOne({ employeeId });
 
     if (!team) {
@@ -52,33 +52,6 @@ export const loginTeam = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      _id: team?._id,
-      employeeId: team?.employeeId,
-      name: team?.name,
-      email: team?.email,
-      mobile: team?.mobile,
-      password: team?.password,
-      joining: team?.joining,
-      dob: team?.dob,
-      monthlySalary: team?.monthlySalary,
-      workingHoursPerDay: team?.workingHoursPerDay,
-      designation: team?.designation?._id,
-      role: team?.role?._id,
-      reportingTo: team?.reportingTo?._id,
-      PAN: team?.PAN,
-      UAN: team?.UAN,
-      bankAccount: team?.bankAccount,
-      office: team?.office?._id,
-      department: team?.department?._id,
-      allotedLeaveBalance: team?.allotedLeaveBalance,
-      currentLeaveBalance: team?.currentLeaveBalance,
-      usedLeaveBalance: team?.usedLeaveBalance,
-      leaveBalanceAllotedHistory: team?.leaveBalanceAllotedHistory,
-      leaveBalanceUsedHistory: team?.leaveBalanceUsedHistory,
-      approvedLeaves: team?.approvedLeaves,
-      eligibleCompOffDate: team?.eligibleCompOffDate,
-      isActive: team?.isActive,
-      fcmToken: team?.fcmToken,
       token: generateToken(
         team?._id,
         team?.employeeId,
@@ -102,15 +75,14 @@ export const loginTeam = async (req, res) => {
         team?.currentLeaveBalance,
         team?.usedLeaveBalance,
         team?.leaveBalanceAllotedHistory,
-        team?.leaveBalanceUsedHistory,
         team?.approvedLeaves,
         team?.eligibleCompOffDate,
         team?.isActive,
         team?.fcmToken,
+        "Employee",
       ),
     });
   } catch (error) {
-    console.log("Error while login employee:", error.message);
     return res.status(500).json({ success: false, message: `Error while login employee: ${error.message}` });
   };
 };
@@ -118,7 +90,8 @@ export const loginTeam = async (req, res) => {
 // Controller for fetching logged in employee
 export const loggedInTeam = async (req, res) => {
   try {
-    const team = await Team.findById(req.team._id)
+    const team = await Team
+      .findById(req.team._id)
       .populate({ path: "role", select: "" })
       .populate({ path: "designation", select: "name" })
       .populate({ path: "reportingTo", select: "name" })
@@ -132,56 +105,8 @@ export const loggedInTeam = async (req, res) => {
 
     return res.status(200).json({ success: true, message: 'Logged in employee fetched successfully', team });
   } catch (error) {
-    console.log('Error while fetching logged in employee:', error.message);
     return res.status(500).json({ success: false, message: `Error while fetching logged in employee: ${error.message}` });
   };
-};
-
-// Helper function to build the projection object based on user permissions
-const buildProjection = (permissions) => {
-  const teamFields = permissions.team.fields;
-  const projection = {};
-
-  for (const [key, value] of Object.entries(teamFields)) {
-    if (value.show) {
-      projection[key] = 1;
-    } else {
-      projection[key] = 0;
-    };
-  };
-
-  // Ensure _id, createdAt and updatedAt are included by default unless explicitly excluded
-  projection._id = 1;
-  projection.createdAt = 1;
-  projection.updatedAt = 1;
-
-  return projection;
-};
-
-// Helper function to filter fields based on projection
-const filterFields = (team, projection) => {
-  const filteredTeam = {};
-
-  for (const key in team._doc) {
-    if (projection[key] !== 0) {  // only exclude if explicitly set to 0
-      filteredTeam[key] = team[key];
-    };
-  };
-
-  // Include _id, createdAt, and updatedAt if they were not excluded
-  if (projection._id !== 0) {
-    filteredTeam._id = team._id;
-  };
-
-  if (projection.createdAt !== 0) {
-    filteredTeam.createdAt = team.createdAt;
-  };
-
-  if (projection.updatedAt !== 0) {
-    filteredTeam.updatedAt = team.updatedAt;
-  };
-
-  return filteredTeam;
 };
 
 // Helper function to find ObjectId by string in referenced models
@@ -204,7 +129,7 @@ export const fetchAllTeam = async (req, res) => {
     let filter = {};
     let sort = {};
 
-    // Handle universal searching across all fields
+    // Handle searching across all fields
     if (req.query.search) {
       const searchRegex = new RegExp(req.query.search, 'i');
       filter.$or = [
@@ -212,9 +137,6 @@ export const fetchAllTeam = async (req, res) => {
         { name: { $regex: searchRegex } },
         { email: { $regex: searchRegex } },
         { mobile: { $regex: searchRegex } },
-        { password: { $regex: searchRegex } },
-        { monthlySalary: { $regex: searchRegex } },
-        { workingHoursPerDay: { $regex: searchRegex } },
         { joining: { $regex: searchRegex } },
         { dob: { $regex: searchRegex } },
         { designation: await findObjectIdByString('Designation', 'name', req.query.search) },
@@ -261,14 +183,10 @@ export const fetchAllTeam = async (req, res) => {
       return res.status(404).json({ success: false, message: "Employee not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredTeam = team.map((team) => filterFields(team, projection));
     const totalCount = await Team.countDocuments(filter);
 
-    return res.status(200).json({ success: true, message: "All employee fetched successfully", team: filteredTeam, totalCount });
+    return res.status(200).json({ success: true, message: "All employee fetched successfully", team, totalCount });
   } catch (error) {
-    console.log("Error while fetching all employee:", error.message);
     return res.status(500).json({ success: false, message: `Error while fetching all employee: ${error.message}` });
   };
 };
@@ -291,13 +209,8 @@ export const fetchSingleTeam = async (req, res) => {
       return res.status(404).json({ success: false, message: "Employee not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredTeam = filterFields(team, projection);
-
-    return res.status(200).json({ success: true, message: "Single employee fetched successfully", team: filteredTeam });
+    return res.status(200).json({ success: true, message: "Single employee fetched successfully", team });
   } catch (error) {
-    console.log("Error while fetching single employee:", error.message);
     return res.status(500).json({ success: false, message: `Error while fetching single employee: ${error.message}` });
   };
 };
@@ -307,7 +220,8 @@ export const updateTeam = async (req, res) => {
   try {
     const teamId = req.params.id;
 
-    const team = await Team.findByIdAndUpdate(teamId, req.body, { new: true });
+    const team = await Team
+      .findByIdAndUpdate(teamId, req.body, { new: true });
 
     if (!team) {
       return res.status(404).json({ success: false, message: "Employee not found" });
@@ -315,7 +229,6 @@ export const updateTeam = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Employee updated successfully", team });
   } catch (error) {
-    console.log("Error while updating employee:", error.message);
     return res.status(500).json({ success: false, message: `Error while updating employee: ${error.message}` });
   };
 };
@@ -324,7 +237,9 @@ export const updateTeam = async (req, res) => {
 export const deleteTeam = async (req, res) => {
   try {
     const teamId = req.params.id;
-    const team = await Team.findByIdAndDelete(teamId);
+
+    const team = await Team
+      .findByIdAndDelete(teamId);
 
     if (!team) {
       return res.status(400).json({ success: false, message: "Employee not found" });
@@ -332,7 +247,6 @@ export const deleteTeam = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Employee deleted successfully" });
   } catch (error) {
-    console.log("Error while deleting employee:", error.message);
     return res.status(500).json({ success: false, message: `Error while deleting employee: ${error.message}` });
   };
 };

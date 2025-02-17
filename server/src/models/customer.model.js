@@ -10,6 +10,10 @@ const customerSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    password: {
+      type: String,
+      trim: true,
+    },
     mobile: {
       type: String,
       trim: true,
@@ -24,10 +28,15 @@ const customerSchema = new mongoose.Schema(
     },
     state: {
       type: String,
+      trim: true,
     },
     address: {
       type: String,
       trim: true,
+    },
+    role: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
     },
   },
   {
@@ -40,6 +49,7 @@ customerSchema.pre("save", function (next) {
     if (!string) return "";
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
+
   if (this.name) {
     this.name = capitalizeWords(this.name);
   };

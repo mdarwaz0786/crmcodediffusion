@@ -294,6 +294,8 @@ const CustomerPermissionSchema = new mongoose.Schema(
       companyName: { type: FieldPermissionSchema, default: () => ({}) },
       state: { type: FieldPermissionSchema, default: () => ({}) },
       address: { type: FieldPermissionSchema, default: () => ({}) },
+      password: { type: FieldPermissionSchema, default: () => ({}) },
+      role: { type: FieldPermissionSchema, default: () => ({}) },
     },
   },
 );

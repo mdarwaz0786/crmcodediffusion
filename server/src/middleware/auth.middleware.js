@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import Team from "../models/team.model.js";
+import Customer from "../models/customer.model.js";
 
 export const isLoggedIn = async (req, res, next) => {
   try {
@@ -12,23 +13,41 @@ export const isLoggedIn = async (req, res, next) => {
     const jwtToken = token.replace("Bearer", "").trim();
     const isVerified = jwt.verify(jwtToken, process.env.JWT_SECRET_KEY);
 
-    const teamData = await Team
-      .findOne({ employeeId: isVerified.employeeId })
-      .populate({ path: "role", select: "" })
-      .populate({ path: "designation", select: "name" })
-      .populate({ path: "reportingTo", select: "name" })
-      .populate({ path: "department", select: "name" })
-      .populate({ path: "office", select: "" })
-      .exec();
+    if (isVerified.userType === "Client") {
+      const clientData = await Customer
+        .findOne({ mobile: isVerified.mobile })
+        .populate({ path: "role", select: "" })
+        .exec();
 
-    req.team = teamData;
-    req.token = jwtToken;
-    req.teamId = teamData._id;
+      if (!clientData) {
+        return res.status(401).json({ success: false, message: "Client not found or unauthorized" });
+      };
+
+      req.client = clientData;
+      req.token = jwtToken;
+      req.clientId = clientData?._id;
+    } else {
+      const teamData = await Team
+        .findOne({ employeeId: isVerified.employeeId })
+        .populate({ path: "role", select: "" })
+        .populate({ path: "designation", select: "name" })
+        .populate({ path: "reportingTo", select: "name" })
+        .populate({ path: "department", select: "name" })
+        .populate({ path: "office", select: "" })
+        .exec();
+
+      if (!teamData) {
+        return res.status(401).json({ success: false, message: "Employee not found or unauthorized" });
+      };
+
+      req.team = teamData;
+      req.token = jwtToken;
+      req.teamId = teamData._id;
+    };
 
     next();
 
   } catch (error) {
-    console.log("Employee is not logged in:", error.message);
-    return res.status(401).json({ success: false, message: `Employee is not logged in: ${error.message}` });
+    return res.status(401).json({ success: false, message: `Unauthorized: ${error.message}` });
   };
 };

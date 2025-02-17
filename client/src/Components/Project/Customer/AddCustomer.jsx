@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-extra-semi */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from 'axios';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
@@ -57,14 +58,41 @@ const formFields = [
   { name: 'companyName', type: 'text', label: 'Company Name' },
   { name: 'state', type: 'select', label: 'State' },
   { name: 'address', type: 'textarea', label: 'Address', row: 4 },
+  { name: 'role', type: 'select', label: 'Role' },
+  { name: 'password', type: 'text', label: 'Password' },
 ];
 
 const AddCustomer = () => {
   const [formData, setFormData] = useState(formFields.reduce((accumulator, field) => ({ ...accumulator, [field.name]: "" }), {}));
   const [selectedState, setSelectedState] = useState(null);
+  const [role, setRole] = useState([]);
+  const [selectedRole, setSelectedRole] = useState('');
   const navigate = useNavigate();
   const { validToken, team, isLoading } = useAuth();
   const permissions = team?.role?.permissions?.customer;
+
+  // Fetch all roles from the API
+  const fetchAllRole = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/role/all-role`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        setRole(response?.data?.role);
+      }
+    } catch (error) {
+      console.log(error.message);
+    };
+  };
+
+  useEffect(() => {
+    if (validToken && team && !isLoading && permissions?.create) {
+      fetchAllRole();
+    };
+  }, [validToken, team, isLoading, permissions]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,6 +102,11 @@ const AddCustomer = () => {
   const handleStateChange = (selectedOption) => {
     setSelectedState(selectedOption);
     setFormData((prev) => ({ ...prev, state: selectedOption ? selectedOption.value : "" }));
+  };
+
+  const handleRoleChange = (e) => {
+    setSelectedRole(e.target.value);
+    setFormData((prev) => ({ ...prev, role: e.target.value }));
   };
 
   const handleCreate = async (e) => {
@@ -148,12 +181,33 @@ const AddCustomer = () => {
                       </div>
                     </div>
                   );
+                } else if (name === 'role') {
+                  return (
+                    <div className="col-md-6" key={name}>
+                      <div className="form-wrap">
+                        <label className="col-form-label" htmlFor="role">
+                          {label} <span className="text-danger">*</span>
+                        </label>
+                        <select
+                          className="form-select"
+                          name="role"
+                          value={selectedRole}
+                          onChange={handleRoleChange}
+                        >
+                          <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
+                          {role?.map((r) => (
+                            <option key={r?._id} value={r?._id}>{r?.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  );
                 } else {
                   return (
                     <div className={type === "textarea" ? "col-md-12" : "col-md-6"} key={name}>
                       <div className="form-wrap">
                         <label className="col-form-label" htmlFor={name}>
-                          {label} {(name === 'name' || name === 'email' || name === 'mobile' || name === 'address') && <span className="text-danger">*</span>}
+                          {label} {(name === 'name' || name === 'email' || name === 'mobile' || name === 'address' || name === 'password') && <span className="text-danger">*</span>}
                         </label>
                         {type === "textarea" ? (
                           <textarea className="form-control" rows={row} name={name} id={name} value={formData[name]} onChange={handleChange} />

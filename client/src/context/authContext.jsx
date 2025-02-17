@@ -12,6 +12,7 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [team, setTeam] = useState("");
+  const [customer, setCustomer] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const validToken = `Bearer ${token}`;
   let isLoggedIn = !!token;
@@ -25,6 +26,7 @@ export const AuthProvider = ({ children }) => {
   const logOutTeam = () => {
     setToken("");
     setTeam("");
+    setCustomer("");
     if (status !== 401) {
       toast.success("Logout successful");
     };
@@ -55,12 +57,43 @@ export const AuthProvider = ({ children }) => {
     };
   };
 
+  const loggedInCustomer = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(`${base_url}/api/v1/customer/loggedin-customer`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+      if (response?.data?.success) {
+        setCustomer(response?.data?.customer);
+        setIsLoading(false);
+      };
+    } catch (error) {
+      setIsLoading(false);
+      if (error?.response && error?.response?.status === 401) {
+        status = error?.response?.status;
+        logOutTeam();
+        toast.error("Please log in to continue");
+      } else {
+        console.log("Error while fetching logged in customer:", error.message);
+      };
+    };
+  };
+
   useEffect(() => {
-    loggedInTeam();
-  }, []);
+    if (isLoggedIn) {
+      loggedInTeam();
+      loggedInCustomer();
+    } else {
+      setIsLoading(false);
+    };
+  }, [isLoggedIn]);
+
+  console.log(customer);
 
   return (
-    <AuthContext.Provider value={{ storeToken, logOutTeam, isLoggedIn, team, isLoading, validToken }}>
+    <AuthContext.Provider value={{ storeToken, logOutTeam, isLoggedIn, team, customer, isLoading, validToken }}>
       {children}
     </AuthContext.Provider>
   );

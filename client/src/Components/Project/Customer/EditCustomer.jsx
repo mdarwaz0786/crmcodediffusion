@@ -57,12 +57,16 @@ const formFields = [
   { name: 'companyName', type: 'text', label: 'Company Name' },
   { name: 'state', type: 'select', label: 'State' },
   { name: 'address', type: 'textarea', label: 'Address', row: 4 },
+  { name: 'role', type: 'select', label: 'Role' },
+  { name: 'password', type: 'text', label: 'Password' },
 ];
 
 const EditCustomer = () => {
   const [formData, setFormData] = useState(formFields.reduce((accumulator, field) => ({ ...accumulator, [field.name]: "" }), {}));
   const [selectedState, setSelectedState] = useState(null);
   const [fieldPermissions, setFieldPermissions] = useState({});
+  const [role, setRole] = useState([]);
+  const [selectedRole, setSelectedRole] = useState('');
   const { id } = useParams();
   const navigate = useNavigate();
   const { validToken, team, isLoading } = useAuth();
@@ -85,12 +89,35 @@ const EditCustomer = () => {
 
       if (response?.data?.success) {
         setFormData(response.data.customer);
-        setSelectedState(statesOfIndia.find(state => state.value === response.data.customer.state) || null);
+        setSelectedState(statesOfIndia.find((state) => state.value === response.data.customer.state) || null);
+        setSelectedRole(response?.data?.customer?.role?._id);
       };
     } catch (error) {
       console.log("Error while fetching single customer:", error.message);
     };
   };
+
+  const fetchAllRole = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/role/all-role`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        setRole(response?.data?.role);
+      }
+    } catch (error) {
+      console.log(error.message);
+    };
+  };
+
+  useEffect(() => {
+    if (validToken && team && !isLoading && permissions?.update && id) {
+      fetchAllRole();
+    };
+  }, [validToken, team, isLoading, permissions, id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -104,10 +131,14 @@ const EditCustomer = () => {
     setFormData((prev) => ({ ...prev, state: selectedOption ? selectedOption.value : "" }));
   };
 
+  const handleRoleChange = (e) => {
+    setSelectedRole(e.target.value);
+    setFormData((prev) => ({ ...prev, role: e.target.value }));
+  };
+
   const handleUpdate = async (e, id) => {
     e.preventDefault();
 
-    // Create update object based on permissions
     const updateData = Object.fromEntries(Object.entries(formData).filter(([key]) => fieldPermissions[key]?.show && !fieldPermissions[key]?.read));
 
     try {
@@ -139,7 +170,7 @@ const EditCustomer = () => {
     <div className="page-wrapper" style={{ paddingBottom: "2rem" }}>
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <h4>Update Client</h4>
+          <h4>Edit Client</h4>
           <Link to="#" onClick={() => navigate(-1)}><button className="btn btn-primary">Back</button></Link>
         </div>
         <form onSubmit={(e) => handleUpdate(e, id)}>
@@ -164,7 +195,29 @@ const EditCustomer = () => {
                           name="state"
                           value={selectedState}
                           onChange={handleStateChange}
-                          options={statesOfIndia} />
+                          options={statesOfIndia}
+                        />
+                      </div>
+                    </div>
+                  );
+                } else if (name === 'role') {
+                  return (
+                    <div className="col-md-6" key={name}>
+                      <div className="form-wrap">
+                        <label className="col-form-label" htmlFor="role">
+                          {label} <span className="text-danger">*</span>
+                        </label>
+                        <select
+                          className="form-select"
+                          name="role"
+                          value={selectedRole}
+                          onChange={handleRoleChange}
+                        >
+                          <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
+                          {role?.map((r) => (
+                            <option key={r?._id} value={r?._id}>{r?.name}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                   );
@@ -173,7 +226,7 @@ const EditCustomer = () => {
                     <div className={type === "textarea" ? "col-md-12" : "col-md-6"} key={name}>
                       <div className="form-wrap">
                         <label className="col-form-label" htmlFor={name}>
-                          {label} {(name === 'name' || name === 'email' || name === 'mobile' || name === 'address') && <span className="text-danger">*</span>}
+                          {label} {(name === 'name' || name === 'email' || name === 'mobile' || name === 'address' || name === 'password') && <span className="text-danger">*</span>}
                         </label>
                         {type === "textarea" ? (
                           <textarea className="form-control" rows={row} name={name} id={name} value={formData[name]} onChange={handleChange} />

@@ -8,22 +8,30 @@ import logo from "../../Assets/logo.png";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const Login = () => {
-  const [employeeId, setEmployeeId] = useState("");
+  const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
+  const [isClientLogin, setIsClientLogin] = useState(false);
   const navigate = useNavigate();
   const { storeToken } = useAuth();
-
-  // Ensure the employeeId starts with "EmpID" and the rest remains unchanged
-  const transformedEmployeeId = `EmpID${employeeId.substring(5)}`;
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await axios.post(`${base_url}/api/v1/team/login-team`, { employeeId: transformedEmployeeId, password });
+      const endpoint = isClientLogin
+        ? `${base_url}/api/v1/customer/login-customer`
+        : `${base_url}/api/v1/team/login-team`;
+
+      const loginField = isClientLogin ? "mobile" : "employeeId";
+
+      const response = await axios.post(endpoint, {
+        [loginField]: loginId,
+        password
+      });
+
       if (response?.data?.success) {
         storeToken(response?.data?.token);
-        setEmployeeId("");
+        setLoginId("");
         setPassword("");
         toast.success(response?.data?.message);
         navigate('/');
@@ -31,8 +39,8 @@ const Login = () => {
       };
     } catch (error) {
       console.log("Error while login:", error.message);
-      if (error.response && error.response.data && error.response.data.message) {
-        toast.error(error.response.data.message);
+      if (error?.response && error?.response?.data && error?.response?.data?.message) {
+        toast.error(error?.response?.data?.message);
       } else {
         toast.error("An unexpected error occurred. Please try again.");
       };
@@ -50,22 +58,47 @@ const Login = () => {
               </div>
               <div className="login-heading">
                 <h4>Login</h4>
-                <p>Access the Code Diffusion CRM panel using your employee ID and password.</p>
+                <p>{isClientLogin ? "Login using your mobile number" : "Login using your employee ID"}</p>
               </div>
               <div className="form-wrap">
-                <label className="col-form-label">Employee ID <span className="text-danger">*</span></label>
+                <label className="col-form-label">
+                  {isClientLogin ? "Mobile Number" : "Employee ID"} <span className="text-danger">*</span>
+                </label>
                 <div className="form-wrap-icon">
-                  <input type="text" className="form-control" name="employeeId" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} autoComplete="new-employeeId" />
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="loginId"
+                    value={loginId}
+                    onChange={(e) => setLoginId(e.target.value)}
+                    autoComplete="new-loginId"
+                  />
                 </div>
               </div>
               <div className="form-wrap">
                 <label className="col-form-label">Password <span className="text-danger">*</span></label>
                 <div className="pass-group">
-                  <input type="password" className="pass-input form-control" name="password" value={password} onChange={(e) => { setPassword(e.target.value) }} autoComplete="new-password" />
+                  <input
+                    type="password"
+                    className="pass-input form-control"
+                    name="password"
+                    value={password}
+                    onChange={(e) => { setPassword(e.target.value) }}
+                    autoComplete="new-password"
+                  />
                 </div>
               </div>
               <div className="form-wrap">
                 <button type="submit" className="btn btn-secondary" onClick={(e) => handleLogin(e)}>Login</button>
+              </div>
+              <div className="form-wrap">
+                <button
+                  type="button"
+                  className="btn btn-link"
+                  onClick={() => setIsClientLogin(!isClientLogin)}
+                >
+                  {isClientLogin ? "Login as Employee" : "Login as Client"}
+                </button>
               </div>
             </div>
           </div>

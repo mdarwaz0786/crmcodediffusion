@@ -160,6 +160,8 @@ const EditRole = () => {
         companyName: { read: true, show: true },
         state: { read: true, show: true },
         address: { read: true, show: true },
+        password: { read: true, show: true },
+        role: { read: true, show: true },
       },
     },
     team: {
@@ -571,6 +573,8 @@ const EditRole = () => {
               companyName: { read: true, show: true },
               state: { read: true, show: true },
               address: { read: true, show: true },
+              password: { read: true, show: true },
+              role: { read: true, show: true },
             },
           },
           team: {
