@@ -7,36 +7,26 @@ import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from "../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
 import * as XLSX from 'xlsx';
-import JSZip from "jszip";
-import FileSaver from "file-saver";
 import Preloader from "../../Preloader.jsx";
-import logo from '../../Assets/logo.png';
+import formatDate from "../../Helper/formatDate.js";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-const InvoiceList = () => {
+const Ticket = () => {
   const [data, setData] = useState([]);
   const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(true);
   const { validToken, team, isLoading } = useAuth();
-  const [nameData, setNameData] = useState([]);
-  const [nameSearch, setNameSearch] = useState("");
+  const [ticketIdData, setTicketIdData] = useState([]);
+  const [ticketId, setTicketId] = useState("");
   const [filters, setFilters] = useState({
     search: "",
-    nameFilter: [],
+    ticketIdFilter: [],
     sort: "Descending",
     page: 1,
     limit: 20,
-    year: "",
-    month: "",
-  });
-  const permissions = team?.role?.permissions?.invoice;
-  const filedPermissions = team?.role?.permissions?.invoice?.fields;
-
-  function formatDate(isoDate) {
-    const date = new Date(isoDate);
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    return date.toLocaleDateString('en-GB', options);
-  };
+  })
+  const permissions = team?.role?.permissions?.ticket;
+  const filedPermissions = team?.role?.permissions?.ticket?.fields;
 
   const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -61,12 +51,12 @@ const InvoiceList = () => {
   };
 
   const debouncedSearch = useDebounce(filters.search, 500);
-  const debouncedSearchName = useDebounce(nameSearch, 500);
+  const debouncedSearchTicketId = useDebounce(ticketId, 500);
 
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${base_url}/api/v1/invoice/all-invoice`, {
+      const response = await axios.get(`${base_url}/api/v1/ticket/all-ticket`, {
         headers: {
           Authorization: validToken,
         },
@@ -75,14 +65,12 @@ const InvoiceList = () => {
           sort: filters.sort,
           page: filters.page,
           limit: filters.limit,
-          nameFilter: filters.nameFilter.map(String),
-          year: filters.year,
-          month: filters.month,
+          ticketIdFilter: filters.ticketIdFilter.map(String),
         },
       });
 
       if (response?.data?.success) {
-        setData(response?.data?.invoice);
+        setData(response?.data?.tickets);
         setTotal(response?.data?.totalCount);
         setLoading(false);
       };
@@ -92,19 +80,19 @@ const InvoiceList = () => {
     };
   };
 
-  const fetchAllInvoiceName = async () => {
+  const fetchAllTicketId = async () => {
     try {
-      const response = await axios.get(`${base_url}/api/v1/invoice/all-invoice`, {
+      const response = await axios.get(`${base_url}/api/v1/ticket/all-ticket`, {
         headers: {
           Authorization: validToken,
         },
         params: {
-          nameSearch,
+          ticketId,
         },
       });
 
       if (response?.data?.success) {
-        setNameData(response?.data?.invoice);
+        setTicketIdData(response?.data?.tickets);
       };
     } catch (error) {
       console.log(error.message);
@@ -113,25 +101,9 @@ const InvoiceList = () => {
 
   useEffect(() => {
     if (!isLoading && team && permissions?.access) {
-      fetchAllInvoiceName();
+      fetchAllTicketId();
     };
-  }, [debouncedSearchName, isLoading, team, permissions]);
-
-  const handleYearChange = (e) => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      year: e.target.value,
-      page: 1,
-    }));
-  };
-
-  const handleMonthChange = (e) => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      month: e.target.value,
-      page: 1,
-    }));
-  };
+  }, [debouncedSearchTicketId, isLoading, team, permissions]);
 
   const handleFilterChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -157,14 +129,14 @@ const InvoiceList = () => {
     if (!isLoading && team && permissions?.access) {
       fetchAllData();
     };
-  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, filters.year, filters.month, isLoading, team, permissions]);
+  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.ticketIdFilter, isLoading, team, permissions]);
 
   const handleDelete = async (id) => {
     let isdelete = prompt("If you want to delete, type \"yes\".");
 
     if (isdelete === "yes") {
       try {
-        const response = await axios.delete(`${base_url}/api/v1/invoice/delete-invoice/${id}`, {
+        const response = await axios.delete(`${base_url}/api/v1/ticket/delete-ticket/${id}`, {
           headers: {
             Authorization: validToken,
           },
@@ -175,53 +147,16 @@ const InvoiceList = () => {
           fetchAllData();
         };
       } catch (error) {
-        console.log("Error while deleting invoice:", error.message);
+        console.log("Error while deleting ticket:", error.message);
         toast.error("Error while deleting");
       };
     };
   };
 
-  const exportInvoiceListAsExcel = () => {
-    if (!data || data?.length === 0) {
-      alert("No data available to export");
-      return;
-    };
-
-    const exportData = data.map((entry, index) => {
-      return {
-        "#": index + 1 || "1",
-        "InvoiceId": entry?.invoiceId || "N/A",
-        "Date": formatDate(entry?.date) || "N/A",
-        "Project Name": entry?.project?.projectName,
-        "Project Cost": entry?.project?.projectPrice,
-        "Client Name": entry?.project?.customer?.name,
-        "Sub Total": `₹${entry?.subtotal}` || "0",
-        "CGST": entry?.CGST > 0 ? `₹${entry?.CGST}` : "Not Applicable",
-        "SGST": entry?.SGST > 0 ? `₹${entry?.SGST}` : "Not Applicable",
-        "IGST": entry?.IGST > 0 ? `₹${entry?.IGST}` : "Not Applicable",
-        "Total": `₹${entry?.total}` || "0",
-        "Balance Due": `₹${entry?.balanceDue}` || "0",
-      };
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-
-    const columnWidths = Object.keys(exportData[0] || {}).map((key) => ({
-      wch: Math.max(key.length, ...exportData.map((row) => row[key] ? row[key].toString().length : 0)) + 2,
-    }));
-
-    worksheet["!cols"] = columnWidths;
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "tax-invoice");
-
-    XLSX.writeFile(workbook, `tax-invoice.xlsx`);
-  };
-
-  const exportInvoiceListAsPdf = () => {
-    const element = document.querySelector("#exportInvoiceList");
+  const exportTicketListAsPdf = () => {
+    const element = document.querySelector("#exportTicketList");
     const options = {
-      filename: "tax-invoice",
+      filename: "ticket.pdf",
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
@@ -233,37 +168,34 @@ const InvoiceList = () => {
         format: 'a3',
       },
     };
-    html2pdf().set(options).from(element).save();
+    if (element) {
+      html2pdf().set(options).from(element).save();
+    };
   };
 
-  const generatePDFsAndZip = async () => {
-    const zip = new JSZip();
-
-    // Generate PDFs for each invoice
-    for (const invoice of data) {
-      const element = document.querySelector(`#invoice-${invoice?._id}`);
-      const pdfOptions = {
-        filename: `${invoice?.invoiceId}-${invoice?.project?.customer?.companyName}-Tax-Invoice.pdf`,
-        margin: [0, 0, 10, 0],
-        html2canvas: {
-          useCORS: true,
-          scale: 2,
-        },
-        jsPDF: {
-          orientation: 'portrait',
-          format: 'a4',
-          unit: 'pt',
-        },
-      };
-
-      // Pass pdfOptions to html2pdf
-      const pdfBlob = await html2pdf().from(element).set(pdfOptions).output('blob');
-      zip.file(`${invoice?.invoiceId}-${invoice?.project?.customer?.companyName}-Tax-Invoice.pdf`, pdfBlob);
+  const exportTicketListAsExcel = () => {
+    if (data?.length === 0) {
+      alert("No data available to export");
+      return;
     };
 
-    // Generate the ZIP file and save it
-    const content = await zip.generateAsync({ type: "blob" });
-    FileSaver.saveAs(content, `${filters.month}-${filters.year}-Tax-Invoice.zip`);
+    const exportData = data?.map((entry) => ({
+      "Title": entry?.title || "N/A",
+      "Description": entry?.description || "N/A",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+    const columnWidths = Object.keys(exportData[0] || {}).map((key) => ({
+      wch: Math.max(key.length, ...exportData.map((row) => (row[key] ? row[key].toString().length : 0))) + 2,
+    }));
+
+    worksheet["!cols"] = columnWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "ticket");
+
+    XLSX.writeFile(workbook, `ticket.xlsx`);
   };
 
   if (isLoading) {
@@ -278,23 +210,16 @@ const InvoiceList = () => {
     <>
       {/* Page Wrapper */}
       <div className="page-wrapper">
-        <div className="content" id="exportInvoiceList">
+        <div className="content" id="exportTicketList">
           <div className="row">
             <div className="col-md-12">
               {/* Page Header */}
               <div className="page-header">
                 <div className="row align-items-center">
                   <div className="col-4">
-                    <h4 className="page-title">Tax Invoices<span className="count-title">{total}</span></h4>
+                    <h4 className="page-title">Tickets<span className="count-title">{total}</span></h4>
                   </div>
-                  <div className="col-4 mb-3">
-                    {
-                      permissions?.export && (
-                        <button className="btn btn-secondary" onClick={generatePDFsAndZip}>Download All</button>
-                      )
-                    }
-                  </div>
-                  <div className="col-4 text-end">
+                  <div className="col-8 text-end">
                     <div className="head-icons">
                       <Link to="#" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Refresh" onClick={() => window.location.reload()}>
                         <i className="ti ti-refresh-dot" />
@@ -316,7 +241,7 @@ const InvoiceList = () => {
                       <div className="col-md-5 col-sm-4">
                         <div className="form-wrap icon-form">
                           <span className="form-icon"><i className="ti ti-search" /></span>
-                          <input type="text" className="form-control" placeholder="Search Invoice" value={filters.search} onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value, page: 1 }))} />
+                          <input type="text" className="form-control" placeholder="Search Ticket" value={filters.search} onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value, page: 1 }))} />
                         </div>
                       </div>
                       <div className="col-md-7 col-sm-8">
@@ -333,13 +258,13 @@ const InvoiceList = () => {
                                     <div className="dropdown-menu  dropdown-menu-end">
                                       <ul>
                                         <li>
-                                          <Link to="#" onClick={() => setTimeout(() => { exportInvoiceListAsPdf() }, 0)}>
+                                          <Link to="#" onClick={() => setTimeout(() => { exportTicketListAsPdf() }, 0)}>
                                             <i className="ti ti-file-type-pdf text-danger" />
                                             Export as PDF
                                           </Link>
                                         </li>
                                         <li>
-                                          <Link to="#" onClick={() => setTimeout(() => { exportInvoiceListAsExcel() }, 0)}>
+                                          <Link to="#" onClick={() => setTimeout(() => { exportTicketListAsExcel() }, 0)}>
                                             <i className="ti ti-file-spreadsheet text-success" />
                                             Export as EXCEL
                                           </Link>
@@ -353,9 +278,9 @@ const InvoiceList = () => {
                             {
                               (permissions?.create) && (
                                 <li>
-                                  <Link to="/add-invoice" className="btn btn-primary">
+                                  <Link to="/raise-ticket" className="btn btn-primary">
                                     <i className="ti ti-square-rounded-plus" />
-                                    Add New Tax Invoice
+                                    Raise New Ticket
                                   </Link>
                                 </li>
                               )
@@ -372,19 +297,18 @@ const InvoiceList = () => {
                     <div className="sortby-list">
                       <ul>
                         <li>
-                          <label className="pb-1">Sort:</label>
                           <div className="sort-dropdown drop-down">
                             <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown"><i className="ti ti-sort-ascending-2" />{filters.sort}</Link>
                             <div className="dropdown-menu  dropdown-menu-start">
                               <ul>
                                 <li>
-                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, sort: "Ascending", page: 1 }))} >
+                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, sort: "Ascending", page: 1 }))}>
                                     <i className="ti ti-circle-chevron-right" />
                                     Ascending
                                   </Link>
                                 </li>
                                 <li>
-                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, sort: "Descending", page: 1 }))} >
+                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, sort: "Descending", page: 1 }))}>
                                     <i className="ti ti-circle-chevron-right" />
                                     Descending
                                   </Link>
@@ -393,49 +317,9 @@ const InvoiceList = () => {
                             </div>
                           </div>
                         </li>
-                        <li>
-                          <label className="pb-1">Year:</label>
-                          <select
-                            id="year"
-                            value={filters.year}
-                            onChange={handleYearChange}
-                            className="form-select"
-                          >
-                            <option value="">All</option>
-                            {
-                              Array.from({ length: 10 }, (_, i) => {
-                                const year = new Date().getFullYear() - i;
-                                return <option key={year} value={year}>{year}</option>;
-                              })
-                            }
-                          </select>
-                        </li>
-                        <li>
-                          <label className="pb-1">Month:</label>
-                          <select
-                            id="month"
-                            value={filters.month}
-                            onChange={handleMonthChange}
-                            className="form-select"
-                          >
-                            <option value="">All</option>
-                            <option value="01">January</option>
-                            <option value="02">February</option>
-                            <option value="03">March</option>
-                            <option value="04">April</option>
-                            <option value="05">May</option>
-                            <option value="06">June</option>
-                            <option value="07">July</option>
-                            <option value="08">August</option>
-                            <option value="09">September</option>
-                            <option value="10">October</option>
-                            <option value="11">November</option>
-                            <option value="12">December</option>
-                          </select>
-                        </li>
                       </ul>
                     </div>
-                    <div className="filter-list pt-4">
+                    <div className="filter-list">
                       <ul>
                         <li>
                           <div className="form-sorts dropdown">
@@ -448,32 +332,32 @@ const InvoiceList = () => {
                                 <div className="accordion" id="accordionExample">
                                   <div className="filter-set-content">
                                     <div className="filter-set-content-head">
-                                      <Link to="#" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Invoice Id</Link>
+                                      <Link to="#" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Ticket Id</Link>
                                     </div>
                                     <div className="filter-set-contents accordion-collapse collapse show" id="collapseTwo" data-bs-parent="#accordionExample">
                                       <div className="filter-content-list">
                                         <div className="form-wrap icon-form">
                                           <span className="form-icon"><i className="ti ti-search" /></span>
-                                          <input type="text" className="form-control" placeholder="Search Invoice Id" onChange={(e) => setNameSearch(e.target.value)} />
+                                          <input type="text" className="form-control" placeholder="Search Ticket Id" onChange={(e) => setTicketId(e.target.value)} />
                                         </div>
                                         <ul>
                                           {
-                                            nameData?.map((n) => (
+                                            ticketIdData?.map((n) => (
                                               <li key={n?._id}>
                                                 <div className="filter-checks">
                                                   <label className="checkboxs">
                                                     <input
                                                       type="checkbox"
-                                                      name="nameFilter"
-                                                      value={n?.invoiceId}
-                                                      checked={filters.nameFilter.includes(n?.invoiceId)}
+                                                      name="ticketIdFilter"
+                                                      value={n?.ticketId}
+                                                      checked={filters.ticketIdFilter.includes(n?.ticketId)}
                                                       onChange={handleFilterChange}
                                                     />
                                                     <span className="checkmarks" />
                                                   </label>
                                                 </div>
                                                 <div className="collapse-inside-text">
-                                                  <h5>{n?.invoiceId}</h5>
+                                                  <h5>{n?.ticketId}</h5>
                                                 </div>
                                               </li>
                                             ))
@@ -486,7 +370,7 @@ const InvoiceList = () => {
                                 <div className="filter-reset-btns">
                                   <div className="row">
                                     <div className="col-6">
-                                      <Link to="#" className="btn btn-light" onClick={() => setFilters((prev) => ({ ...prev, nameFilter: [] }))}>Reset</Link>
+                                      <Link to="#" className="btn btn-light" onClick={() => setFilters((prev) => ({ ...prev, ticketIdFilter: [] }))}>Reset</Link>
                                     </div>
                                   </div>
                                 </div>
@@ -505,7 +389,7 @@ const InvoiceList = () => {
                   </div>
                   {/* /Filter */}
 
-                  {/* Invoice List */}
+                  {/* Ticket List */}
                   <div className="table-responsive custom-table">
                     <table className="table table-bordered table-striped custom-border">
                       <thead className="thead-light">
@@ -515,32 +399,22 @@ const InvoiceList = () => {
                           </th>
                           <th>#</th>
                           {
-                            (permissions?.access) && (
-                              <th>View</th>
+                            (filedPermissions?.ticketId?.show) && (
+                              <th>TicketId</th>
                             )
                           }
                           {
-                            (filedPermissions?.invoiceId?.show) && (
-                              <th>Invoice ID</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.project?.show) && (
-                              <th>Project Name</th>
+                            (filedPermissions?.createdBy?.show) && (
+                              <th>Raise By</th>
                             )
                           }
                           {
                             (filedPermissions?.project?.show) && (
-                              <th>Client Name</th>
+                              <th>Project</th>
                             )
                           }
                           {
-                            (filedPermissions?.amount?.show) && (
-                              <th>Total Amount</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.date?.show) && (
+                            (filedPermissions?.project?.show) && (
                               <th>Date</th>
                             )
                           }
@@ -556,13 +430,13 @@ const InvoiceList = () => {
                               </th>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
                               {
-                                (permissions?.access) && (
-                                  <td><Link to={`/single-invoice/${d?._id}`}><i className="fas fa-eye"></i></Link></td>
+                                (filedPermissions?.ticketId?.show) && (
+                                  <td>{d?.ticketId}</td>
                                 )
                               }
                               {
-                                (filedPermissions?.invoiceId?.show) && (
-                                  <td>{d?.invoiceId}</td>
+                                (filedPermissions?.createdBy?.show) && (
+                                  <td>{d?.createdBy?.name}</td>
                                 )
                               }
                               {
@@ -571,18 +445,8 @@ const InvoiceList = () => {
                                 )
                               }
                               {
-                                (filedPermissions?.amount?.show) && (
-                                  <td>{d?.project?.customer?.name}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.subtotal?.show) && (
-                                  d?.tax === "Inclusive" ? <td>₹{d?.total}</td> : <td>₹{d?.subtotal}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.date?.show) && (
-                                  <td>{formatDate(d?.date)}</td>
+                                (filedPermissions?.project?.show) && (
+                                  <td>{formatDate(d?.createdAt?.split("T")[0])}</td>
                                 )
                               }
                               <td>
@@ -672,166 +536,11 @@ const InvoiceList = () => {
                       </div>
                     </div>
                   </div>
-                  {/* /Invoice List */}
+                  {/* /Ticket List */}
                 </div>
               </div>
             </div>
           </div>
-
-          {/* All Invoice in zip file */}
-          <section className="zip-invoice">
-            {
-              data?.map((invoice) => (
-                <div key={invoice?._id} id={`invoice-${invoice?._id}`} className="bg-white" style={{ margin: '20px auto' }}>
-                  {/* Invoice Header */}
-                  <div className="invoice-heading">
-                    <div className="col-md-6">
-                      <div className="logo mt-4 ps-4 mb-3">
-                        <img src={logo} width="150px" alt="logo" />
-                      </div>
-                    </div>
-                    <div className="col-md-6 px-4">
-                      <div className="name d-flex mt-4 justify-content-end">
-                        <h4>TAX INVOICE</h4>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Invoice Details */}
-                  <div className="invoice row">
-                    <div className="col-md-6 p-5 pt-0">
-                      <div className="p-0 m-0"><strong>Code Diffusion Technologies</strong></div>
-                      <div>Address :</div>
-                      <div>1020 , Kirti Sikhar Tower,</div>
-                      <div>District Centre, Janakpuri,</div>
-                      <div>New Delhi.</div>
-                      <div><strong>GST No: O7FRWPS7288J3Z</strong></div>
-                    </div>
-                    <div className="col-md-6 p-5 pt-0">
-                      <div className="ubic-code d-flex justify-content-end">
-                        <p>{invoice?.invoiceId}</p><br />
-                      </div>
-                      <div className="date-box d-flex justify-content-end mt-5 pt-3">
-                        <div className="date px-1">
-                          <strong>Date:</strong>
-                        </div>
-                        <div className="date text-end">
-                          <p>{invoice?.date}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="col-md-8 p-5" style={{ display: "flex", columnGap: "1rem" }}>
-                      <div className="content w-100">
-                        <div className="pera">
-                          <h5 style={{ color: "#262a2a7a" }}>Bill To:</h5>
-                          <div>
-                            <strong style={{ color: "#000" }}>
-                              {invoice?.project.customer?.companyName}
-                            </strong>
-                          </div>
-                          <div><strong>GST No: {invoice?.project.customer?.GSTNumber}</strong></div>
-                        </div>
-                      </div>
-                      <div className="content w-100">
-                        <div className="pera">
-                          <h5 style={{ color: "#262a2a7a" }}>Ship To:</h5>
-                          <p>
-                            <strong style={{ color: "#000" }}>
-                              {invoice?.project.customer?.address}
-                            </strong>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-4 d-flex justify-content-end align-items-baseline" style={{ padding: "0 45px 0 0" }}>
-                      <div style={{ borderRadius: "5px", display: "inline-block", fontWeight: "bold" }}><p>Balance Due: ₹{invoice?.total}</p></div>
-                    </div>
-                  </div>
-                  <div className="row px-3">
-                    <div className="col-md-12">
-                      <table className="table mt-3" style={{ border: "0px solid white" }}>
-                        <thead className='invoice-custom-table-header'>
-                          <tr className="text-start">
-                            <th scope="col">Item</th>
-                            <th scope="col">Quantity</th>
-                            <th scope="col">Rate</th>
-                            <th scope="col" className="text-end">Amount</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {
-                            invoice?.projects?.map((d) => (
-                              <tr className="text-start" key={d?._id}>
-                                <th scope="col">{d?.project?.projectName}</th>
-                                <th scope="col" className="ps-5">1</th>
-                                <th scope="col">₹{d?.amount}</th>
-                                <th scope="col" className="text-end">₹{d?.amount}</th>
-                              </tr>
-                            ))
-                          }
-                        </tbody>
-                        <tbody className="text-end mt-5 pt-5">
-                          <tr>
-                            <th scope="col" />
-                            <th scope="col" />
-                            <th scope="col-1">Subtotal :</th>
-                            <th scope="col-2">₹{invoice?.subtotal}</th>
-                          </tr>
-                          {
-                            (invoice?.CGST > 0) && (
-                              <tr>
-                                <th scope="col" />
-                                <th scope="col" />
-                                <th scope="col-1">CGST (9%) :</th>
-                                <th scope="col-2">₹{invoice?.CGST}</th>
-                              </tr>
-                            )
-                          }
-                          {
-                            (invoice?.SGST > 0) && (
-                              <tr>
-                                <th scope="col" />
-                                <th scope="col" />
-                                <th scope="col-1">SGST (9%) :</th>
-                                <th scope="col-2">₹{invoice?.SGST}</th>
-                              </tr>
-                            )
-                          }
-                          {
-                            (invoice?.IGST > 0) && (
-                              <tr>
-                                <th scope="col" />
-                                <th scope="col" />
-                                <th scope="col-1">IGST (18%) :</th>
-                                <th scope="col-2">₹{invoice?.IGST}</th>
-                              </tr>
-                            )
-                          }
-                          <tr>
-                            <th scope="col" />
-                            <th scope="col" />
-                            <th scope="col-1">Total :</th>
-                            <th scope="col-2">₹{invoice?.total}</th>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  <div className="col-md-6 ps-4 m-0">
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Notes:</strong></div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Name: </strong>Code Diffusion Technologies </div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Type: </strong>Current Account</div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Number: </strong>60374584640</div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Bank Name: </strong>Bank of Maharashtra</div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>IFSC Code: </strong>mahb0001247</div>
-                  </div>
-                  <div className="col-md-6" />
-                </div>
-              ))
-            }
-          </section>
-          {/* /All Invoice in zip file */}
         </div>
       </div>
       {/* /Page Wrapper */}
@@ -839,4 +548,4 @@ const InvoiceList = () => {
   );
 };
 
-export default InvoiceList;
+export default Ticket;

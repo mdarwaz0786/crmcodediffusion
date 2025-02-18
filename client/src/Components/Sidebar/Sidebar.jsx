@@ -116,6 +116,7 @@ const Sidebar = () => {
               <li>
                 {
                   (permissions?.customer?.access ||
+                    permissions?.ticket?.access ||
                     team?.role?.name.toLowerCase() === "admin" ||
                     team?.role?.name.toLowerCase() === "hr"
                   ) && (
@@ -126,6 +127,11 @@ const Sidebar = () => {
                   {
                     (permissions?.customer?.access) && (
                       <li><Link to="/client" className={currentPath === "/client" ? "active" : ""} id={isMobile && active === "client" ? "mobile_btn" : ""} onClick={() => handleActive("client")}><i style={{ color: currentPath === "/client" ? "" : "#FFA201" }} className="ti ti-user-circle"></i><span>Client</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.ticket?.access) && (
+                      <li><Link to="/ticket" className={currentPath === "/ticket" ? "active" : ""} id={isMobile && active === "ticket" ? "mobile_btn" : ""} onClick={() => handleActive("ticket")}><i style={{ color: currentPath === "/ticket" ? "" : "#FFA201" }} className="ti ti-ticket"></i><span>Ticket</span></Link></li>
                     )
                   }
                   {
@@ -140,7 +146,8 @@ const Sidebar = () => {
                 {
                   (
                     team?.role?.name.toLowerCase() === "admin" ||
-                    team?.role?.name.toLowerCase() === "hr"
+                    team?.role?.name.toLowerCase() === "hr" ||
+                    permissions?.team?.access
                   ) && (
                     <h6 className="submenu-hdr">EMPLOYEE</h6>
                   )

@@ -79,6 +79,9 @@ import EditDepartment from "./Components/Project/Department/EditDepartment.jsx";
 import AddNotification from "./Components/Notification/AddNotification.jsx";
 import LatePunchIn from "./Components/LatePunchIn/LatePunchIn.jsx";
 import AddProjectWork from "./Components/ProjectWork/AddProjectWork.jsx";
+import AddTicket from "./Components/Ticket/AddTicket.jsx";
+import Ticket from "./Components/Ticket/Ticket.jsx";
+import SingleTicket from "./Components/Ticket/SingleTicket.jsx";
 import Test from "./Test.jsx";
 
 const App = () => {
@@ -163,6 +166,9 @@ const App = () => {
           <Route path="edit-holiday/:id" element={<EditHoliday />} />
           <Route path="send-notification" element={<AddNotification />} />
           <Route path="update-project-status/:id" element={<AddProjectWork />} />
+          <Route path="raise-ticket" element={<AddTicket />} />
+          <Route path="ticket" element={<Ticket />} />
+          <Route path="single-ticket/:id" element={<SingleTicket />} />
           <Route path="test" element={<Test />} />
         </Route>
         <Route path="/login" element={<Login />} />

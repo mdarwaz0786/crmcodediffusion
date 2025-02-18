@@ -300,6 +300,43 @@ const CustomerPermissionSchema = new mongoose.Schema(
   },
 );
 
+// Ticket permission Schema
+const TicketPermissionSchema = new mongoose.Schema(
+  {
+    access: {
+      type: Boolean,
+      default: false,
+    },
+    export: {
+      type: Boolean,
+      default: false,
+    },
+    create: {
+      type: Boolean,
+      default: false,
+    },
+    update: {
+      type: Boolean,
+      default: false,
+    },
+    delete: {
+      type: Boolean,
+      default: false,
+    },
+    fields: {
+      ticketId: { type: FieldPermissionSchema, default: () => ({}) },
+      title: { type: FieldPermissionSchema, default: () => ({}) },
+      description: { type: FieldPermissionSchema, default: () => ({}) },
+      status: { type: FieldPermissionSchema, default: () => ({}) },
+      priority: { type: FieldPermissionSchema, default: () => ({}) },
+      project: { type: FieldPermissionSchema, default: () => ({}) },
+      assignedTo: { type: FieldPermissionSchema, default: () => ({}) },
+      createdBy: { type: FieldPermissionSchema, default: () => ({}) },
+      resolutionDetails: { type: FieldPermissionSchema, default: () => ({}) },
+    },
+  },
+);
+
 // Designation permission Schema
 const DesignationPermissionSchema = new mongoose.Schema(
   {
@@ -865,6 +902,7 @@ const RoleSchema = new mongoose.Schema(
       projectDeployment: { type: ProjectDeploymentPermissionSchema, default: () => ({}) },
       attendance: { type: AttendancePermissionSchema, default: () => ({}) },
       customer: { type: CustomerPermissionSchema, default: () => ({}) },
+      ticket: { type: TicketPermissionSchema, default: () => ({}) },
       team: { type: TeamPermissionSchema, default: () => ({}) },
       role: { type: RolePermissionSchema, default: () => ({}) },
       designation: { type: DesignationPermissionSchema, default: () => ({}) },

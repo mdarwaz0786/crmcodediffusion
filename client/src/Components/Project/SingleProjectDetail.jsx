@@ -215,9 +215,13 @@ const SingleProjectDetail = () => {
             </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-            <Link to={`/update-project-status/${id}`}><button className="btn btn-primary">Update Status</button></Link>
-          </div>
+          {
+            (fieldPermissions?.projectStatus?.show && !fieldPermissions?.projectStatus?.read) && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                <Link to={`/update-project-status/${id}`}><button className="btn btn-primary">Update Status</button></Link>
+              </div>
+            )
+          }
 
           {
             projectWork?.map((p, index) => (

@@ -43,6 +43,7 @@ import compOffRoute from "./src/routes/compOff.route.js";
 import workSummaryRoute from "./src/routes/workSummary.route.js";
 import notificationRoute from "./src/routes/notification.route.js";
 import projectWorkRoute from "./src/routes/projectWork.route.js";
+import ticketRoute from "./src/routes/ticket.route.js";
 
 // Directory name for serving index.html file
 const __dirname = path.resolve();
@@ -123,6 +124,8 @@ server.use("/api/v1/workSummary", workSummaryRoute);
 server.use("/api/v1/notification", notificationRoute);
 // Project work route
 server.use("/api/v1/projectWork", projectWorkRoute);
+// Project work route
+server.use("/api/v1/ticket", ticketRoute);
 
 // Middleware for serving client index.html file
 server.use(express.static(path.join(__dirname, "../client/dist")), (req, res, next) => next());
