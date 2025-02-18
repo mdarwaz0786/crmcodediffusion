@@ -4,7 +4,7 @@ const checkFieldUpdatePermission = (master, fields) => {
   return async (req, res, next) => {
     try {
       const teamRole = req.team.role;
-      const role = await Role.findById(teamRole._id);
+      const role = await Role.findById(teamRole?._id);
 
       if (!role) {
         return res.status(403).json({ success: false, message: 'Access denied' });
@@ -46,7 +46,6 @@ const checkFieldUpdatePermission = (master, fields) => {
       next();
 
     } catch (error) {
-      console.log('Authorization error:', error.message);
       return res.status(500).json({ success: false, message: `Authorization error: ${error.message}` });
     };
   };

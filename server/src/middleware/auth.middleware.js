@@ -26,7 +26,7 @@ export const isLoggedIn = async (req, res, next) => {
       req.client = clientData;
       req.token = jwtToken;
       req.clientId = clientData?._id;
-    } else {
+    } else if (isVerified.userType === "Employee") {
       const teamData = await Team
         .findOne({ employeeId: isVerified.employeeId })
         .populate({ path: "role", select: "" })

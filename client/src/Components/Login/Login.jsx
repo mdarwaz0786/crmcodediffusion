@@ -26,24 +26,20 @@ const Login = () => {
 
       const response = await axios.post(endpoint, {
         [loginField]: loginId,
-        password
+        password,
       });
 
       if (response?.data?.success) {
         storeToken(response?.data?.token);
+        localStorage.setItem("userType", isClientLogin ? "Client" : "Employee");
         setLoginId("");
         setPassword("");
-        toast.success(response?.data?.message);
+        toast.success("Login Successful");
         navigate('/');
         window.location.reload();
       };
     } catch (error) {
-      console.log("Error while login:", error.message);
-      if (error?.response && error?.response?.data && error?.response?.data?.message) {
-        toast.error(error?.response?.data?.message);
-      } else {
-        toast.error("An unexpected error occurred. Please try again.");
-      };
+      toast.error(error?.response?.data?.message || "An unexpected error occurred.");
     };
   };
 

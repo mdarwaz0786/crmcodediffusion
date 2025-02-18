@@ -64,7 +64,7 @@ export const loggedInCustomer = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Clinet not found' });
     };
 
-    return res.status(200).json({ success: true, message: 'Logged in client fetched successfully', customer });
+    return res.status(200).json({ success: true, message: 'Logged in client fetched successfully', team: customer });
   } catch (error) {
     return res.status(500).json({ success: false, message: `Error while fetching logged in client: ${error.message}` });
   };
