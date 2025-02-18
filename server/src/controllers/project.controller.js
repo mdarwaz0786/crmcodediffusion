@@ -4,8 +4,39 @@ import mongoose from "mongoose";
 
 // Helper function to generate the next projectId
 const getNextProjectId = async () => {
-  const counter = await ProjectId.findOneAndUpdate({ _id: "projectId" }, { $inc: { sequence: 1 } }, { new: true, upsert: true });
+  const counter = await ProjectId.findOneAndUpdate(
+    { _id: "projectId" },
+    { $inc: { sequence: 1 } },
+    { new: true, upsert: true },
+  );
   return `CD${counter.sequence.toString().padStart(3, "0")}`;
+};
+
+// Helper function to calculate the difference in hours
+const calculateHourDifference = (startTime, endTime) => {
+  if (!startTime || !endTime) {
+    return;
+  };
+
+  const [startHours, startMinutes] = startTime.split(':').map(Number);
+  const [endHours, endMinutes] = endTime.split(':').map(Number);
+  const startDate = new Date(0, 0, 0, startHours, startMinutes);
+  const endDate = new Date(0, 0, 0, endHours, endMinutes);
+  return (endDate - startDate) / (1000 * 60 * 60);
+};
+
+// Helper function to find ObjectId by string in referenced models
+const findObjectIdByString = async (modelName, fieldName, searchString) => {
+  const Model = mongoose.model(modelName);
+  const result = await Model.findOne({ [fieldName]: { $regex: new RegExp(searchString, 'i') } }).select('_id');
+  return result ? result._id : null;
+};
+
+// Helper function to find ObjectId array by string in referenced models
+const findObjectIdArrayByString = async (modelName, fieldName, searchString) => {
+  const Model = mongoose.model(modelName);
+  const results = await Model.find({ [fieldName]: { $regex: new RegExp(searchString, 'i') } }).select('_id');
+  return results.map((result) => result._id);
 };
 
 // Controller for creating a project
@@ -26,70 +57,8 @@ export const createProject = async (req, res) => {
 
     return res.status(201).json({ success: true, message: "Project created successfully", project });
   } catch (error) {
-    console.log("Error while creating project:", error.message);
     return res.status(500).json({ success: false, message: `Error while creating project: ${error.message}` });
   };
-};
-
-// Helper function to build the projection object based on user permissions
-const buildProjection = (permissions) => {
-  const projectFields = permissions.project.fields;
-  const projection = {};
-
-  for (const [key, value] of Object.entries(projectFields)) {
-    if (value.show) {
-      projection[key] = 1;
-    } else {
-      projection[key] = 0;
-    };
-  };
-
-  // Ensure _id, createdAt and updatedAt are included by default unless explicitly excluded
-  projection._id = 1;
-  projection.createdAt = 1;
-  projection.updatedAt = 1;
-
-  return projection;
-};
-
-// Helper function to filter fields based on projection
-const filterFields = (project, projection) => {
-  const filteredProject = {};
-
-  for (const key in project._doc) {
-    if (projection[key] !== 0) {   // only exclude if explicitly set to 0
-      filteredProject[key] = project[key];
-    };
-  };
-
-  // Include _id, createdAt, and updatedAt if they were not excluded
-  if (projection._id !== 0) {
-    filteredProject._id = project._id;
-  };
-
-  if (projection.createdAt !== 0) {
-    filteredProject.createdAt = project.createdAt;
-  };
-
-  if (projection.updatedAt !== 0) {
-    filteredProject.updatedAt = project.updatedAt;
-  };
-
-  return filteredProject;
-};
-
-// Helper function to find ObjectId by string in referenced models
-const findObjectIdByString = async (modelName, fieldName, searchString) => {
-  const Model = mongoose.model(modelName);
-  const result = await Model.findOne({ [fieldName]: { $regex: new RegExp(searchString, 'i') } }).select('_id');
-  return result ? result._id : null;
-};
-
-// Helper function to find ObjectId array by string in referenced models
-const findObjectIdArrayByString = async (modelName, fieldName, searchString) => {
-  const Model = mongoose.model(modelName);
-  const results = await Model.find({ [fieldName]: { $regex: new RegExp(searchString, 'i') } }).select('_id');
-  return results.map((result) => result._id);
 };
 
 // Controller for fetching all project
@@ -98,39 +67,40 @@ export const fetchAllProject = async (req, res) => {
     let filter = {};
     let sort = {};
 
-    // Check if the role is either "Coordinator" or "Admin"
-    const teamRole = req.team.role?.name;
-    if (teamRole.toLowerCase() !== "coordinator" && teamRole.toLowerCase() !== "admin") {
+    // Check if the role is not "Coordinator" or "Admin"
+    const teamRole = req.team.role.name.toLowerCase();
+    if (teamRole !== "coordinator" && teamRole !== "admin") {
       const teamId = req.team._id;
       filter.$or = [
-        { teamLeader: teamId },
-        { responsiblePerson: teamId },
+        { teamLeader: { $in: [teamId] } },
+        { responsiblePerson: { $in: [teamId] } },
+        { customer: teamId },
       ];
     };
 
-    // Handle universal searching across all fields
+    // Handle searching across all fields
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search, 'i');
-      filter.$or = [
+      const searchRegex = new RegExp(req.query.search.trim(), "i");
+      const searchFilter = [
         { projectName: { $regex: searchRegex } },
         { projectId: { $regex: searchRegex } },
-        { startDate: { $regex: searchRegex } },
-        { endDate: { $regex: searchRegex } },
-        { customer: await findObjectIdByString('Customer', 'name', req.query.search) },
-        { projectType: await findObjectIdByString('ProjectType', 'name', req.query.search) },
-        { projectCategory: await findObjectIdByString('ProjectCategory', 'name', req.query.search) },
-        { projectTiming: await findObjectIdByString('ProjectTiming', 'name', req.query.search) },
-        { projectStatus: await findObjectIdByString('ProjectStatus', 'status', req.query.search) },
-        { projectPriority: await findObjectIdByString('ProjectPriority', 'name', req.query.search) },
-        { responsiblePerson: { $in: await findObjectIdArrayByString('Team', 'name', req.query.search) } },
-        { teamLeader: { $in: await findObjectIdArrayByString('Team', 'name', req.query.search) } },
-        { technology: { $in: await findObjectIdArrayByString('Technology', 'name', req.query.search) } },
+        { projectDeadline: { $regex: searchRegex } },
+        { customer: await findObjectIdByString("Customer", "name", req.query.search.trim()) },
+        { projectType: await findObjectIdByString("ProjectType", "name", req.query.search.trim()) },
+        { projectCategory: await findObjectIdByString("ProjectCategory", "name", req.query.search.trim()) },
+        { projectStatus: await findObjectIdByString("ProjectStatus", "status", req.query.search.trim()) },
+        { projectPriority: await findObjectIdByString("ProjectPriority", "name", req.query.search.trim()) },
+        { responsiblePerson: { $in: await findObjectIdArrayByString("Team", "name", req.query.search.trim()) } },
+        { teamLeader: { $in: await findObjectIdArrayByString("Team", "name", req.query.search.trim()) } },
+        { technology: { $in: await findObjectIdArrayByString("Technology", "name", req.query.search.trim()) } },
       ];
+
+      filter.$and = [{ $or: searchFilter }];
     };
 
     // Handle project name search
     if (req.query.projectName) {
-      filter.projectName = { $regex: new RegExp(req.query.projectName, 'i') };
+      filter.projectName = { $regex: new RegExp(req.query.projectName.trim(), 'i') };
     };
 
     // Handle project name filter
@@ -145,7 +115,7 @@ export const fetchAllProject = async (req, res) => {
 
     // Handle projectId search
     if (req.query.projectId) {
-      filter.projectId = { $regex: new RegExp(req.query.projectId, 'i') };
+      filter.projectId = { $regex: new RegExp(req.query.projectId.trim(), 'i') };
     };
 
     // Handle projectId filter
@@ -198,14 +168,10 @@ export const fetchAllProject = async (req, res) => {
       return res.status(404).json({ success: false, message: "Project not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredProject = project.map((project) => filterFields(project, projection));
     const totalCount = await Project.countDocuments(filter);
 
-    return res.status(200).json({ success: true, message: "All project fetched successfully", project: filteredProject, totalCount });
+    return res.status(200).json({ success: true, message: "All project fetched successfully", project, totalCount });
   } catch (error) {
-    console.log("Error while fetching all project:", error.message);
     return res.status(500).json({ success: false, message: `Error while fetching all project: ${error.message}` });
   };
 };
@@ -233,18 +199,13 @@ export const fetchSingleProject = async (req, res) => {
       return res.status(404).json({ success: false, message: "Project not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredProject = filterFields(project, projection);
-
-    return res.status(200).json({ success: true, message: "Single project fetched successfully", project: filteredProject });
+    return res.status(200).json({ success: true, message: "Single project fetched successfully", project });
   } catch (error) {
-    console.log("Error while fetching single project:", error.message);
     return res.status(500).json({ success: false, message: `Error while fetching single project: ${error.message}` });
   };
 };
 
-// Fetch work details based on projectId, current date, month, year or employeeId
+// Fetch work details based on projectId, current date, month, year and employeeId
 export const fetchWorkDetail = async (req, res) => {
   try {
     const { projectId, date, year, month, employeeId, page = 1, limit = 10 } = req.query;
@@ -345,29 +306,10 @@ export const fetchWorkDetail = async (req, res) => {
     const paginatedResult = result.slice((page - 1) * limit, page * limit);
 
     // Send response with the result and the total count
-    res.status(200).json({
-      success: true,
-      message: "Work detail fetched successfully",
-      data: paginatedResult,
-      totalCount: totalCount,
-    });
+    return res.status(200).json({ success: true, message: "Work detail fetched successfully", data: paginatedResult, totalCount: totalCount });
   } catch (error) {
-    console.error("Error while fetching work details:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Error while fetching work details",
-      error: error.message,
-    });
+    return res.status(500).json({ success: false, message: "Error while fetching work details", error: error.message });
   };
-};
-
-// Helper function to calculate the difference in hours
-const calculateHourDifference = (startTime, endTime) => {
-  const [startHours, startMinutes] = startTime.split(':').map(Number);
-  const [endHours, endMinutes] = endTime.split(':').map(Number);
-  const startDate = new Date(0, 0, 0, startHours, startMinutes);
-  const endDate = new Date(0, 0, 0, endHours, endMinutes);
-  return (endDate - startDate) / (1000 * 60 * 60);
 };
 
 // Controller for updating a project with work detail and payment 
@@ -468,7 +410,6 @@ export const updateProject = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Project updated successfully", project: updatedProject });
   } catch (error) {
-    console.log("Error while updating project:", error.message);
     return res.status(500).json({ success: false, message: `Error while updating project: ${error.message}` });
   };
 };
@@ -485,7 +426,6 @@ export const deleteProject = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Project deleted successfully" });
   } catch (error) {
-    console.log("Error while deleting project:", error.message);
     return res.status(500).json({ success: false, message: `Error while deleting project: ${error.message}` });
   };
 };

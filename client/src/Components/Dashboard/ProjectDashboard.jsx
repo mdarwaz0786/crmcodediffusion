@@ -105,21 +105,9 @@ const ProjectDashboard = () => {
       });
 
       if (response?.data?.success) {
-        const filteredProject = response?.data?.project?.filter((p) => {
-          const isLeader = p?.teamLeader?.some((l) => l?._id === team?._id);
-          const isResponsible = p?.responsiblePerson?.some((r) => r?._id === team?._id);
-          return isLeader || isResponsible;
-        });
-
-        if (team?.role?.name.toLowerCase() === "coordinator" || team?.role?.name.toLowerCase() === "admin") {
-          setProject(response?.data?.project);
-          setTotal(response?.data?.totalCount);
-          setFilteredTotal(response?.data?.totalCount);
-        } else {
-          setProject(filteredProject);
-          setTotal(response?.data?.totalCount);
-          setFilteredTotal(filteredProject?.length);
-        };
+        setProject(response?.data?.project);
+        setTotal(response?.data?.totalCount);
+        setFilteredTotal(response?.data?.totalCount);
         setLoading(false);
       };
     } catch (error) {
@@ -146,15 +134,7 @@ const ProjectDashboard = () => {
       });
 
       if (response?.data?.success) {
-        // Filter projects based on the user's role (Team Leader or Responsible Person)
-        const filteredProject = response?.data?.project?.filter((p) => {
-          const isLeader = p?.teamLeader?.some((l) => l?._id === team?._id);
-          const isResponsible = p?.responsiblePerson?.some((r) => r?._id === team?._id);
-          return isLeader || isResponsible;
-        });
-
-        // Handle project data based on the role of the team member
-        const projectsToSet = (team?.role?.name.toLowerCase() === "coordinator" || team?.role?.name.toLowerCase() === "admin") ? response?.data?.project : filteredProject;
+        const projectsToSet = response?.data?.project;
 
         // Calculate the project priority names with their lengths
         const projectPriorities = projectsToSet?.reduce((accumulator, project) => {
@@ -373,7 +353,7 @@ const ProjectDashboard = () => {
   useEffect(() => {
     if (team?.role?.permissions?.projectDeployment?.access) {
       fetchAllExpiringProjectDeployment()
-    }
+    };
   }, [team?.role?.permissions?.projectDeployment?.access]);
 
   if (isLoading) {
@@ -687,15 +667,7 @@ const ProjectDashboard = () => {
                                           style={{
                                             color: d?.status === "Present"
                                               ? "green"
-                                              : d?.status === "Absent"
-                                                ? "red"
-                                                : d?.status === "Holiday"
-                                                  ? "#ffb300"
-                                                  : d?.status === "Sunday"
-                                                    ? "blue"
-                                                    : d?.status === "On Leave"
-                                                      ? "purple"
-                                                      : "black"
+                                              : "black"
                                           }}
                                         >{d?.status}</td>
                                       </tr>

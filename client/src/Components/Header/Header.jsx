@@ -26,16 +26,7 @@ const Header = () => {
         });
 
         if (response?.data?.success) {
-          const filteredProject = response?.data?.project?.filter((p) => {
-            const isLeader = p?.teamLeader?.some((l) => l?._id === team?._id);
-            const isResponsible = p?.responsiblePerson?.some((r) => r?._id === team?._id);
-            return isLeader || isResponsible;
-          });
-          if (team?.role?.name?.toLowerCase() === "coordinator" || team?.role?.name?.toLowerCase() === "admin") {
-            setTotal(response?.data?.totalCount);
-          } else {
-            setTotal(filteredProject?.length);
-          };
+          setTotal(response?.data?.totalCount);
         };
       } catch (error) {
         console.log(error.message);

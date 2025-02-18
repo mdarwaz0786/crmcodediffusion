@@ -65,58 +65,21 @@ export const createInvoice = async (req, res) => {
   };
 };
 
-// Helper function to build the projection object based on user permissions
-const buildProjection = (permissions) => {
-  const invoiceFields = permissions.invoice.fields;
-  const projection = {};
-
-  for (const [key, value] of Object.entries(invoiceFields)) {
-    if (value.show) {
-      projection[key] = 1;
-    } else {
-      projection[key] = 0;
-    };
-  };
-
-  // Ensure _id, createdAt and updatedAt are included by default unless explicitly excluded
-  projection._id = 1;
-  projection.createdAt = 1;
-  projection.updatedAt = 1;
-
-  return projection;
-};
-
-// Helper function to filter fields based on projection
-const filterFields = (invoice, projection) => {
-  const filteredInvoice = {};
-
-  for (const key in invoice._doc) {
-    if (projection[key] !== 0) {  // only exclude if explicitly set to 0
-      filteredInvoice[key] = invoice[key];
-    };
-  };
-
-  // Include _id, createdAt, and updatedAt if they were not excluded
-  if (projection._id !== 0) {
-    filteredInvoice._id = invoice._id;
-  };
-
-  if (projection.createdAt !== 0) {
-    filteredInvoice.createdAt = invoice.createdAt;
-  };
-
-  if (projection.updatedAt !== 0) {
-    filteredInvoice.updatedAt = invoice.updatedAt;
-  };
-
-  return filteredInvoice;
-};
-
 // Helper function to find ObjectId by string in referenced models
 const findObjectIdByString = async (modelName, fieldName, searchString) => {
   const Model = mongoose.model(modelName);
   const result = await Model.findOne({ [fieldName]: { $regex: new RegExp(searchString, 'i') } }).select('_id');
   return result ? result._id : null;
+};
+
+// Helper function to fetch projects where the customer field matches the given teamId
+const getProjectsByCustomer = async (teamId) => {
+  try {
+    const projects = await Project.find({ customer: teamId }).select("_id");
+    return projects.map((project) => project._id);
+  } catch (error) {
+    throw new Error("Error while fetching projects by customer");
+  };
 };
 
 // Controller for fetching all invoice
@@ -125,7 +88,13 @@ export const fetchAllInvoice = async (req, res) => {
     let filter = {};
     let sort = {};
 
-    // Handle universal searching across all fields
+    const userRole = req.team.role.name.toLowerCase();
+
+    if (userRole === "client" && req.teamId) {
+      filter.project = { $in: await getProjectsByCustomer(req.teamId) };
+    };
+
+    // Handle searching across all fields
     if (req.query.search) {
       filter.$or = [
         { project: await findObjectIdByString('Project', 'projectName', req.query.search) },
@@ -204,14 +173,10 @@ export const fetchAllInvoice = async (req, res) => {
       return res.status(404).json({ success: false, message: "Invoice not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredInvoice = invoice.map((invoice) => filterFields(invoice, projection));
     const totalCount = await Invoice.countDocuments(filter);
 
-    return res.status(200).json({ success: true, message: "All invoice fetched successfully", invoice: filteredInvoice, totalCount });
+    return res.status(200).json({ success: true, message: "All invoice fetched successfully", invoice, totalCount });
   } catch (error) {
-    console.log("Error while fetching all invoice:", error.message);
     return res.status(500).json({ success: false, message: "Error while fetching all invoice", error: error.message });
   };
 };
@@ -235,13 +200,8 @@ export const fetchSingleInvoice = async (req, res) => {
       return res.status(404).json({ success: false, message: "Invoice not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredInvoice = filterFields(invoice, projection);
-
-    return res.status(200).json({ success: true, message: "Single invoice fetched successfully", invoice: filteredInvoice });
+    return res.status(200).json({ success: true, message: "Single invoice fetched successfully", invoice });
   } catch (error) {
-    console.log("Error while fetching single invoice:", error.message);
     return res.status(500).json({ success: false, message: "Error while fetching single invoice", error: error.message });
   };
 };
@@ -262,7 +222,7 @@ export const fetchInvoiceByProject = async (req, res) => {
       })
       .exec();
 
-    if (!invoices.length) {
+    if (!invoices) {
       return res.status(404).json({ success: false, message: "Invoices not found" });
     };
 
@@ -275,7 +235,6 @@ export const fetchInvoiceByProject = async (req, res) => {
 
     return res.status(200).json({ success: true, invoices, totalReceived });
   } catch (error) {
-    console.error("Error while fetching invoice by project:", error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -324,9 +283,9 @@ export const updateInvoice = async (req, res) => {
 
     await invoice.save();
 
-    res.status(200).json({ success: true, invoice });
+    return res.status(200).json({ success: true, invoice });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -342,7 +301,6 @@ export const deleteInvoice = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Invoice deleted successfully" });
   } catch (error) {
-    console.log("Error while deleting invoice:", error.message);
     return res.status(500).json({ success: false, message: "Error while deleting invoice", error: error.message });
   };
 };

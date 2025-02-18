@@ -56,7 +56,7 @@ export const loginCustomer = async (req, res) => {
 export const loggedInCustomer = async (req, res) => {
   try {
     const customer = await Customer
-      .findById(req?.client?._id)
+      .findById(req.team._id)
       .populate({ path: "role", select: "" })
       .exec();
 
@@ -75,6 +75,12 @@ export const fetchAllCustomer = async (req, res) => {
   try {
     let filter = {};
     let sort = {};
+
+    const userRole = req.team.role.name.toLowerCase();
+
+    if (userRole === "client") {
+      filter._id = req.teamId;
+    };
 
     // Handle searching across all fields
     if (req.query.search) {

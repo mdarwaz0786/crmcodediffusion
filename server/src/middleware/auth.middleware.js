@@ -23,9 +23,9 @@ export const isLoggedIn = async (req, res, next) => {
         return res.status(401).json({ success: false, message: "Client not found or unauthorized" });
       };
 
-      req.client = clientData;
+      req.team = clientData;
       req.token = jwtToken;
-      req.clientId = clientData?._id;
+      req.teamId = clientData?._id;
     } else if (isVerified.userType === "Employee") {
       const teamData = await Team
         .findOne({ employeeId: isVerified.employeeId })

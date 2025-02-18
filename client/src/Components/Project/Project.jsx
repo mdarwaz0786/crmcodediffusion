@@ -69,7 +69,10 @@ const Project = () => {
 
   useEffect(() => {
     const formatDate = (date) => {
-      if (!date) return "";
+      if (!date) {
+        return "";
+      };
+
       const day = date.getDate().toString().padStart(2, "0");
       const month = (date.getMonth() + 1).toString().padStart(2, "0");
       const year = date.getFullYear();
@@ -94,6 +97,10 @@ const Project = () => {
   };
 
   const convertToHoursAndMinutes = (hours) => {
+    if (!hours) {
+      return;
+    };
+
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     return `${h} hours ${m} minutes`;
@@ -119,20 +126,9 @@ const Project = () => {
       });
 
       if (response?.data?.success) {
-        const filteredProject = response?.data?.project?.filter((p) => {
-          const isLeader = p?.teamLeader?.some((l) => l?._id === team?._id);
-          const isResponsible = p?.responsiblePerson?.some((r) => r?._id === team?._id);
-          return isLeader || isResponsible;
-        });
-        if (team?.role?.name.toLowerCase() === "coordinator" || team?.role?.name.toLowerCase() === "admin") {
-          setProject(response?.data?.project);
-          setTotal(response?.data?.totalCount);
-          setFilteredTotal(response?.data?.totalCount);
-        } else {
-          setProject(filteredProject);
-          setTotal(response?.data?.totalCount);
-          setFilteredTotal(filteredProject?.length);
-        };
+        setProject(response?.data?.project);
+        setTotal(response?.data?.totalCount);
+        setFilteredTotal(response?.data?.totalCount);
         setLoading(false);
       };
     } catch (error) {
@@ -153,16 +149,7 @@ const Project = () => {
       });
 
       if (response?.data?.success) {
-        const filteredProject = response?.data?.project?.filter((p) => {
-          const isLeader = p?.leader?.some((l) => l?._id === team?._id);
-          const isResponsible = p?.responsible?.some((r) => r?._id === team?._id);
-          return isLeader || isResponsible;
-        });
-        if (team?.role?.name.toLowerCase() === "coordinator" || team?.role?.name.toLowerCase() === "admin") {
-          setProjectNameData(response?.data?.project);
-        } else {
-          setProjectNameData(filteredProject);
-        };
+        setProjectNameData(response?.data?.project);
       };
     } catch (error) {
       console.log(error.message);
@@ -187,16 +174,7 @@ const Project = () => {
       });
 
       if (response?.data?.success) {
-        const filteredProject = response?.data?.project?.filter((p) => {
-          const isLeader = p?.leader?.some((l) => l?._id === team?._id);
-          const isResponsible = p?.responsible?.some((r) => r?._id === team?._id);
-          return isLeader || isResponsible;
-        });
-        if (team?.role?.name.toLowerCase() === "coordinator" || team?.role?.name.toLowerCase() === "admin") {
-          setProjectIdData(response?.data?.project);
-        } else {
-          setProjectIdData(filteredProject);
-        };
+        setProjectIdData(response?.data?.project);
       };
     } catch (error) {
       console.log(error.message);
@@ -325,14 +303,8 @@ const Project = () => {
       "Description": entry?.description.replace(/<[^>]+>/g, '') || "N/A",
     }));
 
-    if (exportData?.length === 0) {
-      alert("No project found to export");
-      return;
-    };
-
     const worksheet = XLSX.utils.json_to_sheet(exportData);
 
-    // Calculate column width dynamically
     const columnWidths = Object.keys(exportData[0] || {}).map((key) => ({
       wch: Math.max(key.length, ...exportData.map((row) => (row[key] ? row[key].toString().length : 0))) + 2,
     }));
