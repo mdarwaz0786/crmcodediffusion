@@ -167,6 +167,8 @@ export const newCreateAttendance = async (req, res) => {
       ).session(session);
     };
 
+    const sendBy = await Team.findById(employee);
+
     // Send push notification to admin
     const teams = await Team
       .find()
@@ -586,6 +588,9 @@ export const newUpdateAttendance = async (req, res) => {
         upsert: true,
       },
     );
+
+    // Send email
+    const sendBy = await Team.findById(employee);
 
     // Send push notification to admin
     const teams = await Team
