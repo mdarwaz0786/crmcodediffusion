@@ -1,7 +1,6 @@
 import Attendance from '../models/attendance.model.js';
 import Team from "../models/team.model.js";
 import Holiday from "../models/holiday.model.js";
-import { sendEmail } from "../services/emailService.js";
 import mongoose from "mongoose";
 import firebase from "../firebase/index.js";
 
@@ -167,12 +166,6 @@ export const newCreateAttendance = async (req, res) => {
         { $addToSet: { eligibleCompOffDate: compOffEntry } },
       ).session(session);
     };
-
-    // Send email
-    const sendBy = await Team.findById(employee);
-    const subject = `${sendBy?.name} Marked Punch-In At ${punchInTime} on Date ${attendanceDate}`;
-    const htmlContent = `<p>${sendBy?.name} marked punch-in at ${punchInTime} on date ${attendanceDate}.</p>`;
-    sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
     // Send push notification to admin
     const teams = await Team
@@ -593,12 +586,6 @@ export const newUpdateAttendance = async (req, res) => {
         upsert: true,
       },
     );
-
-    // Send email
-    const sendBy = await Team.findById(employee);
-    const subject = `${sendBy?.name} Marked Punch-Out At ${punchOutTime} On Date ${attendanceDate}`;
-    const htmlContent = `<p>${sendBy?.name} marked punch-out at ${punchOutTime} on date ${attendanceDate}.</p>`;
-    sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
 
     // Send push notification to admin
     const teams = await Team
