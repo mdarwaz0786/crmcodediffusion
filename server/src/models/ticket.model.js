@@ -27,6 +27,11 @@ const ticketSchema = new mongoose.Schema(
       enum: ["Low", "Medium", "High"],
       default: "Medium",
     },
+    ticketType: {
+      type: String,
+      enum: ["Bug", "Feature Request", "Improvement", "Task", "Support", "Incident"],
+      required: true,
+    },
     project: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
@@ -40,8 +45,13 @@ const ticketSchema = new mongoose.Schema(
     ],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer",
       required: true,
+      refPath: "createdByModel",
+    },
+    createdByModel: {
+      type: String,
+      required: true,
+      enum: ["Customer", "Team"],
     },
     resolutionDetails: [
       {

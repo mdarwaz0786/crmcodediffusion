@@ -26,6 +26,7 @@ export const isLoggedIn = async (req, res, next) => {
       req.team = clientData;
       req.token = jwtToken;
       req.teamId = clientData?._id;
+      req.teamType = isVerified.userType;
     } else if (isVerified.userType === "Employee") {
       const teamData = await Team
         .findOne({ employeeId: isVerified.employeeId })
@@ -43,6 +44,7 @@ export const isLoggedIn = async (req, res, next) => {
       req.team = teamData;
       req.token = jwtToken;
       req.teamId = teamData._id;
+      req.teamType = isVerified.userType;
     };
 
     next();

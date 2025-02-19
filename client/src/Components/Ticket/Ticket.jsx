@@ -399,8 +399,18 @@ const Ticket = () => {
                           </th>
                           <th>#</th>
                           {
+                            (permissions?.access) && (
+                              <th>View</th>
+                            )
+                          }
+                          {
                             (filedPermissions?.ticketId?.show) && (
                               <th>TicketId</th>
+                            )
+                          }
+                          {
+                            (filedPermissions?.ticketType?.show) && (
+                              <th>Ticket type</th>
                             )
                           }
                           {
@@ -430,8 +440,18 @@ const Ticket = () => {
                               </th>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
                               {
+                                (permissions?.access) && (
+                                  <td><Link to={`/single-ticket/${d?._id}`}><i className="fas fa-eye"></i></Link></td>
+                                )
+                              }
+                              {
                                 (filedPermissions?.ticketId?.show) && (
                                   <td>{d?.ticketId}</td>
+                                )
+                              }
+                              {
+                                (filedPermissions?.ticketType?.show) && (
+                                  <td>{d?.ticketType}</td>
                                 )
                               }
                               {

@@ -4,7 +4,24 @@ import Project from "../models/project.model.js";
 // Create a new Ticket
 export const createTicket = async (req, res) => {
   try {
-    const { title, description, projectId, priority, createdBy } = req.body;
+    const { title, description, projectId, priority, ticketType } = req.body;
+
+    if (!req.team || !req.teamType || !req.teamId) {
+      return res.status(401).json({ message: "User not authenticated." });
+    };
+
+    let createdByModel;
+    let createdBy;
+
+    if (req.teamType === "Client") {
+      createdByModel = "Customer";
+      createdBy = req.teamId;
+    } else if (req.teamType === "Employee") {
+      createdByModel = "Team";
+      createdBy = req.teamId;
+    } else {
+      return res.status(400).json({ message: "Invalid user role." });
+    };
 
     const project = await Project
       .findOne({ _id: projectId })
@@ -20,10 +37,12 @@ export const createTicket = async (req, res) => {
     const newTicket = new Ticket({
       title,
       description,
-      project: project._id,
+      project: project?._id,
       assignedTo,
       priority,
+      ticketType,
       createdBy,
+      createdByModel,
     });
 
     await newTicket.save();
@@ -53,9 +72,12 @@ export const fetchAllTickets = async (req, res) => {
     if (req.query.search) {
       const searchRegex = new RegExp(req.query.search.trim(), "i");
       const searchFilter = [
-        { title: { $regex: searchRegex } },
         { ticketId: { $regex: searchRegex } },
+        { title: { $regex: searchRegex } },
         { description: { $regex: searchRegex } },
+        { status: { $regex: searchRegex } },
+        { priority: { $regex: searchRegex } },
+        { ticketType: { $regex: searchRegex } },
       ];
 
       filter.$and = [{ $or: searchFilter }];
@@ -102,7 +124,7 @@ export const fetchAllTickets = async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(limit)
-      .populate("project assignedTo createdBy")
+      .populate("createdBy project assignedTo")
       .exec();
 
     const totalCount = await Ticket.countDocuments(filter);
@@ -118,7 +140,8 @@ export const fetchSingleTicket = async (req, res) => {
   try {
     const ticket = await Ticket
       .findById(req.params.id)
-      .populate("project assignedTo createdBy");
+      .populate("createdBy project assignedTo")
+      .exec();
 
     if (!ticket) {
       return res.status(404).json({ success: false, message: "Ticket not found" });
