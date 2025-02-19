@@ -34,6 +34,13 @@ export const createTicket = async (req, res) => {
 
     const assignedTo = [...(project.responsiblePerson || []), ...(project.teamLeader || [])];
 
+    let image = "";
+
+    if (req.file) {
+      const file = req.file;
+      image = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+    };
+
     const newTicket = new Ticket({
       title,
       description,
@@ -43,6 +50,7 @@ export const createTicket = async (req, res) => {
       ticketType,
       createdBy,
       createdByModel,
+      image,
     });
 
     await newTicket.save();
@@ -157,10 +165,16 @@ export const fetchSingleTicket = async (req, res) => {
 export const updateTicket = async (req, res) => {
   try {
     const ticketId = req.params.id;
-    const updateData = req.body;
+    const updateData = { ...req.body };
 
-    const ticket = await Ticket
-      .findByIdAndUpdate(ticketId, updateData, { new: true });
+    if (req.file) {
+      const file = req.file;
+      updateData.image = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+    } else if (req.body.removeImage === "true") {
+      updateData.image = "";
+    };
+
+    const ticket = await Ticket.findByIdAndUpdate(ticketId, updateData, { new: true });
 
     if (!ticket) {
       return res.status(404).json({ success: false, message: "Ticket not found" });

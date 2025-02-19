@@ -177,6 +177,7 @@ const AddRole = () => {
         assignedTo: { read: true, show: true },
         ticketType: { read: true, show: true },
         resolutionDetails: { read: true, show: true },
+        image: { read: true, show: true },
       },
     },
     team: {
@@ -563,6 +564,7 @@ const AddRole = () => {
               assignedTo: { read: true, show: true },
               ticketType: { read: true, show: true },
               resolutionDetails: { read: true, show: true },
+              image: { read: true, show: true },
             },
           },
           team: {

@@ -335,6 +335,7 @@ const TicketPermissionSchema = new mongoose.Schema(
       createdBy: { type: FieldPermissionSchema, default: () => ({}) },
       createdByModel: { type: FieldPermissionSchema, default: () => ({}) },
       resolutionDetails: { type: FieldPermissionSchema, default: () => ({}) },
+      image: { type: FieldPermissionSchema, default: () => ({}) },
     },
   },
 );

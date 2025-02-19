@@ -15,6 +15,8 @@ const AddTicket = () => {
   const [ticketType, setTicketType] = useState("");
   const [project, setProject] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const navigate = useNavigate();
   const { validToken, team, isLoading } = useAuth();
   const permissions = team?.role?.permissions?.ticket;
@@ -22,14 +24,9 @@ const AddTicket = () => {
   const fetchAllProject = async () => {
     try {
       const response = await axios.get(`${base_url}/api/v1/project/all-project`, {
-        headers: {
-          Authorization: validToken,
-        },
+        headers: { Authorization: validToken },
       });
-
-      if (response?.data?.success) {
-        setProject(response?.data?.project);
-      };
+      if (response?.data?.success) setProject(response?.data?.project);
     } catch (error) {
       console.log(error.message);
     };
@@ -41,49 +38,56 @@ const AddTicket = () => {
     };
   }, [permissions]);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select a valid image file.");
+        return;
+      };
+
+      if (file.size > 1 * 1024 * 1024) {
+        toast.error("Image size should be less than 1MB.");
+        return;
+      };
+
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    };
+  };
+
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-
-      // Validations
-      if (!title) {
-        return toast.error("Enter title");
+      if (!title || !description || !selectedProject || !priority || !ticketType) {
+        return toast.error("Please fill all required fields.");
       };
 
-      if (!description) {
-        return toast.error("Enter description");
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("description", description);
+      formData.append("projectId", selectedProject);
+      formData.append("priority", priority);
+      formData.append("ticketType", ticketType);
+      if (image) {
+        formData.append("image", image);
       };
 
-      if (!selectedProject) {
-        return toast.error("Select project");
-      };
-
-      if (!priority) {
-        return toast.error("Select priority");
-      };
-
-      if (!ticketType) {
-        return toast.error("Select ticket type");
-      };
-
-      const response = await axios.post(`${base_url}/api/v1/ticket/create-ticket`,
-        { title, description, projectId: selectedProject, priority, ticketType },
-        {
-          headers: {
-            Authorization: validToken,
-          },
-        });
+      const response = await axios.post(`${base_url}/api/v1/ticket/create-ticket`, formData, {
+        headers: {
+          Authorization: validToken,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       if (response?.data?.success) {
-        setTitle("");
-        setDescription("");
-        setSelectedProject("");
-        setPriority("");
+        setTitle(""); setDescription(""); setSelectedProject(""); setPriority(""); setImage(null);
         toast.success("Submitted Successfully");
         navigate(-1);
       };
     } catch (error) {
-      console.log("Error while creating designation:", error.message);
+      console.log("Error while creating ticket:", error.message);
       toast.error("Error while creating");
     };
   };
@@ -101,33 +105,31 @@ const AddTicket = () => {
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <h4>Raise Ticket</h4>
-          <Link to="#" onClick={() => navigate(-1)}><button className="btn btn-primary">Back</button></Link>
+          <Link to="#" onClick={() => navigate(-1)}>
+            <button className="btn btn-primary">Back</button>
+          </Link>
         </div>
         <div className="row">
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="title">Title <span className="text-danger">*</span></label>
-              <input type="text" className="form-control" name="title" id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
+              <label className="col-form-label">Title <span className="text-danger">*</span></label>
+              <input type="text" className="form-control" value={title} onChange={(e) => setTitle(e.target.value)} />
             </div>
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="project">Project <span className="text-danger">*</span></label>
-              <select className="form-select" name="project" id="project" value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)}>
-                <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
-                {
-                  project?.map((p) => (
-                    <option key={p?._id} value={p?._id}>{p?.projectName}</option>
-                  ))
-                }
+              <label className="col-form-label">Project <span className="text-danger">*</span></label>
+              <select className="form-select" value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)}>
+                <option value="">Select</option>
+                {project?.map((p) => (<option key={p?._id} value={p?._id}>{p?.projectName}</option>))}
               </select>
             </div>
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="priority">Priority <span className="text-danger">*</span></label>
-              <select className="form-select" name="priority" id="priority" value={priority} onChange={(e) => setPriority(e.target.value)}>
-                <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
+              <label className="col-form-label">Priority <span className="text-danger">*</span></label>
+              <select className="form-select" value={priority} onChange={(e) => setPriority(e.target.value)}>
+                <option value="">Select</option>
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
                 <option value="High">High</option>
@@ -136,9 +138,9 @@ const AddTicket = () => {
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="ticketType">Ticket Type <span className="text-danger">*</span></label>
-              <select className="form-select" name="ticketType" id="ticketType" value={ticketType} onChange={(e) => setTicketType(e.target.value)}>
-                <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
+              <label className="col-form-label">Ticket Type <span className="text-danger">*</span></label>
+              <select className="form-select" value={ticketType} onChange={(e) => setTicketType(e.target.value)}>
+                <option value="">Select</option>
                 <option value="Bug">Bug</option>
                 <option value="Feature Request">Feature Request</option>
                 <option value="Improvement">Improvement</option>
@@ -150,14 +152,26 @@ const AddTicket = () => {
           </div>
           <div className="col-md-12">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="description">Description <span className="text-danger"></span></label>
-              <textarea className="form-control" rows={4} name="description" id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
+              <label className="col-form-label">Description <span className="text-danger">*</span></label>
+              <textarea className="form-control" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+          </div>
+          <div className="col-md-12">
+            <div className="form-wrap">
+              <label className="col-form-label">Upload Image (Max 1MB)</label>
+              <input type="file" className="form-control" accept="image/*" onChange={handleImageChange} />
+              {imagePreview && (
+                <div className="mt-3 text-center">
+                  <p><strong>Image Preview:</strong></p>
+                  <img src={imagePreview} alt="Preview" style={{ maxWidth: "100%", height: "auto" }} />
+                </div>
+              )}
             </div>
           </div>
         </div>
         <div className="submit-button text-end">
-          <Link to="#" onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
-          <Link to="#" className="btn btn-primary" onClick={(e) => handleCreate(e)}>Submit</Link>
+          <Link to="#" onClick={() => navigate(-1)} className="btn btn-light">Cancel</Link>
+          <button className="btn btn-primary" onClick={handleCreate}>Submit</button>
         </div>
       </div>
     </div>

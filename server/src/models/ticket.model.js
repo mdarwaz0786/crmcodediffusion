@@ -53,6 +53,9 @@ const ticketSchema = new mongoose.Schema(
       required: true,
       enum: ["Customer", "Team"],
     },
+    image: {
+      type: String,
+    },
     resolutionDetails: [
       {
         resolveBy: {

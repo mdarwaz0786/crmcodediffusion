@@ -109,7 +109,7 @@ const SingleTicket = () => {
 
   return (
     <div className="page-wrapper" style={{ paddingBottom: "2rem" }}>
-      <div className="content">
+      <div className="content" id="exportTicketDetail">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
           <h4>Ticket Detail</h4>
           {
@@ -119,7 +119,7 @@ const SingleTicket = () => {
           }
           <Link to="#" onClick={() => navigate(-1)}><button className="btn btn-primary">Back</button></Link>
         </div>
-        <div className="card border-light rounded p-4 mb-4" id="exportTicketDetail">
+        <div className="card border-light rounded p-4 mb-4">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h2 className="h4 mb-0 text-primary">🎫 Ticket Details</h2>
             <div className="d-flex flex-column align-items-end">
@@ -196,6 +196,14 @@ const SingleTicket = () => {
             <p className="mb-0">⏱ Last Updated: {new Date(data?.updatedAt).toLocaleString("en-IN")}</p>
           </div>
         </div>
+        {
+          data?.image && (
+            <div className="mt-3 text-center">
+              <p><strong>Attachment:</strong></p>
+              <img src={data?.image} alt="attachment" style={{ maxWidth: "100%", height: "auto" }} />
+            </div>
+          )
+        }
       </div>
     </div>
   );
