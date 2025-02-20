@@ -296,6 +296,7 @@ const CustomerPermissionSchema = new mongoose.Schema(
       address: { type: FieldPermissionSchema, default: () => ({}) },
       password: { type: FieldPermissionSchema, default: () => ({}) },
       role: { type: FieldPermissionSchema, default: () => ({}) },
+      fcmToken: { type: FieldPermissionSchema, default: () => ({}) },
     },
   },
 );

@@ -159,6 +159,7 @@ const AddRole = () => {
         address: { read: true, show: true },
         password: { read: true, show: true },
         role: { read: true, show: true },
+        fcmToken: { read: true, show: true },
       },
     },
     ticket: {
@@ -546,6 +547,7 @@ const AddRole = () => {
               address: { read: true, show: true },
               password: { read: true, show: true },
               role: { read: true, show: true },
+              fcmToken: { read: true, show: true },
             },
           },
           ticket: {

@@ -18,16 +18,21 @@ export const createCustomer = async (req, res) => {
 // controller for login customer
 export const loginCustomer = async (req, res) => {
   try {
-    const { mobile, password } = req.body;
+    const { mobile, password, fcmToken } = req.body;
 
     const customer = await Customer.findOne({ mobile });
 
     if (!customer) {
-      return res.status(404).json({ success: false, message: "Invalid Login Id" });
+      return res.status(404).json({ success: false, message: "Invalid mobile number" });
     };
 
     if (password !== customer.password) {
       return res.status(401).json({ success: false, message: "Invalid Password" });
+    };
+
+    if (!!fcmToken) {
+      customer.fcmToken = fcmToken;
+      await customer.save();
     };
 
     return res.status(200).json({
@@ -44,11 +49,12 @@ export const loginCustomer = async (req, res) => {
         customer?.state,
         customer?.address,
         customer?.role?._id,
+        customer?.fcmToken,
         "Client",
       ),
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: `Error while login employee: ${error.message}` });
+    return res.status(500).json({ success: false, message: `Error while login client: ${error.message}` });
   };
 };
 

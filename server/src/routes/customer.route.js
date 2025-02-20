@@ -4,7 +4,7 @@ import { isLoggedIn } from './../middleware/auth.middleware.js';
 import checkMasterActionPermission from "../middleware/masterActionPermission.middleware.js";
 import checkFieldUpdatePermission from "../middleware/checkFieldUpdatePermission.middleware.js";
 
-const fields = ['name', 'email', 'password', 'mobile', 'GSTNumber', 'state', 'companyName', 'address', 'role'];
+const fields = ['name', 'email', 'password', 'mobile', 'GSTNumber', 'state', 'companyName', 'address', 'role', 'fcmToken'];
 
 // router object
 const router = express.Router();
