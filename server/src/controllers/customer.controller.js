@@ -62,7 +62,7 @@ export const loginCustomer = async (req, res) => {
 export const loggedInCustomer = async (req, res) => {
   try {
     const customer = await Customer
-      .findById(req.team._id)
+      .findById(req.team?._id)
       .populate({ path: "role", select: "" })
       .exec();
 

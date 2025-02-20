@@ -5,7 +5,12 @@ import mongoose from "mongoose";
 
 // Helper function to generate the next employeeId
 const getNextEmployeeId = async () => {
-  const counter = await EmployeeId.findOneAndUpdate({ _id: "employeeId" }, { $inc: { sequence: 1 } }, { new: true, upsert: true });
+  const counter = await EmployeeId
+    .findOneAndUpdate(
+      { _id: "employeeId" },
+      { $inc: { sequence: 1 } },
+      { new: true, upsert: true },
+    );
   return `EmpID${counter.sequence.toString().padStart(3, "0")}`;
 };
 
@@ -91,7 +96,7 @@ export const loginTeam = async (req, res) => {
 export const loggedInTeam = async (req, res) => {
   try {
     const team = await Team
-      .findById(req.team._id)
+      .findById(req.team?._id)
       .populate({ path: "role", select: "" })
       .populate({ path: "designation", select: "name" })
       .populate({ path: "reportingTo", select: "name" })

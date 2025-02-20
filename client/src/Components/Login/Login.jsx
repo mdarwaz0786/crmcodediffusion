@@ -1,5 +1,5 @@
 /* eslint-disable no-extra-semi */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authContext.jsx";
 import axios from "axios";
@@ -13,6 +13,16 @@ const Login = () => {
   const [isClientLogin, setIsClientLogin] = useState(false);
   const navigate = useNavigate();
   const { storeToken } = useAuth();
+
+  useEffect(() => {
+    const userType = localStorage.getItem("userType");
+
+    if (userType === "Client") {
+      setIsClientLogin(true)
+    } else if (userType === "Employee") {
+      setIsClientLogin(false);
+    };
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -30,10 +40,10 @@ const Login = () => {
       });
 
       if (response?.data?.success) {
-        storeToken(response?.data?.token);
-        localStorage.setItem("userType", isClientLogin ? "Client" : "Employee");
         setLoginId("");
         setPassword("");
+        localStorage.setItem("userType", isClientLogin ? "Client" : "Employee");
+        storeToken(response?.data?.token);
         toast.success("Login Successful");
         navigate('/');
         window.location.reload();
@@ -54,7 +64,7 @@ const Login = () => {
               </div>
               <div className="login-heading">
                 <h4>Login</h4>
-                <p>{isClientLogin ? "Login using your mobile number" : "Login using your employee ID"}</p>
+                <p>{isClientLogin ? "Login using your mobile number and password" : "Login using your employee id and password"}</p>
               </div>
               <div className="form-wrap">
                 <label className="col-form-label">

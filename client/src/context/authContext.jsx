@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [team, setTeam] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+
   const validToken = `Bearer ${token}`;
   let isLoggedIn = !!token;
 
