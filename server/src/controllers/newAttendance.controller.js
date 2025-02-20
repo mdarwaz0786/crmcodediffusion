@@ -589,7 +589,6 @@ export const newUpdateAttendance = async (req, res) => {
       },
     );
 
-    // Send email
     const sendBy = await Team.findById(employee);
 
     // Send push notification to admin
