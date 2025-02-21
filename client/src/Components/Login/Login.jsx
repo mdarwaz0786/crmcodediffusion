@@ -16,10 +16,9 @@ const Login = () => {
 
   useEffect(() => {
     const userType = localStorage.getItem("userType");
-
     if (userType === "Client") {
       setIsClientLogin(true)
-    } else if (userType === "Employee") {
+    } else {
       setIsClientLogin(false);
     };
   }, []);
