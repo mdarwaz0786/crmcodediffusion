@@ -1,5 +1,12 @@
 import Invoice from "../models/proformaInvoice.model.js";
 import ProformaInvoiceId from "../models/proformaInvoiceId.model.js";
+import puppeteer from "puppeteer";
+import { transporter } from "../services/emailService.js";
+import fs from "fs";
+import path from "path";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // Helper function to generate the next proforma invoice id
 const getNextProformaInvoiceId = async () => {
@@ -14,7 +21,7 @@ const getNextProformaInvoiceId = async () => {
 // Controller for creating an invoice
 export const createInvoice = async (req, res) => {
   try {
-    const { date, tax, projectName, projectCost, clientName, GSTNumber, state, shipTo } = req.body;
+    const { date, tax, projectName, projectCost, clientName, GSTNumber, state, shipTo, email } = req.body;
 
     let subtotal = parseFloat(projectCost);
     let CGST = 0;
@@ -43,6 +50,7 @@ export const createInvoice = async (req, res) => {
       projectName,
       projectCost: projectCost,
       clientName,
+      email,
       GSTNumber,
       state,
       shipTo,
@@ -54,8 +62,6 @@ export const createInvoice = async (req, res) => {
       balanceDue: total.toFixed(2),
     });
 
-    await newInvoice.save();
-
     // Generate the next proformaInvoiceId only after successful save
     const proformaInvoiceId = await getNextProformaInvoiceId();
 
@@ -64,58 +70,274 @@ export const createInvoice = async (req, res) => {
 
     await newInvoice.save();
 
-    res.status(200).json({ success: true, message: "Proforma invoice created successfully", invoice: newInvoice });
+    // Read the logo file and convert it to Base64
+    const __dirname = path.resolve();
+    const logoPath = path.join(__dirname, 'public/assets/logo.png');
+    const logoBase64 = fs.readFileSync(logoPath).toString('base64');
+    const logoSrc = `data:image/png;base64,${logoBase64}`;
+
+    // Generate the salary slip HTML
+    const salarySlipHTML = `
+    <!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .strong {
+      font-weight: 600;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h4 {
+      margin: 0;
+    }
+
+    .invoice-container {
+      background-color: white;
+      margin: 10px auto;
+      padding-bottom: 32px;
+    }
+
+    .invoice-heading {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px;
+    }
+
+    .logo img {
+      width: 150px;
+      margin-bottom: 30px;
+    }
+
+    .invoice-title h4 {
+      text-align: right;
+      font-size: 18px;
+    }
+
+    .invoice-details {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .invoice-id {
+      margin-bottom: 3px;
+    }
+
+    .billing-info {
+      width: 50%;
+    }
+
+    .billing-info div {
+      margin-bottom: 3px;
+    }
+
+    .invoice-meta {
+      text-align: right;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .row div {
+      margin-bottom: 3px;
+    }
+
+    .balance-due {
+      display: flex;
+      align-items: baseline;
+      justify-content: flex-end;
+      padding: 0 45px;
+    }
+
+    .invoice-table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+
+    .invoice-table th,
+    .invoice-table td {
+      padding: 20px;
+      text-align: left;
+    }
+
+    .invoice-table th {
+      padding: 10px;
+      padding-left: 20px;
+      padding-right: 20px;
+      background-color: #dcf0f0;
+    }
+
+    .invoice-table th.text-end,
+    .invoice-table td.text-end {
+      text-align: right;
+    }
+
+    .notes {
+      padding: 20px;
+    }
+
+    .notes div {
+      padding-bottom: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="content">
+    <div class="invoice-container">
+      <div class="invoice-heading">
+        <div class="logo">
+          <img src="${logoSrc}" width="150px" alt="logo">
+        </div>
+        <div class="invoice-title">
+          <h4>TAX INVOICE</h4>
+        </div>
+      </div>
+      <div class="invoice-details">
+        <div class="billing-info">
+          <div><strong>Code Diffusion Technologies</strong></div>
+          <div>Address:</div>
+          <div>1020, Kirti Sikhar Tower,</div>
+          <div>District Centre, Janakpuri,</div>
+          <div>New Delhi.</div>
+          <div><strong>GST No: O7FRWPS7288J3ZC</strong></div>
+        </div>
+        <div class="invoice-meta">
+          <div class="invoice-id">Invoice ID: ${proformaInvoiceId}</div>
+          <div class="invoice-date">
+            <strong>Date:</strong>
+            <span>${date}</span>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="billing-address">
+          <div><strong>Bill To:</strong></div>
+          <div>${clientName}</div>
+          <div><strong>GST No: ${GSTNumber}</strong></div>
+        </div>
+        <div class="shipping-address">
+          <div><strong>Ship To:</strong></div>
+          <div>${shipTo}</div>
+        </div>
+        <div class="balance-due">
+          <p><strong>Balance Due: ₹${total}</strong></p>
+        </div>
+      </div>
+      <table class="invoice-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Rate</th>
+            <th class="text-end">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>${projectName}</td>
+            <td>1</td>
+            <td>₹${projectCost}</td>
+            <td class="text-end">₹${projectCost}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" style="text-align: right;"><strong>Subtotal:</strong></td>
+            <td class="text-end">₹${subtotal}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align: right;"><strong>CGST (9%):</strong></td>
+            <td class="text-end">₹${CGST}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align: right;"><strong>SGST (9%):</strong></td>
+            <td class="text-end">₹${SGST}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align: right;"><strong>IGST (18%):</strong></td>
+            <td class="text-end">₹${IGST}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align: right;"><strong>Total:</strong></td>
+            <td class="text-end">₹${total}</td>
+          </tr>
+        </tfoot>
+      </table>
+      <div class="notes">
+        <div><strong>Notes:</strong></div>
+        <div><strong>Account Name: </strong>Code Diffusion Technologies</div>
+        <div><strong>Account Type: </strong>Current Account</div>
+        <div><strong>Account Number: </strong>60374584640</div>
+        <div><strong>Bank Name: </strong>Bank of Maharashtra</div>
+        <div><strong>IFSC Code: </strong>mahb0001247</div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
+    `;
+
+    // Generate PDF from HTML
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setContent(salarySlipHTML);
+    const pdfPath = `porforma_invoice_${clientName}.pdf`;
+    await page.pdf({ path: pdfPath, format: 'A4' });
+    await browser.close();
+
+    // Email options
+    const mailOptions = {
+      from: `${process.env.SENDER_EMAIL_ID}`,
+      to: `${email}`,
+      subject: `Proforma Invoice ${date}`,
+      text: 'Please find attached your porforma invoice.',
+      attachments: [
+        {
+          filename: pdfPath,
+          path: pdfPath,
+        },
+      ],
+    };
+
+    // Send email
+    transporter.sendMail(mailOptions, () => {
+      fs.unlinkSync(pdfPath);
+    });
+
+    return res.status(200).json({ success: true, message: "Proforma invoice created successfully", invoice: newInvoice });
   } catch (error) {
-    console.error("Error while creating proforma invoice:", error.message);
-    res.status(500).json({ success: false, message: `Error while creating proforma invoice: ${error.message}` });
+    return res.status(500).json({ success: false, message: `Error while creating proforma invoice: ${error.message}` });
   };
-};
-
-// Helper function to build the projection object based on user permissions
-const buildProjection = (permissions) => {
-  const invoiceFields = permissions.invoice.fields;
-  const projection = {};
-
-  for (const [key, value] of Object.entries(invoiceFields)) {
-    if (value.show) {
-      projection[key] = 1;
-    } else {
-      projection[key] = 0;
-    };
-  };
-
-  // Ensure _id, createdAt and updatedAt are included by default unless explicitly excluded
-  projection._id = 1;
-  projection.createdAt = 1;
-  projection.updatedAt = 1;
-
-  return projection;
-};
-
-// Helper function to filter fields based on projection
-const filterFields = (invoice, projection) => {
-  const filteredInvoice = {};
-
-  for (const key in invoice._doc) {
-    if (projection[key] !== 0) {  // only exclude if explicitly set to 0
-      filteredInvoice[key] = invoice[key];
-    };
-  };
-
-  // Include _id, createdAt, and updatedAt if they were not excluded
-  if (projection._id !== 0) {
-    filteredInvoice._id = invoice._id;
-  };
-
-  if (projection.createdAt !== 0) {
-    filteredInvoice.createdAt = invoice.createdAt;
-  };
-
-  if (projection.updatedAt !== 0) {
-    filteredInvoice.updatedAt = invoice.updatedAt;
-  };
-
-  return filteredInvoice;
 };
 
 // Controller for fetching all proforma invoice
@@ -196,7 +418,8 @@ export const fetchAllInvoice = async (req, res) => {
     const limit = parseInt(req.query.limit);
     const skip = (page - 1) * limit;
 
-    const proformaInvoices = await Invoice.find(filter)
+    const proformaInvoices = await Invoice
+      .find(filter)
       .sort(sort)
       .skip(skip)
       .limit(limit)
@@ -206,26 +429,17 @@ export const fetchAllInvoice = async (req, res) => {
       return res.status(404).json({ success: false, message: "Proforma invoices not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredProformaInvoices = proformaInvoices.map((invoice) => filterFields(invoice, projection));
-
     const totalCount = await Invoice.countDocuments(filter);
 
     return res.status(200).json({
       success: true,
       message: "Proforma invoices fetched successfully",
-      invoice: filteredProformaInvoices,
+      invoice: proformaInvoices,
       totalCount,
     });
 
   } catch (error) {
-    console.error("Error while fetching proforma invoice:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: "Error while fetching proforma invoice",
-      error: error.message,
-    });
+    return res.status(500).json({ success: false, message: "Error while fetching proforma invoice", error: error.message });
   };
 };
 
@@ -239,13 +453,8 @@ export const fetchSingleInvoice = async (req, res) => {
       return res.status(404).json({ success: false, message: "Invoice not found" });
     };
 
-    const permissions = req.team.role.permissions;
-    const projection = buildProjection(permissions);
-    const filteredInvoice = filterFields(invoice, projection);
-
-    return res.status(200).json({ success: true, message: "Single invoice fetched successfully", invoice: filteredInvoice });
+    return res.status(200).json({ success: true, message: "Single invoice fetched successfully", invoice });
   } catch (error) {
-    console.log("Error while fetching single invoice:", error.message);
     return res.status(500).json({ success: false, message: "Error while fetching single invoice", error: error.message });
   };
 };
@@ -254,7 +463,7 @@ export const fetchSingleInvoice = async (req, res) => {
 export const updateInvoice = async (req, res) => {
   try {
     const invoiceId = req.params.id;
-    const { date, tax, projectName, projectCost, clientName, GSTNumber, state, shipTo } = req.body;
+    const { date, tax, projectName, projectCost, clientName, GSTNumber, state, shipTo, email } = req.body;
 
     const invoice = await Invoice.findById(invoiceId);
 
@@ -288,6 +497,7 @@ export const updateInvoice = async (req, res) => {
     invoice.projectName = projectName;
     invoice.projectCost = projectCost;
     invoice.clientName = clientName;
+    invoice.email = email;
     invoice.GSTNumber = GSTNumber;
     invoice.state = state;
     invoice.shipTo = shipTo;
@@ -300,10 +510,9 @@ export const updateInvoice = async (req, res) => {
 
     await invoice.save();
 
-    res.status(200).json({ success: true, message: "Proforma invoice updated successfully", invoice });
+    return res.status(200).json({ success: true, message: "Proforma invoice updated successfully", invoice });
   } catch (error) {
-    console.error("Error while updating proforma invoice:", error.message);
-    res.status(500).json({ success: false, message: `Error while updating proforma invoice: ${error.message}` });
+    return res.status(500).json({ success: false, message: `Error while updating proforma invoice: ${error.message}` });
   };
 };
 
@@ -319,7 +528,6 @@ export const deleteInvoice = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Invoice deleted successfully" });
   } catch (error) {
-    console.log("Error while deleting invoice:", error.message);
     return res.status(500).json({ success: false, message: "Error while deleting invoice", error: error.message });
   };
 };

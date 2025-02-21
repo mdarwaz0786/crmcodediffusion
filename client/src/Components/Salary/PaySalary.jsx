@@ -13,17 +13,27 @@ const PaySalary = () => {
   const { employeeId, month, year, totalSalary } = useParams();
   const navigate = useNavigate();
   const { validToken, team, isLoading } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   const handleCreate = async (e) => {
     e.preventDefault();
 
     try {
+      setLoading(true);
+
       if (!totalSalary || !month || !year || !employeeId || !transactionId) {
-        return toast.error("Try again");
+        return toast.error("Enter transaction id");
       };
 
       const response = await axios.post(`${base_url}/api/v1/salary/create-salary`,
-        { transactionId: transactionId, amountPaid: totalSalary, month, year, employee: employeeId, salaryPaid: true },
+        {
+          transactionId: transactionId,
+          amountPaid: totalSalary,
+          month,
+          year,
+          employee: employeeId,
+          salaryPaid: true,
+        },
         {
           headers: {
             Authorization: validToken,
@@ -37,8 +47,9 @@ const PaySalary = () => {
         navigate(-1);
       };
     } catch (error) {
-      console.error("Error while uploading salary record:", error.message);
       toast.error(error?.response?.data?.message || "Error while submitting");
+    } finally {
+      setLoading(false);
     };
   };
 
@@ -74,10 +85,18 @@ const PaySalary = () => {
         </div>
 
         {/* Submit Button */}
-        <div className="text-start">
-          <Link to="#" style={{ marginRight: "1rem" }} onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
-          <Link to="#" className="btn btn-primary" onClick={handleCreate}>Submit</Link>
-        </div>
+        {
+          loading ? (
+            <div className="text-start">
+              <h6>Salary slip is creating and sending...</h6>
+            </div>
+          ) : (
+            <div className="text-start">
+              <Link to="#" style={{ marginRight: "1rem" }} onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
+              <Link to="#" className="btn btn-primary" onClick={handleCreate}>Submit</Link>
+            </div>
+          )
+        }
       </div>
     </div>
   );

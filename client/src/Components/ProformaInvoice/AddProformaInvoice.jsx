@@ -15,6 +15,7 @@ const AddProformaInvoice = () => {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [tax, setTax] = useState("Exclusive");
   const [clientName, setClientName] = useState("");
+  const [email, setEmail] = useState("");
   const [GSTNumber, setGSTNumber] = useState("");
   const [shipTo, setShipTo] = useState("");
   const [state, setState] = useState(null);
@@ -103,6 +104,10 @@ const AddProformaInvoice = () => {
       return toast.error("Enter GST Number");
     };
 
+    if (!email) {
+      return toast.error("Enter email");
+    };
+
     try {
       const invoiceData = {
         projectName,
@@ -110,6 +115,7 @@ const AddProformaInvoice = () => {
         date,
         tax,
         clientName,
+        email,
         GSTNumber,
         shipTo,
         state,
@@ -188,8 +194,8 @@ const AddProformaInvoice = () => {
         <div className="row">
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="shipTo">Ship To <span className="text-danger">*</span></label>
-              <input type="text" className="form-control" id="shipTo" name="shipTo" value={shipTo} onChange={(e) => setShipTo(e.target.value)} />
+              <label className="col-form-label" htmlFor="email">Email <span className="text-danger">*</span></label>
+              <input type="email" className="form-control" id="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
           </div>
 
@@ -244,6 +250,15 @@ const AddProformaInvoice = () => {
                   <div className="col-form-label" style={{ color: "red" }}>Project cost should not less than 1. <i className="fas fa-times"></i></div>
                 )
               }
+            </div>
+          </div>
+        </div>
+
+        <div className="row">
+          <div className="col-md-12">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="shipTo">Ship To <span className="text-danger">*</span></label>
+              <textarea type="text" rows={6} className="form-control" id="shipTo" name="shipTo" value={shipTo} onChange={(e) => setShipTo(e.target.value)} />
             </div>
           </div>
         </div>
