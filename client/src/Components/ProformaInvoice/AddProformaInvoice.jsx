@@ -19,6 +19,7 @@ const AddProformaInvoice = () => {
   const [GSTNumber, setGSTNumber] = useState("");
   const [shipTo, setShipTo] = useState("");
   const [state, setState] = useState(null);
+  const [loding, setLoding] = useState(false);
   const { validToken, team, isLoading } = useAuth();
   const navigate = useNavigate();
   const permissions = team?.role?.permissions?.invoice;
@@ -121,6 +122,8 @@ const AddProformaInvoice = () => {
         state,
       };
 
+      setLoding(true);
+
       const response = await axios.post(`${base_url}/api/v1/proformaInvoice/create-proformaInvoice`, invoiceData, {
         headers: {
           Authorization: validToken,
@@ -132,8 +135,9 @@ const AddProformaInvoice = () => {
         navigate(-1);
       };
     } catch (error) {
-      console.log("Error while creating invoices:", error.message);
-      toast.error("Error while submitting");
+      toast.error(error?.response?.data?.message || "Error while submitting");
+    } finally {
+      setLoding(false);
     };
   };
 
@@ -263,10 +267,18 @@ const AddProformaInvoice = () => {
           </div>
         </div>
 
-        <div className="submit-button text-end">
-          <Link to="#" onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
-          <Link className="btn btn-primary" onClick={handleCreate}>Submit</Link>
-        </div>
+        {
+          loding ? (
+            <div className="text-end">
+              <h4>Invoice is creating and sending to client...</h4>
+            </div>
+          ) : (
+            <div className="submit-button text-end">
+              <Link to="#" onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
+              <Link className="btn btn-primary" onClick={handleCreate}>Submit</Link>
+            </div>
+          )
+        }
       </div>
     </div>
   );

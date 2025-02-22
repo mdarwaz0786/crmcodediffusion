@@ -18,6 +18,7 @@ const AddInvoice = () => {
   const [projectCost, setProjectCost] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [tax, setTax] = useState("Exclusive");
+  const [loding, setLoding] = useState(false);
   const { validToken, team, isLoading } = useAuth();
   const navigate = useNavigate();
   const permissions = team?.role?.permissions?.invoice;
@@ -145,6 +146,8 @@ const AddInvoice = () => {
         tax,
       };
 
+      setLoding(true);
+
       const response = await axios.post(`${base_url}/api/v1/invoice/create-invoice`, invoiceData, {
         headers: {
           Authorization: validToken,
@@ -156,8 +159,9 @@ const AddInvoice = () => {
         navigate(-1);
       };
     } catch (error) {
-      console.log("Error while creating invoices:", error.message);
-      toast.error("Error while submitting");
+      toast.error(error?.response?.data?.message || "Error while submitting");
+    } finally {
+      setLoding(false);
     };
   };
 
@@ -286,10 +290,18 @@ const AddInvoice = () => {
           </div>
         </div>
 
-        <div className="submit-button text-end">
-          <Link to="#" onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
-          <Link className="btn btn-primary" onClick={handleCreate}>Submit</Link>
-        </div>
+        {
+          loding ? (
+            <div className="text-end">
+              <h4>Invoice is creating and sending to client...</h4>
+            </div>
+          ) : (
+            <div className="submit-button text-end">
+              <Link to="#" onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
+              <Link className="btn btn-primary" onClick={handleCreate}>Submit</Link>
+            </div>
+          )
+        }
       </div>
     </div>
   );
