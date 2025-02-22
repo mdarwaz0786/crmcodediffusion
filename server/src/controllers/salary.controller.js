@@ -505,6 +505,7 @@ export const createSalary = async (req, res) => {
     // Generate PDF from HTML
     const browser = await puppeteer.launch({
       headless: true,
+      executablePath: '/root/.cache/puppeteer/chrome/linux-133.0.6943.98/chrome-linux64/chrome',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -519,7 +520,7 @@ export const createSalary = async (req, res) => {
     const page = await browser.newPage();
     await page.setContent(salarySlipHTML);
     const pdfPath = `salary_slip_${emp?.name}_${numberToMonthName(month)}_${year}.pdf`;
-    await page.pdf({ path: pdfPath, format: 'A4' });
+    await page.pdf({ path: pdfPath, format: 'A4', printBackground: true });
     await browser.close();
 
     // Email options
