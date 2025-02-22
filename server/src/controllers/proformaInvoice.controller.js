@@ -69,8 +69,6 @@ export const createInvoice = async (req, res) => {
     // Update the proformainvoice document with the generated proformaInvoiceId
     newInvoice.proformaInvoiceId = proformaInvoiceId;
 
-    await newInvoice.save();
-
     // Read the logo file and convert it to Base64
     const __dirname = path.resolve();
     const logoPath = path.join(__dirname, 'public/assets/logo.png');
@@ -245,8 +243,8 @@ export const createInvoice = async (req, res) => {
           <tr>
             <td>${projectName}</td>
             <td>1</td>
-            <td>₹${projectCost}</td>
-            <td class="text-end">₹${projectCost}</td>
+            <td>₹${subtotal}</td>
+            <td class="text-end">₹${subtotal}</td>
           </tr>
         </tbody>
         <tfoot>
@@ -343,9 +341,11 @@ https://www.codediffusion.in/`,
       fs.unlinkSync(pdfPath);
     });
 
+    await newInvoice.save();
+
     return res.status(200).json({ success: true, message: "Proforma invoice created successfully", invoice: newInvoice });
   } catch (error) {
-    return res.status(500).json({ success: false, message: `Error while creating proforma invoice: ${error.message}` });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
