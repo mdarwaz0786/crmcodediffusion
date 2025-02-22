@@ -8,7 +8,8 @@ import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
 import numberToWord from "../utils/numbeToWord.js";
-import numberToMonthName from "../utils/numberToMonthName.js"
+import numberToMonthName from "../utils/numberToMonthName.js";
+import formatDate from "../utils/formatDate.js";
 
 dotenv.config();
 
@@ -408,7 +409,7 @@ export const createSalary = async (req, res) => {
         </div>
         <div class="row">
           <div class="label">Date of Joining</div>
-          <div class="value">${emp?.joining}</div>
+          <div class="value">${formatDate(emp?.joining)}</div>
         </div>
         <div class="row">
           <div class="label">Mobile Number</div>
@@ -514,7 +515,23 @@ export const createSalary = async (req, res) => {
       from: `${process.env.SENDER_EMAIL_ID}`,
       to: `${emp?.email}`,
       subject: `Salary Slip for ${numberToMonthName(month)} ${year}`,
-      text: 'Please find attached your salary slip.',
+      text: `Dear ${emp?.name},
+
+We hope you are doing well.
+
+Please find attached your salary slip for ${numberToMonthName(month)} ${year}. The attached document includes a detailed breakdown of your earnings, deductions, and net pay for the mentioned period.
+
+If you have any questions or need further clarification regarding your salary details, please feel free to reach out.
+
+Thank you for your continued contributions to the team.
+
+Best regards,
+Abhishek Singh
+Code Diffusion Technologies
++91 7827114607
+info@codediffusion.in
+https://www.codediffusion.in/`,
+
       attachments: [
         {
           filename: pdfPath,
@@ -638,9 +655,9 @@ export const deleteSalary = async (req, res) => {
       return res.status(404).json({ success: false, message: "Salary record not found." });
     };
 
-    res.status(200).json({ success: true, message: "Salary record deleted successfully." });
+    return res.status(200).json({ success: true, message: "Salary record deleted successfully." });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 

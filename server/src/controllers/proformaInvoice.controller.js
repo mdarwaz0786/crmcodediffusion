@@ -5,6 +5,7 @@ import { transporter } from "../services/emailService.js";
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
+import formatDate from "../utils/formatDate.js";
 
 dotenv.config();
 
@@ -86,7 +87,7 @@ export const createInvoice = async (req, res) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Invoice</title>
     <style>
-    * {
+      * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
@@ -94,10 +95,6 @@ export const createInvoice = async (req, res) => {
 
     body {
       font-family: Arial, sans-serif;
-    }
-
-    .strong {
-      font-weight: 600;
     }
 
     .content {
@@ -110,29 +107,23 @@ export const createInvoice = async (req, res) => {
       align-items: center;
     }
 
-    .header h4 {
-      margin: 0;
-    }
-
     .invoice-container {
       background-color: white;
-      margin: 10px auto;
-      padding-bottom: 32px;
     }
 
     .invoice-heading {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       padding: 20px;
     }
 
     .logo img {
       width: 150px;
-      margin-bottom: 30px;
+      margin-bottom: 10px;
     }
 
     .invoice-title h4 {
-      text-align: right;
       font-size: 18px;
     }
 
@@ -143,19 +134,11 @@ export const createInvoice = async (req, res) => {
     }
 
     .invoice-id {
-      margin-bottom: 3px;
-    }
-
-    .billing-info {
-      width: 50%;
+      margin-bottom: 5px;
     }
 
     .billing-info div {
-      margin-bottom: 3px;
-    }
-
-    .invoice-meta {
-      text-align: right;
+      margin-bottom: 5px;
     }
 
     .row {
@@ -166,14 +149,7 @@ export const createInvoice = async (req, res) => {
     }
 
     .row div {
-      margin-bottom: 3px;
-    }
-
-    .balance-due {
-      display: flex;
-      align-items: baseline;
-      justify-content: flex-end;
-      padding: 0 45px;
+      margin-bottom: 5px;
     }
 
     .invoice-table {
@@ -184,15 +160,19 @@ export const createInvoice = async (req, res) => {
 
     .invoice-table th,
     .invoice-table td {
-      padding: 20px;
       text-align: left;
     }
 
     .invoice-table th {
-      padding: 10px;
-      padding-left: 20px;
-      padding-right: 20px;
-      background-color: #dcf0f0;
+      padding: 10px 20px;
+      background-color: #dcf0f0 !important;
+      color: #000 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    .invoice-table td {
+      padding: 8px 20px;
     }
 
     .invoice-table th.text-end,
@@ -215,10 +195,10 @@ export const createInvoice = async (req, res) => {
     <div class="invoice-container">
       <div class="invoice-heading">
         <div class="logo">
-          <img src="${logoSrc}" width="150px" alt="logo">
+          <img src="${logoSrc}" alt="logo">
         </div>
         <div class="invoice-title">
-          <h4>TAX INVOICE</h4>
+          <h4>PROFORMA INVOICE</h4>
         </div>
       </div>
       <div class="invoice-details">
@@ -231,10 +211,10 @@ export const createInvoice = async (req, res) => {
           <div><strong>GST No: O7FRWPS7288J3ZC</strong></div>
         </div>
         <div class="invoice-meta">
-          <div class="invoice-id">Invoice ID: ${proformaInvoiceId}</div>
+          <div class="invoice-id">Invoice ID: <strong>${proformaInvoiceId}</strong></div>
           <div class="invoice-date">
             <strong>Date:</strong>
-            <span>${date}</span>
+            <span>${formatDate(date)}</span>
           </div>
         </div>
       </div>
@@ -249,7 +229,7 @@ export const createInvoice = async (req, res) => {
           <div>${shipTo}</div>
         </div>
         <div class="balance-due">
-          <p><strong>Balance Due: ₹${total}</strong></p>
+          <p><strong>Balance Due: ₹${total.toFixed(2)}</strong></p>
         </div>
       </div>
       <table class="invoice-table">
@@ -272,23 +252,23 @@ export const createInvoice = async (req, res) => {
         <tfoot>
           <tr>
             <td colspan="3" style="text-align: right;"><strong>Subtotal:</strong></td>
-            <td class="text-end">₹${subtotal}</td>
+            <td class="text-end">₹${subtotal.toFixed(2)}</td>
           </tr>
           <tr>
             <td colspan="3" style="text-align: right;"><strong>CGST (9%):</strong></td>
-            <td class="text-end">₹${CGST}</td>
+            <td class="text-end">₹${CGST.toFixed(2)}</td>
           </tr>
           <tr>
             <td colspan="3" style="text-align: right;"><strong>SGST (9%):</strong></td>
-            <td class="text-end">₹${SGST}</td>
+            <td class="text-end">₹${SGST.toFixed(2)}</td>
           </tr>
           <tr>
             <td colspan="3" style="text-align: right;"><strong>IGST (18%):</strong></td>
-            <td class="text-end">₹${IGST}</td>
+            <td class="text-end">₹${IGST.toFixed(2)}</td>
           </tr>
           <tr>
             <td colspan="3" style="text-align: right;"><strong>Total:</strong></td>
-            <td class="text-end">₹${total}</td>
+            <td class="text-end">₹${total.toFixed(2)}</td>
           </tr>
         </tfoot>
       </table>
@@ -311,7 +291,7 @@ export const createInvoice = async (req, res) => {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.setContent(salarySlipHTML);
-    const pdfPath = `porforma_invoice_${clientName}.pdf`;
+    const pdfPath = `code_diffusion_technologies_proforma_invoice_${proformaInvoiceId}.pdf`;
     await page.pdf({ path: pdfPath, format: 'A4' });
     await browser.close();
 
@@ -319,8 +299,24 @@ export const createInvoice = async (req, res) => {
     const mailOptions = {
       from: `${process.env.SENDER_EMAIL_ID}`,
       to: `${email}`,
-      subject: `Proforma Invoice ${date}`,
-      text: 'Please find attached your porforma invoice.',
+      subject: `Proforma Invoice from Code Diffusion Technologies - ${formatDate(date)}`,
+      text: `Dear ${clientName},
+
+We hope you are doing well.
+
+Please find attached the proforma invoice for your reference. The invoice outlines the details of the services/products discussed, including pricing and terms.
+
+Kindly review the invoice and let us know if you have any questions or require further clarification.
+
+We look forward to proceeding with the next steps upon your confirmation.
+
+Best regards,
+Abhishek Singh
+Code Diffusion Technologies
++91 7827114607
+info@codediffusion.in
+https://www.codediffusion.in/`,
+
       attachments: [
         {
           filename: pdfPath,
