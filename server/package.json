@@ -18,6 +18,7 @@
   "author": "Md Arwaz",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.7.9",
     "compression": "^1.7.4",
     "concurrently": "^8.2.2",
     "cors": "^2.8.5",

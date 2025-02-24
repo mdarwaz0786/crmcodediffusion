@@ -1,9 +1,10 @@
-// utils/generatePayUUrl.js
-import crypto from "crypto";
-import dotenv from "dotenv";
+import crypto from 'crypto';
+import dotenv from 'dotenv';
+import axios from 'axios';
+
 dotenv.config();
 
-export const generatePayUUrl = ({ amount, productInfo, firstName, email, txnId }) => {
+export const generatePayUUrl = async ({ amount, productInfo, firstName, email, phone, txnId }) => {
   const { PAYU_MERCHANT_KEY, PAYU_SALT, PAYU_BASE_URL } = process.env;
 
   const successUrl = `${process.env.SERVER_URL}/api/v1/payment/success`;
@@ -12,7 +13,25 @@ export const generatePayUUrl = ({ amount, productInfo, firstName, email, txnId }
   const hashString = `${PAYU_MERCHANT_KEY}|${txnId}|${amount}|${productInfo}|${firstName}|${email}|||||||||||${PAYU_SALT}`;
   const hash = crypto.createHash("sha512").update(hashString).digest("hex");
 
-  const paymentUrl = `${PAYU_BASE_URL}/_payment?key=${PAYU_MERCHANT_KEY}&txnid=${txnId}&amount=${amount}&productinfo=${productInfo}&firstname=${firstName}&email=${email}&phone=&surl=${successUrl}&furl=${failureUrl}&hash=${hash}`;
+  const formData = new URLSearchParams({
+    key: PAYU_MERCHANT_KEY,
+    txnid: txnId,
+    amount,
+    productinfo: productInfo,
+    firstname: firstName,
+    email,
+    phone,
+    surl: successUrl,
+    furl: failureUrl,
+    hash,
+  });
 
-  return paymentUrl;
+  try {
+    const response = await axios.post(`${PAYU_BASE_URL}/_payment`, formData.toString(), {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  };
 };

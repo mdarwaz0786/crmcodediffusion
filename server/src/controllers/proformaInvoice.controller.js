@@ -8,6 +8,7 @@ import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
 import formatDate from "../utils/formatDate.js";
+import mongoose from "mongoose";
 
 dotenv.config();
 
@@ -23,8 +24,11 @@ const getNextProformaInvoiceId = async () => {
 
 // Controller for creating an invoice
 export const createInvoice = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const { date, tax, projectName, projectCost, clientName, GSTNumber, state, shipTo, email } = req.body;
+    const { date, tax, projectName, projectCost, clientName, GSTNumber, state, shipTo, email, phone } = req.body;
 
     let subtotal = parseFloat(projectCost);
     let CGST = 0;
@@ -54,6 +58,7 @@ export const createInvoice = async (req, res) => {
       projectCost: projectCost,
       clientName,
       email,
+      phone,
       GSTNumber,
       state,
       shipTo,
@@ -294,6 +299,7 @@ export const createInvoice = async (req, res) => {
       productInfo: projectName,
       firstName: clientName,
       email,
+      phone,
       txnId,
     });
 
@@ -304,6 +310,7 @@ export const createInvoice = async (req, res) => {
       projectCost,
       clientName,
       email,
+      phone,
       GSTNumber,
       state,
       shipTo,
@@ -311,10 +318,25 @@ export const createInvoice = async (req, res) => {
       amount: total.toFixed(2),
       transactionId: txnId,
       paymentStatus: "Pending",
-    });
+    }, { session });
 
     // Add PayU payment link to email HTML
     const paymentButton = `<p><a href="${payUUrl}" style="background-color:#28a745;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Pay Now</a></p>`;
+
+    const emailHTML = `
+  <p>Dear ${clientName},</p>
+  <p>We hope you are doing well.</p>
+  <p>Please find attached the proforma invoice for your reference. The invoice outlines the details of the services/products discussed, including pricing and terms.</p>
+  <p>Kindly review the invoice and let us know if you have any questions or require further clarification.</p>
+  <p>We look forward to proceeding with the next steps upon your confirmation.</p>
+  <p>Best regards,</p>
+  <p>Abhishek Singh<br/>
+  Code Diffusion Technologies<br/>
+  +91 7827114607<br/>
+  info@codediffusion.in<br/>
+  <a href="https://www.codediffusion.in/">https://www.codediffusion.in/</a></p>
+  ${paymentButton}
+`;
 
     // Generate PDF from HTML
     const browser = await puppeteer.launch(
@@ -344,24 +366,7 @@ export const createInvoice = async (req, res) => {
       from: `${process.env.SENDER_EMAIL_ID}`,
       to: `${email}`,
       subject: `Proforma Invoice from Code Diffusion Technologies - ${formatDate(date)}`,
-      text: `Dear ${clientName},
-
-We hope you are doing well.
-
-Please find attached the proforma invoice for your reference. The invoice outlines the details of the services/products discussed, including pricing and terms.
-
-Kindly review the invoice and let us know if you have any questions or require further clarification.
-
-We look forward to proceeding with the next steps upon your confirmation.
-
-Best regards,
-Abhishek Singh
-Code Diffusion Technologies
-+91 7827114607
-info@codediffusion.in
-https://www.codediffusion.in/`,
-
-      html: paymentButton,
+      html: emailHTML,
 
       attachments: [
         {
@@ -371,16 +376,24 @@ https://www.codediffusion.in/`,
       ],
     };
 
-    // Send email
-    transporter.sendMail(mailOptions, () => {
-      fs.unlinkSync(pdfPath);
-    });
+    // Send the email
+    await transporter.sendMail(mailOptions);
 
-    await newInvoice.save();
+    // Save the invoice record
+    await newInvoice.save({ session });
+
+    // Commit the transaction after email sending and PDF generation
+    await session.commitTransaction();
+
+    // Cleanup the generated PDF
+    fs.unlinkSync(pdfPath);
 
     return res.status(200).json({ success: true, message: "Proforma invoice created successfully", invoice: newInvoice });
   } catch (error) {
+    await session.abortTransaction();
     return res.status(500).json({ success: false, message: error.message });
+  } finally {
+    session.endSession();
   };
 };
 
