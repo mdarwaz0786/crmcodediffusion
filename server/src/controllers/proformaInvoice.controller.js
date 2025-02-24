@@ -2,13 +2,11 @@ import Invoice from "../models/proformaInvoice.model.js";
 import ProformaInvoiceId from "../models/proformaInvoiceId.model.js";
 import puppeteer from "puppeteer";
 import { transporter } from "../services/emailService.js";
-import { generatePayUUrl } from "../utils/generatePayUUrl.js";
 import Payment from "../models/payment.model.js";
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
 import formatDate from "../utils/formatDate.js";
-import mongoose from "mongoose";
 
 dotenv.config();
 
@@ -24,9 +22,6 @@ const getNextProformaInvoiceId = async () => {
 
 // Controller for creating an invoice
 export const createInvoice = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const { date, tax, projectName, projectCost, clientName, GSTNumber, state, shipTo, email, phone } = req.body;
 
@@ -294,17 +289,10 @@ export const createInvoice = async (req, res) => {
 
     // After generating the invoice
     const txnId = `TXN${Date.now()}`;
-    const payUUrl = generatePayUUrl({
-      amount: total.toFixed(2),
-      productInfo: projectName,
-      firstName: clientName,
-      email,
-      phone,
-      txnId,
-    });
+    const paymentUrl = `${process.env.SERVER_URL}/api/v1/payment/redirect/${txnId}`;
 
     // Store initial payment data
-    await Payment.create({
+    const newPayment = new Payment({
       proformaInvoiceId: proformaInvoiceId,
       projectName,
       projectCost,
@@ -318,10 +306,10 @@ export const createInvoice = async (req, res) => {
       amount: total.toFixed(2),
       transactionId: txnId,
       paymentStatus: "Pending",
-    }, { session });
+    });
 
     // Add PayU payment link to email HTML
-    const paymentButton = `<p><a href="${payUUrl}" style="background-color:#28a745;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Pay Now</a></p>`;
+    const paymentButton = `<p><a href="${paymentUrl}" style="background-color:#28a745;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Pay Now</a></p>`;
 
     const emailHTML = `
   <p>Dear ${clientName},</p>
@@ -339,22 +327,7 @@ export const createInvoice = async (req, res) => {
 `;
 
     // Generate PDF from HTML
-    const browser = await puppeteer.launch(
-      {
-        headless: true,
-        executablePath: '/root/.cache/puppeteer/chrome/linux-133.0.6943.98/chrome-linux64/chrome',
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-gpu',
-        ],
-      }
-    );
+    const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.setContent(salarySlipHTML);
     const pdfPath = `proforma_invoice_${proformaInvoiceId}.pdf`;
@@ -379,20 +352,17 @@ export const createInvoice = async (req, res) => {
     await transporter.sendMail(mailOptions);
 
     // Save the invoice record
-    await newInvoice.save({ session });
+    await newInvoice.save();
 
-    // Commit the transaction after email sending and PDF generation
-    await session.commitTransaction();
+    // Save the payment record
+    await newPayment.save();
 
     // Cleanup the generated PDF
     fs.unlinkSync(pdfPath);
 
     return res.status(200).json({ success: true, message: "Proforma invoice created successfully", invoice: newInvoice });
   } catch (error) {
-    await session.abortTransaction();
     return res.status(500).json({ success: false, message: error.message });
-  } finally {
-    session.endSession();
   };
 };
 
