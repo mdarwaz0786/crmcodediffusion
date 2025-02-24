@@ -2,6 +2,8 @@ import Invoice from "../models/proformaInvoice.model.js";
 import ProformaInvoiceId from "../models/proformaInvoiceId.model.js";
 import puppeteer from "puppeteer";
 import { transporter } from "../services/emailService.js";
+import { generatePayUUrl } from "../utils/generatePayUUrl.js";
+import Payment from "../models/payment.model.js";
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
@@ -285,21 +287,37 @@ export const createInvoice = async (req, res) => {
 </html>
     `;
 
-    // Generate PDF from HTML
-    const browser = await puppeteer.launch({
-      headless: true,
-      executablePath: '/root/.cache/puppeteer/chrome/linux-133.0.6943.98/chrome-linux64/chrome',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu',
-      ],
+    // After generating the invoice
+    const txnId = `TXN${Date.now()}`;
+    const payUUrl = generatePayUUrl({
+      amount: total.toFixed(2),
+      productInfo: projectName,
+      firstName: clientName,
+      email,
+      txnId,
     });
+
+    // Store initial payment data
+    await Payment.create({
+      proformaInvoiceId: proformaInvoiceId,
+      projectName,
+      projectCost,
+      clientName,
+      email,
+      GSTNumber,
+      state,
+      shipTo,
+      tax,
+      amount: total.toFixed(2),
+      transactionId: txnId,
+      paymentStatus: "Pending",
+    });
+
+    // Add PayU payment link to email HTML
+    const paymentButton = `<p><a href="${payUUrl}" style="background-color:#28a745;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Pay Now</a></p>`;
+
+    // Generate PDF from HTML
+    const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.setContent(salarySlipHTML);
     const pdfPath = `proforma_invoice_${proformaInvoiceId}.pdf`;
@@ -327,6 +345,8 @@ Code Diffusion Technologies
 +91 7827114607
 info@codediffusion.in
 https://www.codediffusion.in/`,
+
+      html: paymentButton,
 
       attachments: [
         {
