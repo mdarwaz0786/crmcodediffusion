@@ -495,6 +495,40 @@ export const createSalary = async (req, res) => {
         </div>
       </div>
     </div>
+
+    <h6 class="deduction-summary-title">Attendance Summary (January 2025)</h6>
+    <div class="deduction-summary">
+      <div class="deduction-row">
+        <div class="deduction-column">
+          <div class="deduction-title">Present</div>
+          <div class="deduction-data">${salaryData?.totalPresent}</div>
+        </div>
+        <div class="deduction-column">
+          <div class="deduction-title">Half Day</div>
+          <div class="deduction-data">${salaryData?.totalHalfDays}</div>
+        </div>
+        <div class="deduction-column">
+          <div class="deduction-title">Absent</div>
+          <div class="deduction-data">${salaryData?.totalAbsent}</div>
+        </div>
+        <div class="deduction-column">
+          <div class="deduction-title">Leave</div>
+          <div class="deduction-data">${salaryData?.totalOnLeave}</div>
+        </div>
+        <div class="deduction-column">
+          <div class="deduction-title">Comp Off</div>
+          <div class="deduction-data">${salaryData?.totalCompOff}</div>
+        </div>
+        <div class="deduction-column">
+          <div class="deduction-title">Weekly Off</div>
+          <div class="deduction-data">${salaryData?.totalSundays}</div>
+        </div>
+        <div class="deduction-column">
+          <div class="deduction-title">Holiday</div>
+          <div class="deduction-data">${salaryData?.totalHolidays}</div>
+        </div>
+      </div>
+    </div>
     <p class="footer">This is a digitally generated document and does not require a signature or seal.</p>
   </div>
 </body>
