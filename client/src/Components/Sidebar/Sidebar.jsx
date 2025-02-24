@@ -53,7 +53,6 @@ const Sidebar = () => {
               <li>
                 {
                   (permissions?.project?.access ||
-                    permissions?.project?.fields?.payment?.show ||
                     permissions?.projectDeployment?.access) && (
                     <h6 className="submenu-hdr">Project</h6>
                   )
@@ -127,6 +126,11 @@ const Sidebar = () => {
                   {
                     (permissions?.customer?.access) && (
                       <li><Link to="/client" className={currentPath === "/client" ? "active" : ""} id={isMobile && active === "client" ? "mobile_btn" : ""} onClick={() => handleActive("client")}><i style={{ color: currentPath === "/client" ? "" : "#FFA201" }} className="ti ti-user-circle"></i><span>Client</span></Link></li>
+                    )
+                  }
+                  {
+                    (team?.role?.name.toLowerCase() === "admin") && (
+                      <li><Link to="/payment" className={currentPath === "/payment" ? "active" : ""} id={isMobile && active === "payment" ? "mobile_btn" : ""} onClick={() => handleActive("payment")}><i style={{ color: currentPath === "/payment" ? "" : "#FFA201" }} className="ti ti-wallet"></i><span>Payment</span></Link></li>
                     )
                   }
                   {
@@ -216,7 +220,6 @@ const Sidebar = () => {
                     permissions?.projectType?.access ||
                     permissions?.projectStatus?.access ||
                     permissions?.projectCategory?.access ||
-                    permissions?.projectTiming?.access ||
                     permissions?.projectPriority?.access) && (
                     <h6 className="submenu-hdr">Master</h6>
                   )

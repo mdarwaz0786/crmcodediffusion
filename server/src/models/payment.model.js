@@ -27,6 +27,11 @@ const paymentSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     GSTNumber: {
       type: String,
       required: true,

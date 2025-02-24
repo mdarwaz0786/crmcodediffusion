@@ -26,6 +26,11 @@ const proformaInvoiceSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     projectCost: {
       type: String,
       required: true,

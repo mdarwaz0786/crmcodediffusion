@@ -82,6 +82,7 @@ import AddProjectWork from "./Components/ProjectWork/AddProjectWork.jsx";
 import AddTicket from "./Components/Ticket/AddTicket.jsx";
 import Ticket from "./Components/Ticket/Ticket.jsx";
 import SingleTicket from "./Components/Ticket/SingleTicket.jsx";
+import PaymentList from "./Components/Payment/PaymentList.jsx";
 import Test from "./Test.jsx";
 
 const App = () => {
@@ -169,6 +170,7 @@ const App = () => {
           <Route path="raise-ticket" element={<AddTicket />} />
           <Route path="ticket" element={<Ticket />} />
           <Route path="single-ticket/:id" element={<SingleTicket />} />
+          <Route path="payment" element={<PaymentList />} />
           <Route path="test" element={<Test />} />
         </Route>
         <Route path="/login" element={<Login />} />

@@ -16,6 +16,7 @@ const AddProformaInvoice = () => {
   const [tax, setTax] = useState("Exclusive");
   const [clientName, setClientName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [GSTNumber, setGSTNumber] = useState("");
   const [shipTo, setShipTo] = useState("");
   const [state, setState] = useState(null);
@@ -109,6 +110,10 @@ const AddProformaInvoice = () => {
       return toast.error("Enter email");
     };
 
+    if (!phone) {
+      return toast.error("Enter phone");
+    };
+
     try {
       const invoiceData = {
         projectName,
@@ -117,6 +122,7 @@ const AddProformaInvoice = () => {
         tax,
         clientName,
         email,
+        phone,
         GSTNumber,
         shipTo,
         state,
@@ -139,6 +145,12 @@ const AddProformaInvoice = () => {
     } finally {
       setLoding(false);
     };
+  };
+
+  const selectStyle = {
+    control: (provided) => ({ ...provided, outline: 'none', border: "none", boxShadow: 'none' }),
+    indicatorSeparator: (provided) => ({ ...provided, display: 'none' }),
+    option: (provided, state) => ({ ...provided, backgroundColor: state.isSelected ? "#f0f0f0" : state.isFocused ? "#e0e0e0" : "#fff", color: "#333" }),
   };
 
   if (isLoading) {
@@ -196,22 +208,25 @@ const AddProformaInvoice = () => {
         </div>
 
         <div className="row">
-          <div className="col-md-6">
+          <div className="col-md-4">
             <div className="form-wrap">
               <label className="col-form-label" htmlFor="email">Email <span className="text-danger">*</span></label>
               <input type="email" className="form-control" id="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
           </div>
 
-          <div className="col-md-6">
+          <div className="col-md-4">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="phone">Phone <span className="text-danger">*</span></label>
+              <input type="text" className="form-control" id="phone" name="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="col-md-4">
             <div className="form-wrap">
               <label className="col-form-label" htmlFor="state">State <span className="text-danger">*</span></label>
               <Select
-                styles={{
-                  control: (provided) => ({ ...provided, outline: 'none', border: "none", boxShadow: 'none' }),
-                  indicatorSeparator: (provided) => ({ ...provided, display: 'none' }),
-                  option: (provided, state) => ({ ...provided, backgroundColor: state.isSelected ? "#f0f0f0" : state.isFocused ? "#e0e0e0" : "#fff", color: "#333" }),
-                }}
+                styles={selectStyle}
                 className="form-select p-0"
                 id="state"
                 name="state"

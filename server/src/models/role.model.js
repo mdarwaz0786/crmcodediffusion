@@ -135,6 +135,7 @@ const ProformaInvoicePermissionSchema = new mongoose.Schema(
       projectCost: { type: FieldPermissionSchema, default: () => ({}) },
       clientName: { type: FieldPermissionSchema, default: () => ({}) },
       email: { type: FieldPermissionSchema, default: () => ({}) },
+      phone: { type: FieldPermissionSchema, default: () => ({}) },
       GSTNumber: { type: FieldPermissionSchema, default: () => ({}) },
       shipTo: { type: FieldPermissionSchema, default: () => ({}) },
       state: { type: FieldPermissionSchema, default: () => ({}) },

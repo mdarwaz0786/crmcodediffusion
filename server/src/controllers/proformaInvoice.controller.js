@@ -367,7 +367,6 @@ export const createInvoice = async (req, res) => {
       to: `${email}`,
       subject: `Proforma Invoice from Code Diffusion Technologies - ${formatDate(date)}`,
       html: emailHTML,
-
       attachments: [
         {
           filename: pdfPath,
@@ -409,13 +408,14 @@ export const fetchAllInvoice = async (req, res) => {
         $or: [
           { proformaInvoiceId: searchRegex },
           { clientName: searchRegex },
+          { email: searchRegex },
+          { phone: searchRegex },
           { GSTNumber: searchRegex },
           { state: searchRegex },
           { shipTo: searchRegex },
           { tax: searchRegex },
           { date: searchRegex },
           { projectName: searchRegex },
-          { projectCost: searchRegex },
         ],
       };
     };
@@ -520,7 +520,7 @@ export const fetchSingleInvoice = async (req, res) => {
 export const updateInvoice = async (req, res) => {
   try {
     const invoiceId = req.params.id;
-    const { date, tax, projectName, projectCost, clientName, GSTNumber, state, shipTo, email } = req.body;
+    const { date, tax, projectName, projectCost, clientName, GSTNumber, state, shipTo, email, phone } = req.body;
 
     const invoice = await Invoice.findById(invoiceId);
 
@@ -555,6 +555,7 @@ export const updateInvoice = async (req, res) => {
     invoice.projectCost = projectCost;
     invoice.clientName = clientName;
     invoice.email = email;
+    invoice.phone = phone;
     invoice.GSTNumber = GSTNumber;
     invoice.state = state;
     invoice.shipTo = shipTo;
