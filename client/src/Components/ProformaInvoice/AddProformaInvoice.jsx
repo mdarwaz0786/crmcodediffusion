@@ -270,7 +270,7 @@ const AddProformaInvoice = () => {
         {
           loding ? (
             <div className="text-end">
-              <h4>Invoice is creating and sending to client...</h4>
+              <h4>Invoice is creating and sending to client, please wait...</h4>
             </div>
           ) : (
             <div className="submit-button text-end">

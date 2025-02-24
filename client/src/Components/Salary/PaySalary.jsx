@@ -73,7 +73,7 @@ const PaySalary = () => {
         <div className="row">
           <div className="col-md-12">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="transactionId">Transaction Id <span className="text-danger">*</span></label>
+              <label className="col-form-label" htmlFor="transactionId">Transaction ID <span className="text-danger">*</span></label>
               <input
                 type="text"
                 className="form-control"
@@ -88,7 +88,7 @@ const PaySalary = () => {
         {
           loading ? (
             <div className="text-start">
-              <h6>Salary slip is creating and sending...</h6>
+              <h6>Salary slip is creating and sending to employee, please wait...</h6>
             </div>
           ) : (
             <div className="text-start">

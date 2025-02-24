@@ -140,7 +140,7 @@ const SalarySlip = () => {
       <div className="content">
         {
           loading ? (
-            <h4 style={{ textAlign: "center", marginTop: "1rem" }}>Making Salary slip...</h4>
+            <h4 style={{ textAlign: "center", marginTop: "1rem" }}>Making Salary slip, please wait...</h4>
           ) : (
             <>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -271,7 +271,7 @@ const SalarySlip = () => {
                 <div className="ps-3" style={{ border: "1px solid #eee" }}>
                   <div className="row py-2" style={{ color: "black" }}>
                     <div className="col">Present</div>
-                    <div className="col">Half days</div>
+                    <div className="col">Half Day</div>
                     <div className="col">Absent</div>
                     <div className="col">Leave</div>
                     <div className="col">Comp Off</div>

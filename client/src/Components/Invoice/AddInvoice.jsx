@@ -169,7 +169,7 @@ const AddInvoice = () => {
     control: (provided) => ({ ...provided, outline: 'none', border: "none", boxShadow: 'none' }),
     indicatorSeparator: (provided) => ({ ...provided, display: 'none' }),
     option: (provided, state) => ({ ...provided, backgroundColor: state.isSelected ? "#f0f0f0" : state.isFocused ? "#e0e0e0" : "#fff", color: "#333" }),
-  }
+  };
 
   if (isLoading) {
     return <Preloader />;
@@ -293,7 +293,7 @@ const AddInvoice = () => {
         {
           loding ? (
             <div className="text-end">
-              <h4>Invoice is creating and sending to client...</h4>
+              <h4>Invoice is creating and sending to client, please wait...</h4>
             </div>
           ) : (
             <div className="submit-button text-end">
