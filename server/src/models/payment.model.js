@@ -58,6 +58,9 @@ const paymentSchema = new mongoose.Schema(
       default: "Pending",
       trim: true,
     },
+    failureReason: {
+      type: String,
+    },
     paymentDate: {
       type: Date,
     },

@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post("/success", paymentSuccess);
 router.post("/failure", paymentFailure);
-router.post("/redirect/:txnId", redirectTo);
+router.get("/payu-payment", redirectTo);
 router.get("/all-payment", isLoggedIn, getAllPayments);
 router.get("/single-payment/:id", isLoggedIn, getPaymentById);
 router.put("/update-payment/:id", isLoggedIn, updatePayment);

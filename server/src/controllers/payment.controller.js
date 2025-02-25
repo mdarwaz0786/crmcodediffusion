@@ -1,25 +1,51 @@
 import Payment from "../models/payment.model.js";
-import { generatePayUForm } from "../utils/generatePayUForm.js";
+import axios from "axios";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const paymentSuccess = async (req, res) => {
   const { txnid } = req.body;
+  const key = process.env.PAYU_MERCHANT_KEY;
+  const salt = process.env.PAYU_SALT;
 
   try {
-    const updatedPayment = await Payment.findOneAndUpdate(
-      { transactionId: txnid },
-      {
-        paymentStatus: "Success",
-        paymentDate: new Date(),
-        payUResponse: req.body,
+    const hashString = `${key}|verify_payment|${txnid}|${salt}`;
+    const hash = crypto.createHash("sha512").update(hashString).digest("hex");
+
+    const response = await axios.post("https://info.payu.in/merchant/postservice?form=2", null, {
+      params: {
+        key: key,
+        command: "verify_payment",
+        hash: hash,
+        var1: txnid,
       },
-      { new: true },
-    );
+    });
 
-    if (!updatedPayment) {
-      return res.status(404).json({ success: false, message: "Payment record not found." });
+    const payUResponse = response.data;
+
+    console.log("response", response);
+    console.log("payUResponse", payUResponse);
+
+    if (payUResponse.status === 1 && payUResponse.transaction_details[txnid].status === "success") {
+      const updatedPayment = await Payment.findOneAndUpdate(
+        { transactionId: txnid },
+        {
+          paymentStatus: "Success",
+          paymentDate: new Date(),
+          payUResponse: payUResponse,
+        },
+        { new: true }
+      );
+
+      if (!updatedPayment) {
+        return res.status(404).json({ success: false, message: "Payment record not found." });
+      };
+
+      return res.status(200).json({ success: true, message: "Payment Successful. Thank you!" });
+    } else {
+      return res.status(400).json({ success: false, message: "Payment verification failed. Status: " + payUResponse.transaction_details[txnid].status });
     };
-
-    return res.status(200).json({ success: true, message: "Payment Successful. Thank you!" });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Something went wrong. Please try again later." });
   };
@@ -27,48 +53,109 @@ export const paymentSuccess = async (req, res) => {
 
 export const paymentFailure = async (req, res) => {
   const { txnid } = req.body;
+  const key = process.env.PAYU_MERCHANT_KEY;
+  const salt = process.env.PAYU_SALT;
 
   try {
-    const updatedPayment = await Payment.findOneAndUpdate(
-      { transactionId: txnid },
-      { paymentStatus: "Failed", payUResponse: req.body },
-      { new: true },
-    );
+    const hashString = `${key}|verify_payment|${txnid}|${salt}`;
+    const hash = crypto.createHash("sha512").update(hashString).digest("hex");
 
-    if (!updatedPayment) {
-      return res.status(404).json({ success: false, message: "Payment record not found." });
+    const response = await axios.post("https://info.payu.in/merchant/postservice?form=2", null, {
+      params: {
+        key: key,
+        command: "verify_payment",
+        hash: hash,
+        var1: txnid,
+      },
+    });
+
+    const payUResponse = response.data;
+    const transactionDetails = payUResponse.transaction_details[txnid];
+
+    console.log("PayU Failure Response:", transactionDetails);
+
+    if (payUResponse.status === 1) {
+      const status = transactionDetails.status;
+
+      if (["failed", "cancelled", "bounced", "dropped"].includes(status)) {
+        const updatedPayment = await Payment.findOneAndUpdate(
+          { transactionId: txnid },
+          {
+            paymentStatus: "Failed",
+            failureReason: transactionDetails.error_Message || "Unknown reason",
+            paymentDate: new Date(),
+            payUResponse: payUResponse,
+          },
+          { new: true }
+        );
+
+        if (!updatedPayment) {
+          return res.status(404).json({ success: false, message: "Payment record not found." });
+        };
+
+        return res.status(400).json({ success: false, message: `Payment Failed. Status: ${status}. Reason: ${transactionDetails.error_Message || "No reason provided."}` });
+      } else {
+        return res.status(400).json({ success: false, message: `Payment is not marked as failed by PayU. Current status: ${status}` });
+      };
+    } else {
+      return res.status(400).json({ success: false, message: "Payment verification failed from PayU side." });
     };
-
-    return res.status(400).json({ success: false, message: "Payment Failed. Please try again." });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Something went wrong. Please try again later." });
   };
 };
 
 export const redirectTo = async (req, res) => {
-  try {
-    const { txnId } = req.params;
+  const {
+    key,
+    txnid,
+    amount,
+    productinfo,
+    firstname,
+    email,
+    phone,
+    surl,
+    furl,
+    hash,
+  } = req.query;
 
-    const payment = await Payment
-      .findOne({ transactionId: txnId });
-
-    if (!payment) {
-      return res.status(404).send("Invalid Payment Link.");
-    };
-
-    const formHtml = generatePayUForm({
-      amount: payment.amount,
-      productInfo: payment.projectName,
-      firstName: payment.clientName,
-      email: payment.email,
-      phone: payment.phone,
-      txnId: payment.transactionId,
-    });
-
-    return res.send(formHtml);
-  } catch (error) {
-    return res.status(500).send("Server Error");
+  if (!key || !txnid || !amount || !productinfo || !firstname || !email || !phone || !surl || !furl || !hash) {
+    return res.status(400).send("Missing required payment parameters.");
   };
+
+  const formHTML = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Redirecting to PayU...</title>
+    </head>
+    <body>
+      <h2>Redirecting to PayU, please wait...</h2>
+      <form id="paymentForm" action="https://secure.payu.in/_payment" method="post">
+        <input type="hidden" name="key" value="${key}" />
+        <input type="hidden" name="txnid" value="${txnid}" />
+        <input type="hidden" name="amount" value="${amount}" />
+        <input type="hidden" name="productinfo" value="${productinfo}" />
+        <input type="hidden" name="firstname" value="${firstname}" />
+        <input type="hidden" name="email" value="${email}" />
+        <input type="hidden" name="phone" value="${phone}" />
+        <input type="hidden" name="surl" value="${surl}" />
+        <input type="hidden" name="furl" value="${furl}" />
+        <input type="hidden" name="hash" value="${hash}" />
+        <input type="submit" value="Pay Now" />
+      </form>
+      <script>
+        window.onload = function () {
+          document.getElementById("paymentForm").submit();
+        };
+      </script>
+    </body>
+    </html>
+  `;
+
+  res.send(formHTML);
 };
 
 // Get all payments with search, sort, filter, and pagination

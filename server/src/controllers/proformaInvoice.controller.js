@@ -7,6 +7,7 @@ import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
 import formatDate from "../utils/formatDate.js";
+import generatePayUHash from "../utils/generatePayUHash.js";
 
 dotenv.config();
 
@@ -287,9 +288,25 @@ export const createInvoice = async (req, res) => {
 </html>
     `;
 
-    // After generating the invoice
-    const txnId = `TXN${Date.now()}`;
-    const paymentUrl = `${process.env.SERVER_URL}/api/v1/payment/redirect/${txnId}`;
+    const txnid = `TXN${Date.now()}`;
+    const key = process.env.PAYU_MERCHANT_KEY;
+    const salt = process.env.PAYU_SALT;
+    const amount = total;
+    const productinfo = projectName;
+    const firstname = clientName;
+    const surl = process.env.PAYU_SUCCESS_URL;
+    const furl = process.env.PAYU_FAILURE_URL;
+    const serverUrl = process.env.SERVER_URL;
+
+    const hash = generatePayUHash({
+      key,
+      txnid,
+      amount,
+      productinfo,
+      firstname,
+      email,
+      salt,
+    });
 
     // Store initial payment data
     const newPayment = new Payment({
@@ -304,26 +321,30 @@ export const createInvoice = async (req, res) => {
       shipTo,
       tax,
       amount: total.toFixed(2),
-      transactionId: txnId,
+      transactionId: txnid,
       paymentStatus: "Pending",
     });
 
-    // Add PayU payment link to email HTML
-    const paymentButton = `<p><a href="${paymentUrl}" style="background-color:#28a745;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Pay Now</a></p>`;
+    const paymentLink = `${serverUrl}/api/v1/payment/payu-payment?key=${key}&txnid=${txnid}&amount=${amount}&productinfo=${encodeURIComponent(
+      productinfo
+    )}&firstname=${encodeURIComponent(firstname)}&email=${encodeURIComponent(
+      email
+    )}&phone=${phone}&surl=${surl}&furl=${furl}&hash=${hash}`;
 
     const emailHTML = `
   <p>Dear ${clientName},</p>
   <p>We hope you are doing well.</p>
   <p>Please find attached the proforma invoice for your reference. The invoice outlines the details of the services/products discussed, including pricing and terms.</p>
   <p>Kindly review the invoice and let us know if you have any questions or require further clarification.</p>
+  <p>To make a payment, please click the link below:</p>
+  <p><a href="${paymentLink}" style="background-color:#28a745;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Pay Now</a></p>
   <p>We look forward to proceeding with the next steps upon your confirmation.</p>
   <p>Best regards,</p>
   <p>Abhishek Singh<br/>
   Code Diffusion Technologies<br/>
   +91 7827114607<br/>
   info@codediffusion.in<br/>
-  <a href="https://www.codediffusion.in/">https://www.codediffusion.in/</a></p>
-  ${paymentButton}
+  <a href="https://www.codediffusion.in/">https://www.codediffusion.in/</a>
 `;
 
     // Generate PDF from HTML
