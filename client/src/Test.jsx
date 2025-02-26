@@ -1,8 +1,10 @@
+/* eslint-disable no-extra-semi */
 /* eslint-disable react-hooks/exhaustive-deps */
 // src/ProjectPriority.js
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const Test = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -16,13 +18,12 @@ const Test = () => {
   const search = searchParams.get('search') || '';
   const sort = searchParams.get('sort') || 'Descending';
 
-  // Predefined list of names for filtering (this could be fetched from the server)
   const nameOptions = ['High', 'Medium', 'Low'];
 
   const fetchProjectPriorities = async () => {
     setLoading(true);
     try {
-      const response = await axios.get('http://localhost:8080/api/v1/projectPriority/all-projectPriority', {
+      const response = await axios.get(`${base_url}/api/v1/projectPriority/all-projectPriority`, {
         params: {
           page,
           limit,
@@ -34,10 +35,10 @@ const Test = () => {
       setProjectPriorities(response.data.projectPriority);
       setTotalCount(response.data.totalCount);
     } catch (error) {
-      console.error('Error fetching project priorities:', error);
+      console.log('Error fetching project priorities:', error.message);
     } finally {
       setLoading(false);
-    }
+    };
   };
 
   useEffect(() => {

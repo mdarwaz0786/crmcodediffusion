@@ -190,7 +190,7 @@ const PaymentList = () => {
         "Tax": entry?.tax || "N/A",
         "Payment Status": entry?.paymentStatus || "N/A",
         "Payment Date": formatDate(entry?.paymentDate) || "N/A",
-        "Amount Paid": `₹${entry?.amount}` || "0",
+        "Amount": `₹${entry?.amount}` || "0",
       };
     });
 
@@ -253,7 +253,7 @@ const PaymentList = () => {
                   <div className="col-4">
                     <h4 className="page-title">Payments<span className="count-title">{total}</span></h4>
                   </div>
-                  <div className="col-4 text-end">
+                  <div className="col-8 text-end">
                     <div className="head-icons">
                       <Link to="#" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Refresh" onClick={() => window.location.reload()}>
                         <i className="ti ti-refresh-dot" />
