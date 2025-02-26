@@ -1,7 +1,7 @@
 
 let themesettings = `
 <div class="sidebar-contact">
-    <div class="toggle-theme"><i class="fa fa-cog fa-w-16 fa-spin"></i></div>
+    <div class="toggle-theme"><i class="fa fa-cog fa-w-16"></i></div>
     </div>
     <div class="sidebar-themesettings">
     <div class="themesettings-header">
