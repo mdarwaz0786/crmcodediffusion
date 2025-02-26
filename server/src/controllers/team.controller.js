@@ -136,7 +136,7 @@ export const fetchAllTeam = async (req, res) => {
 
     // Handle searching across all fields
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search, 'i');
+      const searchRegex = new RegExp(req.query.search.trim(), 'i');
       filter.$or = [
         { employeeId: { $regex: searchRegex } },
         { name: { $regex: searchRegex } },
@@ -152,7 +152,7 @@ export const fetchAllTeam = async (req, res) => {
 
     // Handle name search
     if (req.query.name) {
-      filter.name = { $regex: new RegExp(req.query.name, 'i') };
+      filter.name = { $regex: new RegExp(req.query.name.trim(), 'i') };
     };
 
     // Handle name filter
