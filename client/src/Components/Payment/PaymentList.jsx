@@ -476,7 +476,7 @@ const PaymentList = () => {
                                 <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
                               </th>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
-                              <td><Link to={`/single-payment/${d?._id}`}><i className="fas fa-eye"></i></Link></td>
+                              <td><Link to={`/single-payment/${d?._id}/${d?.transactionId}`}><i className="fas fa-eye"></i></Link></td>
                               <td>{d?.proformaInvoiceId}</td>
                               <td>{d?.projectName}</td>
                               <td>{d?.clientName}</td>

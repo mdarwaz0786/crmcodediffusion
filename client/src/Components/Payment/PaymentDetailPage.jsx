@@ -11,6 +11,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const PaymentDetailPage = () => {
   const { validToken, team, isLoading } = useAuth();
   const { id } = useParams();
+  const { txnid } = useParams();
   const [payment, setPayment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -59,7 +60,7 @@ const PaymentDetailPage = () => {
     return <p className="text-center text-danger mt-5">No payment data found.</p>;
   };
 
-  return <PaymentDetail payment={payment} />;
+  return <PaymentDetail payment={payment} txnid={txnid} />;
 };
 
 export default PaymentDetailPage;

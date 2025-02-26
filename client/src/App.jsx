@@ -176,7 +176,7 @@ const App = () => {
           <Route path="ticket" element={<Ticket />} />
           <Route path="single-ticket/:id" element={<SingleTicket />} />
           <Route path="payment" element={<PaymentList />} />
-          <Route path="single-payment/:id" element={<PaymentDetailPage />} />
+          <Route path="single-payment/:id/:txnid" element={<PaymentDetailPage />} />
           <Route path="test" element={<Test />} />
         </Route>
         <Route path="/login" element={<Login />} />
