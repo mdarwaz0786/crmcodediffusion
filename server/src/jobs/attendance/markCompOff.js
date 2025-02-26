@@ -28,18 +28,12 @@ cron.schedule("00 19 * * *", async () => {
     // Loop through each employee
     const updateAttendancePromises = employees?.map(async (employee) => {
       const compOffIndex = employee?.eligibleCompOffDate?.findIndex((compOff) =>
-        compOff?.date === today &&
+        compOff?.compOffDate === today &&
         compOff?.isApplied === true &&
-        compOff?.isApproved === true &&
-        compOff?.isUtilized === false
+        compOff?.isApproved === true
       );
 
       if (compOffIndex !== -1) {
-        employee.eligibleCompOffDate[compOffIndex].isUtilized = true;
-        employee.eligibleCompOffDate[compOffIndex].utilizedDate = today;
-
-        await employee.save({ session });
-
         const existingAttendance = await Attendance.findOne({
           employee: employee?._id,
           attendanceDate: today,
@@ -70,7 +64,6 @@ cron.schedule("00 19 * * *", async () => {
 
     await session.commitTransaction();
   } catch (error) {
-    console.log("Error while marking attendance as Comp Off:", error.message);
     await session.abortTransaction();
   } finally {
     session.endSession();

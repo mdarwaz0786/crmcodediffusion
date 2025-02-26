@@ -14,41 +14,53 @@ export const paymentSuccess = async (req, res) => {
     const hash = crypto.createHash("sha512").update(hashString).digest("hex");
 
     const response = await axios.post("https://info.payu.in/merchant/postservice?form=2", null, {
-      params: {
-        key: key,
-        command: "verify_payment",
-        hash: hash,
-        var1: txnid,
-      },
+      params: { key, command: "verify_payment", hash, var1: txnid },
     });
 
     const payUResponse = response.data;
+    const transactionDetails = payUResponse.transaction_details[txnid];
 
-    console.log("response", response);
-    console.log("payUResponse", payUResponse);
-
-    if (payUResponse.status === 1 && payUResponse.transaction_details[txnid].status === "success") {
+    if (payUResponse.status === 1 && transactionDetails.status === "success") {
       const updatedPayment = await Payment.findOneAndUpdate(
         { transactionId: txnid },
         {
           paymentStatus: "Success",
           paymentDate: new Date(),
-          payUResponse: payUResponse,
+          payUResponse,
         },
-        { new: true }
+        { new: true },
       );
 
       if (!updatedPayment) {
-        return res.status(404).json({ success: false, message: "Payment record not found." });
+        return res.status(404).render("paymentFailure", {
+          txnid,
+          status: "Record not found",
+          reason: "Payment record not found in the database.",
+          date: new Date().toLocaleString(),
+        });
       };
 
-      return res.status(200).json({ success: true, message: "Payment Successful. Thank you!" });
+      return res.status(200).render("paymentSuccess", {
+        txnid,
+        amount: transactionDetails.amt,
+        date: new Date().toLocaleString(),
+      });
     } else {
-      return res.status(400).json({ success: false, message: "Payment verification failed. Status: " + payUResponse.transaction_details[txnid].status });
+      return res.status(400).render("paymentFailure", {
+        txnid,
+        status: transactionDetails.status,
+        reason: transactionDetails.error_Message || "Unknown reason",
+        date: new Date().toLocaleString(),
+      });
     };
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Something went wrong. Please try again later." });
-  };
+    return res.status(500).render("paymentFailure", {
+      txnid,
+      status: "Internal Server Error",
+      reason: error.message || "Something went wrong.",
+      date: new Date().toLocaleString(),
+    });
+  }
 };
 
 export const paymentFailure = async (req, res) => {
@@ -61,18 +73,11 @@ export const paymentFailure = async (req, res) => {
     const hash = crypto.createHash("sha512").update(hashString).digest("hex");
 
     const response = await axios.post("https://info.payu.in/merchant/postservice?form=2", null, {
-      params: {
-        key: key,
-        command: "verify_payment",
-        hash: hash,
-        var1: txnid,
-      },
+      params: { key, command: "verify_payment", hash, var1: txnid },
     });
 
     const payUResponse = response.data;
     const transactionDetails = payUResponse.transaction_details[txnid];
-
-    console.log("PayU Failure Response:", transactionDetails);
 
     if (payUResponse.status === 1) {
       const status = transactionDetails.status;
@@ -84,24 +89,40 @@ export const paymentFailure = async (req, res) => {
             paymentStatus: "Failed",
             failureReason: transactionDetails.error_Message || "Unknown reason",
             paymentDate: new Date(),
-            payUResponse: payUResponse,
+            payUResponse,
           },
-          { new: true }
+          { new: true },
         );
 
-        if (!updatedPayment) {
-          return res.status(404).json({ success: false, message: "Payment record not found." });
-        };
-
-        return res.status(400).json({ success: false, message: `Payment Failed. Status: ${status}. Reason: ${transactionDetails.error_Message || "No reason provided."}` });
+        return res.status(400).render("paymentFailure", {
+          txnid,
+          status,
+          reason: transactionDetails.error_Message || "No reason provided.",
+          date: new Date().toLocaleString(),
+        });
       } else {
-        return res.status(400).json({ success: false, message: `Payment is not marked as failed by PayU. Current status: ${status}` });
+        return res.status(400).render("paymentFailure", {
+          txnid,
+          status,
+          reason: `Unexpected status received: ${status}`,
+          date: new Date().toLocaleString(),
+        });
       };
     } else {
-      return res.status(400).json({ success: false, message: "Payment verification failed from PayU side." });
+      return res.status(400).render("paymentFailure", {
+        txnid,
+        status: "Verification Failed",
+        reason: "Payment verification failed from PayU side.",
+        date: new Date().toLocaleString(),
+      });
     };
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Something went wrong. Please try again later." });
+    return res.status(500).render("paymentFailure", {
+      txnid,
+      status: "Internal Server Error",
+      reason: error.message || "Something went wrong.",
+      date: new Date().toLocaleString(),
+    });
   };
 };
 

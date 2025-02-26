@@ -66,10 +66,8 @@ export const createInvoice = async (req, res) => {
       balanceDue: total.toFixed(2),
     });
 
-    // Generate the next proformaInvoiceId only after successful save
     const proformaInvoiceId = await getNextProformaInvoiceId();
 
-    // Update the proformainvoice document with the generated proformaInvoiceId
     newInvoice.proformaInvoiceId = proformaInvoiceId;
 
     // Read the logo file and convert it to Base64

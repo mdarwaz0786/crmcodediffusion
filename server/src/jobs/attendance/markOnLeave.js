@@ -11,7 +11,7 @@ cron.schedule("15 19 * * *", async () => {
 
     const employees = await Team
       .find()
-      .select("_id name currentLeaveBalance usedLeaveBalance leaveBalanceUsedHistory approvedLeaves");
+      .select("_id name currentLeaveBalance usedLeaveBalance approvedLeaves");
 
     if (!employees || employees.length === 0) {
       return;
@@ -26,15 +26,9 @@ cron.schedule("15 19 * * *", async () => {
 
     // Loop through each employee
     const updateAttendancePromises = employees?.map(async (employee) => {
-      const leaveIndex = employee?.approvedLeaves?.findIndex((leave) =>
-        leave?.date === today &&
-        leave?.isUtilized === false
-      );
+      const leaveIndex = employee?.approvedLeaves?.findIndex((leave) => leave?.date === today);
 
       if (leaveIndex !== -1) {
-        employee.approvedLeaves[leaveIndex].isUtilized = true;
-        await employee.save({ session });
-
         // Create a new attendance record with status On Leave
         const existingAttendance = await Attendance.findOne({
           employee: employee?._id,
@@ -61,11 +55,6 @@ cron.schedule("15 19 * * *", async () => {
         employee.currentLeaveBalance = (parseFloat(employee?.currentLeaveBalance) - 1).toString();
         employee.usedLeaveBalance = (parseFloat(employee?.usedLeaveBalance) + 1).toString();
 
-        employee?.leaveBalanceUsedHistory?.push({
-          date: today,
-          reason: employee?.approvedLeaves[leaveIndex]?.reason,
-        });
-
         await employee.save({ session });
       };
     });
@@ -75,7 +64,6 @@ cron.schedule("15 19 * * *", async () => {
 
     await session.commitTransaction();
   } catch (error) {
-    console.log("Error while processing leave and attendance:", error.message);
     await session.abortTransaction();
   } finally {
     session.endSession();
