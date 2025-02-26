@@ -1,14 +1,16 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-extra-semi */
 /* eslint-disable react/prop-types */
-import { Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import Preloader from "../../../Preloader.jsx";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 import axios from "axios";
 import { useAuth } from "../../../context/authContext.jsx";
 import { useEffect, useState } from "react";
+import html2pdf from "html2pdf.js";
 
 const CustomerDetail = () => {
+  const navigate = useNavigate();
   const { id } = useParams();
   const [customer, setCustomer] = useState("");
   const { validToken, team, isLoading } = useAuth();
@@ -40,6 +42,26 @@ const CustomerDetail = () => {
     };
   }, [validToken, id, permissions]);
 
+  const exportClientDetailAsPdf = () => {
+    const element = document.querySelector("#exportClientDetail");
+    const options = {
+      filename: `${customer?.name}.pdf`,
+      margin: [10, 10, 10, 10],
+      html2canvas: {
+        useCORS: true,
+        scale: 4,
+      },
+      jsPDF: {
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'a3',
+      },
+    };
+    if (element) {
+      html2pdf().set(options).from(element).save();
+    };
+  };
+
   if (loading) {
     return <p className="text-center mt-5">Loading client details...</p>;
   };
@@ -54,17 +76,23 @@ const CustomerDetail = () => {
 
   return (
     <div className="page-wrapper">
-      <div className="content" id="exportClient">
-        <div className="card shadow-lg rounded-3">
-          <div className="card-header bg-primary text-white text-center">
+      <div className="content">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+          <h4>Client Detail</h4>
+          <Link to="#" onClick={exportClientDetailAsPdf}><button className="btn btn-secondary">Download</button></Link>
+          <Link to="#" onClick={() => navigate(-1)}><button className="btn btn-primary">Back</button></Link>
+        </div>
+        <div className="card rounded-3" id="exportClientDetail">
+          <div className="card-header bg-secondary text-white text-center">
             <i className="bi bi-person-circle fs-1"></i>
-            <h3 className="text-white mt-2">Client Details</h3>
+            <h4 className="text-white mt-2">Client Details</h4>
           </div>
           <div className="card-body">
             <div className="row g-3">
               <DetailItem label="Name" value={customer?.name} />
               <DetailItem label="Email" value={customer?.email} />
               <DetailItem label="Mobile" value={customer?.mobile} />
+              <DetailItem label="Password" value={customer?.password} />
               <DetailItem label="GST Number" value={customer?.GSTNumber} />
               <DetailItem label="Company Name" value={customer?.companyName} />
               <DetailItem label="State" value={customer?.state} />

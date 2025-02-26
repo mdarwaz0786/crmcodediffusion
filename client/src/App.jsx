@@ -22,9 +22,11 @@ import EditProjectStatus from "./Components/Project/ProjectStatus/EditProjectSta
 import Customer from './Components/Project/Customer/Customer.jsx';
 import AddCustomer from "./Components/Project/Customer/AddCustomer.jsx";
 import EditCustomer from "./Components/Project/Customer/EditCustomer.jsx";
+import CustomerDetail from "./Components/Project/Customer/CustomerDetail.jsx";
 import TeamMember from "./Components/Project/TeamMember/TeamMember.jsx";
 import AddTeamMember from "./Components/Project/TeamMember/AddTeamMember.jsx";
 import EditTeamMember from "./Components/Project/TeamMember/EditTeamMember.jsx";
+import TeamMemberDetail from "./Components/Project/TeamMember/TeamMemberDetail.jsx";
 import ProjectTiming from "./Components/Project/ProjectTiming/ProjectTiming.jsx";
 import AddProjectTiming from "./Components/Project/ProjectTiming/AddProjectTiming.jsx";
 import EditProjectTiming from "./Components/Project/ProjectTiming/EditProjectTiming.jsx";
@@ -95,6 +97,7 @@ const App = () => {
           <Route path="client" element={<Customer />} />
           <Route path="add-client" element={<AddCustomer />} />
           <Route path="edit-client/:id" element={<EditCustomer />} />
+          <Route path="single-client/:id" element={<CustomerDetail />} />
           <Route path="project" element={<Project />} />
           <Route path="add-project" element={<AddProject />} />
           <Route path="edit-project/:id" element={<EditProject />} />
@@ -117,6 +120,7 @@ const App = () => {
           <Route path="employee" element={<TeamMember />} />
           <Route path="add-employee" element={<AddTeamMember />} />
           <Route path="edit-employee/:id" element={<EditTeamMember />} />
+          <Route path="single-employee/:id" element={<TeamMemberDetail />} />
           <Route path="project-timeline" element={<ProjectTiming />} />
           <Route path="add-project-timeline" element={<AddProjectTiming />} />
           <Route path="edit-project-timeline/:id" element={<EditProjectTiming />} />

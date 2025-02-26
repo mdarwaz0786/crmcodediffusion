@@ -409,6 +409,11 @@ const Customer = () => {
                           </th>
                           <th>#</th>
                           {
+                            (permissions?.access) && (
+                              <th>View</th>
+                            )
+                          }
+                          {
                             (filedPermissions?.name?.show) && (
                               <th>Client Name</th>
                             )
@@ -439,6 +444,11 @@ const Customer = () => {
                                 <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
                               </th>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
+                              {
+                                (permissions?.access) && (
+                                  <td><Link to={`/single-client/${d?._id}`}><i className="fas fa-eye"></i></Link></td>
+                                )
+                              }
                               {
                                 (filedPermissions?.name?.show) && (
                                   <td>{d?.name}</td>

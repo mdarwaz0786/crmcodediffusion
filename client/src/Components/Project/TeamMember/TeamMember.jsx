@@ -174,14 +174,8 @@ const TeamMember = () => {
       "Working Hours/Day": formatTimeToHoursMinute(entry?.workingHoursPerDay) || "N/A",
     }));
 
-    if (exportData?.length === 0) {
-      alert("No employee found to export");
-      return;
-    };
-
     const worksheet = XLSX.utils.json_to_sheet(exportData);
 
-    // Calculate column width dynamically
     const columnWidths = Object.keys(exportData[0] || {}).map((key) => ({
       wch: Math.max(key.length, ...exportData.map((row) => (row[key] ? row[key].toString().length : 0))) + 2,
     }));
@@ -415,6 +409,11 @@ const TeamMember = () => {
                           </th>
                           <th>#</th>
                           {
+                            (permissions?.access) && (
+                              <th>View</th>
+                            )
+                          }
+                          {
                             (fieldPermissions?.employeeId?.show) && (
                               <th>Employee ID</th>
                             )
@@ -455,6 +454,11 @@ const TeamMember = () => {
                                 <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
                               </th>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
+                              {
+                                (permissions?.access) && (
+                                  <td><Link to={`/single-employee/${d?._id}`}><i className="fas fa-eye"></i></Link></td>
+                                )
+                              }
                               {
                                 (fieldPermissions?.employeeId?.show) && (
                                   <td>{d?.employeeId}</td>
