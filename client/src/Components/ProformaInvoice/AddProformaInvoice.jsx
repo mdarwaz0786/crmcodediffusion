@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-extra-semi */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -13,13 +13,16 @@ const AddProformaInvoice = () => {
   const [projectName, setProjectName] = useState("");
   const [projectCost, setProjectCost] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [tax, setTax] = useState("Exclusive");
+  const [tax, setTax] = useState("Inclusive");
   const [clientName, setClientName] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [GSTNumber, setGSTNumber] = useState("");
   const [shipTo, setShipTo] = useState("");
   const [state, setState] = useState(null);
+  const [office, setOffice] = useState([]);
+  const [selectedOffice, setSelectedOffice] = useState("");
   const [loding, setLoding] = useState(false);
   const { validToken, team, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -66,6 +69,28 @@ const AddProformaInvoice = () => {
     { value: 'Dadra and Nagar haveli', label: 'Dadra and Nagar haveli' },
   ];
 
+  const fetchOffice = async () => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/officeLocation/all-officeLocation`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        setOffice(response?.data?.officeLocation);
+      };
+    } catch (error) {
+      console.log(error.message);
+    };
+  };
+
+  useEffect(() => {
+    if (validToken && permissions?.create) {
+      fetchOffice();
+    };
+  }, [validToken, permissions]);
+
   const handleStateChange = (selectedOption) => {
     setState(selectedOption.value);
   };
@@ -90,12 +115,20 @@ const AddProformaInvoice = () => {
       return toast.error("Select tax");
     };
 
+    if (!selectedOffice) {
+      return toast.error("Select office");
+    };
+
     if (!shipTo) {
       return toast.error("Enter ship to");
     };
 
     if (!clientName) {
       return toast.error("Enter client name");
+    };
+
+    if (!companyName) {
+      return toast.error("Enter company name");
     };
 
     if (!state) {
@@ -120,7 +153,9 @@ const AddProformaInvoice = () => {
         projectCost,
         date,
         tax,
+        office: selectedOffice,
         clientName,
+        companyName,
         email,
         phone,
         GSTNumber,
@@ -172,7 +207,21 @@ const AddProformaInvoice = () => {
         </div>
 
         <div className="row">
-          <div className="col-md-6">
+          <div className="col-md-4">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="office">Office <span className="text-danger">*</span></label>
+              <select className="form-select" name="office" id="office" value={selectedOffice} onChange={(e) => setSelectedOffice(e.target.value)}>
+                <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
+                {
+                  office?.map((o) => (
+                    <option key={o?._id} value={o?._id}>{o?.uniqueCode}</option>
+                  ))
+                }
+              </select>
+            </div>
+          </div>
+
+          <div className="col-md-4">
             <div className="form-wrap">
               <label className="col-form-label" htmlFor="tax">Tax <span className="text-danger">*</span></label>
               <select className="form-select" name="tax" id="tax" value={tax} onChange={(e) => setTax(e.target.value)}>
@@ -183,7 +232,7 @@ const AddProformaInvoice = () => {
             </div>
           </div>
 
-          <div className="col-md-6">
+          <div className="col-md-4">
             <div className="form-wrap">
               <label className="col-form-label" htmlFor="date">Date <span className="text-danger">*</span></label>
               <input type="date" className="form-control" id="date" value={date} onChange={(e) => setDate(e.target.value)} />
@@ -192,14 +241,21 @@ const AddProformaInvoice = () => {
         </div>
 
         <div className="row">
-          <div className="col-md-6">
+          <div className="col-md-4">
             <div className="form-wrap">
               <label className="col-form-label" htmlFor="clientName">Client Name <span className="text-danger">*</span></label>
               <input type="text" className="form-control" id="clientName" name="clientName" value={clientName} onChange={(e) => setClientName(e.target.value)} />
             </div>
           </div>
 
-          <div className="col-md-6">
+          <div className="col-md-4">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="companyName">Company Name <span className="text-danger">*</span></label>
+              <input type="text" className="form-control" id="companyName" name="companyName" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="col-md-4">
             <div className="form-wrap">
               <label className="col-form-label" htmlFor="GSTNumber">GST Number <span className="text-danger">*</span></label>
               <input type="text" className="form-control" id="GSTNumber" name="GSTNumber" value={GSTNumber} onChange={(e) => setGSTNumber(e.target.value)} />

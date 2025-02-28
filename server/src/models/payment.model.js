@@ -6,6 +6,18 @@ const paymentSchema = new mongoose.Schema(
     proformaInvoiceId: {
       type: String,
     },
+    proformaInvoiceDate: {
+      type: String,
+    },
+    tax: {
+      type: String,
+      enum: ["Inclusive", "Exclusive"],
+      trim: true,
+    },
+    office: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "OfficeLocation",
+    },
     projectName: {
       type: String,
       trim: true,
@@ -15,6 +27,10 @@ const paymentSchema = new mongoose.Schema(
       trim: true,
     },
     clientName: {
+      type: String,
+      trim: true,
+    },
+    companyName: {
       type: String,
       trim: true,
     },
@@ -38,10 +54,21 @@ const paymentSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    tax: {
+    subtotal: {
       type: String,
-      enum: ["Inclusive", "Exclusive"],
-      trim: true,
+      default: 0,
+    },
+    CGST: {
+      type: String,
+      default: 0,
+    },
+    SGST: {
+      type: String,
+      default: 0,
+    },
+    IGST: {
+      type: String,
+      default: 0,
     },
     amount: {
       type: Number,

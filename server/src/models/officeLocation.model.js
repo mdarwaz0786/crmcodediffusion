@@ -24,6 +24,10 @@ const officeLocationSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    GSTNumber: {
+      type: String,
+      trim: true,
+    },
     latitude: {
       type: String,
       trim: true,

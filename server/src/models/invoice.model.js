@@ -17,10 +17,13 @@ const invoiceSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    office: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "OfficeLocation",
+    },
     project: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
-      required: true,
     },
     amount: {
       type: String,
@@ -50,6 +53,53 @@ const invoiceSchema = new mongoose.Schema(
     balanceDue: {
       type: String,
       default: 0,
+    },
+    proformaInvoiceDetails: {
+      proformaInvoiceId: {
+        type: String,
+      },
+      proformaInvoiceDate: {
+        type: String,
+      },
+      transactionId: {
+        type: String,
+      },
+      projectName: {
+        type: String,
+        trim: true,
+      },
+      email: {
+        type: String,
+        trim: true
+      },
+      phone: {
+        type: String,
+        trim: true,
+      },
+      projectCost: {
+        type: String,
+        trim: true,
+      },
+      clientName: {
+        type: String,
+        trim: true,
+      },
+      companyName: {
+        type: String,
+        trim: true,
+      },
+      GSTNumber: {
+        type: String,
+        trim: true,
+      },
+      state: {
+        type: String,
+        trim: true,
+      },
+      shipTo: {
+        type: String,
+        trim: true,
+      },
     },
   },
   {

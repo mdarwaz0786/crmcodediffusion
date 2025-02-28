@@ -6,6 +6,10 @@ const proformaInvoiceSchema = new mongoose.Schema(
       type: String,
       unique: true,
     },
+    office: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "OfficeLocation",
+    },
     date: {
       type: Date,
       required: true,
@@ -39,6 +43,10 @@ const proformaInvoiceSchema = new mongoose.Schema(
     clientName: {
       type: String,
       required: true,
+      trim: true,
+    },
+    companyName: {
+      type: String,
       trim: true,
     },
     GSTNumber: {

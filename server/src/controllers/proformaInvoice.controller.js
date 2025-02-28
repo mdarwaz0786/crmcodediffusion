@@ -1,10 +1,10 @@
 import Invoice from "../models/proformaInvoice.model.js";
+import OfficeLocation from "../models/officeLocation.model.js";
 import ProformaInvoiceId from "../models/proformaInvoiceId.model.js";
 import puppeteer from "puppeteer";
 import { transporter } from "../services/emailService.js";
 import Payment from "../models/payment.model.js";
 import fs from "fs";
-import path from "path";
 import dotenv from "dotenv";
 import formatDate from "../utils/formatDate.js";
 import generatePayUHash from "../utils/generatePayUHash.js";
@@ -24,7 +24,14 @@ const getNextProformaInvoiceId = async () => {
 // Controller for creating an invoice
 export const createInvoice = async (req, res) => {
   try {
-    const { date, tax, projectName, projectCost, clientName, GSTNumber, state, shipTo, email, phone } = req.body;
+    const { date, tax, office, projectName, projectCost, clientName, companyName, GSTNumber, state, shipTo, email, phone } = req.body;
+
+    const officeLocation = await OfficeLocation
+      .findById(office);
+
+    if (!officeLocation) {
+      return res.status(404).json({ success: false, message: "Office not found" });
+    };
 
     let subtotal = parseFloat(projectCost);
     let CGST = 0;
@@ -50,9 +57,11 @@ export const createInvoice = async (req, res) => {
     const newInvoice = new Invoice({
       date: invoiceDate,
       tax,
+      office,
       projectName,
       projectCost: projectCost,
       clientName,
+      companyName,
       email,
       phone,
       GSTNumber,
@@ -67,14 +76,7 @@ export const createInvoice = async (req, res) => {
     });
 
     const proformaInvoiceId = await getNextProformaInvoiceId();
-
     newInvoice.proformaInvoiceId = proformaInvoiceId;
-
-    // Read the logo file and convert it to Base64
-    const __dirname = path.resolve();
-    const logoPath = path.join(__dirname, 'public/assets/logo.png');
-    const logoBase64 = fs.readFileSync(logoPath).toString('base64');
-    const logoSrc = `data:image/png;base64,${logoBase64}`;
 
     // Generate the salary slip HTML
     const salarySlipHTML = `
@@ -194,7 +196,7 @@ export const createInvoice = async (req, res) => {
     <div class="invoice-container">
       <div class="invoice-heading">
         <div class="logo">
-          <img src="${logoSrc}" alt="logo">
+          <img src="${officeLocation?.logo}" alt="logo">
         </div>
         <div class="invoice-title">
           <h4>PROFORMA INVOICE</h4>
@@ -202,12 +204,12 @@ export const createInvoice = async (req, res) => {
       </div>
       <div class="invoice-details">
         <div class="billing-info">
-          <div><strong>Code Diffusion Technologies</strong></div>
+          <div><strong>${officeLocation?.name}</strong></div>
           <div>Address:</div>
-          <div>1020, Kirti Sikhar Tower,</div>
-          <div>District Centre, Janakpuri,</div>
-          <div>New Delhi.</div>
-          <div><strong>GST No: O7FRWPS7288J3ZC</strong></div>
+          <div>${officeLocation?.addressLine1},</div>
+          <div>${officeLocation?.addressLine2},div>
+          <div>${officeLocation?.addressLine3}.</div>
+          <div><strong>GST No: ${officeLocation?.GSTNumber}</strong></div>
         </div>
         <div class="invoice-meta">
           <div class="invoice-id">Invoice ID: <strong>${proformaInvoiceId}</strong></div>
@@ -220,7 +222,7 @@ export const createInvoice = async (req, res) => {
       <div class="row">
         <div class="billing-address">
           <div><strong>Bill To:</strong></div>
-          <div>${clientName}</div>
+          <div>${companyName || clientName}</div>
           <div><strong>GST No: ${GSTNumber}</strong></div>
         </div>
         <div class="shipping-address">
@@ -244,8 +246,8 @@ export const createInvoice = async (req, res) => {
           <tr>
             <td>${projectName}</td>
             <td>1</td>
-            <td>₹${subtotal}</td>
-            <td class="text-end">₹${subtotal}</td>
+            <td>₹${subtotal.toFixed(2)}</td>
+            <td class="text-end">₹${subtotal.toFixed(2)}</td>
           </tr>
         </tbody>
         <tfoot>
@@ -291,7 +293,7 @@ export const createInvoice = async (req, res) => {
     const salt = process.env.PAYU_SALT;
     const amount = total;
     const productinfo = projectName;
-    const firstname = clientName;
+    const firstname = companyName || clientName;
     const surl = process.env.PAYU_SUCCESS_URL;
     const furl = process.env.PAYU_FAILURE_URL;
     const serverUrl = process.env.SERVER_URL;
@@ -309,15 +311,22 @@ export const createInvoice = async (req, res) => {
     // Store initial payment data
     const newPayment = new Payment({
       proformaInvoiceId: proformaInvoiceId,
+      proformaInvoiceDate: invoiceDate,
+      office,
       projectName,
       projectCost,
       clientName,
+      companyName,
       email,
       phone,
       GSTNumber,
       state,
       shipTo,
       tax,
+      subtotal: subtotal.toFixed(2),
+      CGST: CGST.toFixed(2),
+      SGST: SGST.toFixed(2),
+      IGST: IGST.toFixed(2),
       amount: total.toFixed(2),
       transactionId: txnid,
       paymentStatus: "Pending",
@@ -407,11 +416,12 @@ export const fetchAllInvoice = async (req, res) => {
     let sort = {};
 
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search, 'i');
+      const searchRegex = new RegExp(req.query.search.trim(), 'i');
       filter = {
         $or: [
           { proformaInvoiceId: searchRegex },
           { clientName: searchRegex },
+          { companyName: searchRegex },
           { email: searchRegex },
           { phone: searchRegex },
           { GSTNumber: searchRegex },
@@ -484,6 +494,7 @@ export const fetchAllInvoice = async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(limit)
+      .populate("office")
       .exec();
 
     if (!proformaInvoices) {
@@ -508,7 +519,10 @@ export const fetchAllInvoice = async (req, res) => {
 export const fetchSingleInvoice = async (req, res) => {
   try {
     const invoiceId = req.params.id;
-    const invoice = await Invoice.findById(invoiceId).exec();
+    const invoice = await Invoice
+      .findById(invoiceId)
+      .populate("office")
+      .exec();
 
     if (!invoice) {
       return res.status(404).json({ success: false, message: "Invoice not found" });
@@ -524,7 +538,7 @@ export const fetchSingleInvoice = async (req, res) => {
 export const updateInvoice = async (req, res) => {
   try {
     const invoiceId = req.params.id;
-    const { date, tax, projectName, projectCost, clientName, GSTNumber, state, shipTo, email, phone } = req.body;
+    const { date, tax, projectName, projectCost, clientName, GSTNumber, companyName, office, state, shipTo, email, phone } = req.body;
 
     const invoice = await Invoice.findById(invoiceId);
 
@@ -555,9 +569,11 @@ export const updateInvoice = async (req, res) => {
 
     invoice.date = invoiceDate;
     invoice.tax = tax;
+    invoice.office = office;
     invoice.projectName = projectName;
     invoice.projectCost = projectCost;
     invoice.clientName = clientName;
+    invoice.companyName = companyName;
     invoice.email = email;
     invoice.phone = phone;
     invoice.GSTNumber = GSTNumber;

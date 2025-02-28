@@ -1,4 +1,5 @@
 import Payment from "../models/payment.model.js";
+import Invoice from "../models/invoice.model.js";
 import axios from "axios";
 import dotenv from "dotenv";
 import crypto from "crypto";
@@ -9,6 +10,7 @@ export const paymentSuccess = async (req, res) => {
   const { txnid } = req.body;
   const key = process.env.PAYU_MERCHANT_KEY;
   const salt = process.env.PAYU_SALT;
+  const date = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })
 
   try {
     // ✅ Create hash for verification
@@ -38,7 +40,7 @@ export const paymentSuccess = async (req, res) => {
         txnid,
         status: "Transaction details missing",
         reason: "Invalid transaction details received from PayU.",
-        date: new Date().toLocaleString(),
+        date,
       });
     };
 
@@ -50,7 +52,7 @@ export const paymentSuccess = async (req, res) => {
         { transactionId: txnid },
         {
           paymentStatus: "Success",
-          paymentDate: new Date(),
+          paymentDate: date,
           payUResponse,
         },
         { new: true },
@@ -61,14 +63,51 @@ export const paymentSuccess = async (req, res) => {
           txnid,
           status: "Record not found",
           reason: "Payment record not found in the database.",
-          date: new Date().toLocaleString(),
+          date,
         });
       };
+
+      const paymentDetail = await Payment
+        .find({ transactionId: txnid })
+        .populate("office")
+        .exec();
+
+      const proformaInvoiceDetails = {
+        proformaInvoiceId: paymentDetail?.proformaInvoiceId,
+        proformaInvoiceDate: paymentDetail?.proformaInvoiceDate,
+        transactionId: paymentDetail?.transactionId,
+        projectName: paymentDetail?.projectName,
+        projectCost: paymentDetail?.projectCost,
+        email: paymentDetail?.email,
+        phone: paymentDetail?.phone,
+        clientName: paymentDetail?.clientName,
+        companyName: paymentDetail?.companyName,
+        GSTNumber: paymentDetail?.GSTNumber,
+        state: paymentDetail?.state,
+        shipTo: paymentDetail?.shipTo,
+      };
+
+      const newInvoice = new Invoice({
+        invoiceId: paymentDetail?.proformaInvoiceId,
+        tax: paymentDetail?.tax,
+        date,
+        office: paymentDetail?.office?._id,
+        amount: paymentDetail?.projectCost,
+        subtotal: paymentDetail?.subtotal,
+        CGST: paymentDetail?.CGST,
+        SGST: paymentDetail?.SGST,
+        IGST: paymentDetail?.IGST,
+        total: paymentDetail?.amount,
+        balanceDue: paymentDetail?.amount,
+        proformaInvoiceDetails,
+      });
+
+      await newInvoice.save();
 
       return res.status(200).render("paymentSuccess", {
         txnid,
         amount: transactionDetails.amt,
-        date: new Date().toLocaleString(),
+        date: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
       });
     } else {
       // ❌ Payment failed
@@ -76,7 +115,7 @@ export const paymentSuccess = async (req, res) => {
         txnid,
         status: transactionDetails.status,
         reason: transactionDetails.error_Message || "Unknown reason",
-        date: new Date().toLocaleString(),
+        date: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
       });
     };
   } catch (error) {
@@ -86,7 +125,7 @@ export const paymentSuccess = async (req, res) => {
       txnid,
       status: "Internal Server Error",
       reason: error.response?.data?.message || error.message || "Something went wrong.",
-      date: new Date().toLocaleString(),
+      date: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
     });
   };
 };
@@ -246,6 +285,7 @@ export const getAllPayments = async (req, res) => {
         $or: [
           { proformaInvoiceId: searchRegex },
           { clientName: searchRegex },
+          { companyName: searchRegex },
           { email: searchRegex },
           { phone: searchRegex },
           { GSTNumber: searchRegex },
@@ -318,6 +358,7 @@ export const getAllPayments = async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(limit)
+      .populate("office")
       .exec();
 
     if (!payment) {
@@ -343,7 +384,10 @@ export const getPaymentById = async (req, res) => {
     const { id } = req.params;
 
     // Fetch the payment from the database using the ID
-    const payment = await Payment.findById(id);
+    const payment = await Payment
+      .findById(id)
+      .populate("office")
+      .exec();
 
     // If payment not found
     if (!payment) {
