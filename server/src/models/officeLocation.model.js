@@ -28,6 +28,26 @@ const officeLocationSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    accountNumber: {
+      type: String,
+      trim: true,
+    },
+    accountName: {
+      type: String,
+      trim: true,
+    },
+    accountType: {
+      type: String,
+      trim: true,
+    },
+    bankName: {
+      type: String,
+      trim: true,
+    },
+    IFSCCode: {
+      type: String,
+      trim: true,
+    },
     latitude: {
       type: String,
       trim: true,
