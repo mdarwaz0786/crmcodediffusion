@@ -3,6 +3,11 @@ import Invoice from "../models/invoice.model.js";
 import axios from "axios";
 import dotenv from "dotenv";
 import crypto from "crypto";
+import puppeteer from "puppeteer";
+import { transporter } from "../services/emailService.js";
+import fs from "fs";
+import dotenv from "dotenv";
+import formatDate from "../utils/formatDate.js";
 
 dotenv.config();
 
@@ -10,7 +15,13 @@ export const paymentSuccess = async (req, res) => {
   const { txnid } = req.body;
   const key = process.env.PAYU_MERCHANT_KEY;
   const salt = process.env.PAYU_SALT;
-  const date = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })
+  const date = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+
+  const dateObj = new Date(date);
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const day = String(dateObj.getDate()).padStart(2, "0");
+  const formattedDate = `${year}-${month}-${day}`;
 
   try {
     // ✅ Create hash for verification
@@ -102,12 +113,280 @@ export const paymentSuccess = async (req, res) => {
         proformaInvoiceDetails,
       });
 
+      // Generate the tax invoice HTML
+      const taxInvoiceHTML = `
+    <!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tax Invoice</title>
+    <style>
+      * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .invoice-container {
+      background-color: white;
+    }
+
+    .invoice-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .logo img {
+      width: 150px;
+      margin-bottom: 10px;
+    }
+
+    .invoice-title h4 {
+      font-size: 18px;
+    }
+
+    .invoice-details {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .invoice-id {
+      margin-bottom: 5px;
+    }
+
+    .billing-info div {
+      margin-bottom: 5px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .row div {
+      margin-bottom: 5px;
+    }
+
+    .invoice-table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+
+    .invoice-table th,
+    .invoice-table td {
+      text-align: left;
+    }
+
+    .invoice-table th {
+      padding: 10px 20px;
+      background-color: #dcf0f0 !important;
+      color: #000 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    .invoice-table td {
+      padding: 8px 20px;
+    }
+
+    .invoice-table th.text-end,
+    .invoice-table td.text-end {
+      text-align: right;
+    }
+
+    .notes {
+      padding: 20px;
+    }
+
+    .notes div {
+      padding-bottom: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="content">
+    <div class="invoice-container">
+      <div class="invoice-heading">
+        <div class="logo">
+          <img src="${paymentDetail?.office?.logo}" alt="logo">
+        </div>
+        <div class="invoice-title">
+          <h4>TAX INVOICE</h4>
+        </div>
+      </div>
+      <div class="invoice-details">
+        <div class="billing-info">
+          <div><strong>${paymentDetail?.office?.name}</strong></div>
+          <div>Address:</div>
+          <div>${paymentDetail?.office?.addressLine1},</div>
+          <div>${paymentDetail?.office?.addressLine2},</div>
+          <div>${paymentDetail?.office?.addressLine3}.</div>
+          <div><strong>GST No: ${paymentDetail?.GSTNumber}</strong></div>
+        </div>
+        <div class="invoice-meta">
+          <div class="invoice-id">Invoice ID: <strong>${paymentDetail?.proformaInvoiceId}</strong></div>
+          <div class="invoice-date">
+            <strong>Date:</strong>
+            <span>${formatDate(formattedDate)}</span>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="billing-address">
+          <div><strong>Bill To:</strong></div>
+          <div>${paymentDetail?.companyName || paymentDetail?.clientName}</div>
+          <div><strong>GST No: ${paymentDetail?.GSTNumber}</strong></div>
+        </div>
+        <div class="shipping-address">
+          <div><strong>Ship To:</strong></div>
+          <div>${paymentDetail?.shipTo}</div>
+        </div>
+        <div class="balance-due">
+          <p><strong>Balance Due: ₹${paymentDetail?.amount}</strong></p>
+        </div>
+      </div>
+      <table class="invoice-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Rate</th>
+            <th class="text-end">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>${paymentDetail?.projectName}</td>
+            <td>1</td>
+            <td>₹${paymentDetail?.subtotal}</td>
+            <td class="text-end">₹${paymentDetail?.subtotal}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" style="text-align: right;"><strong>Subtotal:</strong></td>
+            <td class="text-end">₹${paymentDetail?.subtotal}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align: right;"><strong>CGST (9%):</strong></td>
+            <td class="text-end">₹${paymentDetail?.CGST}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align: right;"><strong>SGST (9%):</strong></td>
+            <td class="text-end">₹${paymentDetail?.SGST}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align: right;"><strong>IGST (18%):</strong></td>
+            <td class="text-end">₹${paymentDetail?.IGST}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align: right;"><strong>Total:</strong></td>
+            <td class="text-end">₹${paymentDetail?.amount}</td>
+          </tr>
+        </tfoot>
+      </table>
+      <div class="notes">
+        <div><strong>Notes:</strong></div>
+        <div><strong>Account Name: </strong>Code Diffusion Technologies</div>
+        <div><strong>Account Type: </strong>Current Account</div>
+        <div><strong>Account Number: </strong>60374584640</div>
+        <div><strong>Bank Name: </strong>Bank of Maharashtra</div>
+        <div><strong>IFSC Code: </strong>mahb0001247</div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
+    `;
+
+      // Generate PDF from HTML
+      const browser = await puppeteer.launch({
+        headless: true,
+        executablePath: '/root/.cache/puppeteer/chrome/linux-133.0.6943.98/chrome-linux64/chrome',
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu',
+        ],
+      });
+      const page = await browser.newPage();
+      await page.setContent(taxInvoiceHTML);
+      const pdfPath = `tax_invoice_${paymentDetail?.proformaInvoiceId}.pdf`;
+      await page.pdf({ path: pdfPath, format: 'A4', printBackground: true, });
+      await browser.close();
+
+      // Email options
+      const mailOptions = {
+        from: `${process.env.SENDER_EMAIL_ID}`,
+        to: `${paymentDetail?.email}`,
+        subject: `Tax Invoice from Code Diffusion Technologies - ${formatDate(formattedDate)}`,
+        text: `Dear ${paymentDetail?.clientName},
+
+We hope you’re doing well.
+
+Please find attached the tax invoice for the services/products provided by Code Diffusion Technologies. The invoice includes a detailed breakdown of charges, applicable taxes, and payment terms for your reference.
+
+Kindly review the invoice and let us know if you have any questions or need further assistance. If everything is in order, we would appreciate it if you could process the payment by the due date mentioned in the invoice.
+
+Thank you for choosing Code Diffusion Technologies. We look forward to continuing our collaboration.
+
+Best regards,  
+Abhishek Singh  
+Code Diffusion Technologies  
++91 7827114607  
+info@codediffusion.in  
+https://www.codediffusion.in/`,
+
+        attachments: [
+          {
+            filename: pdfPath,
+            path: pdfPath,
+          },
+        ],
+      };
+
+      // Send the email
+      await transporter.sendMail(mailOptions);
+
+      // Save the invoice record
       await newInvoice.save();
+
+      // Cleanup the generated PDF
+      fs.unlinkSync(pdfPath);
 
       return res.status(200).render("paymentSuccess", {
         txnid,
         amount: transactionDetails.amt,
-        date: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+        date,
       });
     } else {
       // ❌ Payment failed
@@ -115,17 +394,16 @@ export const paymentSuccess = async (req, res) => {
         txnid,
         status: transactionDetails.status,
         reason: transactionDetails.error_Message || "Unknown reason",
-        date: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+        date,
       });
     };
   } catch (error) {
     // ❌ Handle errors properly
-    console.error("Payment verification error:", error.response?.data || error.message);
     return res.status(500).render("paymentFailure", {
       txnid,
       status: "Internal Server Error",
       reason: error.response?.data?.message || error.message || "Something went wrong.",
-      date: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+      date,
     });
   };
 };
@@ -134,6 +412,7 @@ export const paymentFailure = async (req, res) => {
   const { txnid } = req.body;
   const key = process.env.PAYU_MERCHANT_KEY;
   const salt = process.env.PAYU_SALT;
+  const date = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
   try {
     // ✅ Generate hash for verification
@@ -163,7 +442,7 @@ export const paymentFailure = async (req, res) => {
         txnid,
         status: "Transaction details missing",
         reason: "No valid transaction details received from PayU.",
-        date: new Date().toLocaleString(),
+        date,
       });
     };
 
@@ -178,7 +457,7 @@ export const paymentFailure = async (req, res) => {
           {
             paymentStatus: "Failed",
             failureReason: transactionDetails.error_Message || "Unknown reason",
-            paymentDate: new Date(),
+            paymentDate: date,
             payUResponse,
           },
           { new: true },
@@ -188,7 +467,7 @@ export const paymentFailure = async (req, res) => {
           txnid,
           status,
           reason: transactionDetails.error_Message || "No reason provided by PayU.",
-          date: new Date().toLocaleString(),
+          date,
         });
       } else {
         // ✅ Handle unexpected payment statuses
@@ -196,7 +475,7 @@ export const paymentFailure = async (req, res) => {
           txnid,
           status,
           reason: `Unexpected status received: ${status}`,
-          date: new Date().toLocaleString(),
+          date,
         });
       };
     } else {
@@ -205,17 +484,16 @@ export const paymentFailure = async (req, res) => {
         txnid,
         status: "Verification Failed",
         reason: "Payment verification failed from PayU side.",
-        date: new Date().toLocaleString(),
+        date,
       });
     };
   } catch (error) {
     // ✅ Handle internal server errors with proper logging
-    console.error("Payment verification error:", error.response?.data || error.message);
     return res.status(500).render("paymentFailure", {
       txnid,
       status: "Internal Server Error",
       reason: error.response?.data?.message || error.message || "Something went wrong during verification.",
-      date: new Date().toLocaleString(),
+      date,
     });
   };
 };

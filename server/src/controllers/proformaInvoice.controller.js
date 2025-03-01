@@ -78,15 +78,15 @@ export const createInvoice = async (req, res) => {
     const proformaInvoiceId = await getNextProformaInvoiceId();
     newInvoice.proformaInvoiceId = proformaInvoiceId;
 
-    // Generate the salary slip HTML
-    const salarySlipHTML = `
+    // Generate the proforma invoice HTML
+    const proformaInvoiceHTML = `
     <!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invoice</title>
+  <title>Proforma Invoice</title>
     <style>
       * {
       margin: 0;
@@ -372,7 +372,7 @@ export const createInvoice = async (req, res) => {
       }
     );
     const page = await browser.newPage();
-    await page.setContent(salarySlipHTML);
+    await page.setContent(proformaInvoiceHTML);
     const pdfPath = `proforma_invoice_${proformaInvoiceId}.pdf`;
     await page.pdf({ path: pdfPath, format: 'A4', printBackground: true, });
     await browser.close();
