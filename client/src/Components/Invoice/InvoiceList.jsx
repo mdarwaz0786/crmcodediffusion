@@ -192,9 +192,11 @@ const InvoiceList = () => {
         "#": index + 1 || "1",
         "InvoiceId": entry?.invoiceId || "N/A",
         "Date": formatDate(entry?.date) || "N/A",
-        "Project Name": entry?.project?.projectName,
-        "Project Cost": entry?.project?.projectPrice,
-        "Client Name": entry?.project?.customer?.name,
+        "Project Name": entry?.proformaInvoiceDetails?.projectName || entry?.project?.projectName,
+        "Project Cost": entry?.proformaInvoiceDetails?.projectCost || entry?.project?.projectPrice,
+        "Client Name": entry?.proformaInvoiceDetails?.clientName || entry?.project?.customer?.name,
+        "Company Name": entry?.proformaInvoiceDetails?.companyName || entry?.project?.customer?.companyName,
+        "GST Number": entry?.proformaInvoiceDetails?.GSTNumber || entry?.project?.customer?.GSTNumber,
         "Sub Total": `₹${entry?.subtotal}` || "0",
         "CGST": entry?.CGST > 0 ? `₹${entry?.CGST}` : "Not Applicable",
         "SGST": entry?.SGST > 0 ? `₹${entry?.SGST}` : "Not Applicable",
@@ -243,7 +245,7 @@ const InvoiceList = () => {
     for (const invoice of data) {
       const element = document.querySelector(`#invoice-${invoice?._id}`);
       const pdfOptions = {
-        filename: `${invoice?.invoiceId}-${invoice?.project?.customer?.companyName}-Tax-Invoice.pdf`,
+        filename: `${invoice?.invoiceId}-${invoice?.proformaInvoiceDetails?.companyName || invoice?.project?.customer?.companyName}-Tax-Invoice.pdf`,
         margin: [0, 0, 10, 0],
         html2canvas: {
           useCORS: true,
@@ -258,7 +260,7 @@ const InvoiceList = () => {
 
       // Pass pdfOptions to html2pdf
       const pdfBlob = await html2pdf().from(element).set(pdfOptions).output('blob');
-      zip.file(`${invoice?.invoiceId}-${invoice?.project?.customer?.companyName}-Tax-Invoice.pdf`, pdfBlob);
+      zip.file(`${invoice?.invoiceId}-${invoice?.proformaInvoiceDetails?.companyName || invoice?.project?.customer?.companyName}-Tax-Invoice.pdf`, pdfBlob);
     };
 
     // Generate the ZIP file and save it
@@ -567,17 +569,17 @@ const InvoiceList = () => {
                               }
                               {
                                 (filedPermissions?.project?.show) && (
-                                  <td>{d?.project?.projectName}</td>
+                                  <td>{d?.proformaInvoiceDetails?.projectName || d?.project?.projectName}</td>
                                 )
                               }
                               {
                                 (filedPermissions?.amount?.show) && (
-                                  <td>{d?.project?.customer?.name}</td>
+                                  <td>{d?.proformaInvoiceDetails?.clientName || d?.project?.customer?.name}</td>
                                 )
                               }
                               {
                                 (filedPermissions?.subtotal?.show) && (
-                                  d?.tax === "Inclusive" ? <td>₹{d?.total}</td> : <td>₹{d?.subtotal}</td>
+                                  <td>₹{d?.total}</td>
                                 )
                               }
                               {
@@ -687,7 +689,7 @@ const InvoiceList = () => {
                   <div className="invoice-heading">
                     <div className="col-md-6">
                       <div className="logo mt-4 ps-4 mb-3">
-                        <img src={logo} width="150px" alt="logo" />
+                        <img src={invoice?.office?.logo || logo} width="150px" alt="logo" />
                       </div>
                     </div>
                     <div className="col-md-6 px-4">
@@ -699,12 +701,12 @@ const InvoiceList = () => {
                   {/* Invoice Details */}
                   <div className="invoice row">
                     <div className="col-md-6 p-5 pt-0">
-                      <div className="p-0 m-0"><strong>Code Diffusion Technologies</strong></div>
+                      <div className="p-0 m-0"><strong>{invoice?.office?.name || "Code Diffusion Technologies"}</strong></div>
                       <div>Address :</div>
-                      <div>1020 , Kirti Sikhar Tower,</div>
-                      <div>District Centre, Janakpuri,</div>
-                      <div>New Delhi.</div>
-                      <div><strong>GST No: O7FRWPS7288J3Z</strong></div>
+                      <div>{invoice?.office?.addressLine1 || "1020, Kirti Sikhar Tower"},</div>
+                      <div>{invoice?.office?.addressLine2 || "District Centre, Janakpuri"},</div>
+                      <div>{invoice?.office?.addressLine3 || "New Delhi"}.</div>
+                      <div><strong>GST No: {invoice?.office?.GSTNumber || "O7FRWPS7288J3ZC"}</strong></div>
                     </div>
                     <div className="col-md-6 p-5 pt-0">
                       <div className="ubic-code d-flex justify-content-end">
@@ -715,7 +717,7 @@ const InvoiceList = () => {
                           <strong>Date:</strong>
                         </div>
                         <div className="date text-end">
-                          <p>{invoice?.date}</p>
+                          <p>{formatDate(invoice?.date)}</p>
                         </div>
                       </div>
                     </div>
@@ -727,10 +729,15 @@ const InvoiceList = () => {
                           <h5 style={{ color: "#262a2a7a" }}>Bill To:</h5>
                           <div>
                             <strong style={{ color: "#000" }}>
-                              {invoice?.project.customer?.companyName}
+                              {
+                                invoice?.proformaInvoiceDetails?.companyName ||
+                                invoice?.proformaInvoiceDetails?.clientName ||
+                                invoice?.project?.customer?.companyName ||
+                                invoice?.project?.customer?.clientName
+                              }
                             </strong>
                           </div>
-                          <div><strong>GST No: {invoice?.project.customer?.GSTNumber}</strong></div>
+                          <div><strong>GST No: {invoice?.proformaInvoiceDetails?.GSTNumber || invoice?.project?.customer?.GSTNumber}</strong></div>
                         </div>
                       </div>
                       <div className="content w-100">
@@ -738,7 +745,7 @@ const InvoiceList = () => {
                           <h5 style={{ color: "#262a2a7a" }}>Ship To:</h5>
                           <p>
                             <strong style={{ color: "#000" }}>
-                              {invoice?.project.customer?.address}
+                              {invoice?.proformaInvoiceDetails?.shipTo || invoice?.project?.customer?.address}
                             </strong>
                           </p>
                         </div>
@@ -763,10 +770,10 @@ const InvoiceList = () => {
                           {
                             invoice?.projects?.map((d) => (
                               <tr className="text-start" key={d?._id}>
-                                <th scope="col">{d?.project?.projectName}</th>
+                                <th scope="col">{invoice?.proformaInvoiceDetails?.projectName || invoice?.project?.projectName}</th>
                                 <th scope="col" className="ps-5">1</th>
-                                <th scope="col">₹{d?.amount}</th>
-                                <th scope="col" className="text-end">₹{d?.amount}</th>
+                                <th scope="col">₹{d?.subtotal}</th>
+                                <th scope="col" className="text-end">₹{d?.subtotal}</th>
                               </tr>
                             ))
                           }

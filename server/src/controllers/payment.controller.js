@@ -25,13 +25,10 @@ export const paymentSuccess = async (req, res) => {
   const { txnid } = req.body;
   const key = process.env.PAYU_MERCHANT_KEY;
   const salt = process.env.PAYU_SALT;
-  const date = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
-  const dateObj = new Date(date);
-  const year = dateObj.getFullYear();
-  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-  const day = String(dateObj.getDate()).padStart(2, "0");
-  const formattedDate = `${year}-${month}-${day}`;
+  const date = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+  const [day, month, year] = date.split(",")[0].split("/");
+  const formattedDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 
   try {
     // ✅ Create hash for verification

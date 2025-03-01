@@ -171,8 +171,8 @@ const SingleInvoice = () => {
                     <tr className="text-start">
                       <th scope="col">{data?.proformaInvoiceDetails?.projectName || data?.project?.projectName}</th>
                       <th scope="col" className="ps-5">1</th>
-                      <th scope="col">₹{data?.amount}</th>
-                      <th scope="col" className="text-end">₹{data?.amount}</th>
+                      <th scope="col">₹{data?.subtotal}</th>
+                      <th scope="col" className="text-end">₹{data?.subtotal}</th>
                     </tr>
                   </tbody>
                   <tbody className="text-end mt-5 pt-5">
