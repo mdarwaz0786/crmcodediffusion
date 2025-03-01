@@ -88,7 +88,7 @@ export const createInvoice = async (req, res) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Proforma Invoice</title>
     <style>
-      * {
+    * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
@@ -207,7 +207,7 @@ export const createInvoice = async (req, res) => {
           <div><strong>${officeLocation?.name}</strong></div>
           <div>Address:</div>
           <div>${officeLocation?.addressLine1},</div>
-          <div>${officeLocation?.addressLine2},<div>
+          <div>${officeLocation?.addressLine2},</div>
           <div>${officeLocation?.addressLine3}.</div>
           <div><strong>GST No: ${officeLocation?.GSTNumber}</strong></div>
         </div>
@@ -355,22 +355,7 @@ export const createInvoice = async (req, res) => {
 `;
 
     // Generate PDF from HTML
-    const browser = await puppeteer.launch(
-      {
-        headless: true,
-        executablePath: '/root/.cache/puppeteer/chrome/linux-133.0.6943.98/chrome-linux64/chrome',
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process',
-          '--disable-gpu',
-        ],
-      }
-    );
+    const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.setContent(proformaInvoiceHTML);
     const pdfPath = `proforma_invoice_${proformaInvoiceId}.pdf`;
