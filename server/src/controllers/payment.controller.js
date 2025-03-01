@@ -6,7 +6,6 @@ import crypto from "crypto";
 import puppeteer from "puppeteer";
 import { transporter } from "../services/emailService.js";
 import fs from "fs";
-import dotenv from "dotenv";
 import formatDate from "../utils/formatDate.js";
 
 dotenv.config();
