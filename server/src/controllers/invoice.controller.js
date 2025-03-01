@@ -1,11 +1,11 @@
 import Invoice from "../models/invoice.model.js";
 import Project from "../models/project.model.js";
+import OfficeLocation from "../models/officeLocation.model.js";
 import InvoiceId from "../models/invoiceId.model.js";
 import mongoose from "mongoose";
 import puppeteer from "puppeteer";
 import { transporter } from "../services/emailService.js";
 import fs from "fs";
-import path from "path";
 import dotenv from "dotenv";
 import formatDate from "../utils/formatDate.js";
 
@@ -24,21 +24,29 @@ const getNextInvoiceId = async () => {
 // Controller for creating an invoice
 export const createInvoice = async (req, res) => {
   try {
-    const { project, date, tax, amount } = req.body;
+    const { project, date, tax, amount, office } = req.body;
+
+    const officeLocation = await OfficeLocation
+      .findById(office);
+
+    if (!officeLocation) {
+      return res.status(404).json({ success: false, message: "Office not found" });
+    };
+
+    const projectDetails = await Project
+      .findById(project)
+      .populate("customer", "state")
+      .exec();
+
+    if (!projectDetails) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    };
 
     let subtotal = parseFloat(amount);
     let CGST = 0, SGST = 0, IGST = 0, total = 0;
 
     if (tax === "Inclusive") {
       subtotal = subtotal / 1.18;
-    };
-
-    const projectDetails = await Project
-      .findById(project)
-      .populate("customer", "state");
-
-    if (!projectDetails) {
-      return res.status(404).json({ success: false, message: "Project not found" });
     };
 
     const projectName = projectDetails?.projectName;
@@ -61,6 +69,7 @@ export const createInvoice = async (req, res) => {
       project,
       tax,
       date,
+      office,
       amount: subtotal.toFixed(2),
       subtotal: subtotal.toFixed(2),
       CGST: CGST.toFixed(2),
@@ -73,14 +82,8 @@ export const createInvoice = async (req, res) => {
     const invoiceId = await getNextInvoiceId();
     newInvoice.invoiceId = invoiceId;
 
-    // Read the logo file and convert it to Base64
-    const __dirname = path.resolve();
-    const logoPath = path.join(__dirname, 'public/assets/logo.png');
-    const logoBase64 = fs.readFileSync(logoPath).toString('base64');
-    const logoSrc = `data:image/png;base64,${logoBase64}`;
-
-    // Generate the salary slip HTML
-    const salarySlipHTML = `
+    // Generate the tax invoice HTML
+    const taxInvoiceHTML = `
     <!DOCTYPE html>
 <html lang="en">
 
@@ -197,7 +200,7 @@ export const createInvoice = async (req, res) => {
     <div class="invoice-container">
       <div class="invoice-heading">
         <div class="logo">
-          <img src="${logoSrc}" alt="logo">
+          <img src="${officeLocation?.logo}" alt="logo">
         </div>
         <div class="invoice-title">
           <h4>TAX INVOICE</h4>
@@ -205,12 +208,12 @@ export const createInvoice = async (req, res) => {
       </div>
       <div class="invoice-details">
         <div class="billing-info">
-          <div><strong>Code Diffusion Technologies</strong></div>
+          <div><strong>C${officeLocation?.name}</strong></div>
           <div>Address:</div>
-          <div>1020, Kirti Sikhar Tower,</div>
-          <div>District Centre, Janakpuri,</div>
-          <div>New Delhi.</div>
-          <div><strong>GST No: O7FRWPS7288J3ZC</strong></div>
+          <div>${officeLocation?.addressLine1},</div>
+          <div>${officeLocation?.addressLine2},</div>
+          <div>${officeLocation?.addressLine3}.</div>
+          <div><strong>GST No: ${officeLocation?.GSTNumber}</strong></div>
         </div>
         <div class="invoice-meta">
           <div class="invoice-id">Invoice ID: <strong>${invoiceId}</strong></div>
@@ -305,7 +308,7 @@ export const createInvoice = async (req, res) => {
       ],
     });
     const page = await browser.newPage();
-    await page.setContent(salarySlipHTML);
+    await page.setContent(taxInvoiceHTML);
     const pdfPath = `tax_invoice_${invoiceId}.pdf`;
     await page.pdf({ path: pdfPath, format: 'A4', printBackground: true, });
     await browser.close();
@@ -340,12 +343,14 @@ https://www.codediffusion.in/`,
       ],
     };
 
-    // Send email
-    transporter.sendMail(mailOptions, () => {
-      fs.unlinkSync(pdfPath);
-    });
+    // Send the email
+    await transporter.sendMail(mailOptions);
 
+    // Save the invoice record
     await newInvoice.save();
+
+    // Cleanup the generated PDF
+    fs.unlinkSync(pdfPath);
 
     return res.status(201).json({ success: true, invoice: newInvoice });
   } catch (error) {
@@ -443,10 +448,12 @@ export const fetchAllInvoice = async (req, res) => {
     const limit = parseInt(req.query.limit);
     const skip = (page - 1) * limit;
 
-    const invoice = await Invoice.find(filter)
+    const invoice = await Invoice
+      .find(filter)
       .sort(sort)
       .skip(skip)
       .limit(limit)
+      .populate("office")
       .populate({
         path: "project",
         select: "",
@@ -473,7 +480,9 @@ export const fetchAllInvoice = async (req, res) => {
 export const fetchSingleInvoice = async (req, res) => {
   try {
     const invoiceId = req.params.id;
-    const invoice = await Invoice.findById(invoiceId)
+    const invoice = await Invoice
+      .findById(invoiceId)
+      .populate("office")
       .populate({
         path: "project",
         select: "",
@@ -499,7 +508,9 @@ export const fetchInvoiceByProject = async (req, res) => {
   try {
     const { projectId } = req.params;
 
-    const invoices = await Invoice.find({ project: projectId })
+    const invoices = await Invoice
+      .find({ project: projectId })
+      .populate("office")
       .populate({
         path: "project",
         select: "",
@@ -531,7 +542,7 @@ export const fetchInvoiceByProject = async (req, res) => {
 export const updateInvoice = async (req, res) => {
   try {
     const { id } = req.params;
-    const { project, date, tax, amount } = req.body;
+    const { project, date, tax, amount, office } = req.body;
 
     const invoice = await Invoice.findById(id);
 
@@ -561,6 +572,7 @@ export const updateInvoice = async (req, res) => {
     invoice.project = project;
     invoice.tax = tax;
     invoice.date = date;
+    invoice.office = office;
     invoice.amount = subtotal.toFixed(2);
     invoice.subtotal = subtotal.toFixed(2);
     invoice.CGST = CGST.toFixed(2);

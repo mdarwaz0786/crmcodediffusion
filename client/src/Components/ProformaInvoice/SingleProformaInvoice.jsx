@@ -78,7 +78,7 @@ const SingleProformaInvoice = () => {
     <div className="page-wrapper" style={{ marginBottom: "2rem" }}>
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h4>Proforma Invoice</h4>
+          <h4>PROFORMA INVOICE</h4>
           {
             permissions?.export && (
               <button className="btn btn-secondary" onClick={exportInvoiceAsPdf}>Download</button>
@@ -91,23 +91,23 @@ const SingleProformaInvoice = () => {
             <div className="invoice-heading">
               <div className="col-md-6">
                 <div className="logo mt-4 ps-4 mb-3">
-                  <img src={logo} width="150px" alt="logo" />
+                  <img src={data?.office?.logo || logo} width="150px" alt="logo" />
                 </div>
               </div>
               <div className="col-md-6 px-4">
                 <div className="name d-flex mt-4 justify-content-end">
-                  <h4>Proforma INVOICE</h4>
+                  <h4>PROFORMA INVOICE</h4>
                 </div>
               </div>
             </div>
             <div className="invoice row">
               <div className="col-md-6 p-5 pt-0">
-                <div className="p-0 m-0"><strong>Code Diffusion Technologies</strong></div>
+                <div className="p-0 m-0"><strong>{data?.office?.name || "Code Diffusion Technologies"}</strong></div>
                 <div>Address :</div>
-                <div>1020, Kirti Sikhar Tower,</div>
-                <div>District Centre, Janakpuri,</div>
-                <div>New Delhi.</div>
-                <div><strong>GST No: O7FRWPS7288J3ZC</strong></div>
+                <div>{data?.office?.addressLine1 || "1020, Kirti Sikhar Tower"},</div>
+                <div>{data?.office?.addressLine2 || "District Centre, Janakpuri"},</div>
+                <div>{data?.office?.addressLine3 || "New Delhi"}.</div>
+                <div><strong>GST No: {data?.office?.GSTNumber || "O7FRWPS7288J3ZC"}</strong></div>
               </div>
               <div className="col-md-6 p-5 pt-0">
                 <div className="ubic-code d-flex justify-content-end">
@@ -219,7 +219,7 @@ const SingleProformaInvoice = () => {
             </div>
             <div className="col-md-6 ps-4 m-0">
               <div className="p-0 pb-1 m-0 text-dark"><strong>Notes:</strong></div>
-              <div className="p-0 pb-1 m-0 text-dark"><strong>Account Name: </strong>Code Diffusion Technologies </div>
+              <div className="p-0 pb-1 m-0 text-dark"><strong>Account Name: </strong>Code Diffusion Technologies</div>
               <div className="p-0 pb-1 m-0 text-dark"><strong>Account Type: </strong>Current Account</div>
               <div className="p-0 pb-1 m-0 text-dark"><strong>Account Number: </strong>60374584640</div>
               <div className="p-0 pb-1 m-0 text-dark"><strong>Bank Name: </strong>Bank of Maharashtra</div>

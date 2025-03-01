@@ -207,7 +207,7 @@ export const createInvoice = async (req, res) => {
           <div><strong>${officeLocation?.name}</strong></div>
           <div>Address:</div>
           <div>${officeLocation?.addressLine1},</div>
-          <div>${officeLocation?.addressLine2},div>
+          <div>${officeLocation?.addressLine2},<div>
           <div>${officeLocation?.addressLine3}.</div>
           <div><strong>GST No: ${officeLocation?.GSTNumber}</strong></div>
         </div>

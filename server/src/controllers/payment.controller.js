@@ -1,5 +1,6 @@
 import Payment from "../models/payment.model.js";
 import Invoice from "../models/invoice.model.js";
+import InvoiceId from "../models/invoiceId.model.js";
 import axios from "axios";
 import dotenv from "dotenv";
 import crypto from "crypto";
@@ -9,6 +10,16 @@ import fs from "fs";
 import formatDate from "../utils/formatDate.js";
 
 dotenv.config();
+
+// Helper function to generate the next invoiceId
+const getNextInvoiceId = async () => {
+  const counter = await InvoiceId.findOneAndUpdate(
+    { _id: "invoiceId" },
+    { $inc: { sequence: 1 } },
+    { new: true, upsert: true },
+  );
+  return `#CD${1818 + counter.sequence}`;
+};
 
 export const paymentSuccess = async (req, res) => {
   const { txnid } = req.body;
@@ -78,7 +89,7 @@ export const paymentSuccess = async (req, res) => {
       };
 
       const paymentDetail = await Payment
-        .find({ transactionId: txnid })
+        .findOne({ transactionId: txnid })
         .populate("office")
         .exec();
 
@@ -98,9 +109,8 @@ export const paymentSuccess = async (req, res) => {
       };
 
       const newInvoice = new Invoice({
-        invoiceId: paymentDetail?.proformaInvoiceId,
         tax: paymentDetail?.tax,
-        date,
+        date: formattedDate,
         office: paymentDetail?.office?._id,
         amount: paymentDetail?.projectCost,
         subtotal: paymentDetail?.subtotal,
@@ -111,6 +121,9 @@ export const paymentSuccess = async (req, res) => {
         balanceDue: paymentDetail?.amount,
         proformaInvoiceDetails,
       });
+
+      const invoiceId = await getNextInvoiceId();
+      newInvoice.invoiceId = invoiceId;
 
       // Generate the tax invoice HTML
       const taxInvoiceHTML = `
@@ -246,7 +259,7 @@ export const paymentSuccess = async (req, res) => {
           <div><strong>GST No: ${paymentDetail?.GSTNumber}</strong></div>
         </div>
         <div class="invoice-meta">
-          <div class="invoice-id">Invoice ID: <strong>${paymentDetail?.proformaInvoiceId}</strong></div>
+          <div class="invoice-id">Invoice ID: <strong>${invoiceId}</strong></div>
           <div class="invoice-date">
             <strong>Date:</strong>
             <span>${formatDate(formattedDate)}</span>
@@ -339,7 +352,7 @@ export const paymentSuccess = async (req, res) => {
       });
       const page = await browser.newPage();
       await page.setContent(taxInvoiceHTML);
-      const pdfPath = `tax_invoice_${paymentDetail?.proformaInvoiceId}.pdf`;
+      const pdfPath = `tax_invoice_${invoiceId}.pdf`;
       await page.pdf({ path: pdfPath, format: 'A4', printBackground: true, });
       await browser.close();
 

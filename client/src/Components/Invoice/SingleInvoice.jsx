@@ -78,7 +78,7 @@ const SingleInvoice = () => {
     <div className="page-wrapper" style={{ marginBottom: "2rem" }}>
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h4>Tax Invoice</h4>
+          <h4>TAX INVOICE</h4>
           {
             permissions?.export && (
               <button className="btn btn-secondary" onClick={exportInvoiceAsPdf}>Download</button>
@@ -91,7 +91,7 @@ const SingleInvoice = () => {
             <div className="invoice-heading">
               <div className="col-md-6">
                 <div className="logo mt-4 ps-4 mb-3">
-                  <img src={logo} width="150px" alt="logo" />
+                  <img src={data?.office?.logo || logo} width="150px" alt="logo" />
                 </div>
               </div>
               <div className="col-md-6 px-4">
@@ -102,12 +102,12 @@ const SingleInvoice = () => {
             </div>
             <div className="invoice row">
               <div className="col-md-6 p-5 pt-0">
-                <div className="p-0 m-0"><strong>Code Diffusion Technologies</strong></div>
+                <div className="p-0 m-0"><strong>{data?.office?.name || "Code Diffusion Technologies"}</strong></div>
                 <div>Address :</div>
-                <div>1020 , Kirti Sikhar Tower,</div>
-                <div>District Centre, Janakpuri,</div>
-                <div>New Delhi.</div>
-                <div><strong>GST No: O7FRWPS7288J3ZC</strong></div>
+                <div>{data?.office?.addressLine1 || "1020, Kirti Sikhar Tower"},</div>
+                <div>{data?.office?.addressLine2 || "District Centre, Janakpuri"},</div>
+                <div>{data?.office?.addressLine3 || "New Delhi"}.</div>
+                <div><strong>GST No: {data?.office?.GSTNumber || "O7FRWPS7288J3ZC"}</strong></div>
               </div>
               <div className="col-md-6 p-5 pt-0">
                 <div className="ubic-code d-flex justify-content-end">
@@ -130,10 +130,15 @@ const SingleInvoice = () => {
                     <h5 style={{ color: "#262a2a7a" }}>Bill To:</h5>
                     <div>
                       <strong style={{ color: "#000" }}>
-                        {data?.project?.customer?.companyName}
+                        {
+                          data?.proformaInvoiceDetails?.companyName ||
+                          data?.proformaInvoiceDetails?.clientName ||
+                          data?.project?.customer?.companyName ||
+                          data?.project?.customer?.clientName
+                        }
                       </strong>
                     </div>
-                    <div><strong>GST No: {data?.project?.customer?.GSTNumber}</strong></div>
+                    <div><strong>GST No: {data?.proformaInvoiceDetails?.GSTNumber || data?.project?.customer?.GSTNumber}</strong></div>
                   </div>
                 </div>
                 <div className="content w-100">
@@ -141,7 +146,7 @@ const SingleInvoice = () => {
                     <h5 style={{ color: "#262a2a7a" }}>Ship To:</h5>
                     <p>
                       <strong style={{ color: "#000" }}>
-                        {data?.project?.customer?.address}
+                        {data?.proformaInvoiceDetails?.shipTo || data?.project?.customer?.address}
                       </strong>
                     </p>
                   </div>
@@ -164,7 +169,7 @@ const SingleInvoice = () => {
                   </thead>
                   <tbody>
                     <tr className="text-start">
-                      <th scope="col">{data?.project?.projectName}</th>
+                      <th scope="col">{data?.proformaInvoiceDetails?.projectName || data?.project?.projectName}</th>
                       <th scope="col" className="ps-5">1</th>
                       <th scope="col">₹{data?.amount}</th>
                       <th scope="col" className="text-end">₹{data?.amount}</th>
