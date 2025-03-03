@@ -13,6 +13,11 @@ const officeLocationSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    websiteLink: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     logo: {
       type: String,
     },

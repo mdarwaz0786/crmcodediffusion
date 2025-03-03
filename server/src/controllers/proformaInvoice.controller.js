@@ -4,6 +4,7 @@ import puppeteer from "puppeteer";
 import { transporter } from "../services/emailService.js";
 import Payment from "../models/payment.model.js";
 import fs from "fs";
+import path from "path";
 import dotenv from "dotenv";
 import formatDate from "../utils/formatDate.js";
 import generatePayUHash from "../utils/generatePayUHash.js";

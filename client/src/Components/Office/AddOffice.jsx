@@ -9,9 +9,16 @@ const AddOffice = () => {
   const [formData, setFormData] = useState({
     uniqueCode: '',
     name: '',
+    websiteLink: '',
     logo: '',
     email: '',
     contact: '',
+    GSTNumber: '',
+    accountNumber: '',
+    accountName: '',
+    accountType: '',
+    bankName: '',
+    IFSCCode: '',
     latitude: '',
     longitude: '',
     attendanceRadius: '',
@@ -34,9 +41,16 @@ const AddOffice = () => {
         setFormData({
           uniqueCode: '',
           name: '',
+          websiteLink: '',
           logo: '',
           email: '',
           contact: '',
+          GSTNumber: '',
+          accountNumber: '',
+          accountName: '',
+          accountType: '',
+          bankName: '',
+          IFSCCode: '',
           latitude: '',
           longitude: '',
           attendanceRadius: '',
@@ -80,7 +94,7 @@ const AddOffice = () => {
 
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="name">Name <span className="text-danger">*</span></label>
+              <label className="col-form-label" htmlFor="name">Company Name <span className="text-danger">*</span></label>
               <input
                 type="text"
                 name="name"
@@ -101,6 +115,20 @@ const AddOffice = () => {
                 id="logo"
                 className="form-control"
                 value={formData.logo}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="websiteLink">Website Link <span className="text-danger">*</span></label>
+              <input
+                type="text"
+                name="websiteLink"
+                id="websiteLink"
+                className="form-control"
+                value={formData.websiteLink}
                 onChange={handleChange}
               />
             </div>
@@ -129,6 +157,90 @@ const AddOffice = () => {
                 id="contact"
                 className="form-control"
                 value={formData.contact}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="GSTNumber">GST Number <span className="text-danger">*</span></label>
+              <input
+                type="text"
+                name="GSTNumber"
+                id="GSTNumber"
+                className="form-control"
+                value={formData.GSTNumber}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="accountNumber">Account Number <span className="text-danger">*</span></label>
+              <input
+                type="text"
+                name="accountNumber"
+                id="accountNumber"
+                className="form-control"
+                value={formData.accountNumber}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="accountName">Account Name <span className="text-danger">*</span></label>
+              <input
+                type="text"
+                name="accountName"
+                id="accountName"
+                className="form-control"
+                value={formData.accountName}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="accountType">Account Type <span className="text-danger">*</span></label>
+              <input
+                type="text"
+                name="accountType"
+                id="accountType"
+                className="form-control"
+                value={formData.accountType}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="bankName">Bank Name <span className="text-danger">*</span></label>
+              <input
+                type="text"
+                name="bankName"
+                id="bankName"
+                className="form-control"
+                value={formData.bankName}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="col-md-6">
+            <div className="form-wrap">
+              <label className="col-form-label" htmlFor="IFSCCode">IFSC Code <span className="text-danger">*</span></label>
+              <input
+                type="text"
+                name="IFSCCode"
+                id="IFSCCode"
+                className="form-control"
+                value={formData.IFSCCode}
                 onChange={handleChange}
               />
             </div>
@@ -192,7 +304,7 @@ const AddOffice = () => {
 
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="addressLine2">Address Line 2</label>
+              <label className="col-form-label" htmlFor="addressLine2">Address Line 2 <span className="text-danger">*</span></label>
               <input
                 type="text"
                 name="addressLine2"
@@ -206,7 +318,7 @@ const AddOffice = () => {
 
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label" htmlFor="addressLine3">Address Line 3</label>
+              <label className="col-form-label" htmlFor="addressLine3">Address Line 3 <span className="text-danger">*</span></label>
               <input
                 type="text"
                 name="addressLine3"
@@ -219,7 +331,7 @@ const AddOffice = () => {
           </div>
         </div>
 
-        <div className="text-start">
+        <div className="text-end">
           <Link to="#" style={{ marginRight: "1rem" }} onClick={() => Navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
           <Link to="#" className="btn btn-primary" onClick={handleSubmit}>Submit</Link>
         </div>
