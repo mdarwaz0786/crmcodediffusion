@@ -111,6 +111,12 @@ export const paymentSuccess = async (req, res) => {
         proformaInvoiceDetails,
       });
 
+      // Read the logo file and convert it to Base64
+      const __dirname = path.resolve();
+      const logoPath = path.join(__dirname, 'public/assets/logo.png');
+      const logoBase64 = fs.readFileSync(logoPath).toString('base64');
+      const logoSrc = `data:image/png;base64,${logoBase64}`;
+
       // Generate the tax invoice HTML
       const taxInvoiceHTML = `
     <!DOCTYPE html>
@@ -229,7 +235,7 @@ export const paymentSuccess = async (req, res) => {
     <div class="invoice-container">
       <div class="invoice-heading">
         <div class="logo">
-          <img src="${paymentDetail?.office?.logo}" alt="logo">
+          <img src="${paymentDetail?.office?.logo || logoSrc}" alt="logo">
         </div>
         <div class="invoice-title">
           <h4>TAX INVOICE</h4>
