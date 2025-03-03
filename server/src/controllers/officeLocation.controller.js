@@ -8,6 +8,8 @@ export const createOfficeLocation = async (req, res) => {
       name,
       websiteLink,
       email,
+      noReplyEmail,
+      noReplyEmailAppPassword,
       contact,
       GSTNumber,
       accountNumber,
@@ -29,6 +31,8 @@ export const createOfficeLocation = async (req, res) => {
       !name ||
       !websiteLink ||
       !email ||
+      !noReplyEmail ||
+      !noReplyEmailAppPassword ||
       !contact ||
       !GSTNumber ||
       !accountNumber ||
@@ -59,6 +63,8 @@ export const createOfficeLocation = async (req, res) => {
       name,
       websiteLink,
       email,
+      noReplyEmail,
+      noReplyEmailAppPassword,
       contact,
       GSTNumber,
       accountNumber,
@@ -125,6 +131,8 @@ export const updateOfficeLocation = async (req, res) => {
       name,
       websiteLink,
       email,
+      noReplyEmail,
+      noReplyEmailAppPassword,
       contact,
       GSTNumber,
       accountNumber,
@@ -145,6 +153,8 @@ export const updateOfficeLocation = async (req, res) => {
       name,
       websiteLink,
       email,
+      noReplyEmail,
+      noReplyEmailAppPassword,
       contact,
       GSTNumber,
       accountNumber,
@@ -186,7 +196,8 @@ export const deleteOfficeLocation = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const officeLocation = await OfficeLocation.findByIdAndDelete(id);
+    const officeLocation = await OfficeLocation
+      .findByIdAndDelete(id);
 
     if (!officeLocation) {
       return res.status(404).json({ success: false, message: "Office location not found." });

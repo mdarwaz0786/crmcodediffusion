@@ -25,6 +25,14 @@ const officeLocationSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    noReplyEmail: {
+      type: String,
+      trim: true,
+    },
+    noReplyEmailAppPassword: {
+      type: String,
+      trim: true,
+    },
     contact: {
       type: String,
       trim: true,

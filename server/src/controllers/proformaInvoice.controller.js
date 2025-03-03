@@ -1,7 +1,7 @@
 import Invoice from "../models/proformaInvoice.model.js";
 import OfficeLocation from "../models/officeLocation.model.js";
 import puppeteer from "puppeteer";
-import { transporter } from "../services/emailService.js";
+import nodemailer from 'nodemailer';
 import Payment from "../models/payment.model.js";
 import fs from "fs";
 import path from "path";
@@ -372,8 +372,8 @@ export const createInvoice = async (req, res) => {
 
     // Email options
     const mailOptions = {
-      from: `${process.env.SENDER_EMAIL_ID}`,
-      to: `${email}`,
+      from: officeLocation?.noReplyEmail || process.env.SENDER_EMAIL_ID,
+      to: email,
       subject: `Proforma Invoice from ${officeLocation?.name || "Code Diffusion Technologies"} - ${formatDate(date)}`,
       html: emailHTML,
       attachments: [
@@ -383,6 +383,15 @@ export const createInvoice = async (req, res) => {
         },
       ],
     };
+
+    // Create a transporter
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: officeLocation?.noReplyEmail || process.env.SENDER_EMAIL_ID,
+        pass: officeLocation?.noReplyEmailAppPassword || process.env.SENDER_EMAIL_APP_PASSWORD,
+      },
+    });
 
     // Send the email
     await transporter.sendMail(mailOptions);

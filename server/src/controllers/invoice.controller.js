@@ -3,9 +3,9 @@ import Project from "../models/project.model.js";
 import OfficeLocation from "../models/officeLocation.model.js";
 import mongoose from "mongoose";
 import puppeteer from "puppeteer";
-import { transporter } from "../services/emailService.js";
 import fs from "fs";
 import path from "path";
+import nodemailer from 'nodemailer';
 import dotenv from "dotenv";
 import formatDate from "../utils/formatDate.js";
 
@@ -311,8 +311,8 @@ export const createInvoice = async (req, res) => {
 
     // Email options
     const mailOptions = {
-      from: `${process.env.SENDER_EMAIL_ID}`,
-      to: `${email}`,
+      from: officeLocation?.noReplyEmail || process.env.SENDER_EMAIL_ID,
+      to: email,
       subject: `Tax Invoice from ${officeLocation?.name || "Code Diffusion Technologies"} - ${formatDate(date)}`,
       text: `Dear ${clientName},
 
@@ -337,6 +337,15 @@ ${officeLocation?.websiteLink || "https://www.codediffusion.in/"}`,
         },
       ],
     };
+
+    // Create a transporter
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: officeLocation?.noReplyEmail || process.env.SENDER_EMAIL_ID,
+        pass: officeLocation?.noReplyEmailAppPassword || process.env.SENDER_EMAIL_APP_PASSWORD,
+      },
+    });
 
     // Send the email
     await transporter.sendMail(mailOptions);

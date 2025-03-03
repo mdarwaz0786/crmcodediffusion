@@ -2,9 +2,9 @@ import Payment from "../models/payment.model.js";
 import Invoice from "../models/invoice.model.js";
 import axios from "axios";
 import dotenv from "dotenv";
+import nodemailer from 'nodemailer';
 import crypto from "crypto";
 import puppeteer from "puppeteer";
-import { transporter } from "../services/emailService.js";
 import fs from "fs";
 import path from "path";
 import formatDate from "../utils/formatDate.js";
@@ -351,8 +351,8 @@ export const paymentSuccess = async (req, res) => {
 
       // Email options
       const mailOptions = {
-        from: `${process.env.SENDER_EMAIL_ID}`,
-        to: `${paymentDetail?.email}`,
+        from: paymentDetail?.office?.noReplyEmail || process.env.SENDER_EMAIL_ID,
+        to: paymentDetail?.email,
         subject: `Tax Invoice from ${paymentDetail?.office?.name || "Code Diffusion Technologies"}  - ${formatDate(formattedDate)}`,
         text: `Dear ${paymentDetail?.clientName},
 
@@ -377,6 +377,15 @@ ${paymentDetail?.office?.websiteLink || "https://www.codediffusion.in/"}`,
           },
         ],
       };
+
+      // Create a transporter
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: paymentDetail?.office?.noReplyEmail || process.env.SENDER_EMAIL_ID,
+          pass: paymentDetail?.office?.noReplyEmailAppPassword || process.env.SENDER_EMAIL_APP_PASSWORD,
+        },
+      });
 
       // Send the email
       await transporter.sendMail(mailOptions);
