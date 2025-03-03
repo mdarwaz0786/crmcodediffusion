@@ -1,6 +1,5 @@
 import Invoice from "../models/proformaInvoice.model.js";
 import OfficeLocation from "../models/officeLocation.model.js";
-import ProformaInvoiceId from "../models/proformaInvoiceId.model.js";
 import puppeteer from "puppeteer";
 import { transporter } from "../services/emailService.js";
 import Payment from "../models/payment.model.js";
@@ -10,16 +9,6 @@ import formatDate from "../utils/formatDate.js";
 import generatePayUHash from "../utils/generatePayUHash.js";
 
 dotenv.config();
-
-// Helper function to generate the next proforma invoice id
-const getNextProformaInvoiceId = async () => {
-  const counter = await ProformaInvoiceId.findOneAndUpdate(
-    { _id: "proformaInvoiceId" },
-    { $inc: { sequence: 1 } },
-    { new: true, upsert: true },
-  );
-  return `#CD${1818 + counter.sequence}`;
-};
 
 // Controller for creating an invoice
 export const createInvoice = async (req, res) => {
@@ -53,8 +42,10 @@ export const createInvoice = async (req, res) => {
     };
 
     const invoiceDate = date ? new Date(date) : new Date();
+    const proformaInvoiceId = Date.now();
 
     const newInvoice = new Invoice({
+      proformaInvoiceId,
       date: invoiceDate,
       tax,
       office,
@@ -74,9 +65,6 @@ export const createInvoice = async (req, res) => {
       total: total.toFixed(2),
       balanceDue: total.toFixed(2),
     });
-
-    const proformaInvoiceId = await getNextProformaInvoiceId();
-    newInvoice.proformaInvoiceId = proformaInvoiceId;
 
     // Generate the proforma invoice HTML
     const proformaInvoiceHTML = `
@@ -275,11 +263,11 @@ export const createInvoice = async (req, res) => {
       </table>
       <div class="notes">
         <div><strong>Notes:</strong></div>
-        <div><strong>Account Name: </strong>Code Diffusion Technologies</div>
-        <div><strong>Account Type: </strong>Current Account</div>
-        <div><strong>Account Number: </strong>60374584640</div>
-        <div><strong>Bank Name: </strong>Bank of Maharashtra</div>
-        <div><strong>IFSC Code: </strong>mahb0001247</div>
+        <div><strong>Account Name: </strong>${officeLocation?.accountName || "Code Diffusion Technologies"}</div>
+        <div><strong>Account Type: </strong>${officeLocation?.accountType || "Current Account"}</div>
+        <div><strong>Account Number: </strong>${officeLocation?.accountNumber || "60374584640"}</div>
+        <div><strong>Bank Name: </strong>${officeLocation?.bankName || "Bank of Maharashtra"}</div>
+        <div><strong>IFSC Code: </strong>${officeLocation?.IFSCCode || "mahb0001247"}</div>
       </div>
     </div>
   </div>
@@ -288,7 +276,7 @@ export const createInvoice = async (req, res) => {
 </html>
     `;
 
-    const txnid = `TXN${Date.now()}`;
+    const txnid = `TXN${proformaInvoiceId}`;
     const key = process.env.PAYU_MERCHANT_KEY;
     const salt = process.env.PAYU_SALT;
     const amount = total;
@@ -347,15 +335,28 @@ export const createInvoice = async (req, res) => {
   <p><a href="${paymentLink}" style="background-color:#28a745;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Pay Now</a></p>
   <p>We look forward to proceeding with the next steps upon your confirmation.</p>
   <p>Best regards,</p>
-  <p>Abhishek Singh<br/>
-  Code Diffusion Technologies<br/>
-  +91 7827114607<br/>
-  info@codediffusion.in<br/>
-  <a href="https://www.codediffusion.in/">https://www.codediffusion.in/</a>
+  <p>Abhishek Singh</p>
+  <p>${officeLocation?.name || "Code Diffusion Technologies"}</p>
+  <p>${officeLocation?.contact || "+91-7827114607"}</p>
+  <p>${officeLocation?.email || "info@codediffusion.in"}</p>
+  <a href="${officeLocation?.websiteLink || "https://www.codediffusion.in/"}">${officeLocation?.websiteLink || "https://www.codediffusion.in/"}</a>
 `;
 
     // Generate PDF from HTML
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      headless: true,
+      executablePath: '/root/.cache/puppeteer/chrome/linux-133.0.6943.98/chrome-linux64/chrome',
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu',
+      ],
+    });
     const page = await browser.newPage();
     await page.setContent(proformaInvoiceHTML);
     const pdfPath = `proforma_invoice_${proformaInvoiceId}.pdf`;
@@ -366,7 +367,7 @@ export const createInvoice = async (req, res) => {
     const mailOptions = {
       from: `${process.env.SENDER_EMAIL_ID}`,
       to: `${email}`,
-      subject: `Proforma Invoice from Code Diffusion Technologies - ${formatDate(date)}`,
+      subject: `Proforma Invoice from ${officeLocation?.name || "Code Diffusion Technologies"} - ${formatDate(date)}`,
       html: emailHTML,
       attachments: [
         {

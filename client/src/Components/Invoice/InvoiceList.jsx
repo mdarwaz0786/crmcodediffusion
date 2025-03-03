@@ -190,13 +190,12 @@ const InvoiceList = () => {
     const exportData = data.map((entry, index) => {
       return {
         "#": index + 1 || "1",
-        "InvoiceId": entry?.invoiceId || "N/A",
+        "Office Name": entry?.office?.name || "N/A",
         "Date": formatDate(entry?.date) || "N/A",
+        "InvoiceId": entry?.invoiceId || "N/A",
         "Project Name": entry?.proformaInvoiceDetails?.projectName || entry?.project?.projectName,
         "Project Cost": entry?.proformaInvoiceDetails?.projectCost || entry?.project?.projectPrice,
         "Client Name": entry?.proformaInvoiceDetails?.clientName || entry?.project?.customer?.name,
-        "Company Name": entry?.proformaInvoiceDetails?.companyName || entry?.project?.customer?.companyName,
-        "GST Number": entry?.proformaInvoiceDetails?.GSTNumber || entry?.project?.customer?.GSTNumber,
         "Sub Total": `₹${entry?.subtotal}` || "0",
         "CGST": entry?.CGST > 0 ? `₹${entry?.CGST}` : "Not Applicable",
         "SGST": entry?.SGST > 0 ? `₹${entry?.SGST}` : "Not Applicable",
@@ -537,7 +536,7 @@ const InvoiceList = () => {
                             )
                           }
                           {
-                            (filedPermissions?.amount?.show) && (
+                            (filedPermissions?.total?.show) && (
                               <th>Total Amount</th>
                             )
                           }
@@ -578,7 +577,7 @@ const InvoiceList = () => {
                                 )
                               }
                               {
-                                (filedPermissions?.subtotal?.show) && (
+                                (filedPermissions?.total?.show) && (
                                   <td>₹{d?.total}</td>
                                 )
                               }
@@ -827,11 +826,11 @@ const InvoiceList = () => {
                   </div>
                   <div className="col-md-6 ps-4 m-0">
                     <div className="p-0 pb-1 m-0 text-dark"><strong>Notes:</strong></div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Name: </strong>Code Diffusion Technologies </div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Type: </strong>Current Account</div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Number: </strong>60374584640</div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Bank Name: </strong>Bank of Maharashtra</div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>IFSC Code: </strong>mahb0001247</div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Name: </strong>{invoice?.office?.accountName || "Code Diffusion Technologies"}</div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Type: </strong>{invoice?.office?.accountType || "Current Account"}</div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Number: </strong>{invoice?.office?.accountNumber || "60374584640"}</div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>Bank Name: </strong>{invoice?.office?.bankName || "Bank of Maharashtra"}</div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>IFSC Code: </strong>{invoice?.office?.IFSCCode || "mahb0001247"}</div>
                   </div>
                   <div className="col-md-6" />
                 </div>

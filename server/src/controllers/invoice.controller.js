@@ -1,7 +1,6 @@
 import Invoice from "../models/invoice.model.js";
 import Project from "../models/project.model.js";
 import OfficeLocation from "../models/officeLocation.model.js";
-import InvoiceId from "../models/invoiceId.model.js";
 import mongoose from "mongoose";
 import puppeteer from "puppeteer";
 import { transporter } from "../services/emailService.js";
@@ -10,16 +9,6 @@ import dotenv from "dotenv";
 import formatDate from "../utils/formatDate.js";
 
 dotenv.config();
-
-// Helper function to generate the next invoiceId
-const getNextInvoiceId = async () => {
-  const counter = await InvoiceId.findOneAndUpdate(
-    { _id: "invoiceId" },
-    { $inc: { sequence: 1 } },
-    { new: true, upsert: true },
-  );
-  return `#CD${1818 + counter.sequence}`;
-};
 
 // Controller for creating an invoice
 export const createInvoice = async (req, res) => {
@@ -49,13 +38,6 @@ export const createInvoice = async (req, res) => {
       subtotal = subtotal / 1.18;
     };
 
-    const projectName = projectDetails?.projectName;
-    const customerState = projectDetails?.customer?.state;
-    const clientName = projectDetails?.customer?.name;
-    const GSTNumber = projectDetails?.customer?.GSTNumber;
-    const shipTo = projectDetails?.customer?.address;
-    const email = projectDetails?.customer?.email;
-
     if (customerState === "Delhi") {
       CGST = subtotal * 0.09;
       SGST = subtotal * 0.09;
@@ -65,10 +47,20 @@ export const createInvoice = async (req, res) => {
       total = subtotal + IGST;
     };
 
+    const projectName = projectDetails?.projectName;
+    const customerState = projectDetails?.customer?.state;
+    const clientName = projectDetails?.customer?.name;
+    const companyName = projectDetails?.customer?.companyName;
+    const GSTNumber = projectDetails?.customer?.GSTNumber;
+    const shipTo = projectDetails?.customer?.address;
+    const email = projectDetails?.customer?.email;
+    const invoiceId = Date.now();
+
     const newInvoice = new Invoice({
-      project,
-      tax,
+      invoiceId,
       date,
+      tax,
+      project,
       office,
       amount: subtotal.toFixed(2),
       subtotal: subtotal.toFixed(2),
@@ -79,9 +71,6 @@ export const createInvoice = async (req, res) => {
       balanceDue: total.toFixed(2)
     });
 
-    const invoiceId = await getNextInvoiceId();
-    newInvoice.invoiceId = invoiceId;
-
     // Generate the tax invoice HTML
     const taxInvoiceHTML = `
     <!DOCTYPE html>
@@ -90,7 +79,7 @@ export const createInvoice = async (req, res) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invoice</title>
+  <title>Tax Invoice</title>
     <style>
       * {
       margin: 0;
@@ -226,7 +215,7 @@ export const createInvoice = async (req, res) => {
       <div class="row">
         <div class="billing-address">
           <div><strong>Bill To:</strong></div>
-          <div>${clientName}</div>
+          <div>${companyName || clientName}</div>
           <div><strong>GST No: ${GSTNumber}</strong></div>
         </div>
         <div class="shipping-address">
@@ -279,11 +268,11 @@ export const createInvoice = async (req, res) => {
       </table>
       <div class="notes">
         <div><strong>Notes:</strong></div>
-        <div><strong>Account Name: </strong>Code Diffusion Technologies</div>
-        <div><strong>Account Type: </strong>Current Account</div>
-        <div><strong>Account Number: </strong>60374584640</div>
-        <div><strong>Bank Name: </strong>Bank of Maharashtra</div>
-        <div><strong>IFSC Code: </strong>mahb0001247</div>
+        <div><strong>Account Name: </strong>${officeLocation?.accountName || "Code Diffusion Technologies"}</div>
+        <div><strong>Account Type: </strong>${officeLocation?.accountType || "Current Account"}</div>
+        <div><strong>Account Number: </strong>${officeLocation?.accountNumber || "60374584640"}</div>
+        <div><strong>Bank Name: </strong>${officeLocation?.bankName || "Bank of Maharashtra"}</div>
+        <div><strong>IFSC Code: </strong>${officeLocation?.IFSCCode || "mahb0001247"}</div>
       </div>
     </div>
   </div>
@@ -317,24 +306,23 @@ export const createInvoice = async (req, res) => {
     const mailOptions = {
       from: `${process.env.SENDER_EMAIL_ID}`,
       to: `${email}`,
-      subject: `Tax Invoice from Code Diffusion Technologies - ${formatDate(date)}`,
+      subject: `Tax Invoice from ${officeLocation?.name || "Code Diffusion Technologies"} - ${formatDate(date)}`,
       text: `Dear ${clientName},
 
 We hope you’re doing well.
 
-Please find attached the tax invoice for the services/products provided by Code Diffusion Technologies. The invoice includes a detailed breakdown of charges, applicable taxes, and payment terms for your reference.
+Please find attached the tax invoice for the services/products provided by ${officeLocation?.name || "Code Diffusion Technologies"}. The invoice includes a detailed breakdown of charges, applicable taxes, and payment terms for your reference.
 
 Kindly review the invoice and let us know if you have any questions or need further assistance. If everything is in order, we would appreciate it if you could process the payment by the due date mentioned in the invoice.
 
-Thank you for choosing Code Diffusion Technologies. We look forward to continuing our collaboration.
+Thank you for choosing ${officeLocation?.name || "Code Diffusion Technologies"}. We look forward to continuing our collaboration.
 
 Best regards,  
-Abhishek Singh  
-Code Diffusion Technologies  
-+91 7827114607  
-info@codediffusion.in  
-https://www.codediffusion.in/`,
-
+Abhishek Singh
+${officeLocation?.name || "Code Diffusion Technologies"} 
+${officeLocation?.contact || "+91-7827114607"}
+${officeLocation?.email || "info@codediffusion.in"}
+${officeLocation?.websiteLink || "https://www.codediffusion.in/"}`,
       attachments: [
         {
           filename: pdfPath,

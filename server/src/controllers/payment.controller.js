@@ -1,6 +1,5 @@
 import Payment from "../models/payment.model.js";
 import Invoice from "../models/invoice.model.js";
-import InvoiceId from "../models/invoiceId.model.js";
 import axios from "axios";
 import dotenv from "dotenv";
 import crypto from "crypto";
@@ -10,16 +9,6 @@ import fs from "fs";
 import formatDate from "../utils/formatDate.js";
 
 dotenv.config();
-
-// Helper function to generate the next invoiceId
-const getNextInvoiceId = async () => {
-  const counter = await InvoiceId.findOneAndUpdate(
-    { _id: "invoiceId" },
-    { $inc: { sequence: 1 } },
-    { new: true, upsert: true },
-  );
-  return `#CD${1818 + counter.sequence}`;
-};
 
 export const paymentSuccess = async (req, res) => {
   const { txnid } = req.body;
@@ -105,7 +94,10 @@ export const paymentSuccess = async (req, res) => {
         shipTo: paymentDetail?.shipTo,
       };
 
+      const invoiceId = Date.now();
+
       const newInvoice = new Invoice({
+        invoiceId,
         tax: paymentDetail?.tax,
         date: formattedDate,
         office: paymentDetail?.office?._id,
@@ -118,9 +110,6 @@ export const paymentSuccess = async (req, res) => {
         balanceDue: paymentDetail?.amount,
         proformaInvoiceDetails,
       });
-
-      const invoiceId = await getNextInvoiceId();
-      newInvoice.invoiceId = invoiceId;
 
       // Generate the tax invoice HTML
       const taxInvoiceHTML = `
@@ -319,11 +308,11 @@ export const paymentSuccess = async (req, res) => {
       </table>
       <div class="notes">
         <div><strong>Notes:</strong></div>
-        <div><strong>Account Name: </strong>Code Diffusion Technologies</div>
-        <div><strong>Account Type: </strong>Current Account</div>
-        <div><strong>Account Number: </strong>60374584640</div>
-        <div><strong>Bank Name: </strong>Bank of Maharashtra</div>
-        <div><strong>IFSC Code: </strong>mahb0001247</div>
+        <div><strong>Account Name: </strong>${paymentDetail?.office?.accountName || "Code Diffusion Technologies"}</div>
+        <div><strong>Account Type: </strong>${paymentDetail?.office?.accountType || "Current Account"}</div>
+        <div><strong>Account Number: </strong>${paymentDetail?.office?.accountNumber || "60374584640"}</div>
+        <div><strong>Bank Name: </strong>${paymentDetail?.office?.bankName || "Bank of Maharashtra"}</div>
+        <div><strong>IFSC Code: </strong>${paymentDetail?.office?.IFSCCode || "mahb0001247"}</div>
       </div>
     </div>
   </div>
@@ -357,24 +346,23 @@ export const paymentSuccess = async (req, res) => {
       const mailOptions = {
         from: `${process.env.SENDER_EMAIL_ID}`,
         to: `${paymentDetail?.email}`,
-        subject: `Tax Invoice from Code Diffusion Technologies - ${formatDate(formattedDate)}`,
+        subject: `Tax Invoice from ${paymentDetail?.office?.name || "Code Diffusion Technologies"}  - ${formatDate(formattedDate)}`,
         text: `Dear ${paymentDetail?.clientName},
 
 We hope you’re doing well.
 
-Please find attached the tax invoice for the services/products provided by Code Diffusion Technologies. The invoice includes a detailed breakdown of charges, applicable taxes, and payment terms for your reference.
+Please find attached the tax invoice for the services/products provided by ${paymentDetail?.office?.name || "Code Diffusion Technologies"}. The invoice includes a detailed breakdown of charges, applicable taxes, and payment terms for your reference.
 
 Kindly review the invoice and let us know if you have any questions or need further assistance. If everything is in order, we would appreciate it if you could process the payment by the due date mentioned in the invoice.
 
-Thank you for choosing Code Diffusion Technologies. We look forward to continuing our collaboration.
+Thank you for choosing ${paymentDetail?.office?.name || "Code Diffusion Technologies"} . We look forward to continuing our collaboration.
 
 Best regards,  
 Abhishek Singh  
-Code Diffusion Technologies  
-+91 7827114607  
-info@codediffusion.in  
-https://www.codediffusion.in/`,
-
+${paymentDetail?.office?.name || "Code Diffusion Technologies"} 
+${paymentDetail?.office?.contact || "+91-7827114607"}
+${paymentDetail?.office?.email || "info@codediffusion.in"}
+${paymentDetail?.office?.websiteLink || "https://www.codediffusion.in/"}`,
         attachments: [
           {
             filename: pdfPath,

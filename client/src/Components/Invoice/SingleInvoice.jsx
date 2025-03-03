@@ -47,7 +47,7 @@ const SingleInvoice = () => {
   const exportInvoiceAsPdf = () => {
     const element = document.querySelector("#exportInvoice");
     const options = {
-      filename: `${data?.invoiceId}-${data?.project?.customer?.companyName}-Tax-Invoice.pdf`,
+      filename: `${data?.invoiceId}-${data?.proformaInvoiceDetails?.companyName || data?.project?.customer?.companyName}-Tax-Invoice.pdf`,
       margin: [0, 0, 10, 0],
       html2canvas: {
         useCORS: true,
@@ -224,11 +224,11 @@ const SingleInvoice = () => {
             </div>
             <div className="col-md-6 ps-4 m-0">
               <div className="p-0 pb-1 m-0 text-dark"><strong>Notes:</strong></div>
-              <div className="p-0 pb-1 m-0 text-dark"><strong>Account Name: </strong>Code Diffusion Technologies </div>
-              <div className="p-0 pb-1 m-0 text-dark"><strong>Account Type: </strong>Current Account</div>
-              <div className="p-0 pb-1 m-0 text-dark"><strong>Account Number: </strong>60374584640</div>
-              <div className="p-0 pb-1 m-0 text-dark"><strong>Bank Name: </strong>Bank of Maharashtra</div>
-              <div className="p-0 pb-1 m-0 text-dark"><strong>IFSC Code: </strong>mahb0001247</div>
+              <div className="p-0 pb-1 m-0 text-dark"><strong>Account Name: </strong>{data?.office?.accountName || "Code Diffusion Technologies"}</div>
+              <div className="p-0 pb-1 m-0 text-dark"><strong>Account Type: </strong>{data?.office?.accountType || "Current Account"}</div>
+              <div className="p-0 pb-1 m-0 text-dark"><strong>Account Number: </strong>{data?.office?.accountNumber || "60374584640"}</div>
+              <div className="p-0 pb-1 m-0 text-dark"><strong>Bank Name: </strong>{data?.office?.bankName || "Bank of Maharashtra"}</div>
+              <div className="p-0 pb-1 m-0 text-dark"><strong>IFSC Code: </strong>{data?.office?.IFSCCode || "mahb0001247"}</div>
             </div>
             <div className="col-md-6" />
           </div>

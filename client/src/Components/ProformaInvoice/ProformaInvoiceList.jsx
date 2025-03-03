@@ -184,11 +184,12 @@ const ProformaInvoiceList = () => {
     const exportData = data?.map((entry, index) => {
       return {
         "#": index + 1 || "1",
-        "InvoiceId": entry?.proformaInvoiceId || "N/A",
-        "Client Name": entry?.clientName || "N/A",
+        "Office Name": entry?.office?.name || "N/A",
         "Date": formatDate(entry?.date) || "N/A",
+        "InvoiceId": entry?.proformaInvoiceId || "N/A",
         "Project Name": entry?.projectName || "N/A",
         "Project Cost": `₹${entry?.projectCost}` || "0",
+        "Client Name": entry?.clientName || "N/A",
         "Sub Total": `₹${entry?.subtotal}` || "0",
         "CGST": entry?.CGST > 0 ? `₹${entry?.CGST}` : "Not Applicable",
         "SGST": entry?.SGST > 0 ? `₹${entry?.SGST}` : "Not Applicable",
@@ -593,24 +594,6 @@ const ProformaInvoiceList = () => {
                                   </Link>
                                   <div className="dropdown-menu dropdown-menu-right">
                                     {
-                                      (permissions?.update) && (
-                                        <hr className="horizontal-line" />
-                                      )
-                                    }
-                                    {/* {
-                                      (permissions?.update) && (
-                                        <Link to={`/edit-proforma-invoice/${d?._id}`} className="dropdown-item">
-                                          <i className="ti ti-edit text-blue"></i>
-                                          Update
-                                        </Link>
-                                      )
-                                    }
-                                    {
-                                      (permissions?.delete) && (
-                                        <hr className="horizontal-line" />
-                                      )
-                                    } */}
-                                    {
                                       (permissions?.delete) && (
                                         <Link to="#" className="dropdown-item" onClick={() => handleDelete(d?._id)}>
                                           <i className="ti ti-trash text-danger"></i>
@@ -706,7 +689,7 @@ const ProformaInvoiceList = () => {
                   <div className="invoice-heading">
                     <div className="col-md-6">
                       <div className="logo mt-4 ps-4 mb-3">
-                        <img src={logo} width="150px" alt="logo" />
+                        <img src={invoice?.office?.logo || logo} width="150px" alt="logo" />
                       </div>
                     </div>
                     <div className="col-md-6 px-4">
@@ -718,12 +701,12 @@ const ProformaInvoiceList = () => {
                   {/* Invoice Details */}
                   <div className="invoice row">
                     <div className="col-md-6 p-5 pt-0">
-                      <div className="p-0 m-0"><strong>Code Diffusion Technologies</strong></div>
+                      <div className="p-0 m-0"><strong>{invoice?.office?.name || "Code Diffusion Technologies"}</strong></div>
                       <div>Address :</div>
-                      <div>1020, Kirti Sikhar Tower,</div>
-                      <div>District Centre, Janakpuri,</div>
-                      <div>New Delhi.</div>
-                      <div><strong>GST No: O7FRWPS7288J3Z</strong></div>
+                      <div>{invoice?.office?.addressLine1 || "1020, Kirti Sikhar Tower"},</div>
+                      <div>{invoice?.office?.addressLine2 || "District Centre, Janakpuri"},</div>
+                      <div>{invoice?.office?.addressLine3 || "New Delhi"}.</div>
+                      <div><strong>GST No: {invoice?.office?.GSTNumber || "O7FRWPS7288J3ZC"}</strong></div>
                     </div>
                     <div className="col-md-6 p-5 pt-0">
                       <div className="ubic-code d-flex justify-content-end">
@@ -746,7 +729,7 @@ const ProformaInvoiceList = () => {
                           <h5 style={{ color: "#262a2a7a" }}>Bill To:</h5>
                           <div>
                             <strong style={{ color: "#000" }}>
-                              {invoice?.clientName}
+                              {invoice?.companyName || invoice?.clientName}
                             </strong>
                           </div>
                           <div><strong>GST No: {invoice?.GSTNumber}</strong></div>
@@ -836,11 +819,11 @@ const ProformaInvoiceList = () => {
                   </div>
                   <div className="col-md-6 ps-4 m-0">
                     <div className="p-0 pb-1 m-0 text-dark"><strong>Notes:</strong></div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Name: </strong>Code Diffusion Technologies </div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Type: </strong>Current Account</div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Number: </strong>60374584640</div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>Bank Name: </strong>Bank of Maharashtra</div>
-                    <div className="p-0 pb-1 m-0 text-dark"><strong>IFSC Code: </strong>mahb0001247</div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Name: </strong>{invoice?.office?.accountName || "Code Diffusion Technologies"}</div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Type: </strong>{invoice?.office?.accountType || "Current Account"}</div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>Account Number: </strong>{invoice?.office?.accountNumber || "60374584640"}</div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>Bank Name: </strong>{invoice?.office?.bankName || "Bank of Maharashtra"}</div>
+                    <div className="p-0 pb-1 m-0 text-dark"><strong>IFSC Code: </strong>{invoice?.office?.IFSCCode || "mahb0001247"}</div>
                   </div>
                   <div className="col-md-6" />
                 </div>

@@ -9,6 +9,11 @@ export const createOfficeLocation = async (req, res) => {
       email,
       contact,
       GSTNumber,
+      accountNumber,
+      accountName,
+      accountType,
+      bankName,
+      IFSCCode,
       latitude,
       longitude,
       attendanceRadius,
@@ -23,12 +28,18 @@ export const createOfficeLocation = async (req, res) => {
       !name ||
       !email ||
       !contact ||
+      !GSTNumber ||
+      !accountNumber ||
+      !accountName ||
+      !accountType ||
+      !bankName ||
+      !IFSCCode ||
       !latitude ||
       !longitude ||
       !attendanceRadius ||
       !addressLine1
     ) {
-      return res.status(400).json({ success: false, message: "All fields are required." });
+      return res.status(400).json({ success: false, message: "Fill in required fields." });
     };
 
     // Get the logo file from the request
@@ -45,6 +56,11 @@ export const createOfficeLocation = async (req, res) => {
       email,
       contact,
       GSTNumber,
+      accountNumber,
+      accountName,
+      accountType,
+      bankName,
+      IFSCCode,
       latitude,
       longitude,
       attendanceRadius,
@@ -105,6 +121,11 @@ export const updateOfficeLocation = async (req, res) => {
       email,
       contact,
       GSTNumber,
+      accountNumber,
+      accountName,
+      accountType,
+      bankName,
+      IFSCCode,
       latitude,
       longitude,
       attendanceRadius,
@@ -119,6 +140,11 @@ export const updateOfficeLocation = async (req, res) => {
       email,
       contact,
       GSTNumber,
+      accountNumber,
+      accountName,
+      accountType,
+      bankName,
+      IFSCCode,
       latitude,
       longitude,
       attendanceRadius,

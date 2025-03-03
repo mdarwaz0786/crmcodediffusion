@@ -44,10 +44,8 @@ import AddTechnology from "./Components/Project/Technology/AddTechnology.jsx";
 import EditTechnology from "./Components/Project/Technology/EditTechnology.jsx";
 import InvoiceList from "./Components/Invoice/InvoiceList.jsx";
 import AddInvoice from "./Components/Invoice/AddInvoice.jsx";
-import EditInvoice from "./Components/Invoice/EditInvoice.jsx";
 import SingleInvoice from "./Components/Invoice/SingleInvoice.jsx";
 import ProformaInvoiceList from "./Components/ProformaInvoice/ProformaInvoiceList.jsx";
-import EditProformaInvoice from "./Components/ProformaInvoice/EditProformaInvoice.jsx";
 import AddProformaInvoice from "./Components/ProformaInvoice/AddProformaInvoice.jsx";
 import SingleProformaInvoice from "./Components/ProformaInvoice/SingleProformaInvoice.jsx";
 import Profile from "./Components/Profile/Profile.jsx";
@@ -141,11 +139,9 @@ const App = () => {
           <Route path="edit-project-priority/:id" element={<EditProjectPriority />} />
           <Route path="invoice" element={<InvoiceList />} />
           <Route path="add-invoice" element={<AddInvoice />} />
-          <Route path="edit-invoice/:id" element={<EditInvoice />} />
           <Route path="single-invoice/:id" element={<SingleInvoice />} />
           <Route path="proforma-invoice" element={<ProformaInvoiceList />} />
           <Route path="add-proforma-invoice" element={<AddProformaInvoice />} />
-          <Route path="edit-proforma-invoice/:id" element={<EditProformaInvoice />} />
           <Route path="single-proforma-invoice/:id" element={<SingleProformaInvoice />} />
           <Route path="purchase-invoice" element={<PurchaseInvoice />} />
           <Route path="add-purchase-invoice" element={<AddPurchaseInvoice />} />
