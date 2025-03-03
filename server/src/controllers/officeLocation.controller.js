@@ -6,6 +6,7 @@ export const createOfficeLocation = async (req, res) => {
     const {
       uniqueCode,
       name,
+      websiteLink,
       email,
       contact,
       GSTNumber,
@@ -26,6 +27,7 @@ export const createOfficeLocation = async (req, res) => {
     if (
       !uniqueCode ||
       !name ||
+      !websiteLink ||
       !email ||
       !contact ||
       !GSTNumber ||
@@ -37,9 +39,11 @@ export const createOfficeLocation = async (req, res) => {
       !latitude ||
       !longitude ||
       !attendanceRadius ||
-      !addressLine1
+      !addressLine1 ||
+      !addressLine2 ||
+      !addressLine3
     ) {
-      return res.status(400).json({ success: false, message: "Fill in required fields." });
+      return res.status(400).json({ success: false, message: "All fields are required." });
     };
 
     // Get the logo file from the request
@@ -53,6 +57,7 @@ export const createOfficeLocation = async (req, res) => {
     const officeLocation = new OfficeLocation({
       uniqueCode,
       name,
+      websiteLink,
       email,
       contact,
       GSTNumber,
@@ -118,6 +123,7 @@ export const updateOfficeLocation = async (req, res) => {
     const {
       uniqueCode,
       name,
+      websiteLink,
       email,
       contact,
       GSTNumber,
@@ -137,6 +143,7 @@ export const updateOfficeLocation = async (req, res) => {
     let updateData = {
       uniqueCode,
       name,
+      websiteLink,
       email,
       contact,
       GSTNumber,
