@@ -1,13 +1,15 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-extra-semi */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/authContext.jsx';
 import Preloader from '../../Preloader';
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-const AddOffice = () => {
+const EditOffice = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const { validToken, team, isLoading } = useAuth();
   const [imagePreview, setImagePreview] = useState(null);
@@ -33,6 +35,55 @@ const AddOffice = () => {
     addressLine2: '',
     addressLine3: '',
   });
+
+  const fetchSingleOffice = async (id) => {
+    try {
+      const response = await axios.get(`${base_url}/api/v1/officeLocation/single-officeLocation/${id}`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        const office = response?.data?.officeLocation;
+        setFormData((prevData) => ({
+          ...prevData,
+          uniqueCode: office?.uniqueCode || '',
+          name: office?.name || '',
+          logo: office?.logo || null,
+          websiteLink: office?.websiteLink || '',
+          email: office?.email || '',
+          noReplyEmail: office?.noReplyEmail || '',
+          noReplyEmailAppPassword: office?.noReplyEmailAppPassword || '',
+          contact: office?.contact || '',
+          GSTNumber: office?.GSTNumber || '',
+          accountNumber: office?.accountNumber || '',
+          accountName: office?.accountName || '',
+          accountType: office.accountType || '',
+          bankName: office?.bankName || '',
+          IFSCCode: office?.IFSCCode || '',
+          latitude: office?.latitude || '',
+          longitude: office?.longitude || '',
+          attendanceRadius: office?.attendanceRadius || '',
+          addressLine1: office?.addressLine1 || '',
+          addressLine2: office?.addressLine2 || '',
+          addressLine3: office?.addressLine3 || '',
+        }));
+
+        if (office?.logo) {
+          setImagePreview(office.logo);
+        };
+      };
+    } catch (error) {
+      console.log(error.message)
+    };
+  };
+
+  useEffect(() => {
+    if (id, validToken) {
+      fetchSingleOffice(id)
+    };
+  }, [id, validToken]);
 
   const validateForm = () => {
     for (const field in formData) {
@@ -101,7 +152,7 @@ const AddOffice = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, id) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -109,7 +160,7 @@ const AddOffice = () => {
     };
 
     try {
-      const response = await axios.post(`${base_url}/api/v1/officeLocation/create-officeLocation`, formData, {
+      const response = await axios.put(`${base_url}/api/v1/officeLocation/update-officeLocation/${id}`, formData, {
         headers: {
           Authorization: validToken,
           "Content-Type": "multipart/form-data",
@@ -140,8 +191,8 @@ const AddOffice = () => {
           addressLine3: '',
         });
         setImagePreview(null);
-        toast.success("Submitted successfully");
-        Navigate(-1);
+        toast.success("Update successfully");
+        navigate(-1);
       };
     } catch (error) {
       toast.error(error?.response?.data?.message);
@@ -160,7 +211,7 @@ const AddOffice = () => {
     <div className="page-wrapper" style={{ paddingBottom: "2rem" }}>
       <div className="content">
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <h4>Add Office</h4>
+          <h4>Update Office</h4>
           <Link to="#" onClick={() => navigate(-1)}>
             <button className="btn btn-primary">Back</button>
           </Link>
@@ -462,11 +513,11 @@ const AddOffice = () => {
 
         <div className="text-end">
           <Link to="#" style={{ marginRight: "1rem" }} onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
-          <Link to="#" className="btn btn-primary" onClick={handleSubmit}>Submit</Link>
+          <Link to="#" className="btn btn-primary" onClick={(e) => handleSubmit(e, id)}>Submit</Link>
         </div>
       </div>
     </div>
   );
 };
 
-export default AddOffice;
+export default EditOffice;

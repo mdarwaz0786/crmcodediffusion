@@ -50,6 +50,7 @@ const Sidebar = () => {
                   <li><Link to="/" className={currentPath === "/" ? "active" : ""} id={isMobile && active === "dashboard" ? "mobile_btn" : ""} onClick={() => handleActive("dashboard")}><i className="ti ti-layout-2" style={{ color: currentPath === "/" ? "" : "#FFA201" }} /><span>Dashboard</span></Link></li>
                 </ul>
               </li>
+
               <li>
                 {
                   (permissions?.project?.access ||
@@ -179,11 +180,6 @@ const Sidebar = () => {
                   }
                   {
                     (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr") && (
-                      <li><Link to="/holiday" className={currentPath === "/holiday" ? "active" : ""} id={isMobile && active === "holiday" ? "mobile_btn" : ""} onClick={() => handleActive("holiday")}><i style={{ color: currentPath === "/holiday" ? "" : "#FFA201" }} className="ti ti-sun"></i><span>Holiday</span></Link></li>
-                    )
-                  }
-                  {
-                    (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr") && (
                       <li><Link to="/work-detail" className={currentPath === "/work-detail" ? "active" : ""} id={isMobile && active === "workDetail" ? "mobile_btn" : ""} onClick={() => handleActive("workDetail")}><i style={{ color: currentPath === "/work-detail" ? "" : "#FFA201" }} className="ti ti-clipboard"></i><span>Work Summary</span></Link></li>
                     )
                   }
@@ -205,6 +201,26 @@ const Sidebar = () => {
                   {
                     (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr") && (
                       <li><Link to="/comp-off" className={currentPath === "/comp-off" ? "active" : ""} id={isMobile && active === "CompOff" ? "mobile_btn" : ""} onClick={() => handleActive("CompOff")}><i style={{ color: currentPath === "/comp-off" ? "" : "#FFA201" }} className="ti ti-user-plus"></i><span>Comp Off</span></Link></li>
+                    )
+                  }
+                </ul>
+              </li>
+
+              <li>
+                {
+                  (team?.role?.name?.toLowerCase() === "admin") && (
+                    <h6 className="submenu-hdr">Office</h6>
+                  )
+                }
+                <ul>
+                  {
+                    (team?.role?.name?.toLowerCase() === "admin") && (
+                      <li><Link to="/office" className={currentPath === "/office" ? "active" : ""} id={isMobile && active === "office" ? "mobile_btn" : ""} onClick={() => handleActive("office")}><i style={{ color: currentPath === "/office" ? "" : "#FFA201" }} className="ti ti-building"></i><span>Offices</span></Link></li>
+                    )
+                  }
+                  {
+                    (team?.role?.name?.toLowerCase() === "admin") && (
+                      <li><Link to="/holiday" className={currentPath === "/holiday" ? "active" : ""} id={isMobile && active === "holiday" ? "mobile_btn" : ""} onClick={() => handleActive("holiday")}><i style={{ color: currentPath === "/holiday" ? "" : "#FFA201" }} className="ti ti-sun"></i><span>Holiday</span></Link></li>
                     )
                   }
                 </ul>

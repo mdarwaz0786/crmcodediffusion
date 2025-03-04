@@ -84,7 +84,10 @@ import Ticket from "./Components/Ticket/Ticket.jsx";
 import SingleTicket from "./Components/Ticket/SingleTicket.jsx";
 import PaymentList from "./Components/Payment/PaymentList.jsx";
 import PaymentDetailPage from "./Components/Payment/PaymentDetailPage.jsx";
+import Office from "./Components/Office/Office.jsx";
 import AddOffice from "./Components/Office/AddOffice.jsx";
+import EditOffice from "./Components/Office/EditOffice.jsx";
+import SingleOffice from "./Components/Office/SingleOffice.jsx";
 import Test from "./Test.jsx";
 
 const App = () => {
@@ -174,7 +177,10 @@ const App = () => {
           <Route path="single-ticket/:id" element={<SingleTicket />} />
           <Route path="payment" element={<PaymentList />} />
           <Route path="single-payment/:id/:txnid" element={<PaymentDetailPage />} />
+          <Route path="office" element={<Office />} />
           <Route path="add-office" element={<AddOffice />} />
+          <Route path="edit-office/:id" element={<EditOffice />} />
+          <Route path="single-office/:id" element={<SingleOffice />} />
           <Route path="test" element={<Test />} />
         </Route>
         <Route path="/login" element={<Login />} />

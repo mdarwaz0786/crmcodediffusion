@@ -92,13 +92,56 @@ export const createOfficeLocation = async (req, res) => {
 // Get all office locations
 export const fetchAllOfficeLocation = async (req, res) => {
   try {
-    const officeLocation = await OfficeLocation.find();
+    let filter = {};
+    let sort = {};
+
+    // Handle searching across all fields
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search.trim(), 'i');
+      filter.$or = [
+        { uniqueCode: { $regex: searchRegex } },
+        { addressLine1: { $regex: searchRegex } },
+        { addressLine2: { $regex: searchRegex } },
+        { addressLine3: { $regex: searchRegex } },
+      ];
+    };
+
+    // Handle name search
+    if (req.query.name) {
+      filter.uniqueCode = { $regex: new RegExp(req.query.name.trim(), 'i') };
+    };
+
+    // Handle name filter
+    if (req.query.nameFilter) {
+      filter.uniqueCode = { $in: Array.isArray(req.query.nameFilter) ? req.query.nameFilter : [req.query.nameFilter] };
+    };
+
+    // Handle sorting
+    if (req.query.sort === 'Ascending') {
+      sort = { createdAt: 1 };
+    } else {
+      sort = { createdAt: -1 };
+    };
+
+    // Handle pagination
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+    const skip = (page - 1) * limit;
+
+    const officeLocation = await OfficeLocation
+      .find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .exec();
 
     if (!officeLocation) {
       return res.status(404).json({ success: false, message: "Office location not found." });
     };
 
-    return res.status(200).json({ success: true, officeLocation });
+    const totalCount = await OfficeLocation.countDocuments(filter);
+
+    return res.status(200).json({ success: true, officeLocation, totalCount });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   };
@@ -109,7 +152,8 @@ export const fetchSingleOfficeLocation = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const officeLocation = await OfficeLocation.findById(id);
+    const officeLocation = await OfficeLocation
+      .findById(id);
 
     if (!officeLocation) {
       return res.status(404).json({ success: false, message: "Office location not found." });
