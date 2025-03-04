@@ -71,7 +71,7 @@ const EditOffice = () => {
         }));
 
         if (office?.logo) {
-          setImagePreview(office.logo);
+          setImagePreview(office?.logo);
         };
       };
     } catch (error) {
@@ -191,7 +191,7 @@ const EditOffice = () => {
           addressLine3: '',
         });
         setImagePreview(null);
-        toast.success("Update successfully");
+        toast.success("Updated successfully");
         navigate(-1);
       };
     } catch (error) {
