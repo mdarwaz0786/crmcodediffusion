@@ -124,11 +124,11 @@ const SingleTicket = () => {
             <h2 className="h4 mb-0 text-primary">🎫 Ticket Details</h2>
             <div className="d-flex flex-column align-items-end">
               <div style={{ marginBottom: "0.5rem" }}>
-                <strong>Status:</strong>{" "}
+                <strong>Ticket Status:</strong>{" "}
                 <span className={`badge ${getStatusColor(data?.status)}`}>{data?.status}</span>
               </div>
               <div style={{ marginBottom: "0.5rem" }}>
-                <strong>Priority:</strong>{" "}
+                <strong>Ticket Priority:</strong>{" "}
                 <span className={`badge ${getPriorityColor(data?.priority)}`}>{data?.priority}</span>
               </div>
               <div>
@@ -159,7 +159,7 @@ const SingleTicket = () => {
 
           <div className="row g-4">
             <div className="col-md-6">
-              <h6 className="text-muted">Title</h6>
+              <h6 className="text-muted">Ticket Title</h6>
               <p className="h5 text-primary mb-0">{data?.title}</p>
             </div>
             <div className="col-md-6">

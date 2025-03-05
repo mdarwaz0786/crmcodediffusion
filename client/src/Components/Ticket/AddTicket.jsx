@@ -112,13 +112,13 @@ const AddTicket = () => {
         <div className="row">
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label">Title <span className="text-danger">*</span></label>
+              <label className="col-form-label">Ticket Title <span className="text-danger">*</span></label>
               <input type="text" className="form-control" value={title} onChange={(e) => setTitle(e.target.value)} />
             </div>
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label">Project <span className="text-danger">*</span></label>
+              <label className="col-form-label">Project Name <span className="text-danger">*</span></label>
               <select className="form-select" value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)}>
                 <option value="">Select</option>
                 {project?.map((p) => (<option key={p?._id} value={p?._id}>{p?.projectName}</option>))}
@@ -127,7 +127,7 @@ const AddTicket = () => {
           </div>
           <div className="col-md-6">
             <div className="form-wrap">
-              <label className="col-form-label">Priority <span className="text-danger">*</span></label>
+              <label className="col-form-label">Ticket Priority <span className="text-danger">*</span></label>
               <select className="form-select" value={priority} onChange={(e) => setPriority(e.target.value)}>
                 <option value="">Select</option>
                 <option value="Low">Low</option>

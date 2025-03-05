@@ -405,7 +405,7 @@ const Ticket = () => {
                           }
                           {
                             (filedPermissions?.ticketId?.show) && (
-                              <th>TicketId</th>
+                              <th>Ticket ID</th>
                             )
                           }
                           {
@@ -420,7 +420,7 @@ const Ticket = () => {
                           }
                           {
                             (filedPermissions?.project?.show) && (
-                              <th>Project</th>
+                              <th>Project Name</th>
                             )
                           }
                           {
