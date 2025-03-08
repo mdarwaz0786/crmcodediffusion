@@ -192,6 +192,7 @@ export const createSalary = async (req, res) => {
       employeeId: emp?._id,
       employeeName: emp?.name,
       monthlySalary,
+      workingHoursPerDay,
       totalSalary: totalSalary.toFixed(2),
       totalDeduction: totalDeduction.toFixed(2),
       dailySalary: dailySalary.toFixed(2),
@@ -681,7 +682,8 @@ export const getSalaryById = async (req, res) => {
 // Update a salary record by ID
 export const updateSalary = async (req, res) => {
   try {
-    const updatedSalary = await Salary.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const updatedSalary = await Salary
+      .findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
 
     if (!updatedSalary) {
       return res.status(404).json({ success: false, message: "Salary record not found." });
@@ -696,121 +698,14 @@ export const updateSalary = async (req, res) => {
 // Delete a salary record by ID
 export const deleteSalary = async (req, res) => {
   try {
-    const deletedSalary = await Salary.findByIdAndDelete(req.params.id);
+    const deletedSalary = await Salary
+      .findByIdAndDelete(req.params.id);
 
     if (!deletedSalary) {
       return res.status(404).json({ success: false, message: "Salary record not found." });
     };
 
     return res.status(200).json({ success: true, message: "Salary record deleted successfully." });
-  } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
-  };
-};
-
-// Fetch monthly salary for employee
-export const fetchMonthlySalary = async (req, res) => {
-  try {
-    const { month } = req.query;
-
-    if (!month) {
-      return res.status(400).json({ success: false, message: "Month in YYYY-MM format is required." });
-    };
-
-    const employees = await Team.find();
-
-    if (!employees || employees?.length === 0) {
-      return res.status(400).json({ success: false, message: "Employees not found." });
-    };
-
-    const salaryData = await Promise.all(
-      employees?.map(async (employee) => {
-        const monthlySalary = parseFloat(employee?.monthlySalary);
-        const [requiredHours, requiredMinutes] = employee?.workingHoursPerDay?.split(":")?.map(Number);
-        const dailyThreshold = requiredHours * 60 + requiredMinutes;
-
-        // Calculate the start and end dates for the month
-        const [year, monthIndex] = month.split("-").map(Number);
-        let startDate = new Date(year, monthIndex - 1, 1);
-        let endDate = new Date(year, monthIndex, 0);
-
-        // Convert start and end dates to IST
-        startDate = convertToIST(startDate);
-        endDate = convertToIST(endDate);
-
-        // Fetch Sunday, Holiday and Comp Off records
-        const sundayHolidayCompOffRecords = await Attendance.find({
-          employee: employee?._id,
-          attendanceDate: { $gte: startDate?.toISOString()?.split("T")[0], $lte: endDate?.toISOString()?.split("T")[0] },
-          status: { $in: ["Sunday", "Holiday", "Comp Off"] },
-        });
-
-        const totalSundaysHolidayCompoff = sundayHolidayCompOffRecords?.length;
-
-        const daysInMonth = new Date(year, monthIndex, 0).getDate();
-        const companyWorkingDays = daysInMonth - totalSundaysHolidayCompoff;
-
-        const totalCompanyWorkingMinutes = companyWorkingDays * dailyThreshold;
-
-        // Fetch attendance records
-        const attendanceRecords = await Attendance.find({
-          employee: employee?._id,
-          attendanceDate: { $gte: startDate?.toISOString()?.split("T")[0], $lte: endDate?.toISOString()?.split("T")[0] },
-        });
-
-        let totalMinutesWorked = 0;
-        let onLeave = 0;
-        let compOff = 0;
-
-        attendanceRecords.forEach((record) => {
-          if (record?.status === "Present" || record?.status === "Half Day") {
-            totalMinutesWorked += timeToMinutes(record?.hoursWorked);
-          };
-
-          if (record?.status === "On Leave") {
-            onLeave += 1;
-          };
-
-          if (record?.status === "Comp Off") {
-            compOff += 1;
-          };
-        });
-
-        // Calculate deduction days
-        const hoursShortfall = totalCompanyWorkingMinutes - totalMinutesWorked;
-        const deductionDays = hoursShortfall > 0 ? (hoursShortfall / dailyThreshold) : 0;
-        const totalDeductionDays = deductionDays - onLeave - compOff;
-
-        // Calculate total salary
-        const dailySalary = monthlySalary / companyWorkingDays;
-        const totalSalary = (companyWorkingDays - totalDeductionDays) * dailySalary;
-
-        // Calculate total deduction
-        const totalDeduction = monthlySalary - totalSalary;
-
-        // Check if salary has been paid
-        const salaryRecord = await Salary.findOne({
-          employee: employee?._id,
-          month: monthIndex < 10 ? (`0${monthIndex}`)?.toString() : monthIndex?.toString(),
-          year: year.toString(),
-        });
-
-        const salaryPaid = salaryRecord ? salaryRecord?.salaryPaid : false;
-        const transactionId = salaryRecord ? salaryRecord?.transactionId : "";
-
-        return {
-          employeeId: employee?._id,
-          employeeName: employee?.name,
-          monthlySalary,
-          totalSalary: totalSalary.toFixed(2),
-          totalDeduction: totalDeduction.toFixed(2),
-          salaryPaid,
-          transactionId,
-        };
-      }),
-    );
-
-    return res.status(200).json({ success: true, salaryData });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   };
@@ -836,6 +731,7 @@ export const newFetchMonthlySalary = async (req, res) => {
         let [requiredHours, requiredMinutes] = employee?.workingHoursPerDay?.split(":")?.map(Number);
         let dailyThreshold = requiredHours * 60 + requiredMinutes;
         let monthlySalary = employee?.monthlySalary;
+        let workingHoursPerDay = employee?.workingHoursPerDay;
 
         let [year, monthIndex] = month?.split("-")?.map(Number);
         let totalDaysInMonth = new Date(year, monthIndex, 0).getDate();
@@ -955,10 +851,12 @@ export const newFetchMonthlySalary = async (req, res) => {
           employeeId: employee?._id,
           employeeName: employee?.name,
           monthlySalary,
+          workingHoursPerDay,
           totalSalary: totalSalary.toFixed(2),
           totalDeduction: totalDeduction.toFixed(2),
           dailySalary: dailySalary.toFixed(2),
           companyWorkingHours: minutesToTime(companyWorkingMinutes),
+          companyWorkingDays: totalDaysInMonth - (totalHolidays + totalSundays),
           employeeHoursWorked: minutesToTime(totalMinutesWorked),
           employeeHoursShortfall: minutesToTime(minutesShortfall),
           deductionDays,

@@ -180,7 +180,7 @@ export const newCreateAttendance = async (req, res) => {
     if (filteredAdmins?.length > 0) {
       const payload = {
         notification: {
-          title: `${sendBy?.name} Marked Punch-In At ${punchInTime}`,
+          title: `${sendBy?.name} Punched-In`,
           body: `${sendBy?.name} marked punch-in today at ${punchInTime}.`,
         },
       };
@@ -195,7 +195,6 @@ export const newCreateAttendance = async (req, res) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -266,7 +265,6 @@ export const newFetchAllAttendance = async (req, res) => {
 
     return res.status(200).json({ success: true, attendance, totalCount });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -517,7 +515,6 @@ export const newFetchMonthlyStatistic = async (req, res) => {
 
     return res.status(200).json({ success: true, calendarData, monthlyStatics });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -536,7 +533,6 @@ export const newFetchSingleAttendance = async (req, res) => {
 
     return res.status(200).json({ success: true, attendance });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -602,7 +598,7 @@ export const newUpdateAttendance = async (req, res) => {
     if (filteredAdmins?.length > 0) {
       const payload = {
         notification: {
-          title: `${sendBy?.name} Marked Punch-Out At ${punchOutTime}`,
+          title: `${sendBy?.name} Punched-Out`,
           body: `${sendBy?.name} marked punch-out today at ${punchOutTime}.`,
         },
       };
@@ -612,7 +608,6 @@ export const newUpdateAttendance = async (req, res) => {
 
     return res.status(200).json({ success: true, attendance: updatedAttendance });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -682,7 +677,6 @@ export const newDeleteAttendance = async (req, res) => {
 
     return res.status(204).json({ success: true });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };

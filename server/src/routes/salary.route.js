@@ -1,5 +1,5 @@
 import express from 'express';
-import { createSalary, deleteSalary, fetchMonthlySalary, getAllSalaries, getSalaryById, newFetchMonthlySalary, updateSalary } from '../controllers/salary.controller.js';
+import { createSalary, deleteSalary, getAllSalaries, getSalaryById, newFetchMonthlySalary, updateSalary } from '../controllers/salary.controller.js';
 import { isLoggedIn } from '../middleware/auth.middleware.js';
 
 const router = express.Router();

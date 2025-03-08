@@ -217,8 +217,6 @@ const EditOffice = () => {
           </Link>
         </div>
 
-        <h5 className="text-center mt-3 mb-4">Company Detail</h5>
-
         <div className="row">
           <div className="col-md-6">
             <div className="form-wrap">
@@ -338,7 +336,7 @@ const EditOffice = () => {
             </div>
           )}
 
-          <h5 className="text-center mt-5 mb-4">Bank Account Detail</h5>
+          <h5 className="text-center mt-5 mb-4">Bank Detail</h5>
 
           <div className="col-md-6">
             <div className="form-wrap">
