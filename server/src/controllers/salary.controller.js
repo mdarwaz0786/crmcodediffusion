@@ -848,6 +848,8 @@ export const newFetchMonthlySalary = async (req, res) => {
         let transactionId = salaryRecord ? salaryRecord?.transactionId : "";
 
         return {
+          month,
+          totalDaysInMonth,
           employeeId: employee?._id,
           employeeName: employee?.name,
           monthlySalary,

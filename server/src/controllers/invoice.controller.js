@@ -391,16 +391,30 @@ export const fetchAllInvoice = async (req, res) => {
       filter.project = { $in: await getProjectsByCustomer(req.teamId) };
     };
 
+    // Check if the role is not "Admin"
+    const teamRole = req.team.role.name.toLowerCase();
+    if (teamRole !== "admin" && req.team.GSTNumber) {
+      const gstNumber = req.team.GSTNumber;
+
+      if (await Invoice.exists({ "proformaInvoiceDetails.GSTNumber": gstNumber })) {
+        filter["proformaInvoiceDetails.GSTNumber"] = gstNumber;
+      } else {
+        filter["project.customer.GSTNumber"] = gstNumber;
+      };
+    };
+
     // Handle searching across all fields
     if (req.query.search) {
-      filter.$or = [
-        { project: await findObjectIdByString('Project', 'projectName', req.query.search) },
+      searchFilter = [
+        { project: await findObjectIdByString('Project', 'projectName', req.query.search.trim()) },
       ];
+
+      filter.$and = [{ $or: searchFilter }];
     };
 
     // Handle invoice id search
     if (req.query.nameSearch) {
-      filter.invoiceId = { $regex: new RegExp(req.query.nameSearch, 'i') };
+      filter.invoiceId = { $regex: new RegExp(req.query.nameSearch.trim(), 'i') };
     };
 
     // Handle invoice id filter

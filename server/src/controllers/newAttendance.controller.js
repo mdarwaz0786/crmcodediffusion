@@ -91,7 +91,7 @@ export const newCreateAttendance = async (req, res) => {
 
   try {
     session.startTransaction();
-    const { employee, attendanceDate, punchInTime } = req.body;
+    const { employee, attendanceDate, punchInTime, punchInLatitude, punchInLongitude } = req.body;
 
     if (!employee) {
       return res.status(400).json({ success: false, message: "Employee is required" });
@@ -125,6 +125,8 @@ export const newCreateAttendance = async (req, res) => {
       { employee, attendanceDate, punchIn: false },
       {
         $set: {
+          punchInLatitude,
+          punchInLongitude,
           punchInTime,
           punchIn: true,
           status: attendanceStatus,
@@ -540,7 +542,7 @@ export const newFetchSingleAttendance = async (req, res) => {
 // Update attendance with punch-out
 export const newUpdateAttendance = async (req, res) => {
   try {
-    const { employee, attendanceDate, punchOutTime } = req.body;
+    const { employee, attendanceDate, punchOutTime, punchOutLatitude, punchOutLongitude } = req.body;
 
     if (!employee) {
       return res.status(400).json({ success: false, message: "Employee is required" });
@@ -565,18 +567,20 @@ export const newUpdateAttendance = async (req, res) => {
       return res.status(400).json({ success: false, message: `Punch in not found for date ${attendanceDate}` });
     };
 
-    if (attendance.punchInTime === punchOutTime) {
-      return res.status(400).json({ success: false, message: `There should be gap between punch in and punch out` });
+    if (attendance?.punchInTime === punchOutTime) {
+      return res.status(400).json({ success: false, message: `There should be atleast 1 minute gap between punch in and punch out` });
     };
 
     // Update punch out details
     const updatedAttendance = await Attendance.findOneAndUpdate(
-      { _id: attendance._id },
+      { _id: attendance?._id },
       {
         $set: {
+          punchOutLatitude,
+          punchOutLongitude,
           punchOutTime,
           punchOut: true,
-          hoursWorked: calculateTimeDifference(attendance.punchInTime, punchOutTime),
+          hoursWorked: calculateTimeDifference(attendance?.punchInTime, punchOutTime),
         },
       },
       {

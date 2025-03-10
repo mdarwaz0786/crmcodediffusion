@@ -558,7 +558,7 @@ const ProformaInvoiceList = () => {
                               </th>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
                               {
-                                (permissions?.access && permissions?.update) && (
+                                (permissions?.access) && (
                                   <td><Link to={`/single-proforma-invoice/${d?._id}`}><i className="fas fa-eye"></i></Link></td>
                                 )
                               }

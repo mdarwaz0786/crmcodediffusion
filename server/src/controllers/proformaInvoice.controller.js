@@ -417,23 +417,31 @@ export const fetchAllInvoice = async (req, res) => {
     let filter = {};
     let sort = {};
 
+    // Check if the role is not "Admin"
+    const teamRole = req.team.role.name.toLowerCase();
+    if (teamRole !== "admin") {
+      const gstNumber = req.team.GSTNumber;
+      filter.$or = [
+        { GSTNumber: gstNumber },
+      ];
+    };
+
     if (req.query.search) {
       const searchRegex = new RegExp(req.query.search.trim(), 'i');
-      filter = {
-        $or: [
-          { proformaInvoiceId: searchRegex },
-          { clientName: searchRegex },
-          { companyName: searchRegex },
-          { email: searchRegex },
-          { phone: searchRegex },
-          { GSTNumber: searchRegex },
-          { state: searchRegex },
-          { shipTo: searchRegex },
-          { tax: searchRegex },
-          { date: searchRegex },
-          { projectName: searchRegex },
-        ],
-      };
+      const searchFilter = [
+        { proformaInvoiceId: searchRegex },
+        { clientName: searchRegex },
+        { companyName: searchRegex },
+        { email: searchRegex },
+        { phone: searchRegex },
+        { GSTNumber: searchRegex },
+        { state: searchRegex },
+        { shipTo: searchRegex },
+        { tax: searchRegex },
+        { projectName: searchRegex },
+      ];
+
+      filter.$and = [{ $or: searchFilter }];
     };
 
     if (req.query.nameSearch) {

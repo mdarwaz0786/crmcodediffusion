@@ -69,7 +69,7 @@ export const fetchAllProject = async (req, res) => {
 
     // Check if the role is not "Coordinator" or "Admin"
     const teamRole = req.team.role.name.toLowerCase();
-    if (teamRole !== "coordinator" && teamRole !== "admin") {
+    if (teamRole !== "admin") {
       const teamId = req.team._id;
       filter.$or = [
         { teamLeader: { $in: [teamId] } },

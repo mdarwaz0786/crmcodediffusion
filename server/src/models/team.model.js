@@ -75,7 +75,7 @@ const teamSchema = new mongoose.Schema(
     leaveBalanceAllotedHistory: {
       type: [{
         date: { type: String },
-        alloted: { type: String, default: "2" },
+        alloted: { type: String },
       }],
       default: [],
     },
