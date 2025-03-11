@@ -411,6 +411,13 @@ export const createInvoice = async (req, res) => {
   };
 };
 
+// Helper function to find ObjectId by string in referenced models
+const findObjectIdByString = async (modelName, fieldName, searchString) => {
+  const Model = mongoose.model(modelName);
+  const result = await Model.findOne({ [fieldName]: { $regex: new RegExp(searchString, 'i') } }).select('_id');
+  return result ? result._id : null;
+};
+
 // Controller for fetching all proforma invoice
 export const fetchAllInvoice = async (req, res) => {
   try {
@@ -419,7 +426,7 @@ export const fetchAllInvoice = async (req, res) => {
 
     // Check if the role is not "Admin"
     const teamRole = req.team.role.name.toLowerCase();
-    if (teamRole !== "admin") {
+    if (teamRole === "client") {
       const gstNumber = req.team.GSTNumber;
       filter.$or = [
         { GSTNumber: gstNumber },
@@ -431,14 +438,12 @@ export const fetchAllInvoice = async (req, res) => {
       const searchFilter = [
         { proformaInvoiceId: searchRegex },
         { clientName: searchRegex },
+        { projectName: searchRegex },
         { companyName: searchRegex },
-        { email: searchRegex },
-        { phone: searchRegex },
         { GSTNumber: searchRegex },
         { state: searchRegex },
-        { shipTo: searchRegex },
         { tax: searchRegex },
-        { projectName: searchRegex },
+        { office: await findObjectIdByString("OfficeLocation", "name", req.query.search.trim()) },
       ];
 
       filter.$and = [{ $or: searchFilter }];

@@ -369,55 +369,35 @@ const findObjectIdByString = async (modelName, fieldName, searchString) => {
   return result ? result._id : null;
 };
 
-// Helper function to fetch projects where the customer field matches the given teamId
-const getProjectsByCustomer = async (teamId) => {
-  try {
-    const projects = await Project.find({ customer: teamId }).select("_id");
-    return projects.map((project) => project._id);
-  } catch (error) {
-    throw new Error("Error while fetching projects by customer");
-  };
-};
-
-// Controller for fetching all invoice
 export const fetchAllInvoice = async (req, res) => {
   try {
     let filter = {};
     let sort = {};
 
-    const userRole = req.team.role.name.toLowerCase();
-
-    if (userRole === "client" && req.teamId) {
-      filter.project = { $in: await getProjectsByCustomer(req.teamId) };
-    };
-
-    // Check if the role is not "Admin"
-    const teamRole = req.team.role.name.toLowerCase();
-    if (teamRole !== "admin" && req.team.GSTNumber) {
-      const gstNumber = req.team.GSTNumber;
-
-      if (await Invoice.exists({ "proformaInvoiceDetails.GSTNumber": gstNumber })) {
-        filter["proformaInvoiceDetails.GSTNumber"] = gstNumber;
-      } else {
-        filter["project.customer.GSTNumber"] = gstNumber;
-      };
-    };
-
     // Handle searching across all fields
     if (req.query.search) {
-      searchFilter = [
-        { project: await findObjectIdByString('Project', 'projectName', req.query.search.trim()) },
+      const searchRegex = new RegExp(req.query.search.trim(), "i");
+      const searchFilter = [
+        { "proformaInvoiceDetails.projectName": { $regex: searchRegex } },
+        { "proformaInvoiceDetails.clientName": { $regex: searchRegex } },
+        { "proformaInvoiceDetails.companyName": { $regex: searchRegex } },
+        { "proformaInvoiceDetails.GSTNumber": { $regex: searchRegex } },
+        { "proformaInvoiceDetails.state": { $regex: searchRegex } },
+        { invoiceId: { $regex: searchRegex } },
+        { tax: { $regex: searchRegex } },
+        { project: await findObjectIdByString("Project", "projectName", req.query.search.trim()) },
+        { office: await findObjectIdByString("OfficeLocation", "name", req.query.search.trim()) },
       ];
 
       filter.$and = [{ $or: searchFilter }];
     };
 
-    // Handle invoice id search
+    // Handle invoice ID search
     if (req.query.nameSearch) {
       filter.invoiceId = { $regex: new RegExp(req.query.nameSearch.trim(), 'i') };
     };
 
-    // Handle invoice id filter
+    // Handle invoice ID filter
     if (req.query.nameFilter) {
       filter.invoiceId = { $in: Array.isArray(req.query.nameFilter) ? req.query.nameFilter : [req.query.nameFilter] };
     };
@@ -425,7 +405,6 @@ export const fetchAllInvoice = async (req, res) => {
     // Handle year-wise filtering
     if (req.query.year && !req.query.month) {
       const year = req.query.year;
-
       filter.date = {
         $gte: `${year}-01-01`,
         $lte: `${year}-12-31`,
@@ -436,7 +415,6 @@ export const fetchAllInvoice = async (req, res) => {
     if (req.query.month && !req.query.year) {
       const month = req.query.month.padStart(2, "0");
       const currentYear = new Date().getFullYear();
-
       filter.date = {
         $gte: `${currentYear}-${month}-01`,
         $lte: `${currentYear}-${month}-31`,
@@ -447,7 +425,6 @@ export const fetchAllInvoice = async (req, res) => {
     if (req.query.year && req.query.month) {
       const year = req.query.year;
       const month = req.query.month.padStart(2, "0");
-
       filter.date = {
         $gte: `${year}-${month}-01`,
         $lte: `${year}-${month}-31`,
@@ -455,18 +432,15 @@ export const fetchAllInvoice = async (req, res) => {
     };
 
     // Handle sorting
-    if (req.query.sort === 'Ascending') {
-      sort = { createdAt: 1 };
-    } else {
-      sort = { createdAt: -1 };
-    };
+    sort = req.query.sort === 'Ascending' ? { createdAt: 1 } : { createdAt: -1 };
 
     // Handle pagination
-    const page = parseInt(req.query.page);
-    const limit = parseInt(req.query.limit);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const invoice = await Invoice
+    // Fetch invoices with the initial filter
+    let invoices = await Invoice
       .find(filter)
       .sort(sort)
       .skip(skip)
@@ -474,23 +448,31 @@ export const fetchAllInvoice = async (req, res) => {
       .populate("office")
       .populate({
         path: "project",
-        select: "",
         populate: {
           path: "customer",
-          select: "",
         },
       })
       .exec();
 
-    if (!invoice) {
-      return res.status(404).json({ success: false, message: "Invoice not found" });
+
+    const teamRole = req.team.role.name.toLowerCase();
+
+    if (teamRole === "client") {
+      invoices = invoices.filter((invoice) => {
+        const hasProformaGST = invoice.proformaInvoiceDetails?.GSTNumber === req.team.GSTNumber;
+        const hasCustomerGST = invoice.project?.customer?.GSTNumber === req.team.GSTNumber;
+        return (hasProformaGST && !hasCustomerGST) || (!hasProformaGST && hasCustomerGST);
+      });
     };
 
-    const totalCount = await Invoice.countDocuments(filter);
+    if (!invoices) {
+      return res.status(404).json({ success: false, message: "Invoices not found" });
+    };
 
-    return res.status(200).json({ success: true, message: "All invoice fetched successfully", invoice, totalCount });
+    return res.status(200).json({ success: true, message: "Invoices fetched successfully", invoice: invoices, totalCount: invoices.length });
+
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Error while fetching all invoice", error: error.message });
+    return res.status(500).json({ success: false, message: "Error while fetching invoices", error: error.message });
   };
 };
 
