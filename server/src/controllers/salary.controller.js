@@ -3,9 +3,9 @@ import Attendance from "../models/attendance.model.js";
 import Salary from "../models/salary.model.js";
 import Holiday from "../models/holiday.model.js";
 import puppeteer from "puppeteer";
-import { transporter } from "../services/emailService.js";
 import fs from "fs";
 import path from "path";
+import nodemailer from 'nodemailer';
 import dotenv from "dotenv";
 import numberToWord from "../utils/numbeToWord.js";
 import numberToMonthName from "../utils/numberToMonthName.js";
@@ -73,6 +73,7 @@ export const createSalary = async (req, res) => {
       .findById(employee)
       .populate("designation")
       .populate("department")
+      .populate("office")
       .exec();
 
     if (!emp) {
@@ -386,10 +387,10 @@ export const createSalary = async (req, res) => {
 <body>
   <div class="salary-slip">
     <div class="logo-section">
-      <img class="logo" src="${logoSrc}" alt="logo" />
+      <img class="logo" src="${emp?.office?.logo || logoSrc}" alt="logo" />
     </div>
     <div class="company-details">
-      <h4 class="company-name">CODE DIFFUSION TECHNOLOGIES</h4>
+      <h4 class="company-name">${emp?.office?.name || "CODE DIFFUSION TECHNOLOGIES"}</h4>
       <hr />
     </div>
 
@@ -560,8 +561,8 @@ export const createSalary = async (req, res) => {
 
     // Email options
     const mailOptions = {
-      from: `${process.env.SENDER_EMAIL_ID}`,
-      to: `${emp?.email}`,
+      from: emp?.office?.noReplyEmail || process.env.SENDER_EMAIL_ID,
+      to: emp?.email,
       subject: `Salary Slip for ${numberToMonthName(month)} ${year}`,
       text: `Dear ${emp?.name},
 
@@ -575,10 +576,10 @@ Thank you for your continued contributions to the team.
 
 Best regards,
 Abhishek Singh
-Code Diffusion Technologies
-+91 7827114607
-info@codediffusion.in
-https://www.codediffusion.in/`,
+${emp?.office?.name || "Code Diffusion Technologies"} 
+${emp?.office?.contact || "7827114607"}
+${emp?.office?.email || "info@codediffusion.in"}
+${emp?.office?.websiteLink || "https://www.codediffusion.in/"}`,
 
       attachments: [
         {
@@ -588,15 +589,26 @@ https://www.codediffusion.in/`,
       ],
     };
 
-    // Send email
-    transporter.sendMail(mailOptions, () => {
-      fs.unlinkSync(pdfPath);
+    // Create a transporter
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: emp?.office?.noReplyEmail || process.env.SENDER_EMAIL_ID,
+        pass: emp?.office?.noReplyEmailAppPassword || process.env.SENDER_EMAIL_APP_PASSWORD,
+      },
     });
+
+    // Send the email
+    await transporter.sendMail(mailOptions);
 
     // Create a new salary record
     const newSalary = new Salary({ employee, month, year, salaryPaid, amountPaid, transactionId });
 
+    // Save the salary record
     await newSalary.save();
+
+    // Cleanup the generated PDF
+    fs.unlinkSync(pdfPath);
 
     return res.status(201).json({ success: true, data: newSalary });
   } catch (error) {

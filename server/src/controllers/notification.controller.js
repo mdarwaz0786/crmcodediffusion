@@ -55,7 +55,6 @@ export const createNotification = async (req, res) => {
     await newNotification.save();
     return res.status(200).json({ success: true, data: newNotification });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -94,10 +93,9 @@ export const markNotificationsAsSeen = async (req, res) => {
 export const getNotifications = async (req, res) => {
   try {
     const notifications = await Notification.find().populate("employee");
-    res.status(200).json({ success: true, data: notifications });
+    return res.status(200).json({ success: true, data: notifications });
   } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -110,10 +108,9 @@ export const getNotificationById = async (req, res) => {
       return res.status(404).json({ success: false, message: "Notification not found." });
     };
 
-    res.status(200).json({ success: true, data: notification });
+    return res.status(200).json({ success: true, data: notification });
   } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -131,8 +128,8 @@ export const getNotificationsByEmployee = async (req, res) => {
 
     // Convert query parameters to numbers
     const pageNumber = Number(page);
-    const skipValue = Number(skip);
     const limitValue = Number(limit);
+    const skipValue = (pageNumber - 1) * limitValue;
 
     // Pagination and sorting logic
     const notifications = await Notification.find(filter)
@@ -161,7 +158,6 @@ export const getNotificationsByEmployee = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -181,10 +177,9 @@ export const updateNotification = async (req, res) => {
       return res.status(404).json({ success: false, message: "Notification not found." });
     };
 
-    res.status(200).json({ success: true, data: notification });
+    return res.status(200).json({ success: true, data: notification });
   } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -197,9 +192,8 @@ export const deleteNotification = async (req, res) => {
       return res.status(404).json({ success: false, message: "Notification not found." });
     };
 
-    res.status(200).json({ success: true, message: "Notification deleted successfully." });
+    return res.status(200).json({ success: true, message: "Notification deleted successfully." });
   } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };

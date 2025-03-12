@@ -102,8 +102,6 @@ const SingleOffice = () => {
           </Link>
         </div>
 
-        <h5 className="text-center mt-3 mb-4">Company Detail</h5>
-
         <div className="row">
           <div className="col-md-6">
             <div className="form-wrap">
