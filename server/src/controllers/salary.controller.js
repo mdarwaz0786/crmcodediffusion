@@ -248,6 +248,7 @@ export const createSalary = async (req, res) => {
     .logo {
       width: 150px;
       height: 30px;
+      object-fit: contain;
     }
 
     .company-details {
@@ -472,7 +473,7 @@ export const createSalary = async (req, res) => {
       </div>
     </div>
 
-    <h6 class="deduction-summary-title">Salary Deduction Summary (${numberToMonthName(month)} ${year})</h6>
+    <h6 class="deduction-summary-title">Salary Deduction Calculation (${numberToMonthName(month)} ${year})</h6>
     <div class="deduction-summary">
       <div class="deduction-row">
         <div class="deduction-column">
@@ -535,8 +536,7 @@ export const createSalary = async (req, res) => {
   </div>
 </body>
 
-</html>
-    `;
+</html>`;
 
     // Generate PDF from HTML
     const browser = await puppeteer.launch({
