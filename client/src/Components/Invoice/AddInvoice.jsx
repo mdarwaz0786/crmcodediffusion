@@ -172,7 +172,7 @@ const AddInvoice = () => {
         amount,
         date,
         tax,
-        office,
+        office: selectedOffice,
       };
 
       setLoding(true);

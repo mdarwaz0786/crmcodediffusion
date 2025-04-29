@@ -39,15 +39,6 @@ export const createInvoice = async (req, res) => {
       subtotal = subtotal / 1.18;
     };
 
-    if (customerState === "Delhi") {
-      CGST = subtotal * 0.09;
-      SGST = subtotal * 0.09;
-      total = subtotal + CGST + SGST;
-    } else {
-      IGST = subtotal * 0.18;
-      total = subtotal + IGST;
-    };
-
     const projectName = projectDetails?.projectName;
     const customerState = projectDetails?.customer?.state;
     const clientName = projectDetails?.customer?.name;
@@ -56,6 +47,15 @@ export const createInvoice = async (req, res) => {
     const shipTo = projectDetails?.customer?.address;
     const email = projectDetails?.customer?.email;
     const invoiceId = Date.now();
+
+    if (customerState === "Delhi") {
+      CGST = subtotal * 0.09;
+      SGST = subtotal * 0.09;
+      total = subtotal + CGST + SGST;
+    } else {
+      IGST = subtotal * 0.18;
+      total = subtotal + IGST;
+    };
 
     const newInvoice = new Invoice({
       invoiceId,
