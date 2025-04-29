@@ -246,8 +246,8 @@ export const createInvoice = async (req, res) => {
           <tr>
             <td>${projectName}</td>
             <td>1</td>
-            <td>₹${subtotal}</td>
-            <td class="text-end">₹${subtotal}</td>
+            <td>₹${subtotal.toFixed(2)}</td>
+            <td class="text-end">₹${subtotal.toFixed(2)}</td>
           </tr>
         </tbody>
         <tfoot>
