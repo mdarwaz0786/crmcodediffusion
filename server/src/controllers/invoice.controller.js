@@ -25,7 +25,7 @@ export const createInvoice = async (req, res) => {
 
     const projectDetails = await Project
       .findById(project)
-      .populate("customer", "state")
+      .populate("customer")
       .exec();
 
     if (!projectDetails) {
