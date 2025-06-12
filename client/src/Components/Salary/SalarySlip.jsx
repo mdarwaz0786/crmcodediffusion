@@ -8,7 +8,7 @@ import html2pdf from "html2pdf.js";
 import { useEffect, useState } from "react";
 import numberToWords from "../../Helper/numberToWord.js";
 import Calender from "../Attendance/Calender.jsx";
-import formatDate from "../../Helper/formatDate.js"
+import formatDate from "../../Helper/formatDate.js";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const SalarySlip = () => {
@@ -153,52 +153,48 @@ const SalarySlip = () => {
                   <img style={{ width: "150px", height: "30px" }} src={logo} alt="logo" />
                 </div>
                 <div className="mb-0">
-                  <h4 className="fw-bold text-dark mb-3">CODE DIFFUSION TECHNOLOGIES</h4>
+                  <h4 className="fw-bold text-dark mb-2" style={{ color: "black" }}>CODE DIFFUSION TECHNOLOGIES</h4>
                   <div style={{ borderBottom: "1px solid #aaa" }}></div>
                 </div>
 
-                <h5 className="text-center" style={{ marginBottom: "2rem", marginTop: "2rem" }}>Salary Slip ({getMonthName(month)} {year})</h5>
+                <h5 className="text-center" style={{ marginBottom: "2rem", marginTop: "2rem", color: "black" }}>Salary Slip ({getMonthName(month)} {year})</h5>
                 <div className="row" style={{ border: "1px solid #eee", marginLeft: "0rem", marginRight: "0rem" }}>
                   <div className="col-md-6 px-3 py-2">
                     <div className="row mb-2">
-                      <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Employee Name</div>
+                      <div className="col-5" style={{ fontWeight: "600", color: "black" }}>Employee Name</div>
                       <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.name}</div>
                     </div>
                     <div className="row mb-2">
-                      <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Designation</div>
+                      <div className="col-5" style={{ fontWeight: "600", color: "black" }}>Designation</div>
                       <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.designation?.name}</div>
                     </div>
                     <div className="row mb-2">
-                      <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Department</div>
+                      <div className="col-5" style={{ fontWeight: "600", color: "black" }}>Department</div>
                       <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.department?.name}</div>
                     </div>
                     <div className="row mb-2">
-                      <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Date of Joining</div>
+                      <div className="col-5" style={{ fontWeight: "600", color: "black" }}>Date of Joining</div>
                       <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{formatDate(employee?.joining)}</div>
-                    </div>
-                    <div className="row">
-                      <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Phone Number</div>
-                      <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.mobile}</div>
                     </div>
                   </div>
 
                   <div className="col-md-6 px-3 py-2" style={{ borderLeft: '1px solid #eee' }}>
                     <div className="row mb-2">
-                      <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Transaction ID</div>
-                      <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{salary[0]?.transactionId}</div>
+                      <div className="col-5" style={{ fontWeight: "600", color: "black" }}>Mobile Number</div>
+                      <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.mobile}</div>
                     </div>
                     <div className="row mb-2">
-                      <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Employee ID</div>
+                      <div className="col-5" style={{ fontWeight: "600", color: "black" }}>Employee ID</div>
                       <div className="col-7" style={{ fontWeight: "400", color: "black" }}>{employee?.employeeId}</div>
                     </div>
-                    <div className="row">
-                      <div className="col-5" style={{ fontWeight: "500", color: "black" }}>Monthly Gross</div>
+                    <div className="row mb-2">
+                      <div className="col-5" style={{ fontWeight: "600", color: "black" }}>Monthly Gross Salary</div>
                       <div className="col-7" style={{ fontWeight: "400", color: "black" }}>₹{employee?.monthlySalary}</div>
                     </div>
                   </div>
                 </div>
 
-                <h5 className="mt-5 mb-3">Payment & Salary ({getMonthName(month)} {year})</h5>
+                <h5 className="mt-5 mb-2" style={{ color: "black" }}>Payment & Salary ({getMonthName(month)} {year})</h5>
                 <table className="table table-bordered">
                   <thead>
                     <tr>
@@ -208,12 +204,12 @@ const SalarySlip = () => {
                   </thead>
                   <tbody>
                     <tr>
-                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}>Monthly Gross Salary</td>
-                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}> ₹{employee?.monthlySalary}</td>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>Monthly Gross Salary</td>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}> ₹{employee?.monthlySalary}</td>
                     </tr>
                     <tr>
-                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}>Total Deduction ({salary[0]?.deductionDays} × ₹{salary[0]?.dailySalary})</td>
-                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}>-₹{salary[0]?.totalDeduction}</td>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>Total Deduction ({salary[0]?.deductionDays} × ₹{salary[0]?.dailySalary})</td>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>-₹{salary[0]?.totalDeduction}</td>
                     </tr>
                   </tbody>
                   <thead>
@@ -225,26 +221,26 @@ const SalarySlip = () => {
                 </table>
 
                 <div style={{ border: "1px solid #eee", marginTop: "2rem" }}>
-                  <div className="d-flex justify-content-between px-3 py-2">
+                  <div className="d-flex justify-content-between px-3 mb-2 mt-2">
                     <div style={{ fontWeight: "600", color: "black" }}>Net Payable (Net Salary)</div>
                     <div style={{ fontWeight: "600", color: "black" }}>₹{salary[0]?.totalSalary}</div>
                   </div>
-                  <div className="d-flex justify-content-between px-3 py-2">
+                  <div className="d-flex justify-content-between px-3 mb-2">
                     <div style={{ fontWeight: "600", color: "black" }}>Amount in Words</div>
                     <div style={{ fontWeight: "600", color: "black" }}>{numberToWords(salary[0]?.totalSalary)}</div>
                   </div>
                 </div>
 
-                <h5 className="mt-5 mb-3">Salary Deduction Summary ({getMonthName(month)} {year})</h5>
+                <h5 className="mt-5 mb-2" style={{ color: "black" }}>Salary Deduction Calculation ({getMonthName(month)} {year})</h5>
                 <div className="ps-3" style={{ border: "1px solid #eee" }}>
-                  <div className="row py-2" style={{ color: "black" }}>
+                  <div className="row mb-2 mt-2 text-center" style={{ color: "black", fontWeight: "600" }}>
                     <div className="col">Required Working Hours</div>
                     <div className="col">Worked Hours</div>
                     <div className="col">Shortfall Hours</div>
                     <div className="col">Deduction Days</div>
                     <div className="col">Amount Deducted</div>
                   </div>
-                  <div className="row py-2" style={{ color: "black" }}>
+                  <div className="row mb-2 text-center" style={{ color: "black" }}>
                     <div className="col">{salary[0]?.companyWorkingHours}</div>
                     <div className="col">{salary[0]?.employeeHoursWorked}</div>
                     <div className="col">{salary[0]?.employeeHoursShortfall}</div>
@@ -252,7 +248,29 @@ const SalarySlip = () => {
                     <div className="col">{salary[0]?.deductionDays} × ₹{salary[0]?.dailySalary} = ₹{salary[0]?.totalDeduction}</div>
                   </div>
                 </div>
-                <p className="text-center mt-5">This is a digitally generated document and does not require a signature or seal.</p>
+
+                <h5 className="mt-5 mb-2" style={{ color: "black" }}>Attendance Summary ({getMonthName(month)} {year})</h5>
+                <div style={{ border: "1px solid #eee" }}>
+                  <div className="row mb-2 mt-2 text-center" style={{ color: "black", fontWeight: "600" }}>
+                    <div className="col">Present</div>
+                    <div className="col">Absent</div>
+                    <div className="col">Half Day</div>
+                    <div className="col">Leave</div>
+                    <div className="col">Comp Off</div>
+                    <div className="col">Weekly Off</div>
+                    <div className="col">Holiday</div>
+                  </div>
+                  <div className="row mb-2 text-center" style={{ color: "black" }}>
+                    <div className="col">{monthlyStatics?.employeePresentDays}</div>
+                    <div className="col">{monthlyStatics?.employeeAbsentDays}</div>
+                    <div className="col">{monthlyStatics?.employeeHalfDays}</div>
+                    <div className="col">{monthlyStatics?.employeeLeaveDays}</div>
+                    <div className="col">{monthlyStatics?.employeeCompOffDays}</div>
+                    <div className="col">{monthlyStatics?.totalSundays}</div>
+                    <div className="col">{monthlyStatics?.totalHolidays}</div>
+                  </div>
+                </div>
+                <p className="text-center mt-5" style={{ color: "black" }}>This is a digitally generated document and does not require a signature or seal.</p>
               </div>
 
               <div className="p-5 bg-white mt-2 mb-3" id="exportAttendance">
@@ -260,35 +278,51 @@ const SalarySlip = () => {
                   <img style={{ width: "150px", height: "30px" }} src={logo} alt="logo" />
                 </div>
                 <div className="mb-0">
-                  <h4 className="fw-bold text-dark mb-3">CODE DIFFUSION TECHNOLOGIES</h4>
-                  <div style={{ borderBottom: "1px solid #aaa", marginBottom: "2rem" }}></div>
+                  <h4 className="fw-bold text-dark mb-2" style={{ color: "black" }}>CODE DIFFUSION TECHNOLOGIES</h4>
+                  <div style={{ borderBottom: "1px solid #aaa", marginBottom: "0rem" }}></div>
                 </div>
 
-                <h5 className="mt-5 mb-3">Attendance ({getMonthName(month)} {year})</h5>
+                <h5 className="mt-5 mb-2" style={{ color: "black" }}>Attendance ({getMonthName(month)} {year})</h5>
                 <Calender attendanceData={attendance} month={month} year={year} employeeId={employeeId} />
 
-                <h5 className="mt-5 mb-3">Attendance Summary ({getMonthName(month)} {year})</h5>
-                <div className="ps-3" style={{ border: "1px solid #eee" }}>
-                  <div className="row py-2" style={{ color: "black" }}>
+                <h5 className="mt-5 mb-2" style={{ color: "black" }}>Attendance Summary ({getMonthName(month)} {year})</h5>
+                <div style={{ border: "1px solid #eee" }}>
+                  <div className="row mb-2 mt-2 text-center" style={{ color: "black", fontWeight: "600" }}>
                     <div className="col">Present</div>
-                    <div className="col">Half Day</div>
                     <div className="col">Absent</div>
+                    <div className="col">Half Day</div>
                     <div className="col">Leave</div>
                     <div className="col">Comp Off</div>
                     <div className="col">Weekly Off</div>
                     <div className="col">Holiday</div>
                   </div>
-                  <div className="row py-2" style={{ color: "black" }}>
+                  <div className="row mb-2 text-center" style={{ color: "black" }}>
                     <div className="col">{monthlyStatics?.employeePresentDays}</div>
-                    <div className="col">{monthlyStatics?.employeeHalfDays}</div>
                     <div className="col">{monthlyStatics?.employeeAbsentDays}</div>
+                    <div className="col">{monthlyStatics?.employeeHalfDays}</div>
                     <div className="col">{monthlyStatics?.employeeLeaveDays}</div>
                     <div className="col">{monthlyStatics?.employeeCompOffDays}</div>
                     <div className="col">{monthlyStatics?.totalSundays}</div>
                     <div className="col">{monthlyStatics?.totalHolidays}</div>
                   </div>
                 </div>
-                <p className="text-center mt-5">This is a digitally generated document and does not require a signature or seal.</p>
+
+                <h5 className="mt-5 mb-2" style={{ color: "black" }}>Working Hours Summary ({getMonthName(month)} {year})</h5>
+                <div style={{ border: "1px solid #eee" }}>
+                  <div className="row mb-2 mt-2 text-center" style={{ color: "black", fontWeight: "600" }}>
+                    <div className="col">Total Working Days</div>
+                    <div className="col">Required Working Hours</div>
+                    <div className="col">Worked Hours</div>
+                    <div className="col">Shortfall Hours</div>
+                  </div>
+                  <div className="row mb-2 text-center" style={{ color: "black" }}>
+                    <div className="col">{salary[0]?.companyWorkingDays} Days</div>
+                    <div className="col">{salary[0]?.companyWorkingHours}</div>
+                    <div className="col">{salary[0]?.employeeHoursWorked}</div>
+                    <div className="col">{salary[0]?.employeeHoursShortfall}</div>
+                  </div>
+                </div>
+                <p className="text-center mt-5" style={{ color: "black" }}>This is a digitally generated document and does not require a signature or seal.</p>
               </div>
             </>
           )
