@@ -46,6 +46,7 @@ import projectWorkRoute from "./src/routes/projectWork.route.js";
 import ticketRoute from "./src/routes/ticket.route.js";
 import paymentRoute from "./src/routes/payment.route.js";
 import enquiryRoute from "./src/routes/contactEnquiry.route.js";
+import leedRoute from "./src/routes/leeds.route.js";
 
 // Directory name for serving index.html file
 const __dirname = path.resolve();
@@ -137,6 +138,8 @@ server.use("/api/v1/ticket", ticketRoute);
 server.use("/api/v1/payment", paymentRoute);
 // Enquiry route
 server.use("/api/v1/enquiry", enquiryRoute);
+// Leed route
+server.use("/api/v1/leed", leedRoute);
 
 // Middleware for serving client index.html file
 server.use(express.static(path.join(__dirname, "../client/dist")), (req, res, next) => next());
