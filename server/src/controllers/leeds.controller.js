@@ -1,38 +1,39 @@
 import Leed from "../models/leeds.model.js";
-import { validationResult } from "express-validator";
 
-// Create a new lead
+// Create a new lead (all fields optional)
 export const createLeed = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ success: false, errors: errors.array() });
-  };
-
   try {
     const leed = new Leed(req.body);
     await leed.save();
     res.status(201).json({ success: true, data: leed });
   } catch (err) {
     res.status(500).json({ success: false, error: "Server Error" });
-  };
+  }
 };
 
 // Get all leads with search, filter, sort, pagination
 export const getAllLeeds = async (req, res) => {
   try {
-    const { search, sortBy = "createdAt", sortOrder = "desc", page = 1, limit = 10, ...filters } = req.query;
+    const {
+      search,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+      page = 1,
+      limit = 10,
+      ...filters
+    } = req.query;
 
     const query = {};
 
-    // Search by name/email/requirement/message
     if (search) {
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
+        { fname: { $regex: search, $options: "i" } },
+        { lname: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },
-        { requirement: { $regex: search, $options: "i" } },
+        { mobile: { $regex: search, $options: "i" } },
         { message: { $regex: search, $options: "i" } },
       ];
-    };
+    }
 
     // Apply filters (e.g., mobile=1234567890)
     Object.keys(filters).forEach((key) => {
@@ -56,41 +57,51 @@ export const getAllLeeds = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ success: false, error: "Server Error" });
-  };
+  }
 };
 
-// Get a single lead
+// Get a single lead by ID
 export const getLeedById = async (req, res) => {
   try {
     const leed = await Leed.findById(req.params.id);
-    if (!leed) return res.status(404).json({ success: false, error: "Leed not found" });
+    if (!leed)
+      return res.status(404).json({ success: false, error: "Leed not found" });
 
     res.status(200).json({ success: true, data: leed });
   } catch (err) {
     res.status(500).json({ success: false, error: "Server Error" });
-  };
+  }
 };
 
-// Update a lead
+// Update a lead by ID
 export const updateLeed = async (req, res) => {
   try {
-    const leed = await Leed.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-    if (!leed) return res.status(404).json({ success: false, error: "Leed not found" });
+    const leed = await Leed.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!leed)
+      return res.status(404).json({ success: false, error: "Leed not found" });
 
     res.status(200).json({ success: true, data: leed });
   } catch (err) {
     res.status(500).json({ success: false, error: "Server Error" });
-  };
+  }
 };
 
-// Delete a lead
+// Delete a lead by ID
 export const deleteLeed = async (req, res) => {
   try {
     const leed = await Leed.findByIdAndDelete(req.params.id);
-    if (!leed) return res.status(404).json({ error: "Leed not found" });
 
-    res.status(200).json({ success: true, message: "Leed deleted successfully" });
+    if (!leed)
+      return res.status(404).json({ success: false, error: "Leed not found" });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Leed deleted successfully" });
   } catch (err) {
     res.status(500).json({ success: false, error: "Server Error" });
-  };
+  }
 };

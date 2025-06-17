@@ -2,25 +2,20 @@ import mongoose from "mongoose";
 
 const leedsSchema = new mongoose.Schema(
   {
-    name: {
+    fname: {
       type: String,
-      required: true,
+    },
+    lname: {
+      type: String,
     },
     mobile: {
-      type: Number,
-      required: true,
+      type: String,
     },
     email: {
       type: String,
-      required: true,
-    },
-    requirement: {
-      type: String,
-      required: true,
     },
     message: {
       type: String,
-      required: true,
     },
   },
   {
