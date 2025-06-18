@@ -54,14 +54,20 @@ const Sidebar = () => {
               <li>
                 {
                   (permissions?.project?.access ||
+                    permissions?.leeds?.access ||
                     permissions?.projectDeployment?.access) && (
-                    <h6 className="submenu-hdr">Project</h6>
+                    <h6 className="submenu-hdr">CRM</h6>
                   )
                 }
                 <ul>
                   {
                     (permissions?.project?.access) && (
                       <li><Link to="/project" className={currentPath === "/project" ? "active" : ""} id={isMobile && active === "projects" ? "mobile_btn" : ""} onClick={() => handleActive("projects")}><i style={{ color: currentPath === "/project" ? "" : "#FFA201" }} className="ti ti-briefcase"></i><span>Projects</span></Link></li>
+                    )
+                  }
+                  {
+                    (permissions?.leeds?.access) && (
+                      <li><Link to="/leeds" className={currentPath === "/leeds" ? "active" : ""} id={isMobile && active === "leeds" ? "mobile_btn" : ""} onClick={() => handleActive("leeds")}><i style={{ color: currentPath === "/leeds" ? "" : "#FFA201" }} className="ti ti-file-stack"></i><span>Leeds</span></Link></li>
                     )
                   }
                   {

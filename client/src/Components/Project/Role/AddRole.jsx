@@ -50,6 +50,20 @@ const AddRole = () => {
         projectDeadline: { read: true, show: true },
       },
     },
+    leeds: {
+      access: false,
+      export: false,
+      create: false,
+      update: false,
+      delete: false,
+      fields: {
+        fname: { read: true, show: true },
+        lname: { read: true, show: true },
+        mobile: { read: true, show: true },
+        email: { read: true, show: true },
+        message: { read: true, show: true },
+      },
+    },
     invoice: {
       access: false,
       export: false,
@@ -454,6 +468,20 @@ const AddRole = () => {
               projectDeadline: { read: true, show: true },
             },
           },
+          leeds: {
+            access: false,
+            export: false,
+            create: false,
+            update: false,
+            delete: false,
+            fields: {
+              fname: { read: true, show: true },
+              lname: { read: true, show: true },
+              mobile: { read: true, show: true },
+              email: { read: true, show: true },
+              message: { read: true, show: true },
+            },
+          },
           invoice: {
             access: false,
             export: false,
@@ -747,6 +775,7 @@ const AddRole = () => {
 
   const permissionLabels = {
     project: "Projects",
+    leeds: "Leeds",
     invoice: "Tax Invoice",
     proformaInvoice: "Proforma Invoice",
     purchaseInvoice: "Purchase Invoice",

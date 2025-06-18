@@ -896,6 +896,39 @@ const RolePermissionSchema = new mongoose.Schema(
   },
 );
 
+// Leeds permission Schema
+const LeedsPermissionSchema = new mongoose.Schema(
+  {
+    access: {
+      type: Boolean,
+      default: false,
+    },
+    export: {
+      type: Boolean,
+      default: false,
+    },
+    create: {
+      type: Boolean,
+      default: false,
+    },
+    update: {
+      type: Boolean,
+      default: false,
+    },
+    delete: {
+      type: Boolean,
+      default: false,
+    },
+    fields: {
+      fname: { type: FieldPermissionSchema, default: () => ({}) },
+      lname: { type: FieldPermissionSchema, default: () => ({}) },
+      mobile: { type: FieldPermissionSchema, default: () => ({}) },
+      email: { type: FieldPermissionSchema, default: () => ({}) },
+      message: { type: FieldPermissionSchema, default: () => ({}) },
+    },
+  },
+);
+
 // Role schema
 const RoleSchema = new mongoose.Schema(
   {
@@ -906,6 +939,7 @@ const RoleSchema = new mongoose.Schema(
     },
     permissions: {
       project: { type: ProjectPermissionSchema, default: () => ({}) },
+      leeds: { type: LeedsPermissionSchema, default: () => ({}) },
       invoice: { type: InvoicePermissionSchema, default: () => ({}) },
       proformaInvoice: { type: ProformaInvoicePermissionSchema, default: () => ({}) },
       purchaseInvoice: { type: PurchaseInvoicePermissionSchema, default: () => ({}) },

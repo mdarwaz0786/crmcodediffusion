@@ -88,6 +88,8 @@ import Office from "./Components/Office/Office.jsx";
 import AddOffice from "./Components/Office/AddOffice.jsx";
 import EditOffice from "./Components/Office/EditOffice.jsx";
 import SingleOffice from "./Components/Office/SingleOffice.jsx";
+import Leeds from "./Components/Leeds/Leeds.jsx";
+import SingleLeed from "./Components/Leeds/SingleLeed.jsx";
 import Test from "./Test.jsx";
 
 const App = () => {
@@ -181,6 +183,8 @@ const App = () => {
           <Route path="add-office" element={<AddOffice />} />
           <Route path="edit-office/:id" element={<EditOffice />} />
           <Route path="single-office/:id" element={<SingleOffice />} />
+          <Route path="leeds" element={<Leeds />} />
+          <Route path="single-leed/:id" element={<SingleLeed />} />
           <Route path="test" element={<Test />} />
         </Route>
         <Route path="/login" element={<Login />} />
