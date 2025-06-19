@@ -3,6 +3,7 @@ import Team from "../models/team.model.js";
 import Holiday from "../models/holiday.model.js";
 import mongoose from "mongoose";
 import firebase from "../firebase/index.js";
+import { getDatesBetween } from '../utils/getDatesBetween.js';
 
 // Calculate time difference in HH:MM format
 const calculateTimeDifference = (startTime, endTime) => {
@@ -197,6 +198,120 @@ export const newCreateAttendance = async (req, res) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
+    return res.status(500).json({ success: false, message: error.message });
+  };
+};
+
+export const markAttendanceDateRange = async (req, res) => {
+  try {
+    const { employeeId, punchInTime, punchOutTime, fromDate, toDate } = req.body;
+
+    if (!employeeId || !punchInTime || !punchOutTime || !fromDate || !toDate) {
+      return res.status(400).json({ success: false, message: "All fields are required." })
+    };
+
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+    const isValidTime = (time) => {
+      return timeRegex.test(time);
+    };
+
+    const isValidDate = (date) => {
+      return dateRegex.test(date) && !isNaN(new Date(date).getTime());
+    };
+
+    if (!isValidTime(punchInTime)) {
+      return res.status(400).json({ error: "Invalid punch in time format. Expected HH:MM." });
+    };
+
+    if (!isValidTime(punchOutTime)) {
+      return res.status(400).json({ error: "Invalid punch out time format. Expected HH:MM." });
+    };
+
+    if (!isValidDate(fromDate)) {
+      return res.status(400).json({ error: "Invalid from date format. Expected YYYY-MM-DD." });
+    };
+
+    if (!isValidDate(toDate)) {
+      return res.status(400).json({ error: "Invalid to date format. Expected YYYY-MM-DD." });
+    };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const from = new Date(fromDate);
+    const to = new Date(toDate);
+
+    if (from > today) {
+      return res.status(400).json({ success: false, message: "From date cannot be in the future." });
+    };
+
+    if (to > today) {
+      return res.status(400).json({ success: false, message: "To date cannot be in the future." });
+    };
+
+    const employee = await Team.findOne({ _id: employeeId }).populate("office");
+
+    if (!employee) {
+      return res.status(404).json({ success: false, message: "Employee not found." });
+    };
+
+    const dates = getDatesBetween(fromDate, toDate);
+
+    if (dates.length === 0) {
+      return res.status(404).json({ success: false, message: "Provide from date and to date." });
+    };
+
+    for (let i = 0; i < dates.length; i++) {
+      if (new Date(dates[i]).getDay() === 0) {
+        continue;
+      };
+
+      const holiday = await Holiday.findOne({ date: dates[i] });
+
+      if (holiday) {
+        continue;
+      };
+
+      const existingAttendance = await Attendance.findOne({ attendanceDate: dates[i] });
+
+      if (existingAttendance) {
+        continue;
+      };
+
+      const EXPECTED_PUNCH_IN = "10:00";
+      const HALF_DAY_THRESHOLD = "11:00";
+      const lateIn = calculateTimeDifference(EXPECTED_PUNCH_IN, punchInTime);
+      const attendanceStatus = compareTime(punchInTime, HALF_DAY_THRESHOLD) === 1 ? "Half Day" : "Present";
+      const dayName = getDayName(dates[i]);
+      const hoursWorked = calculateTimeDifference(punchInTime, punchOutTime);
+      const officeLatitude = employee?.office?.latitude;
+      const officeLongitude = employee?.office?.longitude;
+
+      const newAttendance = new Attendance({
+        employee: employeeId,
+        attendanceDate: dates[i],
+        punchInLatitude: officeLatitude,
+        punchInLongitude: officeLongitude,
+        punchOutLatitude: officeLatitude,
+        punchOutLongitude: officeLongitude,
+        status: attendanceStatus,
+        punchInTime: punchInTime,
+        punchIn: true,
+        punchOutTime: punchOutTime,
+        punchOut: true,
+        lateIn: lateIn,
+        hoursWorked: hoursWorked,
+        dayName: dayName,
+        isHoliday: false,
+      });
+
+      await newAttendance.save();
+    };
+
+    return res.status(201).json({ success: true, message: `Attendance successfully marked from date ${fromDate} to date ${toDate}` });
+  } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   };
 };

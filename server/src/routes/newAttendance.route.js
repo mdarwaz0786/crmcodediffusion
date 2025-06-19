@@ -1,5 +1,5 @@
 import express from "express";
-import { newCreateAttendance, newDeleteAttendance, newFetchAllAttendance, newFetchMonthlyStatistic, newFetchSingleAttendance, newUpdateAttendance, newUpdatePunchTimeAttendance } from "../controllers/newAttendance.controller.js";
+import { markAttendanceDateRange, newCreateAttendance, newDeleteAttendance, newFetchAllAttendance, newFetchMonthlyStatistic, newFetchSingleAttendance, newUpdateAttendance, newUpdatePunchTimeAttendance } from "../controllers/newAttendance.controller.js";
 import { isLoggedIn } from "../middleware/auth.middleware.js";
 
 // router object
@@ -7,6 +7,7 @@ const router = express.Router();
 
 // routes
 router.post("/create-newAttendance", isLoggedIn, newCreateAttendance);
+router.post("/mark-attendanceDateRange", markAttendanceDateRange);
 router.get("/all-newAttendance", isLoggedIn, newFetchAllAttendance);
 router.get("/single-newAttendance/:id", isLoggedIn, newFetchSingleAttendance);
 router.get("/monthly-newStatistic", isLoggedIn, newFetchMonthlyStatistic);

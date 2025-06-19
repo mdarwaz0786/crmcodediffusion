@@ -7,11 +7,11 @@ import connectDatabase from "./src/database/connectDatabase.js";
 import "./src/jobs/projectDeployment/domainExpiryStatusSendEmail.js";
 import "./src/jobs/projectDeployment/domainExpiryStatusUpdate.js";
 import "./src/jobs/attendance/addLeaveBalance.js";
-import "./src/jobs/attendance/markAbsent.js";
-import "./src/jobs/attendance/markCompOff.js";
-import "./src/jobs/attendance/markHoliday.js";
-import "./src/jobs/attendance/markOnLeave.js";
-import "./src/jobs/attendance/markSunday.js";
+// import "./src/jobs/attendance/markAbsent.js";
+// import "./src/jobs/attendance/markCompOff.js";
+// import "./src/jobs/attendance/markHoliday.js";
+// import "./src/jobs/attendance/markOnLeave.js";
+// import "./src/jobs/attendance/markSunday.js";
 import testRoute from "./src/routes/test.route.js";
 import customerRoute from "./src/routes/customer.route.js";
 import projectTypeRoute from "./src/routes/projectType.route.js";
@@ -47,6 +47,7 @@ import ticketRoute from "./src/routes/ticket.route.js";
 import paymentRoute from "./src/routes/payment.route.js";
 import enquiryRoute from "./src/routes/contactEnquiry.route.js";
 import leedRoute from "./src/routes/leeds.route.js";
+import leaveBalanceRoute from "./src/routes/leaveBalance.route.js";
 
 // Directory name for serving index.html file
 const __dirname = path.resolve();
@@ -140,6 +141,8 @@ server.use("/api/v1/payment", paymentRoute);
 server.use("/api/v1/enquiry", enquiryRoute);
 // Leed route
 server.use("/api/v1/leed", leedRoute);
+// Leave balance route
+server.use("/api/v1/leave", leaveBalanceRoute);
 
 // Middleware for serving client index.html file
 server.use(express.static(path.join(__dirname, "../client/dist")), (req, res, next) => next());
