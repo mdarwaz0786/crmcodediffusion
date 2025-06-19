@@ -67,7 +67,7 @@ const Sidebar = () => {
                   }
                   {
                     (permissions?.leeds?.access) && (
-                      <li><Link to="/leeds" className={currentPath === "/leeds" ? "active" : ""} id={isMobile && active === "leeds" ? "mobile_btn" : ""} onClick={() => handleActive("leeds")}><i style={{ color: currentPath === "/leeds" ? "" : "#FFA201" }} className="ti ti-file-stack"></i><span>Leeds</span></Link></li>
+                      <li><Link to="/leeds" className={currentPath === "/leeds" ? "active" : ""} id={isMobile && active === "leeds" ? "mobile_btn" : ""} onClick={() => handleActive("leeds")}><i style={{ color: currentPath === "/leeds" ? "" : "#FFA201" }} className="ti ti-file-stack"></i><span>Leads</span></Link></li>
                     )
                   }
                   {

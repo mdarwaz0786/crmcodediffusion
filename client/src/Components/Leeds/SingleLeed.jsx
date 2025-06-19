@@ -23,7 +23,7 @@ const SingleLeed = () => {
         setLeed(res?.data?.data);
       };
     } catch (error) {
-      setError("Failed to load Leed.");
+      setError("Failed to load Leads.");
     } finally {
       setLoading(false);
     };
@@ -38,7 +38,7 @@ const SingleLeed = () => {
   const exportLeedDetailAsPdf = () => {
     const element = document.querySelector("#exportLeedsList");
     const options = {
-      filename: `${leed?.fname}-${leed?.lname}-leed.pdf`,
+      filename: `${leed?.fname}-${leed?.lname}-leads.pdf`,
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
@@ -66,7 +66,7 @@ const SingleLeed = () => {
   if (error || !leed) {
     return (
       <div className="alert alert-danger text-center mt-5" role="alert">
-        {error || "Leed not found"}
+        {error || "Lead not found"}
       </div>
     );
   };
@@ -80,7 +80,7 @@ const SingleLeed = () => {
       <div className="content" id="exportLeedsList">
         <div className="container">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-            <h4>Leed Detail</h4>
+            <h4>Leads Detail</h4>
             {
               permissions?.export && (
                 <Link to="#" onClick={exportLeedDetailAsPdf}><button className="btn btn-secondary">Download</button></Link>
