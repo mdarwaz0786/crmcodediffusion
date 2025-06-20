@@ -264,6 +264,7 @@ export const markAttendanceDateRange = async (req, res) => {
     };
 
     for (let i = 0; i < dates.length; i++) {
+      console.log("runs");
       if (new Date(dates[i]).getDay() === 0) {
         continue;
       };
@@ -274,7 +275,10 @@ export const markAttendanceDateRange = async (req, res) => {
         continue;
       };
 
-      const existingAttendance = await Attendance.findOne({ attendanceDate: dates[i] });
+      const existingAttendance = await Attendance.findOne({
+        attendanceDate: dates[i],
+        employee: employeeId,
+      });
 
       if (existingAttendance) {
         continue;

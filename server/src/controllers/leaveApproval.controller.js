@@ -33,6 +33,72 @@ export const createLeaveApproval = async (req, res) => {
       };
     };
 
+    const existingEmployee = await Team.findById(employee);
+
+    if (!existingEmployee) {
+      return res.status(404).json({ success: false, message: "Employee not found" });
+    };
+
+    let balance;
+    const leaveSystemStart = new Date("2025-07-01");
+    const joinDate = new Date(existingEmployee?.joining);
+
+    const accrualStart = joinDate > leaveSystemStart
+      ? new Date(joinDate.getFullYear(), joinDate.getMonth(), 1)
+      : leaveSystemStart;
+
+    const today = new Date();
+
+    if (today < accrualStart) {
+      balance = 0;
+    };
+
+    // Load holidays into a Set
+    const holidays = await Holiday.find({});
+    const holidaySet = new Set(holidays.map((h) => new Date(h.date).toDateString()));
+
+    // Fetch approved leaves
+    const approvedLeaves = await LeaveApproval.find({
+      employee: employee,
+      leaveStatus: "Approved",
+      startDate: { $gte: accrualStart.toISOString().split("T")[0] },
+    });
+
+    // Count valid leave days excluding holidays and Sundays
+    let totalTaken = 0;
+
+    approvedLeaves.forEach((leave) => {
+      const start = new Date(leave.startDate);
+      const end = new Date(leave.endDate);
+      let current = new Date(start);
+
+      while (current <= end) {
+        const isSunday = current.getDay() === 0;
+        const isHoliday = holidaySet.has(current.toDateString());
+
+        if (!isSunday && !isHoliday) {
+          totalTaken += 1;
+        };
+
+        current.setDate(current.getDate() + 1);
+      };
+    });
+
+    // Calculate total entitled leave = months * 2
+    let cumulativeAdded = 0;
+    let cursor = new Date(accrualStart);
+
+    while (cursor <= today) {
+      cumulativeAdded += 2;
+      cursor.setMonth(cursor.getMonth() + 1);
+    };
+
+    balance = cumulativeAdded - totalTaken;
+
+    if (balance <= 0) {
+      return res.status(400).json({ success: false, message: "Insufficient leave balance" });
+    };
+
     // Convert startDate and endDate to Date objects
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -50,17 +116,6 @@ export const createLeaveApproval = async (req, res) => {
 
     if (start > end) {
       return res.status(400).json({ success: false, message: "Start date can not be later than end date." });
-    };
-
-    // Check if the employee exist
-    const existingEmployee = await Team.findById(employee);
-
-    if (!existingEmployee) {
-      return res.status(400).json({ success: false, message: "Employee not found" });
-    };
-
-    if (parseFloat(existingEmployee?.currentLeaveBalance) <= 0) {
-      return res.status(400).json({ success: false, message: "Insufficient leave balance" });
     };
 
     const existingLeaveApproval = await LeaveApproval.findOne({ employee, startDate, endDate });
@@ -210,6 +265,27 @@ export const fetchSingleLeaveApproval = async (req, res) => {
     };
 
     return res.status(200).json({ success: true, data: leaveApproval });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  };
+};
+
+// Controller to fetch particular employee leave approval
+export const getLeaveApprovalByEmployee = async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const fromDate = new Date('2025-07-01T00:00:00.000Z');
+
+    const leave = await LeaveApproval
+      .find({
+        employee: employeeId,
+        createdAt: { $gte: fromDate },
+      })
+      .sort({ createdAt: -1 })
+      .populate('employee', 'name')
+      .exec();
+
+    return res.status(200).json({ success: true, data: leave });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   };
