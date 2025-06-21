@@ -265,6 +265,28 @@ export const markAttendanceDateRange = async (req, res) => {
 
     for (let i = 0; i < dates.length; i++) {
 
+      function getRandomPunchInTimeInNext10Minutes(punchInTime) {
+        const [hourStr, minuteStr] = punchInTime.split(':');
+        const hour = parseInt(hourStr);
+        const minute = parseInt(minuteStr);
+
+        const maxMinute = Math.min(minute + 10, 59);
+        const randomMinute = Math.floor(Math.random() * (maxMinute - minute + 1)) + minute;
+
+        return `${String(hour).padStart(2, '0')}:${String(randomMinute).padStart(2, '0')}`;
+      };
+
+      function getRandomPunchOutTimeInNext10Minutes(punchOutTime) {
+        const [hourStr, minuteStr] = punchOutTime.split(':');
+        const hour = parseInt(hourStr);
+        const minute = parseInt(minuteStr);
+
+        const maxMinute = Math.min(minute + 10, 59);
+        const randomMinute = Math.floor(Math.random() * (maxMinute - minute + 1)) + minute;
+
+        return `${String(hour).padStart(2, '0')}:${String(randomMinute).padStart(2, '0')}`;
+      };
+
       if (new Date(dates[i]).getDay() === 0) {
         continue;
       };
@@ -301,9 +323,9 @@ export const markAttendanceDateRange = async (req, res) => {
         punchOutLatitude: officeLatitude,
         punchOutLongitude: officeLongitude,
         status: attendanceStatus,
-        punchInTime: punchInTime,
+        punchInTime: getRandomPunchInTimeInNext10Minutes(punchInTime),
         punchIn: true,
-        punchOutTime: punchOutTime,
+        punchOutTime: getRandomPunchOutTimeInNext10Minutes(punchOutTime),
         punchOut: true,
         lateIn: lateIn,
         hoursWorked: hoursWorked,
