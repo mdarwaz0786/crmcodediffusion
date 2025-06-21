@@ -12,7 +12,7 @@ export const leaveBalance = async (req, res) => {
       return res.status(404).json({ success: false, message: "Employee not found" });
     };
 
-    const leaveSystemStart = new Date("2025-07-01");
+    const leaveSystemStart = new Date("2025-01-01");
     const joinDate = new Date(employee.joining);
     const accrualStart = joinDate > leaveSystemStart
       ? new Date(joinDate.getFullYear(), joinDate.getMonth(), 1)

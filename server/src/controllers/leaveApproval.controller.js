@@ -40,7 +40,7 @@ export const createLeaveApproval = async (req, res) => {
     };
 
     let balance;
-    const leaveSystemStart = new Date("2025-07-01");
+    const leaveSystemStart = new Date("2025-01-01");
     const joinDate = new Date(existingEmployee?.joining);
 
     const accrualStart = joinDate > leaveSystemStart
@@ -274,7 +274,7 @@ export const fetchSingleLeaveApproval = async (req, res) => {
 export const getLeaveApprovalByEmployee = async (req, res) => {
   try {
     const { employeeId } = req.params;
-    const fromDate = new Date('2025-07-01T00:00:00.000Z');
+    const fromDate = new Date('2025-01-01T00:00:00.000Z');
 
     const leave = await LeaveApproval
       .find({
@@ -300,9 +300,9 @@ export const getPendingLeaveApprovalRequests = async (req, res) => {
       .populate('employee', 'name')
       .exec();
 
-    res.status(200).json({ success: true, data: pendingRequests });
+    return res.status(200).json({ success: true, data: pendingRequests });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 

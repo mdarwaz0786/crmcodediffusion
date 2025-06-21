@@ -18,6 +18,8 @@ const Calender = ({ attendanceData, month, year, employeeId, fetchAllData }) => 
   const [punchInTime, setPunchInTime] = useState('');
   const [punchOutTime, setPunchOutTime] = useState('');
   const [loading, setLoading] = useState(false);
+  const [attendanceMarking, setAttendanceMarking] = useState(false);
+  const [markDate, setMarkDate] = useState('');
 
   const openModal = (id, punchInTime, punchOutTime) => {
     setAttendanceId(id);
@@ -127,6 +129,46 @@ const Calender = ({ attendanceData, month, year, employeeId, fetchAllData }) => 
     default: 'black',
   };
 
+  const handleSetMarkAttendanceDate = (d) => {
+    setMarkDate(d);
+    setModalIsOpen(true);
+    setAttendanceMarking(true);
+  };
+
+  const handleMarkAttendance = async (e) => {
+    e.preventDefault();
+
+    const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(markDate).padStart(2, '0')}`;
+
+    setLoading(true);
+
+    try {
+      const response = await axios.post(`${base_url}/api/v1/newAttendance/mark-attendanceSingleDay`,
+        {
+          employeeId,
+          punchInTime,
+          punchOutTime,
+          date: formattedDate,
+        },
+        {
+          headers: {
+            Authorization: validToken,
+          },
+        },
+      );
+
+      if (response.data.success) {
+        closeModal();
+        fetchAllData();
+        toast.success("Attendance marked successfully");
+      };
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Error while marking attendance");
+    } finally {
+      setLoading(false);
+    };
+  };
+
   return (
     <>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0px' }}>
@@ -141,7 +183,7 @@ const Calender = ({ attendanceData, month, year, employeeId, fetchAllData }) => 
             <div
               key={index}
               style={calendarStyle}
-              onClick={() => attendance?._id ? openModal(attendance?._id, attendance?.punchInTime, attendance?.punchOutTime) : null}
+              onClick={() => attendance?._id ? openModal(attendance?._id, attendance?.punchInTime, attendance?.punchOutTime) : handleSetMarkAttendanceDate(day)}
             >
               <div>{day}</div>
               <div style={{ color: attendanceColors[attendance?.status] }}>{attendance?.status}</div>
@@ -154,14 +196,14 @@ const Calender = ({ attendanceData, month, year, employeeId, fetchAllData }) => 
 
       <Modal show={modalIsOpen} onHide={closeModal} size="lg" aria-labelledby="modal-title">
         <Modal.Header closeButton>
-          <h5 id="modal-title">Update Punch Time</h5>
+          <h5 id="modal-title">{attendanceMarking ? "Mark Attendance" : "Update Punch Time"}</h5>
         </Modal.Header>
         <Modal.Body>
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={(e) => attendanceMarking ? handleMarkAttendance(e) : handleSubmit(e)}>
             <div className="row">
               <div className="col-md-6">
                 <Form.Group controlId="formPunchInTime">
-                  <Form.Label>Punch In Time:</Form.Label>
+                  <Form.Label>Punch In Time <span className="text-danger">*</span></Form.Label>
                   <Form.Control
                     type="time"
                     value={punchInTime}
@@ -172,7 +214,7 @@ const Calender = ({ attendanceData, month, year, employeeId, fetchAllData }) => 
 
               <div className="col-md-6">
                 <Form.Group controlId="formPunchOutTime">
-                  <Form.Label>Punch Out Time:</Form.Label>
+                  <Form.Label>Punch Out Time <span className="text-danger">*</span></Form.Label>
                   <Form.Control
                     type="time"
                     value={punchOutTime}
@@ -182,14 +224,27 @@ const Calender = ({ attendanceData, month, year, employeeId, fetchAllData }) => 
               </div>
             </div>
 
-            <div className="d-flex justify-content-between mt-3">
-              <Button variant="primary" type="submit" disabled={loading}>
-                {loading ? 'Updating...' : 'Update'}
-              </Button>
-              <Button variant="secondary" onClick={closeModal}>
-                Close
-              </Button>
-            </div>
+            {
+              attendanceMarking ? (
+                <div className="d-flex justify-content-between mt-3">
+                  <Button variant="primary" type="submit" disabled={loading}>
+                    {loading ? 'Marking...' : 'Mark'}
+                  </Button>
+                  <Button variant="secondary" onClick={closeModal}>
+                    Close
+                  </Button>
+                </div>
+              ) : (
+                <div className="d-flex justify-content-between mt-3">
+                  <Button variant="primary" type="submit" disabled={loading}>
+                    {loading ? 'Updating...' : 'Update'}
+                  </Button>
+                  <Button variant="secondary" onClick={closeModal}>
+                    Close
+                  </Button>
+                </div>
+              )
+            }
           </Form>
         </Modal.Body>
       </Modal>

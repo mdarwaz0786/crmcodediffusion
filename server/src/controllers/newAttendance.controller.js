@@ -264,7 +264,7 @@ export const markAttendanceDateRange = async (req, res) => {
     };
 
     for (let i = 0; i < dates.length; i++) {
-      console.log("runs");
+
       if (new Date(dates[i]).getDay() === 0) {
         continue;
       };
@@ -315,6 +315,119 @@ export const markAttendanceDateRange = async (req, res) => {
     };
 
     return res.status(201).json({ success: true, message: `Attendance successfully marked from date ${fromDate} to date ${toDate}` });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  };
+};
+
+export const markAttendanceSingleDay = async (req, res) => {
+  try {
+    const { employeeId, punchInTime, punchOutTime, date } = req.body;
+
+    if (!employeeId || !punchInTime || !punchOutTime || !date) {
+      return res.status(400).json({ success: false, message: "All fields are required." })
+    };
+
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+    const isValidTime = (t) => {
+      return timeRegex.test(t);
+    };
+
+    const isValidDate = (d) => {
+      return dateRegex.test(d) && !isNaN(new Date(d).getTime());
+    };
+
+    if (!isValidTime(punchInTime)) {
+      return res.status(400).json({ error: "Invalid punch in time format. Expected HH:MM." });
+    };
+
+    if (!isValidTime(punchOutTime)) {
+      return res.status(400).json({ error: "Invalid punch out time format. Expected HH:MM." });
+    };
+
+    if (!isValidDate(date)) {
+      return res.status(400).json({ error: "Invalid attendance date format. Expected YYYY-MM-DD." });
+    };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const markDate = new Date(date);
+    markDate.setHours(0, 0, 0, 0);
+
+    if (markDate > today) {
+      return res.status(400).json({ success: false, message: "Attendance date cannot be in the future." });
+    };
+
+    const employee = await Team.findOne({ _id: employeeId }).populate("office");
+
+    if (!employee) {
+      return res.status(404).json({ success: false, message: "Employee not found." });
+    };
+
+    const EXPECTED_PUNCH_IN = "10:00";
+    const HALF_DAY_THRESHOLD = "11:00";
+    const lateIn = calculateTimeDifference(EXPECTED_PUNCH_IN, punchInTime);
+    const attendanceStatus = compareTime(punchInTime, HALF_DAY_THRESHOLD) === 1 ? "Half Day" : "Present";
+    const dayName = getDayName(date);
+    const hoursWorked = calculateTimeDifference(punchInTime, punchOutTime);
+    const officeLatitude = employee?.office?.latitude;
+    const officeLongitude = employee?.office?.longitude;
+
+    // Check if the attendance date is a holiday
+    const holiday = await Holiday.findOne({ date: date });
+
+    const newAttendance = new Attendance({
+      employee: employeeId,
+      attendanceDate: date,
+      punchInLatitude: officeLatitude,
+      punchInLongitude: officeLongitude,
+      punchOutLatitude: officeLatitude,
+      punchOutLongitude: officeLongitude,
+      status: attendanceStatus,
+      punchInTime: punchInTime,
+      punchIn: true,
+      punchOutTime: punchOutTime,
+      punchOut: true,
+      lateIn: lateIn,
+      hoursWorked: hoursWorked,
+      dayName: dayName,
+      isHoliday: holiday ? true : false,
+    });
+
+    await newAttendance.save();
+
+    // Check if the day is Sunday or if it is a holiday
+    if (dayName === "Sunday" || holiday) {
+      let reason = "";
+
+      // If both conditions are true
+      if (dayName === "Sunday" && holiday) {
+        reason = `Worked on ${dayName}, ${holiday?.reason}`;
+      } else if (dayName === "Sunday") {
+        reason = `Worked on ${dayName}`;
+      } else if (holiday) {
+        reason = `Worked on ${holiday?.reason}`;
+      };
+
+      const compOffEntry = {
+        date: date,
+        isApplied: false,
+        isApproved: false,
+        isUtilized: false,
+        reason,
+      };
+
+      // Update the eligibleCompOffDate
+      await Team.findOneAndUpdate(
+        { _id: employeeId },
+        { $addToSet: { eligibleCompOffDate: compOffEntry } },
+      );
+    };
+
+    return res.status(201).json({ success: true, message: "Attendance successfully marked" });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   };

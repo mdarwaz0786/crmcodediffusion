@@ -13,6 +13,9 @@ import formatTimeWithAmPm from "../../Helper/formatTimeWithAmPm.js";
 import Calendar from "./Calender.jsx";
 import AttendanceSummary from "./AttendanceSummary.jsx";
 const base_url = import.meta.env.VITE_API_BASE_URL;
+import { Button, Form } from 'react-bootstrap';
+import Modal from 'react-bootstrap/Modal';
+import { toast } from 'react-toastify';
 
 const AttendanceList = () => {
   const { validToken, team, isLoading } = useAuth();
@@ -27,6 +30,13 @@ const AttendanceList = () => {
     year: new Date().getFullYear(),
     month: (new Date().getMonth() + 1).toString().padStart(2, "0"),
   });
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [punchInTime, setPunchInTime] = useState('');
+  const [punchOutTime, setPunchOutTime] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
+  const [attendanceMarking, setAttendanceMarking] = useState(false);
 
   const fetchAllEmployee = async () => {
     try {
@@ -172,6 +182,71 @@ const AttendanceList = () => {
     };
   };
 
+  const openModal = () => {
+    setModalIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalIsOpen(false);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setSelectedEmployeeId('');
+    setPunchInTime('');
+    setPunchOutTime('');
+    setFromDate('');
+    setToDate();
+  };
+
+  const handlePunchInTimeChange = (e) => {
+    setPunchInTime(e.target.value);
+  };
+
+  const handlePunchOutTimeChange = (e) => {
+    setPunchOutTime(e.target.value);
+  };
+
+  const handleFromDateChange = (e) => {
+    setFromDate(e.target.value);
+  };
+
+  const handleToDateChange = (e) => {
+    setToDate(e.target.value);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setAttendanceMarking(true);
+
+    try {
+      const response = await axios.post(`${base_url}/api/v1/newAttendance/mark-attendanceDateRange`,
+        {
+          employeeId: selectedEmployeeId,
+          punchInTime,
+          punchOutTime,
+          fromDate,
+          toDate,
+        },
+        {
+          headers: {
+            Authorization: validToken,
+          },
+        },
+      );
+
+      if (response.data.success) {
+        closeModal();
+        fetchAllData();
+        toast.success("Attendance marked successfully");
+      };
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Error while marking attendance");
+    } finally {
+      setAttendanceMarking(false);
+    };
+  };
+
   if (isLoading) {
     return <Preloader />;
   };
@@ -206,6 +281,10 @@ const AttendanceList = () => {
                 </div>
               </div>
               {/* /Page Header */}
+
+              <div className="d-flex justify-content-center mb-3">
+                <button className="btn btn-primary" onClick={() => openModal()}>Mark Attendance</button>
+              </div>
 
               <div className="card main-card">
                 <div className="card-body">
@@ -316,6 +395,89 @@ const AttendanceList = () => {
               </div>
             </div>
           </div>
+
+          <Modal show={modalIsOpen} onHide={closeModal} size="lg" aria-labelledby="modal-title">
+            <Modal.Header closeButton>
+              <h5 id="modal-title">Mark Attendance</h5>
+            </Modal.Header>
+            <Modal.Body>
+              <Form onSubmit={handleSubmit}>
+                <div className="row mb-4">
+                  <div className="col-md-6">
+                    <Form.Group controlId="formPunchInTime">
+                      <Form.Label>Punch In Time <span className="text-danger">*</span></Form.Label>
+                      <Form.Control
+                        type="time"
+                        value={punchInTime}
+                        onChange={handlePunchInTimeChange}
+                      />
+                    </Form.Group>
+                  </div>
+
+                  <div className="col-md-6">
+                    <Form.Group controlId="formPunchOutTime">
+                      <Form.Label>Punch Out Time <span className="text-danger">*</span></Form.Label>
+                      <Form.Control
+                        type="time"
+                        value={punchOutTime}
+                        onChange={handlePunchOutTimeChange}
+                      />
+                    </Form.Group>
+                  </div>
+                </div>
+
+                <div className="row mb-4">
+                  <div className="col-md-6">
+                    <Form.Group controlId="formPunchInTime">
+                      <Form.Label>From Date <span className="text-danger">*</span></Form.Label>
+                      <Form.Control
+                        type="date"
+                        value={fromDate}
+                        onChange={handleFromDateChange}
+                      />
+                    </Form.Group>
+                  </div>
+                  <div className="col-md-6">
+                    <Form.Group controlId="formPunchInTime">
+                      <Form.Label>To Date <span className="text-danger">*</span></Form.Label>
+                      <Form.Control
+                        type="date"
+                        value={toDate}
+                        onChange={handleToDateChange}
+                      />
+                    </Form.Group>
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-md-12">
+                    <div className="form-wrap">
+                      <label className="col-form-label" htmlFor="employeeId" style={{ color: "#777" }}>Select Employee <span className="text-danger">*</span></label>
+                      <select className="form-select" name="employeeId" id="employeeId" value={selectedEmployeeId} onChange={(e) => setSelectedEmployeeId(e.target.value)}>
+                        <option value="" style={{ color: "rgb(120, 120, 120)" }}>Select</option>
+                        {
+                          employee?.map((p) => (
+                            <option key={p?._id} value={p?._id}>{p?.name}</option>
+                          ))
+                        }
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <p><strong>Note: <span className="text-danger">*</span></strong> Select Same date for single day attendace marking.</p>
+
+                <div className="d-flex justify-content-between mt-4">
+                  <Button variant="primary" type="submit" disabled={attendanceMarking}>
+                    {attendanceMarking ? 'Marking...' : 'Mark'}
+                  </Button>
+                  <Button variant="secondary" onClick={closeModal}>
+                    Close
+                  </Button>
+                </div>
+              </Form>
+            </Modal.Body>
+          </Modal>
         </div>
       </div>
       {/* /Page Wrapper */}
