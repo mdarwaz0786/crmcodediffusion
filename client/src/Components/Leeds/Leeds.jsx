@@ -157,7 +157,7 @@ const Leeds = () => {
     }));
 
     if (exportData?.length === 0) {
-      alert("No leeds found to export");
+      alert("No leads found to export");
       return;
     };
 
@@ -171,15 +171,15 @@ const Leeds = () => {
     worksheet["!cols"] = columnWidths;
 
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "leeds");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "leads");
 
-    XLSX.writeFile(workbook, `leeds.xlsx`);
+    XLSX.writeFile(workbook, `leads.xlsx`);
   };
 
   const exportLeedsListAsPdf = () => {
     const element = document.querySelector("#exportLeedsList");
     const options = {
-      filename: "leeds",
+      filename: "leads",
       margin: [10, 10, 10, 10],
       html2canvas: {
         useCORS: true,
@@ -239,7 +239,7 @@ const Leeds = () => {
                       <div className="col-md-5 col-sm-4">
                         <div className="form-wrap icon-form">
                           <span className="form-icon"><i className="ti ti-search" /></span>
-                          <input type="text" className="form-control" placeholder="Search Leed" value={filters.search} onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value, page: 1 }))} />
+                          <input type="text" className="form-control" placeholder="Search Leads" value={filters.search} onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value, page: 1 }))} />
                         </div>
                       </div>
                       <div className="col-md-7 col-sm-8">
@@ -330,13 +330,13 @@ const Leeds = () => {
                                 <div className="accordion" id="accordionExample">
                                   <div className="filter-set-content">
                                     <div className="filter-set-content-head">
-                                      <Link to="#" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Leed Name</Link>
+                                      <Link to="#" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Leads Name</Link>
                                     </div>
                                     <div className="filter-set-contents accordion-collapse collapse show" id="collapseTwo" data-bs-parent="#accordionExample">
                                       <div className="filter-content-list">
                                         <div className="form-wrap icon-form">
                                           <span className="form-icon"><i className="ti ti-search" /></span>
-                                          <input type="text" className="form-control" placeholder="Search Leed Name" onChange={(e) => setName(e.target.value)} />
+                                          <input type="text" className="form-control" placeholder="Search Leads Name" onChange={(e) => setName(e.target.value)} />
                                         </div>
                                         <ul>
                                           {
