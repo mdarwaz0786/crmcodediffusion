@@ -197,6 +197,7 @@ const AttendanceList = () => {
     setPunchOutTime('');
     setFromDate('');
     setToDate();
+    setAttendanceMarking(false);
   };
 
   const handlePunchInTimeChange = (e) => {

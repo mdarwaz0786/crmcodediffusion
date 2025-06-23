@@ -37,6 +37,9 @@ const Calender = ({ attendanceData, month, year, employeeId, fetchAllData }) => 
     setAttendanceId('');
     setPunchInTime('');
     setPunchOutTime('');
+    setAttendanceMarking(false);
+    setLoading(false);
+    setMarkDate('');
   };
 
   const handlePunchInTimeChange = (e) => {
@@ -67,7 +70,7 @@ const Calender = ({ attendanceData, month, year, employeeId, fetchAllData }) => 
       if (response.data.success) {
         closeModal();
         fetchAllData();
-        toast.success("Updated successful");
+        toast.success("Updated successfully");
       };
     } catch (error) {
       toast.error(error?.response?.data?.message || "Error while updating");
@@ -131,8 +134,8 @@ const Calender = ({ attendanceData, month, year, employeeId, fetchAllData }) => 
 
   const handleSetMarkAttendanceDate = (d) => {
     setMarkDate(d);
-    setModalIsOpen(true);
     setAttendanceMarking(true);
+    setModalIsOpen(true);
   };
 
   const handleMarkAttendance = async (e) => {
@@ -157,7 +160,7 @@ const Calender = ({ attendanceData, month, year, employeeId, fetchAllData }) => 
         },
       );
 
-      if (response.data.success) {
+      if (response?.data?.success) {
         closeModal();
         fetchAllData();
         toast.success("Attendance marked successfully");
