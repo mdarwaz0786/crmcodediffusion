@@ -13,12 +13,14 @@ export const leaveBalance = async (req, res) => {
     };
 
     const leaveSystemStart = new Date("2025-01-01");
-    const joinDate = new Date(employee.joining);
+    const joinDate = new Date(employee?.joining);
+
     const accrualStart = joinDate > leaveSystemStart
       ? new Date(joinDate.getFullYear(), joinDate.getMonth(), 1)
       : leaveSystemStart;
 
     const today = new Date();
+
     if (today < accrualStart) {
       return res.json({
         summary: [],
@@ -30,7 +32,7 @@ export const leaveBalance = async (req, res) => {
 
     // Load all holidays into a Set for fast lookup
     const holidays = await Holiday.find({});
-    const holidaySet = new Set(holidays.map(h => new Date(h.date).toDateString())); // e.g., "Mon Mar 31 2025"
+    const holidaySet = new Set(holidays.map((h) => new Date(h.date).toDateString()));
 
     // Fetch all approved leaves
     const approvedLeaves = await LeaveApproval.find({
@@ -42,8 +44,8 @@ export const leaveBalance = async (req, res) => {
     const leaveByMonth = {};
 
     approvedLeaves.forEach((leave) => {
-      const start = new Date(leave.startDate);
-      const end = new Date(leave.endDate);
+      const start = new Date(leave?.startDate);
+      const end = new Date(leave?.endDate);
       let current = new Date(start);
 
       while (current <= end) {
@@ -51,8 +53,12 @@ export const leaveBalance = async (req, res) => {
         const isHoliday = holidaySet.has(current.toDateString());
 
         if (!isSunday && !isHoliday) {
-          const month = current.toISOString().slice(0, 7); // "YYYY-MM"
-          leaveByMonth[month] = (leaveByMonth[month] || 0) + 1;
+          const month = current.toISOString().slice(0, 7);
+          const dateStr = current.toISOString().split("T")[0];
+          if (!leaveByMonth[month]) {
+            leaveByMonth[month] = [];
+          };
+          leaveByMonth[month].push(dateStr);
         };
 
         current.setDate(current.getDate() + 1);
@@ -67,7 +73,8 @@ export const leaveBalance = async (req, res) => {
 
     while (cursor <= today) {
       const month = cursor.toISOString().slice(0, 7);
-      const taken = leaveByMonth[month] || 0;
+      const leaveDates = leaveByMonth[month] || [];
+      const taken = leaveDates.length;
 
       cumulativeAdded += 2;
       cumulativeTaken += taken;
@@ -77,6 +84,7 @@ export const leaveBalance = async (req, res) => {
         leavesAdded: 2,
         leavesTaken: taken,
         balanceTillMonth: cumulativeAdded - cumulativeTaken,
+        leaveDates,
       });
 
       cursor.setMonth(cursor.getMonth() + 1);
@@ -87,6 +95,7 @@ export const leaveBalance = async (req, res) => {
     const balance = totalEntitled - totalTaken;
 
     return res.json({
+      success: true,
       summary,
       totalEntitled,
       totalTaken,
