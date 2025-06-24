@@ -732,7 +732,7 @@ export const newFetchMonthlySalary = async (req, res) => {
       return res.status(400).json({ success: false, message: "Month in YYYY-MM format is required." });
     };
 
-    const employees = await Team.find();
+    const employees = await Team.find({ isActive: true });
 
     if (!employees || employees?.length === 0) {
       return res.status(400).json({ success: false, message: "Employees not found." });

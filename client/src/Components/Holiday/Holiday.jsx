@@ -16,7 +16,7 @@ const Holiday = () => {
   const [total, setTotal] = useState("");
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    year: "",
+    year: new Date().getFullYear(),
     month: "",
     sort: "Ascending",
     page: 1,

@@ -21,7 +21,7 @@ cron.schedule("30 18 * * *", async () => {
     };
 
     const employees = await Team
-      .find()
+      .find({ isActive: true })
       .select("_id name");
 
     if (!employees || employees.length === 0) {

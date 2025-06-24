@@ -10,7 +10,7 @@ cron.schedule("15 19 * * *", async () => {
     session.startTransaction();
 
     const employees = await Team
-      .find()
+      .find({ isActive: true })
       .select("_id name currentLeaveBalance usedLeaveBalance approvedLeaves");
 
     if (!employees || employees.length === 0) {

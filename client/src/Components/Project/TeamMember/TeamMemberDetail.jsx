@@ -15,6 +15,7 @@ const TeamMemberDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [teamMember, setTeamMember] = useState("");
+  const [leaveBalance, setLeaveBalance] = useState(null);
   const { validToken, team, isLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const permissions = team?.role?.permissions?.team;
@@ -38,9 +39,29 @@ const TeamMemberDetail = () => {
     };
   };
 
+  const fetchLeaveBalanceData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${base_url}/api/v1/leave/leaveBalance/${id}`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        setLeaveBalance(response?.data);
+        setLoading(false);
+      };
+    } catch (error) {
+      console.log(error.message);
+      setLoading(false);
+    };
+  };
+
   useEffect(() => {
     if (validToken && id && permissions?.access) {
       fetchTeamMemberData();
+      fetchLeaveBalanceData();
     };
   }, [validToken, id, permissions]);
 
@@ -98,15 +119,15 @@ const TeamMemberDetail = () => {
               <DetailItem label="Password" value={teamMember?.password} />
               <DetailItem label="Monthly Salary" value={teamMember?.monthlySalary} />
               <DetailItem label="Working Hours/Day" value={formatTimeToHoursMinutes(teamMember?.workingHoursPerDay)} />
-              <DetailItem label="Joining Date" value={teamMember?.joining} />
+              <DetailItem label="Joining Date" value={formatDate(teamMember?.joining)} />
               <DetailItem label="Date of Birth" value={formatDate(teamMember?.dob)} />
               <DetailItem label="Department" value={teamMember?.department?.name} />
               <DetailItem label="Designation" value={teamMember?.designation?.name} />
-              <DetailItem label="Office" value={teamMember?.office?.uniqueCode} />
+              <DetailItem label="Office" value={teamMember?.office?.name} />
               <DetailItem label="Active" value={teamMember?.isActive ? "Yes" : "No"} />
-              <DetailItem label="Alloted Leave Balance" value={teamMember?.allotedLeaveBalance} />
-              <DetailItem label="Leaves Taken" value={teamMember?.usedLeaveBalance} />
-              <DetailItem label="Available Leave Balance" value={teamMember?.currentLeaveBalance} />
+              <DetailItem label="Total Leave Credited" value={leaveBalance?.totalEntitled} />
+              <DetailItem label="Total Leave Debited" value={leaveBalance?.totalTaken} />
+              <DetailItem label="Available Leave Balance" value={leaveBalance?.balance} />
             </div>
           </div>
         </div>

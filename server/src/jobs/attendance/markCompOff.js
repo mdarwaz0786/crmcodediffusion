@@ -11,7 +11,7 @@ cron.schedule("00 19 * * *", async () => {
     session.startTransaction();
 
     const employees = await Team
-      .find()
+      .find({ isActive: true })
       .select("_id name eligibleCompOffDate");
 
     if (!employees || employees.length === 0) {

@@ -145,6 +145,8 @@ export const fetchAllTeam = async (req, res) => {
         { joining: { $regex: searchRegex } },
         { dob: { $regex: searchRegex } },
         { designation: await findObjectIdByString('Designation', 'name', req.query.search) },
+        { department: await findObjectIdByString('Department', 'name', req.query.search) },
+        { office: await findObjectIdByString('Office', 'name', req.query.search) },
         { role: await findObjectIdByString('Role', 'name', req.query.search) },
         { reportingTo: { $in: await findObjectIdArrayByString('Team', 'name', req.query.search) } },
       ];
@@ -158,6 +160,13 @@ export const fetchAllTeam = async (req, res) => {
     // Handle name filter
     if (req.query.nameFilter) {
       filter.name = { $in: Array.isArray(req.query.nameFilter) ? req.query.nameFilter : [req.query.nameFilter] };
+    };
+
+    // Status filter
+    if (!req.query.status || req.query.status === "Active") {
+      filter.isActive = true;
+    } else if (req.query.status === "Inactive") {
+      filter.isActive = false;
     };
 
     // Handle sorting

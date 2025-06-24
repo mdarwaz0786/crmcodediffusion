@@ -207,6 +207,22 @@ const SalarySlip = () => {
                       <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>Monthly Gross Salary</td>
                       <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}> ₹{employee?.monthlySalary}</td>
                     </tr>
+                    {
+                      salary[0]?.totalOnLeave > 0 && (
+                        <tr>
+                          <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>Paid Leaves ({salary[0]?.totalOnLeave} × ₹{salary[0]?.dailySalary})</td>
+                          <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>+₹{salary[0]?.dailySalary * salary[0]?.totalOnLeave}</td>
+                        </tr>
+                      )
+                    }
+                    {
+                      salary[0]?.totalCompOff > 0 && (
+                        <tr>
+                          <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>Comp Off ({salary[0]?.totalCompOff} × ₹{salary[0]?.dailySalary})</td>
+                          <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>+₹{salary[0]?.dailySalary * salary[0]?.totalCompOff}</td>
+                        </tr>
+                      )
+                    }
                     <tr>
                       <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>Total Deduction ({salary[0]?.deductionDays} × ₹{salary[0]?.dailySalary})</td>
                       <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>-₹{salary[0]?.totalDeduction}</td>

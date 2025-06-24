@@ -25,6 +25,7 @@ const TeamMember = () => {
     sort: "Descending",
     page: 1,
     limit: 20,
+    status: "Active",
   });
   const permissions = team?.role?.permissions?.team;
   const fieldPermissions = team?.role?.permissions?.team?.fields;
@@ -66,6 +67,7 @@ const TeamMember = () => {
           sort: filters.sort,
           page: filters.page,
           limit: filters.limit,
+          status: filters.status,
           nameFilter: filters.nameFilter.map(String),
         },
       });
@@ -89,6 +91,7 @@ const TeamMember = () => {
         },
         params: {
           name,
+          status: filters.status,
         },
       });
 
@@ -104,7 +107,7 @@ const TeamMember = () => {
     if (!isLoading && team && permissions?.access) {
       fetchAllTeamName();
     };
-  }, [debouncedSearchName, isLoading, team, permissions]);
+  }, [debouncedSearchName, isLoading, team, permissions, filters.status]);
 
   const handleFilterChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -130,29 +133,29 @@ const TeamMember = () => {
     if (!isLoading && team && permissions?.access) {
       fetchAllData();
     };
-  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, isLoading, team, permissions]);
+  }, [debouncedSearch, filters.limit, filters.page, filters.status, filters.sort, filters.nameFilter, isLoading, team, permissions]);
 
-  const handleDelete = async (id) => {
-    let isdelete = prompt("If you want to delete, type \"yes\".");
+  // const handleDelete = async (id) => {
+  //   let isdelete = prompt("If you want to delete, type \"yes\".");
 
-    if (isdelete === "yes") {
-      try {
-        const response = await axios.delete(`${base_url}/api/v1/team/delete-team/${id}`, {
-          headers: {
-            Authorization: validToken,
-          },
-        });
+  //   if (isdelete === "yes") {
+  //     try {
+  //       const response = await axios.delete(`${base_url}/api/v1/team/delete-team/${id}`, {
+  //         headers: {
+  //           Authorization: validToken,
+  //         },
+  //       });
 
-        if (response?.data?.success) {
-          toast.success("Deleted successfully");
-          fetchAllData();
-        };
-      } catch (error) {
-        console.log("Error while deleting team:", error.message);
-        toast.error("Error while deleting");
-      };
-    };
-  };
+  //       if (response?.data?.success) {
+  //         toast.success("Deleted successfully");
+  //         fetchAllData();
+  //       };
+  //     } catch (error) {
+  //       console.log("Error while deleting team:", error.message);
+  //       toast.error("Error while deleting");
+  //     };
+  //   };
+  // };
 
   const exportTeamListAsExcel = () => {
     if (data?.length === 0) {
@@ -205,6 +208,30 @@ const TeamMember = () => {
     };
     if (element) {
       html2pdf().set(options).from(element).save();
+    };
+  };
+
+  const handleUpdate = async (e, id, newStatus) => {
+    e.preventDefault();
+
+    // Create update object
+    const updateData = {
+      isActive: newStatus,
+    };
+
+    try {
+      const response = await axios.put(`${base_url}/api/v1/team/update-team/${id}`, updateData, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        fetchAllData();
+        toast.success("Submitted successfully");
+      };
+    } catch (error) {
+      toast.error("Error while updating");
     };
   };
 
@@ -327,6 +354,33 @@ const TeamMember = () => {
                             </div>
                           </div>
                         </li>
+                        <li>
+                          <div className="sort-dropdown drop-down">
+                            <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown"><i className="ti ti-toggle-left" />{filters.status}</Link>
+                            <div className="dropdown-menu  dropdown-menu-start">
+                              <ul>
+                                <li>
+                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, status: "All", page: 1 }))}>
+                                    <i className="ti ti-circle-chevron-right" />
+                                    All
+                                  </Link>
+                                </li>
+                                <li>
+                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, status: "Active", page: 1 }))}>
+                                    <i className="ti ti-circle-chevron-right" />
+                                    Active
+                                  </Link>
+                                </li>
+                                <li>
+                                  <Link to="#" onClick={() => setFilters((prev) => ({ ...prev, status: "Inactive", page: 1 }))}>
+                                    <i className="ti ti-circle-chevron-right" />
+                                    Inactive
+                                  </Link>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                        </li>
                       </ul>
                     </div>
                     <div className="filter-list">
@@ -438,11 +492,12 @@ const TeamMember = () => {
                               <th>Role</th>
                             )
                           }
-                          {
+                          {/* {
                             (fieldPermissions?.designation?.show) && (
                               <th>Designation</th>
                             )
-                          }
+                          } */}
+                          <th>Status</th>
                           <th>Action</th>
                         </tr>
                       </thead>
@@ -484,11 +539,26 @@ const TeamMember = () => {
                                   <td>{d?.role?.name}</td>
                                 )
                               }
-                              {
+                              {/* {
                                 (fieldPermissions?.designation?.show) && (
                                   <td>{d?.designation?.name}</td>
                                 )
-                              }
+                              } */}
+                              <td>
+                                <div className="form-check form-switch" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    role="switch"
+                                    id={`status-switch-${d?._id}`}
+                                    checked={d?.isActive}
+                                    onChange={(e) => handleUpdate(e, d?._id, e.target.checked)}
+                                  />
+                                  <label className="form-check-label" htmlFor={`status-switch-${d?._id}`}>
+                                    {d.isActive ? "Active" : "Inactive"}
+                                  </label>
+                                </div>
+                              </td>
                               <td>
                                 <div className="table-action">
                                   <Link to="#" className="action-icon" data-bs-toggle="dropdown" aria-expanded="false">
@@ -503,7 +573,7 @@ const TeamMember = () => {
                                         </Link>
                                       )
                                     }
-                                    {
+                                    {/* {
                                       permissions?.update && permissions?.delete && (
                                         <hr className="horizontal-line" />
                                       )
@@ -515,7 +585,7 @@ const TeamMember = () => {
                                           Delete
                                         </Link>
                                       )
-                                    }
+                                    } */}
                                   </div>
                                 </div>
                               </td>
