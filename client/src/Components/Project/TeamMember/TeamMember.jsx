@@ -545,16 +545,16 @@ const TeamMember = () => {
                                 )
                               } */}
                               <td>
-                                <div className="form-check form-switch" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <div className="form-check form-switch" style={{ display: "flex", alignItems: "center" }}>
                                   <input
                                     className="form-check-input"
                                     type="checkbox"
                                     role="switch"
-                                    id={`status-switch-${d?._id}`}
+                                    id={d?._id}
                                     checked={d?.isActive}
                                     onChange={(e) => handleUpdate(e, d?._id, e.target.checked)}
                                   />
-                                  <label className="form-check-label" htmlFor={`status-switch-${d?._id}`}>
+                                  <label className="form-check-label" htmlFor={d?._id}>
                                     {d.isActive ? "Active" : "Inactive"}
                                   </label>
                                 </div>
