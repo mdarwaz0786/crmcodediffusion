@@ -32,7 +32,7 @@ export const leaveBalance = async (req, res) => {
 
     // Load all holidays into a Set for fast lookup
     const holidays = await Holiday.find({});
-    const holidaySet = new Set(holidays.map((h) => new Date(h.date).toDateString()));
+    const holidaySet = new Set(holidays?.map((h) => new Date(h?.date).toDateString()));
 
     // Fetch all approved leaves
     const approvedLeaves = await LeaveApproval.find({
@@ -43,25 +43,24 @@ export const leaveBalance = async (req, res) => {
 
     const leaveByMonth = {};
 
-    approvedLeaves.forEach((leave) => {
+    approvedLeaves?.forEach((leave) => {
       const start = new Date(leave?.startDate);
       const end = new Date(leave?.endDate);
-      let current = new Date(start);
 
-      while (current <= end) {
-        const isSunday = current.getDay() === 0;
-        const isHoliday = holidaySet.has(current.toDateString());
+      while (start <= end) {
+        const isSunday = start.getDay() === 0;
+        const isHoliday = holidaySet.has(start.toDateString());
 
         if (!isSunday && !isHoliday) {
-          const month = current.toISOString().slice(0, 7);
-          const dateStr = current.toISOString().split("T")[0];
+          const month = start.toISOString().slice(0, 7);
+          const dateStr = start.toISOString().split("T")[0];
           if (!leaveByMonth[month]) {
             leaveByMonth[month] = [];
           };
           leaveByMonth[month].push(dateStr);
         };
 
-        current.setDate(current.getDate() + 1);
+        start.setDate(start.getDate() + 1);
       };
     });
 
