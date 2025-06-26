@@ -48,6 +48,7 @@ import paymentRoute from "./src/routes/payment.route.js";
 import enquiryRoute from "./src/routes/contactEnquiry.route.js";
 import leedRoute from "./src/routes/leeds.route.js";
 import leaveBalanceRoute from "./src/routes/leaveBalance.route.js";
+import appSettingRoute from "./src/routes/appSetting.route.js";
 
 // Directory name for serving index.html file
 const __dirname = path.resolve();
@@ -143,6 +144,8 @@ server.use("/api/v1/enquiry", enquiryRoute);
 server.use("/api/v1/leed", leedRoute);
 // Leave balance route
 server.use("/api/v1/leave", leaveBalanceRoute);
+// App setting route
+server.use("/api/v1/appSetting", appSettingRoute);
 
 // Middleware for serving client index.html file
 server.use(express.static(path.join(__dirname, "../client/dist")), (req, res, next) => next());

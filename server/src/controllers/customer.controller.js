@@ -18,7 +18,7 @@ export const createCustomer = async (req, res) => {
 // controller for login customer
 export const loginCustomer = async (req, res) => {
   try {
-    const { mobile, password, fcmToken } = req.body;
+    const { mobile, password, fcmToken, deviceId } = req.body;
 
     const customer = await Customer.findOne({ mobile });
 
@@ -32,6 +32,11 @@ export const loginCustomer = async (req, res) => {
 
     if (!!fcmToken) {
       customer.fcmToken = fcmToken;
+      await customer.save();
+    };
+
+    if (!!deviceId) {
+      customer.deviceId = deviceId;
       await customer.save();
     };
 
@@ -50,6 +55,8 @@ export const loginCustomer = async (req, res) => {
         customer?.address,
         customer?.role?._id,
         customer?.fcmToken,
+        customer?.deviceId,
+        customer?.allowMultiDevice,
         "Client",
       ),
     });

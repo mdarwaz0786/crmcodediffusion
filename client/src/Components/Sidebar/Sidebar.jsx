@@ -213,6 +213,17 @@ const Sidebar = () => {
               </li>
 
               <li>
+                <h6 className="submenu-hdr">Setting</h6>
+                <ul>
+                  {
+                    (team?.role?.name?.toLowerCase() === "admin") && (
+                      <li><Link to="/app-setting" className={currentPath === "/app-setting" ? "active" : ""} id={isMobile && active === "appSetting" ? "mobile_btn" : ""} onClick={() => handleActive("appSetting")}><i className="ti ti-settings" style={{ color: currentPath === "/app-setting" ? "" : "#FFA201" }} /><span>App Setting</span></Link></li>
+                    )
+                  }
+                </ul>
+              </li>
+
+              <li>
                 {
                   (team?.role?.name?.toLowerCase() === "admin") && (
                     <h6 className="submenu-hdr">Office</h6>
@@ -221,7 +232,7 @@ const Sidebar = () => {
                 <ul>
                   {
                     (team?.role?.name?.toLowerCase() === "admin") && (
-                      <li><Link to="/office" className={currentPath === "/office" ? "active" : ""} id={isMobile && active === "office" ? "mobile_btn" : ""} onClick={() => handleActive("office")}><i style={{ color: currentPath === "/office" ? "" : "#FFA201" }} className="ti ti-building"></i><span>Offices</span></Link></li>
+                      <li><Link to="/office" className={currentPath === "/office" ? "active" : ""} id={isMobile && active === "office" ? "mobile_btn" : ""} onClick={() => handleActive("office")}><i style={{ color: currentPath === "/office" ? "" : "#FFA201" }} className="ti ti-building"></i><span>Office</span></Link></li>
                     )
                   }
                   {

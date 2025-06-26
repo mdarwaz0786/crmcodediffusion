@@ -90,7 +90,10 @@ import EditOffice from "./Components/Office/EditOffice.jsx";
 import SingleOffice from "./Components/Office/SingleOffice.jsx";
 import Leeds from "./Components/Leeds/Leeds.jsx";
 import SingleLeed from "./Components/Leeds/SingleLeed.jsx";
+import AppSetting from "./Components/AppSetting/AppSetting.jsx";
 import Test from "./Test.jsx";
+import AddAppSetting from "./Components/AppSetting/AddAppSetting.jsx";
+import EditAppSetting from "./Components/AppSetting/EditAppSetting.jsx";
 
 const App = () => {
   return (
@@ -185,6 +188,9 @@ const App = () => {
           <Route path="single-office/:id" element={<SingleOffice />} />
           <Route path="leeds" element={<Leeds />} />
           <Route path="single-leed/:id" element={<SingleLeed />} />
+          <Route path="app-setting" element={<AppSetting />} />
+          <Route path="add-app-setting" element={<AddAppSetting />} />
+          <Route path="edit-app-setting/:id" element={<EditAppSetting />} />
           <Route path="test" element={<Test />} />
         </Route>
         <Route path="/login" element={<Login />} />

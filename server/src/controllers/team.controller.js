@@ -37,7 +37,7 @@ export const createTeam = async (req, res) => {
 // controller for login team member
 export const loginTeam = async (req, res) => {
   try {
-    const { employeeId, password, fcmToken } = req.body;
+    const { employeeId, password, fcmToken, deviceId, appLogin } = req.body;
 
     const team = await Team.findOne({ employeeId });
 
@@ -47,6 +47,20 @@ export const loginTeam = async (req, res) => {
 
     if (password !== team.password) {
       return res.status(401).json({ success: false, message: "Invalid Password" });
+    };
+
+    if (appLogin) {
+      if (!team.allowMultiDevice) {
+        if (!team.deviceId) {
+          team.deviceId = deviceId;
+          await team.save();
+        } else if (team.deviceId !== deviceId) {
+          return res.status(403).json({ success: false, message: "You are not authorized to login in this device." });
+        };
+      } else {
+        team.deviceId = deviceId;
+        await team.save();
+      };
     };
 
     if (!!fcmToken) {
@@ -84,6 +98,8 @@ export const loginTeam = async (req, res) => {
         team?.eligibleCompOffDate,
         team?.isActive,
         team?.fcmToken,
+        team?.deviceId,
+        team?.allowMultiDevice,
         "Employee",
       ),
     });
