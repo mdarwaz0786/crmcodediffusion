@@ -607,6 +607,8 @@ const TeamPermissionSchema = new mongoose.Schema(
       reportingTo: { type: FieldPermissionSchema, default: () => ({}) },
       isActive: { type: FieldPermissionSchema, default: () => ({}) },
       fcmToken: { type: FieldPermissionSchema, default: () => ({}) },
+      deviceId: { type: FieldPermissionSchema, default: () => ({}) },
+      allowMultiDevice: { type: FieldPermissionSchema, default: () => ({}) },
     },
   },
 );

@@ -135,28 +135,6 @@ const TeamMember = () => {
     };
   }, [debouncedSearch, filters.limit, filters.page, filters.status, filters.sort, filters.nameFilter, isLoading, team, permissions]);
 
-  // const handleDelete = async (id) => {
-  //   let isdelete = prompt("If you want to delete, type \"yes\".");
-
-  //   if (isdelete === "yes") {
-  //     try {
-  //       const response = await axios.delete(`${base_url}/api/v1/team/delete-team/${id}`, {
-  //         headers: {
-  //           Authorization: validToken,
-  //         },
-  //       });
-
-  //       if (response?.data?.success) {
-  //         toast.success("Deleted successfully");
-  //         fetchAllData();
-  //       };
-  //     } catch (error) {
-  //       console.log("Error while deleting team:", error.message);
-  //       toast.error("Error while deleting");
-  //     };
-  //   };
-  // };
-
   const exportTeamListAsExcel = () => {
     if (data?.length === 0) {
       alert("No data available to export");
@@ -225,6 +203,34 @@ const TeamMember = () => {
           Authorization: validToken,
         },
       });
+
+      if (response?.data?.success) {
+        fetchAllData();
+        toast.success("Submitted successfully");
+      };
+    } catch (error) {
+      toast.error("Error while updating");
+    };
+  };
+
+  const handleAllowMultiDevice = async (e, id, isAllowed) => {
+    e.preventDefault();
+
+    // Create update object
+    const updateData = {
+      allowMultiDevice: isAllowed,
+    };
+
+    console.log(updateData);
+
+    try {
+      const response = await axios.put(`${base_url}/api/v1/team/update-team/${id}`, updateData, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      console.log(response?.data);
 
       if (response?.data?.success) {
         fetchAllData();
@@ -477,27 +483,14 @@ const TeamMember = () => {
                               <th>Employee Name</th>
                             )
                           }
-                          {
-                            (fieldPermissions?.email?.show) && (
-                              <th>Email ID</th>
-                            )
-                          }
-                          {
-                            (fieldPermissions?.mobile?.show) && (
-                              <th>Mobile No.</th>
-                            )
-                          }
+                          <th>Device Id</th>
+                          <th>Multi Device Login</th>
+                          <th>Status</th>
                           {
                             (fieldPermissions?.role?.show) && (
                               <th>Role</th>
                             )
                           }
-                          {/* {
-                            (fieldPermissions?.designation?.show) && (
-                              <th>Designation</th>
-                            )
-                          } */}
-                          <th>Status</th>
                           <th>Action</th>
                         </tr>
                       </thead>
@@ -524,26 +517,22 @@ const TeamMember = () => {
                                   <td>{d?.name}</td>
                                 )
                               }
-                              {
-                                (fieldPermissions?.email?.show) && (
-                                  <td>{d?.email}</td>
-                                )
-                              }
-                              {
-                                (fieldPermissions?.mobile?.show) && (
-                                  <td>{d?.mobile}</td>
-                                )
-                              }
-                              {
-                                (fieldPermissions?.role?.show) && (
-                                  <td>{d?.role?.name}</td>
-                                )
-                              }
-                              {/* {
-                                (fieldPermissions?.designation?.show) && (
-                                  <td>{d?.designation?.name}</td>
-                                )
-                              } */}
+                              <td>{d?.deviceId}</td>
+                              <td>
+                                <div className="form-check form-switch" style={{ display: "flex", alignItems: "center" }}>
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    role="switch"
+                                    id={d?._id}
+                                    checked={d?.allowMultiDevice}
+                                    onChange={(e) => handleAllowMultiDevice(e, d?._id, e.target.checked)}
+                                  />
+                                  <label className="form-check-label" htmlFor={d?._id}>
+                                    {d?.allowMultiDevice ? "Allowed" : "Not Allowed"}
+                                  </label>
+                                </div>
+                              </td>
                               <td>
                                 <div className="form-check form-switch" style={{ display: "flex", alignItems: "center" }}>
                                   <input
@@ -559,6 +548,11 @@ const TeamMember = () => {
                                   </label>
                                 </div>
                               </td>
+                              {
+                                (fieldPermissions?.role?.show) && (
+                                  <td>{d?.role?.name}</td>
+                                )
+                              }
                               <td>
                                 <div className="table-action">
                                   <Link to="#" className="action-icon" data-bs-toggle="dropdown" aria-expanded="false">
@@ -573,19 +567,6 @@ const TeamMember = () => {
                                         </Link>
                                       )
                                     }
-                                    {/* {
-                                      permissions?.update && permissions?.delete && (
-                                        <hr className="horizontal-line" />
-                                      )
-                                    }
-                                    {
-                                      (permissions?.delete) && (
-                                        <Link to="#" className="dropdown-item" onClick={() => handleDelete(d?._id)}>
-                                          <i className="ti ti-trash text-danger"></i>
-                                          Delete
-                                        </Link>
-                                      )
-                                    } */}
                                   </div>
                                 </div>
                               </td>

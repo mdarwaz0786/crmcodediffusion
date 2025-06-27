@@ -7,7 +7,7 @@ import checkFieldUpdatePermission from "../middleware/checkFieldUpdatePermission
 const fields = ['employeeId', 'name', 'email', 'mobile', 'password', 'joining', 'dob',
   'monthlySalary', 'UAN', 'PAN', 'bankAccount', 'workingHoursPerDay', 'designation',
   'office', 'department', 'allotedLeaveBalance', 'currentLeaveBalance', 'usedLeaveBalance',
-  'approvedLeaves', 'leaveBalanceUsedHistory', 'leaveBalanceAllotedHistory', 'eligibleCompOffDate', 'role', 'reportingTo', 'isActive', 'fcmToken'];
+  'approvedLeaves', 'leaveBalanceUsedHistory', 'leaveBalanceAllotedHistory', 'eligibleCompOffDate', 'role', 'reportingTo', 'isActive', 'fcmToken', 'deviceId', 'allowMultiDevice'];
 
 // router object
 const router = express.Router();

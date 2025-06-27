@@ -247,6 +247,8 @@ const EditRole = () => {
         eligibleCompOffDate: { read: true, show: true },
         isActive: { read: true, show: true },
         fcmToken: { read: true, show: true },
+        deviceId: { read: true, show: true },
+        allowMultiDevice: { read: true, show: true },
       },
     },
     role: {
@@ -710,6 +712,8 @@ const EditRole = () => {
               eligibleCompOffDate: { read: true, show: true },
               isActive: { read: true, show: true },
               fcmToken: { read: true, show: true },
+              deviceId: { read: true, show: true },
+              allowMultiDevice: { read: true, show: true },
             },
           },
           role: {
