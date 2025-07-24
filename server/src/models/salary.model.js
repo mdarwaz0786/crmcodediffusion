@@ -22,6 +22,9 @@ const salarySchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  monthlySalary: {
+    type: Number,
+  },
   salaryPaid: {
     type: Boolean,
     default: false,

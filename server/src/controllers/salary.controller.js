@@ -602,7 +602,7 @@ ${emp?.office?.websiteLink || "https://www.codediffusion.in/"}`,
     await transporter.sendMail(mailOptions);
 
     // Create a new salary record
-    const newSalary = new Salary({ employee, month, year, salaryPaid, amountPaid, transactionId });
+    const newSalary = new Salary({ employee, month, year, salaryPaid, amountPaid, transactionId, monthlySalary });
 
     // Save the salary record
     await newSalary.save();
