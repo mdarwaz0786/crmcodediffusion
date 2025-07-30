@@ -270,12 +270,12 @@ export const fetchSingleLeaveApproval = async (req, res) => {
 export const getLeaveApprovalByEmployee = async (req, res) => {
   try {
     const { employeeId } = req.params;
-    const fromDate = new Date('2025-07-01T00:00:00.000Z');
+    const leaveSystemStart = new Date("2025-07-01");
 
     const leave = await LeaveApproval
       .find({
         employee: employeeId,
-        createdAt: { $gte: fromDate },
+        startDate: { $gte: leaveSystemStart.toISOString().split("T")[0] },
       })
       .sort({ createdAt: -1 })
       .populate('employee', 'name')

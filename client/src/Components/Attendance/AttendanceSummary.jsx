@@ -55,6 +55,7 @@ const AttendanceSummary = ({ attendance }) => {
       <div style={itemStyle}><span style={boldText}>On Leave Days:</span> <span style={{ color: 'orange', fontWeight: 'bold' }}>{attendance?.employeeLeaveDays}</span></div>
       <div style={itemStyle}><span style={boldText}>Late In Days:</span> <span style={{ color: '#dc3545', fontWeight: 'bold' }}>{attendance?.employeeLateInDays}</span></div>
       <div style={itemStyle}><span style={boldText}>Total Hours Worked:</span> <span>{formatTimeToHoursMinutes(attendance?.employeeWorkingHours)}</span></div>
+      <div style={itemStyle}><span style={boldText}>Total Shortfall Hours:</span> <span>{formatTimeToHoursMinutes(attendance?.employeeShortfallHours)}</span></div>
       <div style={itemStyle}><span style={boldText}>Average Punch In Time:</span> <span>{formatTimeWithAmPm(attendance?.averagePunchInTime)}</span></div>
       <div style={itemStyle}><span style={boldText}>Average Punch Out Time:</span> <span>{formatTimeWithAmPm(attendance?.averagePunchOutTime)}</span></div>
     </div>

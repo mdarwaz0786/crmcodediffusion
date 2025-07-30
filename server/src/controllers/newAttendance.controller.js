@@ -737,9 +737,8 @@ export const newFetchMonthlyStatistic = async (req, res) => {
     };
 
     let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalSundays + totalCompOff);
-    let companyWorkingHours = minutesToTime(companyWorkingDays * dailyThreshold);
-
-    let requiredWorkingHours = minutesToTime((totalPresent + totalHalfDays) * dailyThreshold);
+    let companyWorkingHours = companyWorkingDays * dailyThreshold;
+    let requiredWorkingHours = (totalPresent + totalHalfDays) * dailyThreshold;
 
     averagePunchInTime = punchInCount
       ? minutesToTime(Math.floor(totalPunchInMinutes / punchInCount))
@@ -749,12 +748,16 @@ export const newFetchMonthlyStatistic = async (req, res) => {
       ? minutesToTime(Math.floor(totalPunchOutMinutes / punchOutCount))
       : null;
 
+    let totalLeaveAndCompOff = totalOnLeave + totalCompOff;
+    let shortFallByLeaveAndCompOff = totalLeaveAndCompOff * dailyThreshold;
+    let actualShortfall = companyWorkingHours - (totalMinutesWorked + shortFallByLeaveAndCompOff);
+
     const monthlyStatics = {
       employee: employeeId,
       month,
       totalDaysInMonth,
       companyWorkingDays,
-      companyWorkingHours,
+      companyWorkingHours: minutesToTime(companyWorkingHours),
       totalHolidays,
       totalSundays,
       employeePresentDays: totalPresent,
@@ -763,7 +766,8 @@ export const newFetchMonthlyStatistic = async (req, res) => {
       employeeLeaveDays: totalOnLeave,
       employeeCompOffDays: totalCompOff,
       employeeWorkingHours: minutesToTime(totalMinutesWorked),
-      employeeRequiredWorkingHours: requiredWorkingHours,
+      employeeRequiredWorkingHours: minutesToTime(requiredWorkingHours),
+      employeeShortfallHours: minutesToTime(actualShortfall),
       employeeLateInDays: totalLateIn,
       averagePunchInTime,
       averagePunchOutTime,

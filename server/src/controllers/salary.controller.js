@@ -173,21 +173,17 @@ export const createSalary = async (req, res) => {
       };
     };
 
+    let totalLeaveAndCompOff = totalOnLeave + totalCompOff;
     let companyWorkingMinutes = (totalDaysInMonth - (totalHolidays + totalSundays)) * dailyThreshold;
+
     let minutesShortfall = companyWorkingMinutes - totalMinutesWorked;
-    let deductionDays = minutesShortfall > 0 ? Math.ceil(minutesShortfall / dailyThreshold) : 0;
+    let shortFallByLeaveAndCompOff = totalLeaveAndCompOff * dailyThreshold;
+    let actualShortFall = minutesShortfall - shortFallByLeaveAndCompOff;
+    let deductionDays = actualShortFall > 0 ? Math.ceil(actualShortFall / dailyThreshold) : 0;
 
     let dailySalary = monthlySalary / totalDaysInMonth;
     let totalDeduction = deductionDays * dailySalary;
     let totalSalary = monthlySalary - totalDeduction;
-
-    let totalLeaveAndCompOff = totalOnLeave + totalCompOff;
-    let salaryOfLeaveAndCompOff;
-
-    if (totalLeaveAndCompOff > 0) {
-      salaryOfLeaveAndCompOff = dailySalary * totalLeaveAndCompOff;
-      totalSalary = totalSalary + salaryOfLeaveAndCompOff;
-    };
 
     const salaryData = {
       employeeId: emp?._id,
@@ -199,7 +195,7 @@ export const createSalary = async (req, res) => {
       dailySalary: dailySalary.toFixed(2),
       companyWorkingHours: minutesToTime(companyWorkingMinutes),
       employeeHoursWorked: minutesToTime(totalMinutesWorked),
-      employeeHoursShortfall: minutesToTime(minutesShortfall),
+      employeeHoursShortfall: minutesToTime(actualShortFall),
       deductionDays,
       totalPresent,
       totalHalfDays,
@@ -832,22 +828,18 @@ export const newFetchMonthlySalary = async (req, res) => {
           };
         };
 
+        let totalLeaveAndCompOff = totalOnLeave + totalCompOff;
+
         let companyWorkingMinutes = (totalDaysInMonth - (totalHolidays + totalSundays)) * dailyThreshold;
 
         let minutesShortfall = companyWorkingMinutes - totalMinutesWorked;
-        let deductionDays = minutesShortfall > 0 ? Math.ceil(minutesShortfall / dailyThreshold) : 0;
+        let shortFallByLeaveAndCompOff = totalLeaveAndCompOff * dailyThreshold;
+        let actualShortFall = minutesShortfall - shortFallByLeaveAndCompOff;
+        let deductionDays = actualShortFall > 0 ? Math.ceil(actualShortFall / dailyThreshold) : 0;
 
         let dailySalary = monthlySalary / totalDaysInMonth;
         let totalDeduction = deductionDays * dailySalary;
         let totalSalary = monthlySalary - totalDeduction;
-
-        let totalLeaveAndCompOff = totalOnLeave + totalCompOff;
-        let salaryOfLeaveAndCompOff;
-
-        if (totalLeaveAndCompOff > 0) {
-          salaryOfLeaveAndCompOff = dailySalary * totalLeaveAndCompOff;
-          totalSalary = totalSalary + salaryOfLeaveAndCompOff;
-        };
 
         // Check if salary has been paid or not
         let salaryRecord = await Salary.findOne({
@@ -872,7 +864,7 @@ export const newFetchMonthlySalary = async (req, res) => {
           companyWorkingHours: minutesToTime(companyWorkingMinutes),
           companyWorkingDays: totalDaysInMonth - (totalHolidays + totalSundays),
           employeeHoursWorked: minutesToTime(totalMinutesWorked),
-          employeeHoursShortfall: minutesToTime(minutesShortfall),
+          employeeHoursShortfall: minutesToTime(actualShortFall),
           deductionDays,
           totalPresent,
           totalHalfDays,
