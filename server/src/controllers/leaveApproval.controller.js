@@ -40,7 +40,7 @@ export const createLeaveApproval = async (req, res) => {
     };
 
     let balance;
-    const leaveSystemStart = new Date("2025-01-01");
+    const leaveSystemStart = new Date("2025-07-01");
     const joinDate = new Date(existingEmployee?.joining);
 
     const accrualStart = joinDate > leaveSystemStart
@@ -105,10 +105,6 @@ export const createLeaveApproval = async (req, res) => {
 
     // Ensure start date is not the current date or in the past 
     const currentDate = new Date();
-
-    if (start.setHours(0, 0, 0, 0) === currentDate.setHours(0, 0, 0, 0)) {
-      return res.status(400).json({ success: false, message: "Start date can not be today, select future date." });
-    };
 
     if (start.setHours(0, 0, 0, 0) < currentDate.setHours(0, 0, 0, 0)) {
       return res.status(400).json({ success: false, message: "Start date can not be in the past, select future date." });
@@ -274,7 +270,7 @@ export const fetchSingleLeaveApproval = async (req, res) => {
 export const getLeaveApprovalByEmployee = async (req, res) => {
   try {
     const { employeeId } = req.params;
-    const fromDate = new Date('2025-01-01T00:00:00.000Z');
+    const fromDate = new Date('2025-07-01T00:00:00.000Z');
 
     const leave = await LeaveApproval
       .find({
