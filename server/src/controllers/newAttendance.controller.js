@@ -65,6 +65,20 @@ function minutesToTime(minutes) {
   return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 };
 
+// Helper function to convert negative minutes into time (HH:MM)
+function negativeMinutesToTime(minutes) {
+  if (minutes == null) return;
+
+  const isNegative = minutes < 0;
+  const absMinutes = Math.abs(minutes);
+
+  const hours = Math.floor(absMinutes / 60);
+  const mins = absMinutes % 60;
+
+  const timeStr = `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+  return isNegative ? `+${timeStr}` : `-${timeStr}`;
+};
+
 // Helper function to get the day name from a date string
 const getDayName = (dateString) => {
   if (!dateString) {
@@ -752,6 +766,8 @@ export const newFetchMonthlyStatistic = async (req, res) => {
     let shortFallByLeaveAndCompOff = totalLeaveAndCompOff * dailyThreshold;
     let actualShortfall = companyWorkingHours - (totalMinutesWorked + shortFallByLeaveAndCompOff);
 
+    console.log(actualShortfall);
+
     const monthlyStatics = {
       employee: employeeId,
       month,
@@ -767,7 +783,7 @@ export const newFetchMonthlyStatistic = async (req, res) => {
       employeeCompOffDays: totalCompOff,
       employeeWorkingHours: minutesToTime(totalMinutesWorked),
       employeeRequiredWorkingHours: minutesToTime(requiredWorkingHours),
-      employeeShortfallHours: minutesToTime(actualShortfall),
+      employeeShortfallHours: negativeMinutesToTime(actualShortfall),
       employeeLateInDays: totalLateIn,
       averagePunchInTime,
       averagePunchOutTime,
