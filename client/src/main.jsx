@@ -5,6 +5,7 @@ import App from './App.jsx';
 import { ToastContainer } from 'react-toastify';
 import { AuthProvider } from './context/authContext.jsx';
 import 'react-toastify/dist/ReactToastify.css';
+import BottomTab from "./Components/BottomTab/BottomTab.jsx";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -12,6 +13,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <AuthProvider>
       <Preloader />
       <App />
+      <BottomTab />
       <ToastContainer
         position="top-right"
         autoClose={2000}
