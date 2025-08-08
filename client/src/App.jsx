@@ -97,7 +97,7 @@ import EditAppSetting from "./Components/AppSetting/EditAppSetting.jsx";
 
 const App = () => {
   return (
-    <>
+    <div className="page-content">
       <Routes>
         <Route path="/" element={<MainPage />}>
           <Route index element={<ProjectDashboard />} />
@@ -196,7 +196,7 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
       </Routes>
-    </>
+    </div>
   );
 };
 

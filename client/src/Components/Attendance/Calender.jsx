@@ -8,6 +8,7 @@ import axios from 'axios';
 import { useAuth } from "../../context/authContext.jsx";
 import { toast } from 'react-toastify';
 const base_url = import.meta.env.VITE_API_BASE_URL;
+import "./Calender.css";
 
 const Calender = ({ attendanceData, month, year, employeeId, fetchAllData }) => {
   const { validToken } = useAuth();
@@ -174,9 +175,9 @@ const Calender = ({ attendanceData, month, year, employeeId, fetchAllData }) => 
 
   return (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0px' }}>
+      <div className="calendar-grid">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-          <div key={day} style={headerStyle}>{day}</div>
+          <div className="calendar-header" key={day} style={headerStyle}>{day}</div>
         ))}
 
         {calendarDays.map((day, index) => {

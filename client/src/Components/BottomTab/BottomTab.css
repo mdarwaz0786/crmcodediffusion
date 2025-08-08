@@ -33,8 +33,14 @@
   margin-top: 4px;
 }
 
-@media screen and (min-width: 768px) {
+@media (min-width: 768px) {
   .bottom-tab {
     display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .page-content {
+    padding-bottom: 80px;
   }
 }
