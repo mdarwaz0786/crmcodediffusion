@@ -127,9 +127,9 @@ const AddTeamMember = () => {
 
   const handleCreate = async (e) => {
     e.preventDefault();
+
     try {
 
-      // Validation
       if (!name) {
         return toast.error("Enter employee name");
       };
@@ -224,8 +224,7 @@ const AddTeamMember = () => {
         navigate(-1);
       };
     } catch (error) {
-      console.log("Error while creating employee:", error.message);
-      toast.error("Error while creating");
+      toast.error(error?.response?.data?.message || "Error while creating");
     };
   };
 

@@ -2,6 +2,7 @@ import Team from "../models/team.model.js";
 import Attendance from "../models/attendance.model.js";
 import Salary from "../models/salary.model.js";
 import Holiday from "../models/holiday.model.js";
+import Company from "../models/company.model.js";
 import puppeteer from "puppeteer";
 import fs from "fs";
 import path from "path";
@@ -54,26 +55,36 @@ const convertToIST = (date) => {
 export const createSalary = async (req, res) => {
   try {
     const { employee, month, year, salaryPaid, amountPaid, transactionId } = req.body;
+    const company = req.company;
+
+    const rules = await Company.findById(company);
+
+    if (!rules) {
+      return res.status(400).json({ success: false, message: "Company not found" });
+    };
+
+    const weeklyOff = rules?.weeklyOff || [];
 
     if (!transactionId) {
       return res.status(400).json({ success: false, message: "Transaction id is required." });
     };
 
     if (!employee || !month || !year || !amountPaid || !salaryPaid) {
-      return res.status(400).json({ success: false, message: "Employee, month, year, amount paid and salary paid are required." });
+      return res.status(400).json({ success: false, message: "All fields are required." });
     };
 
-    const existingSalary = await Salary.findOne({ employee, month, year });
+    const existingSalary = await Salary.findOne({ employee, month, year, company });
 
     if (existingSalary) {
       return res.status(400).json({ success: false, message: "Salary already paid." });
     };
 
     const emp = await Team
-      .findById(employee)
+      .findOne({ _id: employee, company })
       .populate("designation")
       .populate("department")
       .populate("office")
+      .populate("company")
       .exec();
 
     if (!emp) {
@@ -96,6 +107,8 @@ export const createSalary = async (req, res) => {
     let totalOnLeave = 0;
     let totalHolidays = 0;
     let totalSundays = 0;
+    let totalSaturdays = 0;
+    let totalWeeklyOff = 0;
     let totalMinutesWorked = 0;
 
     for (let day = 1; day <= totalDaysInMonth; day++) {
@@ -104,11 +117,12 @@ export const createSalary = async (req, res) => {
       let currentDate = convertToIST(new Date()).toISOString().split("T")[0];
 
       if (formattedDate > currentDate) {
-      } else if (date.getDay() === 0) {
+      } else if (date.getDay() === 0 && weeklyOff.includes("Sunday")) {
         let attendanceRecord = await Attendance.findOne({
           employee: emp?._id,
           attendanceDate: formattedDate,
           status: { $in: ["Present", "Half Day"] },
+          company,
         }).select("hoursWorked status");
         if (attendanceRecord) {
           if (attendanceRecord?.status === "Present") {
@@ -122,9 +136,31 @@ export const createSalary = async (req, res) => {
           };
         } else {
           totalSundays++;
+          totalWeeklyOff++;
+        };
+      } else if (date.getDay() === 6 && weeklyOff.includes("Saturday")) {
+        let attendanceRecord = await Attendance.findOne({
+          employee: emp?._id,
+          attendanceDate: formattedDate,
+          status: { $in: ["Present", "Half Day"] },
+          company,
+        }).select("hoursWorked status");
+        if (attendanceRecord) {
+          if (attendanceRecord?.status === "Present") {
+            totalPresent++
+          };
+          if (attendanceRecord?.status === "Half Day") {
+            totalHalfDays++;
+          };
+          if (attendanceRecord?.hoursWorked) {
+            totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+          };
+        } else {
+          totalSaturdays++;
+          totalWeeklyOff++;
         };
       } else {
-        let holiday = await Holiday.findOne({ date: formattedDate });
+        let holiday = await Holiday.findOne({ date: formattedDate, company });
         let leaveRecord = emp?.approvedLeaves?.some((leave) => leave?.date === formattedDate);
         let compOffRecord = emp?.eligibleCompOffDate?.some((comp) => comp?.compOffDate === formattedDate);
         if (holiday) {
@@ -132,6 +168,7 @@ export const createSalary = async (req, res) => {
             employee: emp?._id,
             attendanceDate: formattedDate,
             status: { $in: ["Present", "Half Day"] },
+            company,
           }).select("hoursWorked status");
           if (attendanceRecord) {
             if (attendanceRecord?.status === "Present") {
@@ -155,6 +192,7 @@ export const createSalary = async (req, res) => {
             employee: emp?._id,
             attendanceDate: formattedDate,
             status: { $in: ["Present", "Half Day"] },
+            company,
           }).select("hoursWorked status");
           if (attendanceRecord) {
             if (attendanceRecord?.status === "Present") {
@@ -174,7 +212,7 @@ export const createSalary = async (req, res) => {
     };
 
     let totalLeaveAndCompOff = totalOnLeave + totalCompOff;
-    let companyWorkingMinutes = (totalDaysInMonth - (totalHolidays + totalSundays)) * dailyThreshold;
+    let companyWorkingMinutes = (totalDaysInMonth - (totalHolidays + totalSundays + totalSaturdays + totalCompOff)) * dailyThreshold;
 
     let minutesShortfall = companyWorkingMinutes - totalMinutesWorked;
     let shortFallByLeaveAndCompOff = totalLeaveAndCompOff * dailyThreshold;
@@ -204,6 +242,8 @@ export const createSalary = async (req, res) => {
       totalOnLeave,
       totalHolidays,
       totalSundays,
+      totalSaturdays,
+      totalWeeklyOff,
     };
 
     // Read the logo file and convert it to Base64
@@ -503,12 +543,12 @@ export const createSalary = async (req, res) => {
           <div class="deduction-data">${salaryData?.totalPresent}</div>
         </div>
         <div class="deduction-column">
-          <div class="deduction-title">Half Day</div>
-          <div class="deduction-data">${salaryData?.totalHalfDays}</div>
-        </div>
-        <div class="deduction-column">
           <div class="deduction-title">Absent</div>
           <div class="deduction-data">${salaryData?.totalAbsent}</div>
+        </div>
+        <div class="deduction-column">
+          <div class="deduction-title">Half Day</div>
+          <div class="deduction-data">${salaryData?.totalHalfDays}</div>
         </div>
         <div class="deduction-column">
           <div class="deduction-title">Leave</div>
@@ -520,7 +560,7 @@ export const createSalary = async (req, res) => {
         </div>
         <div class="deduction-column">
           <div class="deduction-title">Weekly Off</div>
-          <div class="deduction-data">${salaryData?.totalSundays}</div>
+          <div class="deduction-data">${salaryData?.totalWeeklyOff}</div>
         </div>
         <div class="deduction-column">
           <div class="deduction-title">Holiday</div>
@@ -571,7 +611,6 @@ If you have any questions or need further clarification regarding your salary de
 Thank you for your continued contributions to the team.
 
 Best regards,
-Abhishek Singh
 ${emp?.office?.name || "Code Diffusion Technologies"} 
 ${emp?.office?.contact || "7827114607"}
 ${emp?.office?.email || "info@codediffusion.in"}
@@ -598,7 +637,7 @@ ${emp?.office?.websiteLink || "https://www.codediffusion.in/"}`,
     await transporter.sendMail(mailOptions);
 
     // Create a new salary record
-    const newSalary = new Salary({ employee, month, year, salaryPaid, amountPaid, transactionId, monthlySalary });
+    const newSalary = new Salary({ employee, month, year, salaryPaid, amountPaid, transactionId, monthlySalary, company });
 
     // Save the salary record
     await newSalary.save();
@@ -615,7 +654,7 @@ ${emp?.office?.websiteLink || "https://www.codediffusion.in/"}`,
 // Get all salary records (with sorting and pagination)
 export const getAllSalaries = async (req, res) => {
   try {
-    let query = {};
+    let query = { company: req.company };
     let sort = {};
 
     // Filtering logic
@@ -673,7 +712,7 @@ export const getAllSalaries = async (req, res) => {
 export const getSalaryById = async (req, res) => {
   try {
     const salary = await Salary
-      .findById(req.params.id)
+      .findOne({ _id: req.params.id, company: req.company })
       .populate("employee")
       .exec();
 
@@ -691,7 +730,7 @@ export const getSalaryById = async (req, res) => {
 export const updateSalary = async (req, res) => {
   try {
     const updatedSalary = await Salary
-      .findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+      .findOneAndUpdate({ _id: req.params.id, company: req.company }, req.body, { new: true, runValidators: true });
 
     if (!updatedSalary) {
       return res.status(404).json({ success: false, message: "Salary record not found." });
@@ -707,7 +746,7 @@ export const updateSalary = async (req, res) => {
 export const deleteSalary = async (req, res) => {
   try {
     const deletedSalary = await Salary
-      .findByIdAndDelete(req.params.id);
+      .findOneAndDelete({ _id: req.params.id, company: req.company });
 
     if (!deletedSalary) {
       return res.status(404).json({ success: false, message: "Salary record not found." });
@@ -723,12 +762,21 @@ export const deleteSalary = async (req, res) => {
 export const newFetchMonthlySalary = async (req, res) => {
   try {
     const { month } = req.query;
+    const company = req.company;
+
+    const rules = await Company.findById(company);
+
+    if (!rules) {
+      return res.status(400).json({ success: false, message: "Company not found." });
+    };
+
+    const weeklyOff = rules?.weeklyOff || [];
 
     if (!month) {
       return res.status(400).json({ success: false, message: "Month in YYYY-MM format is required." });
     };
 
-    const employees = await Team.find({ isActive: true });
+    const employees = await Team.find({ isActive: true, company });
 
     if (!employees || employees?.length === 0) {
       return res.status(400).json({ success: false, message: "Employees not found." });
@@ -751,6 +799,8 @@ export const newFetchMonthlySalary = async (req, res) => {
         let totalOnLeave = 0;
         let totalHolidays = 0;
         let totalSundays = 0;
+        let totalSaturdays = 0;
+        let totalWeeklyOff = 0;
         let totalMinutesWorked = 0;
 
         for (let day = 1; day <= totalDaysInMonth; day++) {
@@ -759,11 +809,12 @@ export const newFetchMonthlySalary = async (req, res) => {
           let currentDate = convertToIST(new Date()).toISOString().split("T")[0];
 
           if (formattedDate > currentDate) {
-          } else if (date.getDay() === 0) {
+          } else if (date.getDay() === 0 && weeklyOff.includes("Sunday")) {
             let attendanceRecord = await Attendance.findOne({
               employee: employee?._id,
               attendanceDate: formattedDate,
               status: { $in: ["Present", "Half Day"] },
+              company,
             }).select("hoursWorked status");
             if (attendanceRecord) {
               if (attendanceRecord?.status === "Present") {
@@ -777,9 +828,31 @@ export const newFetchMonthlySalary = async (req, res) => {
               };
             } else {
               totalSundays++;
+              totalWeeklyOff++;
+            };
+          } else if (date.getDay() === 6 && weeklyOff.includes("Saturday")) {
+            let attendanceRecord = await Attendance.findOne({
+              employee: employee?._id,
+              attendanceDate: formattedDate,
+              status: { $in: ["Present", "Half Day"] },
+              company,
+            }).select("hoursWorked status");
+            if (attendanceRecord) {
+              if (attendanceRecord?.status === "Present") {
+                totalPresent++
+              };
+              if (attendanceRecord?.status === "Half Day") {
+                totalHalfDays++;
+              };
+              if (attendanceRecord?.hoursWorked) {
+                totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+              };
+            } else {
+              totalSaturdays++;
+              totalWeeklyOff++;
             };
           } else {
-            let holiday = await Holiday.findOne({ date: formattedDate });
+            let holiday = await Holiday.findOne({ date: formattedDate, company });
             let leaveRecord = employee?.approvedLeaves?.some((leave) => leave?.date === formattedDate);
             let compOffRecord = employee?.eligibleCompOffDate?.some((comp) => comp?.compOffDate === formattedDate);
             if (holiday) {
@@ -787,6 +860,7 @@ export const newFetchMonthlySalary = async (req, res) => {
                 employee: employee?._id,
                 attendanceDate: formattedDate,
                 status: { $in: ["Present", "Half Day"] },
+                company,
               }).select("hoursWorked status");
               if (attendanceRecord) {
                 if (attendanceRecord?.status === "Present") {
@@ -810,6 +884,7 @@ export const newFetchMonthlySalary = async (req, res) => {
                 employee: employee?._id,
                 attendanceDate: formattedDate,
                 status: { $in: ["Present", "Half Day"] },
+                company,
               }).select("hoursWorked status");
               if (attendanceRecord) {
                 if (attendanceRecord?.status === "Present") {
@@ -829,8 +904,7 @@ export const newFetchMonthlySalary = async (req, res) => {
         };
 
         let totalLeaveAndCompOff = totalOnLeave + totalCompOff;
-
-        let companyWorkingMinutes = (totalDaysInMonth - (totalHolidays + totalSundays)) * dailyThreshold;
+        let companyWorkingMinutes = (totalDaysInMonth - (totalHolidays + totalSundays + totalSaturdays + totalCompOff)) * dailyThreshold;
 
         let minutesShortfall = companyWorkingMinutes - totalMinutesWorked;
         let shortFallByLeaveAndCompOff = totalLeaveAndCompOff * dailyThreshold;
@@ -846,6 +920,7 @@ export const newFetchMonthlySalary = async (req, res) => {
           employee: employee?._id,
           month: monthIndex < 10 ? (`0${monthIndex}`)?.toString() : monthIndex?.toString(),
           year: year.toString(),
+          company,
         });
 
         let salaryPaid = salaryRecord ? salaryRecord?.salaryPaid : false;
@@ -873,6 +948,8 @@ export const newFetchMonthlySalary = async (req, res) => {
           totalOnLeave,
           totalHolidays,
           totalSundays,
+          totalSaturdays,
+          totalWeeklyOff,
           salaryPaid,
           transactionId,
         };

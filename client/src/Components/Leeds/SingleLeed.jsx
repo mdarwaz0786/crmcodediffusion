@@ -71,7 +71,7 @@ const SingleLeed = () => {
     );
   };
 
-  if (!permissions?.access) {
+  if (!team?.isSuperAdmin) {
     return <Navigate to="/" />;
   };
 

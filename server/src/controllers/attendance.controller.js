@@ -1,5 +1,6 @@
 import Attendance from '../models/attendance.model.js';
 import Team from "../models/team.model.js";
+import Company from "../models/company.model.js";
 import Holiday from "../models/holiday.model.js";
 import mongoose from "mongoose";
 import firebase from "../firebase/index.js";
@@ -61,6 +62,7 @@ function minutesToTime(minutes) {
 
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
+
     return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 };
 
@@ -92,13 +94,14 @@ export const createAttendance = async (req, res) => {
     try {
         session.startTransaction();
         const { employee, attendanceDate, punchInTime, punchInLatitude, punchInLongitude } = req.body;
+        const company = req.company;
 
         if (!employee) {
             return res.status(400).json({ success: false, message: "Employee is required" });
         };
 
         if (!attendanceDate) {
-            return res.status(400).json({ success: false, message: "Attendance Date is required" });
+            return res.status(400).json({ success: false, message: "Attendance date is required" });
         };
 
         if (!punchInTime) {
@@ -133,6 +136,7 @@ export const createAttendance = async (req, res) => {
                     lateIn,
                     dayName,
                     isHoliday: holiday ? true : false,
+                    company,
                 },
             },
             {
@@ -155,26 +159,28 @@ export const createAttendance = async (req, res) => {
             };
 
             const compOffEntry = {
-                workedDate: attendanceDate,
+                attendanceDate: attendanceDate,
+                isApplied: false,
+                isApproved: false,
                 reason,
             };
 
             // Update the eligibleCompOffDate
             await Team.findOneAndUpdate(
-                { _id: employee },
+                { _id: employee, company },
                 { $addToSet: { eligibleCompOffDate: compOffEntry } },
             ).session(session);
         };
 
-        const sendBy = await Team.findById(employee);
+        const sendBy = await Team.findOne({ _id: employee, company });
 
         // Send push notification to admin
-        const teams = await Team
-            .find()
+        const teams = await Company
+            .find({ _id: sendBy?.company })
             .populate({ path: 'role', select: "name" })
             .exec();
 
-        const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
+        const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "company" && team?.fcmToken);
 
         if (filteredAdmins?.length > 0) {
             const payload = {
@@ -188,13 +194,13 @@ export const createAttendance = async (req, res) => {
         };
 
         await session.commitTransaction();
-        session.endSession();
 
         return res.status(201).json({ success: true, attendance: result });
     } catch (error) {
         await session.abortTransaction();
-        session.endSession();
         return res.status(500).json({ success: false, message: error.message });
+    } finally {
+        session.endSession();
     };
 };
 
@@ -202,7 +208,7 @@ export const createAttendance = async (req, res) => {
 export const fetchAllAttendance = async (req, res) => {
     try {
         const { date, employeeId } = req.query;
-        let query = {};
+        let query = { company: req.company };
         let sort = {};
 
         // Filter by exact date
@@ -293,6 +299,7 @@ export const fetchMonthlyStatistic = async (req, res) => {
         // Fetch attendance records for the specified employee and month
         const attendanceRecords = await Attendance.find({
             employee: employeeId,
+            company: req.company,
             attendanceDate: { $gte: startDate?.toISOString()?.split("T")[0], $lte: endDate?.toISOString()?.split("T")[0] },
         });
 
@@ -370,7 +377,7 @@ export const fetchMonthlyStatistic = async (req, res) => {
 
         const totalWorkingDays = daysInMonth - (totalSundays + totalHolidays + totalCompOff);
 
-        const employee = await Team.findById(employeeId);
+        const employee = await Team.findOne({ _id: employeeId, company: req.company });
 
         if (!employee || employee?.length === 0) {
             return res.status(404).json({ success: false, message: "Employees not found." });
@@ -415,7 +422,7 @@ export const fetchMonthlyStatistic = async (req, res) => {
 export const fetchSingleAttendance = async (req, res) => {
     try {
         const attendance = await Attendance
-            .findById(req.params.id)
+            .findOne({ _id: req.params.id, company: req.company })
             .populate('employee')
             .exec();
 
@@ -433,6 +440,7 @@ export const fetchSingleAttendance = async (req, res) => {
 export const updateAttendance = async (req, res) => {
     try {
         const { employee, attendanceDate, punchOutTime, punchOutLatitude, punchOutLongitude } = req.body;
+        const company = req.company;
 
         if (!employee) {
             return res.status(400).json({ success: false, message: "Employee is required" });
@@ -451,6 +459,7 @@ export const updateAttendance = async (req, res) => {
             employee,
             attendanceDate,
             punchIn: true,
+            company,
         });
 
         if (!attendance) {
@@ -463,7 +472,7 @@ export const updateAttendance = async (req, res) => {
 
         // Update punch out details
         const updatedAttendance = await Attendance.findOneAndUpdate(
-            { _id: attendance?._id },
+            { _id: attendance?._id, company },
             {
                 $set: {
                     punchOutLatitude,
@@ -479,15 +488,15 @@ export const updateAttendance = async (req, res) => {
             },
         );
 
-        const sendBy = await Team.findById(employee);
+        const sendBy = await Team.findOne({ _id: employee, company });
 
         // Send push notification to admin
-        const teams = await Team
-            .find()
+        const teams = await Company
+            .find({ _id: sendBy?.company })
             .populate({ path: 'role', select: "name" })
             .exec();
 
-        const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
+        const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "company" && team?.fcmToken);
 
         if (filteredAdmins?.length > 0) {
             const payload = {
@@ -509,7 +518,7 @@ export const updateAttendance = async (req, res) => {
 // Delete an attendance record by ID
 export const deleteAttendance = async (req, res) => {
     try {
-        const attendance = await Attendance.findByIdAndDelete(req.params.id);
+        const attendance = await Attendance.findOneAndDelete({ _id: req.params.id, company: req.company });
 
         if (!attendance) {
             return res.status(404).json({ success: false, message: 'Attendance not found' });

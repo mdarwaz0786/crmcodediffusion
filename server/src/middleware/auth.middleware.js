@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import Team from "../models/team.model.js";
 import Customer from "../models/customer.model.js";
+import Company from "../models/company.model.js";
 
 export const isLoggedIn = async (req, res, next) => {
   try {
@@ -17,6 +18,7 @@ export const isLoggedIn = async (req, res, next) => {
       const clientData = await Customer
         .findOne({ mobile: isVerified.mobile })
         .populate({ path: "role", select: "" })
+        .populate({ path: "company", select: "-password" })
         .exec();
 
       if (!clientData) {
@@ -27,6 +29,8 @@ export const isLoggedIn = async (req, res, next) => {
       req.token = jwtToken;
       req.teamId = clientData?._id;
       req.teamType = isVerified.userType;
+      req.company = clientData?.company?._id;
+      req.isSuperAdmin = clientData?.isSuperAdmin;
     } else if (isVerified.userType === "Employee") {
       const teamData = await Team
         .findOne({ employeeId: isVerified.employeeId })
@@ -35,6 +39,7 @@ export const isLoggedIn = async (req, res, next) => {
         .populate({ path: "reportingTo", select: "name" })
         .populate({ path: "department", select: "name" })
         .populate({ path: "office", select: "" })
+        .populate({ path: "company", select: "-password" })
         .exec();
 
       if (!teamData) {
@@ -45,6 +50,24 @@ export const isLoggedIn = async (req, res, next) => {
       req.token = jwtToken;
       req.teamId = teamData._id;
       req.teamType = isVerified.userType;
+      req.company = teamData?.company?._id;
+      req.isSuperAdmin = teamData?.isSuperAdmin;
+    } else if (isVerified.userType === "Company") {
+      const companyData = await Company
+        .findOne({ email: isVerified.email })
+        .populate({ path: "role", select: "" })
+        .exec();
+
+      if (!companyData) {
+        return res.status(401).json({ success: false, message: "Company not found or unauthorized" });
+      };
+
+      req.team = companyData;
+      req.token = jwtToken;
+      req.teamId = companyData?._id;
+      req.teamType = isVerified?.userType;
+      req.company = companyData?._id;
+      req.isSuperAdmin = companyData?.isSuperAdmin;
     };
 
     next();

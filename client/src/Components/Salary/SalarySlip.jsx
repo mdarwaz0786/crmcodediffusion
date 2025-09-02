@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-extra-semi */
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import logo from "../../Assets/logo.png";
 import { useAuth } from "../../context/authContext";
 import axios from "axios";
@@ -14,12 +14,14 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const SalarySlip = () => {
   const navigate = useNavigate();
   const { employeeId, month, year } = useParams();
-  const { validToken, team, isLoading } = useAuth("");
+  const { validToken, team, isLoading } = useAuth();
   const [employee, setEmployee] = useState("");
   const [monthlyStatics, setMonthlyStatics] = useState("");
   const [salary, setSalary] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const permissions = team?.role?.permissions?.salary;
 
   const fetchEmployee = async (employeeId) => {
     try {
@@ -78,18 +80,17 @@ const SalarySlip = () => {
         setMonthlyStatics(response?.data?.monthlyStatics);
       };
     } catch (error) {
-      console.log(error.message);
       setLoading(false);
     };
   };
 
   useEffect(() => {
-    if (employeeId && validToken && month && year && !isLoading && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (employeeId && validToken && month && year && !isLoading && permissions?.access) {
       fetchEmployee(employeeId);
       fetchAttendance();
       fetchSalary();
     };
-  }, [employeeId, validToken, team, isLoading, month, year]);
+  }, [employeeId, validToken, team, isLoading, month, year, permissions]);
 
   const months = [
     "January", "February", "March", "April", "May", "June",
@@ -133,6 +134,10 @@ const SalarySlip = () => {
     };
 
     html2pdf().set(options).from(combinedElement).save();
+  };
+
+  if (!permissions?.access) {
+    return <Navigate to="/" />;
   };
 
   return (

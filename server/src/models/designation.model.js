@@ -4,12 +4,16 @@ const designationSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      unique: true,
       trim: true,
     },
     description: {
       type: String,
       trim: true,
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
     },
   },
   {
@@ -30,5 +34,6 @@ designationSchema.pre("save", function (next) {
   next();
 });
 
+designationSchema.index({ name: 1, company: 1 }, { unique: true });
 
 export default mongoose.model("Designation", designationSchema);

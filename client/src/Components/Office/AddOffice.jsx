@@ -152,7 +152,7 @@ const AddOffice = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin") {
+  if (!team?.role?.permissions?.office?.create) {
     return <Navigate to="/" />;
   };
 

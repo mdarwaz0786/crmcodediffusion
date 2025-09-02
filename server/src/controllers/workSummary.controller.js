@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import WorkSummary from "../models/workSummary.model.js";
 import Team from "../models/team.model.js";
+import Company from "../models/company.model.js";
 import { sendEmail } from "../services/emailService.js";
 import firebase from "../firebase/index.js";
 
@@ -8,6 +9,7 @@ import firebase from "../firebase/index.js";
 export const createWorkSummary = async (req, res) => {
   try {
     const { employee, date, summary } = req.body;
+    const company = req.company;
 
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee is required" });
@@ -21,27 +23,35 @@ export const createWorkSummary = async (req, res) => {
       return res.status(404).json({ success: false, message: "Summary is required" });
     };
 
-    const newWorkSummary = new WorkSummary({ employee, date, summary });
+    const newWorkSummary = new WorkSummary({ employee, date, summary, company });
     await newWorkSummary.save();
 
     // Send email
-    const writeBy = await Team.findById(employee);
-    const subject = `${writeBy?.name} Work Summary for Date ${date}`;
-    const htmlContent = `</p>${summary}</p>`;
-    sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+    const existingEmployee = await Team.findOne({ _id: employee, company }).populate("office");
+
+    if (existingEmployee?.office?.noReplyEmail && existingEmployee?.office?.noReplyEmailAppPassword) {
+      const from = existingEmployee?.office?.noReplyEmail;
+      const to = from;
+      const password = existingEmployee?.office?.noReplyEmailAppPassword;
+
+      const subject = `${existingEmployee?.name} Work Summary for Date ${date}`;
+      const htmlContent = `</p>${summary}</p>`;
+
+      sendEmail(from, to, password, subject, htmlContent);
+    };
 
     // Send push notification to admin
-    const teams = await Team
-      .find()
+    const teams = await Company
+      .find({ _id: existingEmployee?.company })
       .populate({ path: 'role', select: "name" })
       .exec();
 
-    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "company" && team?.fcmToken);
 
     if (filteredAdmins?.length > 0) {
       const payload = {
         notification: {
-          title: `${writeBy?.name} Work Summary`,
+          title: `${existingEmployee?.name} Work Summary`,
           body: `${summary}`,
         },
       };
@@ -59,7 +69,7 @@ export const createWorkSummary = async (req, res) => {
 export const getAllWorkSummaries = async (req, res) => {
   try {
     const workSummaries = await WorkSummary
-      .find()
+      .find({ company: req.company })
       .populate('employee');
 
     if (!workSummaries) {
@@ -76,7 +86,7 @@ export const getAllWorkSummaries = async (req, res) => {
 export const getWorkSummaryById = async (req, res) => {
   try {
     const workSummary = await WorkSummary
-      .findById(req.params.id)
+      .findOne({ _id: req.params.id, company: req.company })
       .populate('employee');
 
     if (!workSummary) {
@@ -92,7 +102,7 @@ export const getWorkSummaryById = async (req, res) => {
 // Group work summary by employee
 export const groupWorkSummaryByEmployee = async (req, res) => {
   try {
-    let query = {};
+    let query = { company: new mongoose.Types.ObjectId(req.company) };
 
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
@@ -194,7 +204,6 @@ export const groupWorkSummaryByEmployee = async (req, res) => {
     // Return the response with the grouped summaries
     return res.status(200).json({ success: true, data: paginatedResult, totalCount: total });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -205,7 +214,7 @@ export const getTodayWorkSummary = async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
 
     const todayWorkSummary = await WorkSummary
-      .find({ date: today })
+      .find({ date: today, company: req.company })
       .populate('employee', 'name');
 
     if (!todayWorkSummary) {
@@ -221,14 +230,15 @@ export const getTodayWorkSummary = async (req, res) => {
 // Update WorkSummary
 export const updateWorkSummary = async (req, res) => {
   try {
-    const updatedWorkSummary = await WorkSummary.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      },
-    );
+    const updatedWorkSummary = await WorkSummary
+      .findOneAndUpdate(
+        { _id: req.params.id, company: req.company },
+        req.body,
+        {
+          new: true,
+          runValidators: true,
+        },
+      );
 
     if (!updatedWorkSummary) {
       return res.status(404).json({ success: false, message: "Work summary not found" });
@@ -244,7 +254,7 @@ export const updateWorkSummary = async (req, res) => {
 export const deleteWorkSummary = async (req, res) => {
   try {
     const deletedWorkSummary = await WorkSummary
-      .findByIdAndDelete(req.params.id);
+      .findOneAndDelete({ _id: req.params.id, company: req.company });
 
     if (!deletedWorkSummary) {
       return res.status(404).json({ success: false, message: "Work summary not found" });

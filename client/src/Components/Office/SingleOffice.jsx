@@ -88,7 +88,7 @@ const SingleOffice = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin") {
+  if (!team?.role?.permissions?.office?.access) {
     return <Navigate to="/" />;
   };
 

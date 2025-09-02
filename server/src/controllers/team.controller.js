@@ -1,36 +1,67 @@
 import Team from "../models/team.model.js";
-import EmployeeId from "../models/employeeId.model.js";
+import Company from "../models/company.model.js";
 import generateToken from "../utils/generateToken.js";
 import mongoose from "mongoose";
-
-// Helper function to generate the next employeeId
-const getNextEmployeeId = async () => {
-  const counter = await EmployeeId
-    .findOneAndUpdate(
-      { _id: "employeeId" },
-      { $inc: { sequence: 1 } },
-      { new: true, upsert: true },
-    );
-  return `EmpID${counter.sequence.toString().padStart(3, "0")}`;
-};
 
 // Controller for creating a team
 export const createTeam = async (req, res) => {
   try {
-    // Create a new team without employeeId initially
-    const team = new Team(req.body);
+    const company = req.company;
+
+    const comp = await Company
+      .findOne({ _id: company })
+      .select("numberOfEmployee employeeIdPrefix");
+
+    if (!comp) {
+      return res.status(404).json({
+        success: false,
+        message: "Company not found",
+      });
+    };
+
+    const employees = await Team.countDocuments({ company });
+
+    if (employees >= comp?.numberOfEmployee) {
+      return res.status(400).json({
+        success: false,
+        message: `Employee limit reached. Your plan allows only ${comp?.numberOfEmployee} employees.`,
+      });
+    };
+
+    const lastEmployee = await Team
+      .findOne({ company })
+      .sort({ createdAt: -1 })
+      .select("employeeId");
+
+    let nextEmployeeId;
+
+    if (!lastEmployee || !lastEmployee?.employeeId) {
+      nextEmployeeId = `${comp?.employeeIdPrefix}001`;
+    } else {
+      const prefix = comp?.employeeIdPrefix;
+      const lastIdNum = parseInt(lastEmployee?.employeeId?.replace(prefix, ""));
+      const newIdNum = lastIdNum + 1;
+      nextEmployeeId = `${prefix}${String(newIdNum).padStart(3, "0")}`;
+    };
+
+    const team = new Team({
+      ...req.body,
+      company,
+      employeeId: nextEmployeeId,
+    });
+
     await team.save();
 
-    // Generate the next employeeId only after successful save
-    const employeeId = await getNextEmployeeId();
-
-    // Update the team document with the generated employeeId
-    team.employeeId = employeeId;
-    await team.save();
-
-    return res.status(200).json({ success: true, message: "Employee created successfully", team });
+    return res.status(200).json({
+      success: true,
+      message: "Employee created successfully",
+      team,
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: `Error while creating employee: ${error.message}` });
+    return res.status(500).json({
+      success: false,
+      message: `Error while creating employee: ${error.message}`,
+    });
   };
 };
 
@@ -118,6 +149,7 @@ export const loggedInTeam = async (req, res) => {
       .populate({ path: "reportingTo", select: "name" })
       .populate({ path: "department", select: "name" })
       .populate({ path: "office", select: "" })
+      .populate({ path: "company", select: "-password" })
       .exec();
 
     if (!team) {
@@ -147,7 +179,7 @@ const findObjectIdArrayByString = async (modelName, fieldName, searchString) => 
 // Controller for fetching all employee
 export const fetchAllTeam = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle searching across all fields
@@ -162,7 +194,7 @@ export const fetchAllTeam = async (req, res) => {
         { dob: { $regex: searchRegex } },
         { designation: await findObjectIdByString('Designation', 'name', req.query.search) },
         { department: await findObjectIdByString('Department', 'name', req.query.search) },
-        { office: await findObjectIdByString('Office', 'name', req.query.search) },
+        { office: await findObjectIdByString('OfficeLocation', 'name', req.query.search) },
         { role: await findObjectIdByString('Role', 'name', req.query.search) },
         { reportingTo: { $in: await findObjectIdArrayByString('Team', 'name', req.query.search) } },
       ];
@@ -207,6 +239,7 @@ export const fetchAllTeam = async (req, res) => {
       .populate({ path: "reportingTo", select: "name" })
       .populate({ path: "department", select: "name" })
       .populate({ path: "office", select: "" })
+      .populate({ path: "company", select: "-password" })
       .exec();
 
     if (!team) {
@@ -227,12 +260,13 @@ export const fetchSingleTeam = async (req, res) => {
     const teamId = req.params.id;
 
     const team = await Team
-      .findById(teamId)
+      .findOne({ _id: teamId, company: req.company })
       .populate({ path: "role", select: "" })
       .populate({ path: "designation", select: "name" })
       .populate({ path: "reportingTo", select: "name" })
       .populate({ path: "department", select: "name" })
       .populate({ path: "office", select: "" })
+      .populate({ path: "company", select: "-password" })
       .exec();
 
     if (!team) {
@@ -251,7 +285,7 @@ export const updateTeam = async (req, res) => {
     const teamId = req.params.id;
 
     const team = await Team
-      .findByIdAndUpdate(teamId, req.body, { new: true });
+      .findOneAndUpdate({ _id: teamId, company: req.company }, req.body, { new: true, runValidators: true });
 
     if (!team) {
       return res.status(404).json({ success: false, message: "Employee not found" });
@@ -269,7 +303,7 @@ export const deleteTeam = async (req, res) => {
     const teamId = req.params.id;
 
     const team = await Team
-      .findByIdAndDelete(teamId);
+      .findOneAndDelete({ _id: teamId, company: req.company });
 
     if (!team) {
       return res.status(400).json({ success: false, message: "Employee not found" });

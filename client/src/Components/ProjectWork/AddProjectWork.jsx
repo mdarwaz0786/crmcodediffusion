@@ -5,6 +5,7 @@ import axios from 'axios';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from "../../context/authContext.jsx";
+import { Navigate } from 'react-router-dom';
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddProjectWork = () => {
@@ -74,6 +75,10 @@ const AddProjectWork = () => {
       console.log('Error:', error?.response?.data?.message);
       toast.error(error?.response?.data?.message);
     };
+  };
+
+  if (!team?.role?.permissions?.workSummary?.create) {
+    return <Navigate to="/" />;
   };
 
   return (

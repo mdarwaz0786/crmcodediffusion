@@ -6,7 +6,7 @@ import compression from "compression";
 import connectDatabase from "./src/database/connectDatabase.js";
 import "./src/jobs/projectDeployment/domainExpiryStatusSendEmail.js";
 import "./src/jobs/projectDeployment/domainExpiryStatusUpdate.js";
-import "./src/jobs/attendance/addLeaveBalance.js";
+// import "./src/jobs/attendance/addLeaveBalance.js";
 // import "./src/jobs/attendance/markAbsent.js";
 // import "./src/jobs/attendance/markCompOff.js";
 // import "./src/jobs/attendance/markHoliday.js";
@@ -49,6 +49,9 @@ import enquiryRoute from "./src/routes/contactEnquiry.route.js";
 import leedRoute from "./src/routes/leeds.route.js";
 import leaveBalanceRoute from "./src/routes/leaveBalance.route.js";
 import appSettingRoute from "./src/routes/appSetting.route.js";
+import planRoute from "./src/routes/plan.routes.js";
+import companyRoute from "./src/routes/company.route.js";
+import authRoute from "./src/routes/auth.route.js";
 
 // Directory name for serving index.html file
 const __dirname = path.resolve();
@@ -74,6 +77,8 @@ server.use(cors());
 
 // Test route
 server.use("/api/v1", testRoute);
+// Auth route
+server.use("/api/v1/login", authRoute);
 // Customer route
 server.use("/api/v1/customer", customerRoute);
 // Project type route
@@ -146,6 +151,10 @@ server.use("/api/v1/leed", leedRoute);
 server.use("/api/v1/leave", leaveBalanceRoute);
 // App setting route
 server.use("/api/v1/appSetting", appSettingRoute);
+// Plan route
+server.use("/api/v1/plan", planRoute);
+// Company route
+server.use("/api/v1/company", companyRoute);
 
 // Middleware for serving client index.html file
 server.use(express.static(path.join(__dirname, "../client/dist")), (req, res, next) => next());

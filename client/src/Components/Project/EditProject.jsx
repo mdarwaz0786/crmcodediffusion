@@ -283,7 +283,6 @@ const EditProject = () => {
         navigate(-1);
       };
     } catch (error) {
-      console.log("Error while updating project:", error.message);
       toast.error("Error while submitting");
     };
   };
@@ -552,7 +551,7 @@ const EditProject = () => {
             }
             {
               (fieldPermissions?.responsiblePerson?.show) && (
-                <div className="col-md-12">
+                <div className="col-md-6">
                   <div className="form-wrap">
                     <label className="col-form-label" htmlFor="responsiblePerson">Responsible Person <span className="text-danger">*</span></label>
                     <select className={`form-select ${fieldPermissions?.responsiblePerson?.read ? "readonly-style" : ""}`} name="responsiblePerson" id="responsiblePerson" value="" onChange={(e) => fieldPermissions?.responsiblePerson?.read ? null : handleSelectChangeResponsible(e)}>
@@ -581,7 +580,7 @@ const EditProject = () => {
               (fieldPermissions?.description?.show) && (
                 <div className="col-md-12">
                   <div className="form-wrap">
-                    <label className="col-form-label" htmlFor="description">Development Phase Description <span className="text-danger">*</span></label>
+                    <label className="col-form-label" htmlFor="description">Description <span className="text-danger">*</span></label>
                     <ReactQuill className={`custom-quill-editor ql-container ${fieldPermissions?.description?.read ? "readonly-style" : ""}`} id="description" name="description" value={description} onChange={(value) => fieldPermissions?.description?.read ? null : setDescription(value)} theme="snow" modules={modules} formats={formats} readOnly={fieldPermissions?.description?.read} />
                   </div>
                 </div>

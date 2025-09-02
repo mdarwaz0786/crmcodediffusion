@@ -15,9 +15,10 @@ dotenv.config();
 export const createInvoice = async (req, res) => {
   try {
     const { project, date, tax, amount, office } = req.body;
+    const company = req.company;
 
     const officeLocation = await OfficeLocation
-      .findById(office);
+      .findOne({ office: office, company: req.company });
 
     if (!officeLocation) {
       return res.status(404).json({ success: false, message: "Office not found" });
@@ -69,7 +70,8 @@ export const createInvoice = async (req, res) => {
       SGST: SGST.toFixed(2),
       IGST: IGST.toFixed(2),
       total: total.toFixed(2),
-      balanceDue: total.toFixed(2)
+      balanceDue: total.toFixed(2),
+      company,
     });
 
     // Read the logo file and convert it to Base64
@@ -325,7 +327,6 @@ Kindly review the invoice and let us know if you have any questions or need furt
 Thank you for choosing ${officeLocation?.name || "Code Diffusion Technologies"}. We look forward to continuing our collaboration.
 
 Best regards,  
-Abhishek Singh
 ${officeLocation?.name || "Code Diffusion Technologies"} 
 ${officeLocation?.contact || "+91-7827114607"}
 ${officeLocation?.email || "info@codediffusion.in"}
@@ -371,7 +372,7 @@ const findObjectIdByString = async (modelName, fieldName, searchString) => {
 
 export const fetchAllInvoice = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle searching across all fields
@@ -481,7 +482,7 @@ export const fetchSingleInvoice = async (req, res) => {
   try {
     const invoiceId = req.params.id;
     const invoice = await Invoice
-      .findById(invoiceId)
+      .findOne({ _id: invoiceId, company: req.company })
       .populate("office")
       .populate({
         path: "project",
@@ -509,7 +510,7 @@ export const fetchInvoiceByProject = async (req, res) => {
     const { projectId } = req.params;
 
     const invoices = await Invoice
-      .find({ project: projectId })
+      .find({ project: projectId, company: req.company })
       .populate("office")
       .populate({
         path: "project",
@@ -544,7 +545,7 @@ export const updateInvoice = async (req, res) => {
     const { id } = req.params;
     const { project, date, tax, amount, office } = req.body;
 
-    const invoice = await Invoice.findById(id);
+    const invoice = await Invoice.findOne({ _id: id, company: req.company });
 
     if (!invoice) {
       return res.status(404).json({ success: false, message: "Invoice not found" });
@@ -557,7 +558,7 @@ export const updateInvoice = async (req, res) => {
       subtotal = subtotal / 1.18;
     };
 
-    const projectDetails = await Project.findById(project).populate("customer", "state");
+    const projectDetails = await Project.findOne({ _id: project, company: req.company }).populate("customer", "state");
     const customerState = projectDetails.customer.state;
 
     if (customerState === "Delhi") {
@@ -593,7 +594,7 @@ export const updateInvoice = async (req, res) => {
 export const deleteInvoice = async (req, res) => {
   try {
     const invoiceId = req.params.id;
-    const invoice = await Invoice.findByIdAndDelete(invoiceId);
+    const invoice = await Invoice.findOneAndDelete({ _id: invoiceId, company: req.company });
 
     if (!invoice) {
       return res.status(400).json({ success: false, message: "Invoice not found" });

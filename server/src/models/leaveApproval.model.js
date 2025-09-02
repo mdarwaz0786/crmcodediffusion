@@ -18,10 +18,6 @@ const leaveApprovalSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    leaveApprovedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Team",
-    },
     leaveStatus: {
       type: String,
       enum: ["Pending", "Approved", "Rejected"],
@@ -33,6 +29,11 @@ const leaveApprovalSchema = new mongoose.Schema(
     reason: {
       type: String,
       trim: true,
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
     },
   },
   {

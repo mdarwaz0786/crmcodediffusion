@@ -23,6 +23,8 @@ const Holiday = () => {
     limit: 20,
   });
 
+  const permissions = team?.role?.permissions?.holiday;
+
   const fetchAllData = async () => {
     try {
       setLoading(true);
@@ -45,7 +47,6 @@ const Holiday = () => {
         setLoading(false);
       };
     } catch (error) {
-      console.log(error.message);
       setLoading(false);
     };
   };
@@ -67,10 +68,10 @@ const Holiday = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && permissions?.access) {
       fetchAllData();
     };
-  }, [filters.month, filters.year, filters.limit, filters.page, filters.sort, isLoading, team]);
+  }, [filters.month, filters.year, filters.limit, filters.page, filters.sort, isLoading, team, permissions]);
 
   const exportHolidayListAsExcel = () => {
     if (data?.length === 0) {
@@ -121,7 +122,7 @@ const Holiday = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
+  if (!permissions?.access) {
     return <Navigate to="/" />;
   };
 

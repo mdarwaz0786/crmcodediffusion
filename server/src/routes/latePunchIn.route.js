@@ -1,16 +1,20 @@
 import express from "express";
-import { isLoggedIn } from "../middleware/auth.middleware.js";
+import { authenticateUser } from "../middleware/newAuth.middleware.js";
 import { createLatePunchIn, deleteLatePunchIn, getAllLatePunchIns, getLatePunchInById, getPendingPunchInRequests, updateLatePunchIn } from "../controllers/latePunchIn.controller.js";
+import checkMasterActionPermission from "../middleware/masterActionPermission.middleware.js";
+import checkFieldUpdatePermission from "../middleware/checkFieldUpdatePermission.middleware.js";
+
+const fields = ["status"];
 
 // router object
 const router = express.Router();
 
 // routes
-router.post("/create-latePunchIn", isLoggedIn, createLatePunchIn);
-router.get("/all-latePunchIn", isLoggedIn, getAllLatePunchIns);
-router.get("/single-latePunchIn/:id", isLoggedIn, getLatePunchInById);
-router.get("/pending-latePunchIn", isLoggedIn, getPendingPunchInRequests);
-router.put("/update-latePunchIn/:id", isLoggedIn, updateLatePunchIn);
-router.delete("/delete-latePunchIn/:id", isLoggedIn, deleteLatePunchIn);
+router.post("/create-latePunchIn", authenticateUser, checkMasterActionPermission("latePunchIn", "create"), createLatePunchIn);
+router.get("/all-latePunchIn", authenticateUser, getAllLatePunchIns);
+router.get("/single-latePunchIn/:id", authenticateUser, getLatePunchInById);
+router.get("/pending-latePunchIn", authenticateUser, getPendingPunchInRequests);
+router.put("/update-latePunchIn/:id", authenticateUser, checkMasterActionPermission("latePunchIn", "update"), checkFieldUpdatePermission("latePunchIn", fields), updateLatePunchIn);
+router.delete("/delete-latePunchIn/:id", authenticateUser, checkMasterActionPermission("latePunchIn", "delete"), deleteLatePunchIn);
 
 export default router;

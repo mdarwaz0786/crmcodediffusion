@@ -4,12 +4,13 @@ import ProjectCategory from "../models/projectCategory.model.js";
 export const createProjectCategory = async (req, res) => {
   try {
     const { name, description } = req.body;
+    const company = req.company;
 
     if (!name) {
       return res.status(400).json({ success: false, message: "Name is required." });
     };
 
-    const projectCategory = new ProjectCategory({ name, description });
+    const projectCategory = new ProjectCategory({ name, description, company });
     await projectCategory.save();
 
     return res.status(200).json({ success: true, message: "Project category created successfully", projectCategory });
@@ -21,7 +22,7 @@ export const createProjectCategory = async (req, res) => {
 // Controller for fetching all project category
 export const fetchAllProjectCategory = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle searching across all fields
@@ -80,7 +81,7 @@ export const fetchSingleProjectCategory = async (req, res) => {
     const projectCategoryId = req.params.id;
 
     const projectCategory = await ProjectCategory
-      .findById(projectCategoryId);
+      .findOne({ _id: projectCategoryId, company: req.company });
 
     if (!projectCategory) {
       return res.status(404).json({ success: false, message: "Project category not found" });
@@ -100,7 +101,7 @@ export const updateProjectCategory = async (req, res) => {
     const { name, description } = req.body;
 
     const projectCategory = await ProjectCategory
-      .findByIdAndUpdate(projectCategoryId, { name, description }, { new: true });
+      .findOneAndUpdate({ _id: projectCategoryId, company: req.company }, { name, description }, { new: true, runValidators: true });
 
     if (!projectCategory) {
       return res.status(404).json({ success: false, message: "Project category not found" });
@@ -118,7 +119,7 @@ export const deleteProjectCategory = async (req, res) => {
     const projectCategoryId = req.params.id;
 
     const projectCategory = await ProjectCategory
-      .findByIdAndDelete(projectCategoryId);
+      .findOneAndDelete({ _id: projectCategoryId, company: req.company });
 
     if (!projectCategory) {
       return res.status(400).json({ success: false, message: "Project category not found" });

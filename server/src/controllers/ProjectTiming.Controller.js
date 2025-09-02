@@ -4,12 +4,13 @@ import ProjectTiming from "../models/projectTiming.model.js";
 export const createProjectTiming = async (req, res) => {
   try {
     const { name, description } = req.body;
+    const company = req.company;
 
     if (!name) {
       return res.status(400).json({ success: false, message: "Name is required." });
     };
 
-    const projectTiming = new ProjectTiming({ name, description });
+    const projectTiming = new ProjectTiming({ name, description, company });
     await projectTiming.save();
 
     return res.status(200).json({ success: true, message: "Project timeline created successfully", projectTiming });
@@ -21,7 +22,7 @@ export const createProjectTiming = async (req, res) => {
 // Controller for fetching all project timeline
 export const fetchAllProjectTiming = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle searching across all fields
@@ -80,7 +81,7 @@ export const fetchSingleProjectTiming = async (req, res) => {
     const projectTimingId = req.params.id;
 
     const projectTiming = await ProjectTiming
-      .findById(projectTimingId);
+      .findOne({ _id: projectTimingId, company: req.company });
 
     if (!projectTiming) {
       return res.status(404).json({ success: false, message: "Project timeline not found" });
@@ -100,7 +101,7 @@ export const updateProjectTiming = async (req, res) => {
     const { name, description } = req.body;
 
     const projectTiming = await ProjectTiming
-      .findByIdAndUpdate(projectTimingId, { name, description }, { new: true });
+      .findOneAndUpdate({ _id: projectTimingId, company: req.company }, { name, description }, { new: true, runValidators: true });
 
     if (!projectTiming) {
       return res.status(404).json({ success: false, message: "Project timeline not found" });
@@ -118,7 +119,7 @@ export const deleteProjectTiming = async (req, res) => {
     const projectTimingId = req.params.id;
 
     const projectTiming = await ProjectTiming
-      .findByIdAndDelete(projectTimingId);
+      .findOneAndDelete({ _id: projectTimingId, company: req.company });
 
     if (!projectTiming) {
       return res.status(400).json({ success: false, message: "Project timeline not found" });

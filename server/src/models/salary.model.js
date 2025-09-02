@@ -29,6 +29,10 @@ const salarySchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Company",
+  },
 });
 
 // Compound index to prevent duplicates

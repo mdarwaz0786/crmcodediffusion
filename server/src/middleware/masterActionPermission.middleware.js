@@ -3,8 +3,8 @@ import Role from "../models/role.model.js";
 const checkMasterActionPermission = (master, action) => {
   return async (req, res, next) => {
     try {
-      const teamRole = req.team.role;
-      const role = await Role.findById(teamRole._id);
+      const roleId = req.team?.role?._id;
+      const role = await Role.findById(roleId);
 
       if (!role) {
         return res.status(403).json({ success: false, message: 'Access denied' });

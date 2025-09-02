@@ -1,5 +1,6 @@
 import Attendance from '../models/attendance.model.js';
 import Team from "../models/team.model.js";
+import Company from "../models/company.model.js";
 import Holiday from "../models/holiday.model.js";
 import mongoose from "mongoose";
 import firebase from "../firebase/index.js";
@@ -107,21 +108,29 @@ export const newCreateAttendance = async (req, res) => {
   try {
     session.startTransaction();
     const { employee, attendanceDate, punchInTime, punchInLatitude, punchInLongitude } = req.body;
+    const company = req.company;
+
+    const rules = await Company.findById(company);
+
+    if (!rules) {
+      return res.status(400).json({ success: false, message: "Company not found" });
+    };
 
     if (!employee) {
       return res.status(400).json({ success: false, message: "Employee is required" });
     };
 
     if (!attendanceDate) {
-      return res.status(400).json({ success: false, message: "Attendance Date is required" });
+      return res.status(400).json({ success: false, message: "Attendance date is required" });
     };
 
     if (!punchInTime) {
       return res.status(400).json({ success: false, message: "Punch in time is required" });
     };
 
-    const EXPECTED_PUNCH_IN = "10:00";
-    const HALF_DAY_THRESHOLD = "11:00";
+    const EXPECTED_PUNCH_IN = rules?.punchInTime;
+    const HALF_DAY_THRESHOLD = rules?.halfDayThreshold;
+    const weeklyOff = rules?.weeklyOff || [];
 
     // Calculate lateIn
     const lateIn = calculateTimeDifference(EXPECTED_PUNCH_IN, punchInTime);
@@ -130,14 +139,14 @@ export const newCreateAttendance = async (req, res) => {
     const attendanceStatus = compareTime(punchInTime, HALF_DAY_THRESHOLD) === 1 ? "Half Day" : "Present";
 
     // Check if the attendance date is a holiday
-    const holiday = await Holiday.findOne({ date: attendanceDate }).session(session);
+    const holiday = await Holiday.findOne({ date: attendanceDate, company: req.company }).session(session);
 
     // Get the day name from attendanceDate
     const dayName = getDayName(attendanceDate);
 
     // Upsert attendance record with atomic operation
     const result = await Attendance.findOneAndUpdate(
-      { employee, attendanceDate, punchIn: false },
+      { employee, attendanceDate, punchIn: false, company },
       {
         $set: {
           punchInLatitude,
@@ -148,6 +157,7 @@ export const newCreateAttendance = async (req, res) => {
           lateIn,
           dayName,
           isHoliday: holiday ? true : false,
+          company,
         },
       },
       {
@@ -157,42 +167,41 @@ export const newCreateAttendance = async (req, res) => {
     ).session(session);
 
     // Check if the day is Sunday or if it is a holiday
-    if (dayName === "Sunday" || holiday) {
+    if (dayName === "Sunday" || dayName === "Saturday" || holiday) {
       let reason = "";
 
       // If both conditions are true
-      if (dayName === "Sunday" && holiday) {
-        reason = `Worked on ${dayName}, ${holiday.reason}`;
-      } else if (dayName === "Sunday") {
+      if (dayName === "Sunday" && weeklyOff.includes("Sunday")) {
+        reason = `Worked on ${dayName}`;
+      } else if (dayName === "Saturday" && weeklyOff.includes("Saturday")) {
         reason = `Worked on ${dayName}`;
       } else if (holiday) {
         reason = `Worked on ${holiday.reason}`;
       };
 
       const compOffEntry = {
-        date: attendanceDate,
+        attendanceDate: attendanceDate,
         isApplied: false,
         isApproved: false,
-        isUtilized: false,
         reason,
       };
 
       // Update the eligibleCompOffDate
       await Team.findOneAndUpdate(
-        { _id: employee },
+        { _id: employee, company: req.company },
         { $addToSet: { eligibleCompOffDate: compOffEntry } },
       ).session(session);
     };
 
-    const sendBy = await Team.findById(employee);
+    const sendBy = await Team.findOne({ _id: employee, company });
 
     // Send push notification to admin
-    const teams = await Team
-      .find()
+    const teams = await Company
+      .find({ _id: sendBy?.company })
       .populate({ path: 'role', select: "name" })
       .exec();
 
-    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "company" && team?.fcmToken);
 
     if (filteredAdmins?.length > 0) {
       const payload = {
@@ -216,9 +225,17 @@ export const newCreateAttendance = async (req, res) => {
   };
 };
 
+// Mark multiple date attendance 
 export const markAttendanceDateRange = async (req, res) => {
   try {
     const { employeeId, punchInTime, punchOutTime, fromDate, toDate } = req.body;
+
+    const company = req.company;
+    const rules = await Company.findById(company);
+
+    if (!rules) {
+      return res.status(400).json({ success: false, message: "Company not found" });
+    };
 
     if (!employeeId || !punchInTime || !punchOutTime || !fromDate || !toDate) {
       return res.status(400).json({ success: false, message: "All fields are required." })
@@ -265,7 +282,7 @@ export const markAttendanceDateRange = async (req, res) => {
       return res.status(400).json({ success: false, message: "To date cannot be in the future." });
     };
 
-    const employee = await Team.findOne({ _id: employeeId }).populate("office");
+    const employee = await Team.findOne({ _id: employeeId, company: req.company }).populate("office");
 
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee not found." });
@@ -284,7 +301,7 @@ export const markAttendanceDateRange = async (req, res) => {
         const hour = parseInt(hourStr);
         const minute = parseInt(minuteStr);
 
-        const maxMinute = Math.min(minute + 10, 59);
+        const maxMinute = Math.min(minute + 15, 59);
         const randomMinute = Math.floor(Math.random() * (maxMinute - minute + 1)) + minute;
 
         return `${String(hour).padStart(2, '0')}:${String(randomMinute).padStart(2, '0')}`;
@@ -295,7 +312,7 @@ export const markAttendanceDateRange = async (req, res) => {
         const hour = parseInt(hourStr);
         const minute = parseInt(minuteStr);
 
-        const maxMinute = Math.min(minute + 10, 59);
+        const maxMinute = Math.min(minute + 15, 59);
         const randomMinute = Math.floor(Math.random() * (maxMinute - minute + 1)) + minute;
 
         return `${String(hour).padStart(2, '0')}:${String(randomMinute).padStart(2, '0')}`;
@@ -305,7 +322,7 @@ export const markAttendanceDateRange = async (req, res) => {
         continue;
       };
 
-      const holiday = await Holiday.findOne({ date: dates[i] });
+      const holiday = await Holiday.findOne({ date: dates[i], company: req.company });
 
       if (holiday) {
         continue;
@@ -314,18 +331,22 @@ export const markAttendanceDateRange = async (req, res) => {
       const existingAttendance = await Attendance.findOne({
         attendanceDate: dates[i],
         employee: employeeId,
+        company: req.company,
       });
 
       if (existingAttendance) {
         continue;
       };
 
-      const EXPECTED_PUNCH_IN = "10:00";
-      const HALF_DAY_THRESHOLD = "11:00";
-      const lateIn = calculateTimeDifference(EXPECTED_PUNCH_IN, punchInTime);
-      const attendanceStatus = compareTime(punchInTime, HALF_DAY_THRESHOLD) === 1 ? "Half Day" : "Present";
+      const actualPunchInTime = getRandomPunchInTimeInNext10Minutes(punchInTime)
+      const actualPunchOutTime = getRandomPunchOutTimeInNext10Minutes(punchOutTime)
+
+      const EXPECTED_PUNCH_IN = rules?.punchInTime;
+      const HALF_DAY_THRESHOLD = rules?.halfDayThreshold;
+      const lateIn = calculateTimeDifference(EXPECTED_PUNCH_IN, actualPunchInTime);
+      const attendanceStatus = compareTime(actualPunchInTime, HALF_DAY_THRESHOLD) === 1 ? "Half Day" : "Present";
       const dayName = getDayName(dates[i]);
-      const hoursWorked = calculateTimeDifference(punchInTime, punchOutTime);
+      const hoursWorked = calculateTimeDifference(actualPunchInTime, actualPunchOutTime);
       const officeLatitude = employee?.office?.latitude;
       const officeLongitude = employee?.office?.longitude;
 
@@ -337,14 +358,15 @@ export const markAttendanceDateRange = async (req, res) => {
         punchOutLatitude: officeLatitude,
         punchOutLongitude: officeLongitude,
         status: attendanceStatus,
-        punchInTime: getRandomPunchInTimeInNext10Minutes(punchInTime),
+        punchInTime: actualPunchInTime,
         punchIn: true,
-        punchOutTime: getRandomPunchOutTimeInNext10Minutes(punchOutTime),
+        punchOutTime: actualPunchOutTime,
         punchOut: true,
         lateIn: lateIn,
         hoursWorked: hoursWorked,
         dayName: dayName,
         isHoliday: false,
+        company: req.company,
       });
 
       await newAttendance.save();
@@ -356,9 +378,17 @@ export const markAttendanceDateRange = async (req, res) => {
   };
 };
 
+// Mark single day attendance
 export const markAttendanceSingleDay = async (req, res) => {
   try {
     const { employeeId, punchInTime, punchOutTime, date } = req.body;
+    const company = req.company;
+
+    const rules = await Company.findById(company);
+
+    if (!rules) {
+      return res.status(400).json({ success: false, message: "Company not found" });
+    };
 
     if (!employeeId || !punchInTime || !punchOutTime || !date) {
       return res.status(400).json({ success: false, message: "All fields are required." })
@@ -397,14 +427,14 @@ export const markAttendanceSingleDay = async (req, res) => {
       return res.status(400).json({ success: false, message: "Attendance date cannot be in the future." });
     };
 
-    const employee = await Team.findOne({ _id: employeeId }).populate("office");
+    const employee = await Team.findOne({ _id: employeeId, company }).populate("office");
 
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee not found." });
     };
 
-    const EXPECTED_PUNCH_IN = "10:00";
-    const HALF_DAY_THRESHOLD = "11:00";
+    const EXPECTED_PUNCH_IN = rules?.punchInTime;
+    const HALF_DAY_THRESHOLD = rules?.halfDayThreshold;
     const lateIn = calculateTimeDifference(EXPECTED_PUNCH_IN, punchInTime);
     const attendanceStatus = compareTime(punchInTime, HALF_DAY_THRESHOLD) === 1 ? "Half Day" : "Present";
     const dayName = getDayName(date);
@@ -413,7 +443,7 @@ export const markAttendanceSingleDay = async (req, res) => {
     const officeLongitude = employee?.office?.longitude;
 
     // Check if the attendance date is a holiday
-    const holiday = await Holiday.findOne({ date: date });
+    const holiday = await Holiday.findOne({ date, company });
 
     const newAttendance = new Attendance({
       employee: employeeId,
@@ -431,34 +461,34 @@ export const markAttendanceSingleDay = async (req, res) => {
       hoursWorked: hoursWorked,
       dayName: dayName,
       isHoliday: holiday ? true : false,
+      company,
     });
 
     await newAttendance.save();
 
     // Check if the day is Sunday or if it is a holiday
-    if (dayName === "Sunday" || holiday) {
+    if (dayName === "Sunday" || dayName === "Saturday" || holiday) {
       let reason = "";
 
       // If both conditions are true
-      if (dayName === "Sunday" && holiday) {
-        reason = `Worked on ${dayName}, ${holiday?.reason}`;
-      } else if (dayName === "Sunday") {
+      if (dayName === "Sunday" && weeklyOff.includes("Sunday")) {
+        reason = `Worked on ${dayName}`;
+      } else if (dayName === "Saturday" && weeklyOff.includes("Saturday")) {
         reason = `Worked on ${dayName}`;
       } else if (holiday) {
-        reason = `Worked on ${holiday?.reason}`;
+        reason = `Worked on ${holiday.reason}`;
       };
 
       const compOffEntry = {
-        date: date,
+        attendanceDate: date,
         isApplied: false,
         isApproved: false,
-        isUtilized: false,
         reason,
       };
 
       // Update the eligibleCompOffDate
       await Team.findOneAndUpdate(
-        { _id: employeeId },
+        { _id: employeeId, company },
         { $addToSet: { eligibleCompOffDate: compOffEntry } },
       );
     };
@@ -473,7 +503,7 @@ export const markAttendanceSingleDay = async (req, res) => {
 export const newFetchAllAttendance = async (req, res) => {
   try {
     const { date, employeeId } = req.query;
-    let query = {};
+    let query = { company: req.company };
     let sort = {};
 
     // Filter by exact date
@@ -543,6 +573,15 @@ export const newFetchAllAttendance = async (req, res) => {
 export const newFetchMonthlyStatistic = async (req, res) => {
   try {
     const { employeeId, month } = req.query;
+    const company = req.company;
+
+    const rules = await Company.findById(company);
+
+    if (!rules) {
+      return res.status(400).json({ success: false, message: "Company not found." });
+    };
+
+    const weeklyOff = rules?.weeklyOff || [];
 
     if (!employeeId) {
       return res.status(400).json({ success: false, message: "Employee Id is required." });
@@ -553,13 +592,14 @@ export const newFetchMonthlyStatistic = async (req, res) => {
     };
 
     const employee = await Team
-      .findOne({ _id: employeeId })
-      .select("workingHoursPerDay approvedLeaves eligibleCompOffDate");
+      .findOne({ _id: employeeId, company })
+      .select("workingHoursPerDay approvedLeaves eligibleCompOffDate joining");
 
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee not found." });
     };
 
+    let joiningDate = employee?.joining;
     let [requiredHours, requiredMinutes] = employee?.workingHoursPerDay?.split(":")?.map(Number);
     let dailyThreshold = requiredHours * 60 + requiredMinutes;
 
@@ -574,6 +614,8 @@ export const newFetchMonthlyStatistic = async (req, res) => {
     let totalOnLeave = 0;
     let totalHolidays = 0;
     let totalSundays = 0;
+    let totalSaturdays = 0;
+    let totalWeeklyOff = 0;
     let totalMinutesWorked = 0;
     let totalLateIn = 0;
     let totalCompOff = 0;
@@ -596,13 +638,17 @@ export const newFetchMonthlyStatistic = async (req, res) => {
       let date = new Date(year, monthIndex - 1, day);
       let formattedDate = convertToIST(date).toISOString().split("T")[0];
       let currentDate = convertToIST(new Date()).toISOString().split("T")[0];
+      let attendanceObject;
 
       if (formattedDate > currentDate) {
-      } else if (date.getDay() === 0) {
+      } else if (formattedDate < joiningDate) {
+        status = "";
+      } else if (date.getDay() === 0 && weeklyOff.includes("Sunday")) {
         let attendanceRecord = await Attendance.findOne({
           employee: employeeId,
           attendanceDate: formattedDate,
           status: { $in: ["Present", "Half Day"] },
+          company,
         }).select("_id attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
         if (attendanceRecord) {
           _id = attendanceRecord?._id;
@@ -632,11 +678,51 @@ export const newFetchMonthlyStatistic = async (req, res) => {
             punchOutCount++;
           };
         } else {
-          status = "Sunday";
+          status = "Weekly Off";
           totalSundays++;
+          totalWeeklyOff++;
+        };
+      } else if (date.getDay() === 6 && weeklyOff.includes("Saturday")) {
+        let attendanceRecord = await Attendance.findOne({
+          employee: employeeId,
+          attendanceDate: formattedDate,
+          status: { $in: ["Present", "Half Day"] },
+          company,
+        }).select("_id attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
+        if (attendanceRecord) {
+          _id = attendanceRecord?._id;
+          status = attendanceRecord?.status;
+          punchInTime = attendanceRecord?.punchInTime;
+          punchOutTime = attendanceRecord?.punchOutTime;
+          hoursWorked = attendanceRecord?.hoursWorked;
+          lateIn = attendanceRecord?.lateIn;
+          if (attendanceRecord?.status === "Present") {
+            totalPresent++
+          };
+          if (attendanceRecord?.status === "Half Day") {
+            totalHalfDays++;
+          };
+          if (attendanceRecord?.hoursWorked) {
+            totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+          };
+          if (attendanceRecord?.lateIn !== "00:00") {
+            totalLateIn++;
+          };
+          if (attendanceRecord?.punchInTime) {
+            totalPunchInMinutes += timeToMinutes(attendanceRecord?.punchInTime);
+            punchInCount++;
+          };
+          if (attendanceRecord?.punchOutTime) {
+            totalPunchOutMinutes += timeToMinutes(attendanceRecord?.punchOutTime);
+            punchOutCount++;
+          };
+        } else {
+          status = "Weekly Off";
+          totalSaturdays++;
+          totalWeeklyOff++;
         };
       } else {
-        let holiday = await Holiday.findOne({ date: formattedDate });
+        let holiday = await Holiday.findOne({ date: formattedDate, company });
         let leaveRecord = employee?.approvedLeaves?.some((leave) => leave?.date === formattedDate);
         let compOffRecord = employee?.eligibleCompOffDate?.some((comp) => comp?.compOffDate === formattedDate);
         if (holiday) {
@@ -644,6 +730,7 @@ export const newFetchMonthlyStatistic = async (req, res) => {
             employee: employeeId,
             attendanceDate: formattedDate,
             status: { $in: ["Present", "Half Day"] },
+            company,
           }).select("_id attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
           if (attendanceRecord) {
             _id = attendanceRecord?._id;
@@ -687,6 +774,7 @@ export const newFetchMonthlyStatistic = async (req, res) => {
             employee: employeeId,
             attendanceDate: formattedDate,
             status: { $in: ["Present", "Half Day"] },
+            company,
           }).select("_id attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
           if (attendanceRecord) {
             _id = attendanceRecord?._id;
@@ -722,7 +810,7 @@ export const newFetchMonthlyStatistic = async (req, res) => {
         };
       };
 
-      let attendanceObject = {
+      attendanceObject = {
         attendanceDate: formattedDate,
         status: status,
       };
@@ -750,7 +838,7 @@ export const newFetchMonthlyStatistic = async (req, res) => {
       calendarData.push(attendanceObject);
     };
 
-    let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalSundays + totalCompOff);
+    let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalSundays + totalSaturdays + totalCompOff);
     let companyWorkingHours = companyWorkingDays * dailyThreshold;
     let requiredWorkingHours = (totalPresent + totalHalfDays) * dailyThreshold;
 
@@ -766,8 +854,6 @@ export const newFetchMonthlyStatistic = async (req, res) => {
     let shortFallByLeaveAndCompOff = totalLeaveAndCompOff * dailyThreshold;
     let actualShortfall = companyWorkingHours - (totalMinutesWorked + shortFallByLeaveAndCompOff);
 
-    console.log(actualShortfall);
-
     const monthlyStatics = {
       employee: employeeId,
       month,
@@ -776,6 +862,8 @@ export const newFetchMonthlyStatistic = async (req, res) => {
       companyWorkingHours: minutesToTime(companyWorkingHours),
       totalHolidays,
       totalSundays,
+      totalSaturdays,
+      totalWeeklyOff,
       employeePresentDays: totalPresent,
       employeeHalfDays: totalHalfDays,
       employeeAbsentDays: totalAbsent,
@@ -799,7 +887,7 @@ export const newFetchMonthlyStatistic = async (req, res) => {
 export const newFetchSingleAttendance = async (req, res) => {
   try {
     const attendance = await Attendance
-      .findById(req.params.id)
+      .findOne({ _id: req.params.id, company: req.company })
       .populate('employee')
       .exec();
 
@@ -817,6 +905,7 @@ export const newFetchSingleAttendance = async (req, res) => {
 export const newUpdateAttendance = async (req, res) => {
   try {
     const { employee, attendanceDate, punchOutTime, punchOutLatitude, punchOutLongitude } = req.body;
+    const company = req.company;
 
     if (!employee) {
       return res.status(400).json({ success: false, message: "Employee is required" });
@@ -835,6 +924,7 @@ export const newUpdateAttendance = async (req, res) => {
       employee,
       attendanceDate,
       punchIn: true,
+      company,
     });
 
     if (!attendance) {
@@ -847,7 +937,7 @@ export const newUpdateAttendance = async (req, res) => {
 
     // Update punch out details
     const updatedAttendance = await Attendance.findOneAndUpdate(
-      { _id: attendance?._id },
+      { _id: attendance?._id, company },
       {
         $set: {
           punchOutLatitude,
@@ -863,15 +953,15 @@ export const newUpdateAttendance = async (req, res) => {
       },
     );
 
-    const sendBy = await Team.findById(employee);
+    const sendBy = await Team.findOne({ _id: employee, company });
 
     // Send push notification to admin
-    const teams = await Team
-      .find()
+    const teams = await Company
+      .find({ _id: sendBy?.company })
       .populate({ path: 'role', select: "name" })
       .exec();
 
-    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "company" && team?.fcmToken);
 
     if (filteredAdmins?.length > 0) {
       const payload = {
@@ -894,6 +984,13 @@ export const newUpdateAttendance = async (req, res) => {
 export const newUpdatePunchTimeAttendance = async (req, res) => {
   try {
     const { id, punchOutTime, punchInTime } = req.body;
+    const company = req.company;
+
+    const rules = await Company.findById(company);
+
+    if (!rules) {
+      return res.status(400).json({ success: false, message: "Company not found" });
+    };
 
     if (!id) {
       return res.status(400).json({ success: false, message: "Attendance id is required." });
@@ -903,14 +1000,14 @@ export const newUpdatePunchTimeAttendance = async (req, res) => {
       return res.status(400).json({ success: false, message: "At least one punch time is required." });
     };
 
-    const attendance = await Attendance.findById(id);
+    const attendance = await Attendance.findOne({ _id: id, company });
 
     if (!attendance) {
       return res.status(404).json({ success: false, message: `Attendance not found with id ${id}` });
     };
 
-    const EXPECTED_PUNCH_IN = "10:00";
-    const HALF_DAY_THRESHOLD = "11:00";
+    const EXPECTED_PUNCH_IN = rules?.punchInTime;
+    const HALF_DAY_THRESHOLD = rules?.halfDayThreshold;
 
     const lateIn = calculateTimeDifference(EXPECTED_PUNCH_IN, punchInTime);
 
@@ -932,10 +1029,10 @@ export const newUpdatePunchTimeAttendance = async (req, res) => {
       updateFields.hoursWorked = calculateTimeDifference(punchInTime, punchOutTime);
     };
 
-    const updatedAttendance = await Attendance.findByIdAndUpdate(
-      id,
+    const updatedAttendance = await Attendance.findOneAndUpdate(
+      { _id: id, company },
       { $set: updateFields },
-      { new: true },
+      { new: true, runValidators: true },
     );
 
     return res.status(200).json({ success: true, attendance: updatedAttendance });
@@ -947,7 +1044,7 @@ export const newUpdatePunchTimeAttendance = async (req, res) => {
 // Delete an attendance record by ID
 export const newDeleteAttendance = async (req, res) => {
   try {
-    const attendance = await Attendance.findByIdAndDelete(req.params.id);
+    const attendance = await Attendance.findOneAndDelete({ _id: req.params.id, company: req.company });
 
     if (!attendance) {
       return res.status(404).json({ success: false, message: 'Attendance not found' });

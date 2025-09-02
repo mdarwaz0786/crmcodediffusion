@@ -21,7 +21,7 @@ const Profile = () => {
           <Link to="#" onClick={() => navigate(-1)}><button className="btn btn-primary">Back</button></Link>
         </div>
         {
-          userType === "Employee" ? (
+          (userType === "Employee") ? (
             <div className="row">
               <div className="col-md-6">
                 <div className="form-wrap">
@@ -84,7 +84,7 @@ const Profile = () => {
                 </div>
               </div>
             </div>
-          ) : (
+          ) : (userType === "Client") ? (
             <div className="row">
               <div className="col-md-6">
                 <div className="form-wrap">
@@ -138,6 +138,64 @@ const Profile = () => {
                 <div className="form-wrap">
                   <label className="col-form-label" htmlFor="address">Address <span className="text-danger"></span></label>
                   <textarea rows={4} type="text" className="form-control" name="address" id="address" value={team?.address} disabled />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="row">
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label" htmlFor="name">Company Name <span className="text-danger"></span></label>
+                  <input type="text" className="form-control" name="name" id="name" value={team?.companyName} disabled />
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label" htmlFor="role">Role <span className="text-danger"></span></label>
+                  <input type="text" className="form-control" name="role" id="role" value={team?.role?.name} disabled />
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label" htmlFor="email">Email ID <span className="text-danger"></span></label>
+                  <input type="email" className="form-control" name="email" id="email" value={team?.email} disabled />
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label" htmlFor="mobile">Mobile No. <span className="text-danger"></span></label>
+                  <input type="text" className="form-control" name="mobile" id="mobile" value={team?.mobile} disabled />
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label" htmlFor="password">Password <span className="text-danger"></span></label>
+                  <input type="text" className="form-control" name="password" id="password" value={team?.password} disabled />
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label" htmlFor="numberOfEmployee">Number Of Employee <span className="text-danger"></span></label>
+                  <input type="text" className="form-control" name="numberOfEmployee" id="numberOfEmployee" value={team?.numberOfEmployee} disabled />
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label" htmlFor="employeeIdPrefix">Employee Id Prefix <span className="text-danger"></span></label>
+                  <input type="text" className="form-control" name="employeeIdPrefix" id="employeeIdPrefix" value={team?.employeeIdPrefix} disabled />
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="form-wrap">
+                  <label className="col-form-label" htmlFor="projectIdPrefix">Project Id Prefix <span className="text-danger"></span></label>
+                  <input type="text" className="form-control" name="projectIdPrefix" id="projectIdPrefix" value={team?.projectIdPrefix} disabled />
+                </div>
+              </div>
+              <div className="col-md-12">
+                <div className="form-wrap">
+                  <label className="col-form-label" htmlFor="logo">Logo <span className="text-danger"></span></label>
+                  <input type="file" className="form-control" name="logo" id="logo" disabled />
+                  <img src={team?.logo} alt="logo" style={{ marginTop: "1.5rem", height: "20%", width: "20%", objectFit: "cover" }} />
                 </div>
               </div>
             </div>

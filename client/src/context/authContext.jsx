@@ -24,7 +24,9 @@ export const AuthProvider = ({ children }) => {
   const logOutTeam = () => {
     setToken("");
     setTeam("");
-    return localStorage.removeItem("token");
+    localStorage.removeItem("token");
+    localStorage.removeItem("userType");
+    return;
   };
 
   const loggedInTeam = async () => {
@@ -37,12 +39,15 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (response?.data?.success) {
-        setTeam(response?.data?.team);
-        setIsLoading(false);
+        if (response?.data?.team?.company?.isActive === false) {
+          logOutTeam();
+        } else {
+          setTeam(response?.data?.team);
+          setIsLoading(false);
+        };
       };
     } catch (error) {
       setIsLoading(false);
-      logOutTeam();
     };
   };
 
@@ -56,23 +61,49 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (response?.data?.success) {
-        setTeam(response?.data?.team);
-        setIsLoading(false);
+        if (response?.data?.team?.company?.isActive === false) {
+          logOutTeam();
+        } else {
+          setTeam(response?.data?.team);
+          setIsLoading(false);
+        };
       };
     } catch (error) {
       setIsLoading(false);
-      logOutTeam();
+    };
+  };
+
+  const loggedInCompany = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(`${base_url}/api/v1/company/loggedin-company`, {
+        headers: {
+          Authorization: validToken,
+        },
+      });
+
+      if (response?.data?.success) {
+        if (response?.data?.team?.isActive === false) {
+          logOutTeam();
+        } else {
+          setTeam(response?.data?.team);
+          setIsLoading(false);
+        };
+      };
+    } catch (error) {
+      setIsLoading(false);
     };
   };
 
   useEffect(() => {
     if (isLoggedIn) {
       const userType = localStorage.getItem("userType");
-
       if (userType === "Employee") {
         loggedInTeam();
       } else if (userType === "Client") {
         loggedInCustomer();
+      } else if (userType === "Company") {
+        loggedInCompany();
       };
     } else {
       setIsLoading(false);

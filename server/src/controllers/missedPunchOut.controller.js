@@ -1,6 +1,7 @@
 import MissedPunchOut from "../models/missedPunchOut.model.js";
 import Attendance from "../models/attendance.model.js";
 import Team from "../models/team.model.js";
+import Company from "../models/company.model.js";
 import { sendEmail } from "../services/emailService.js";
 import mongoose from "mongoose";
 import firebase from "../firebase/index.js";
@@ -28,6 +29,7 @@ const calculateTimeDifference = (startTime, endTime) => {
 export const createMissedPunchOut = async (req, res) => {
   try {
     const { employee, attendanceDate, approvedBy, punchOutTime } = req.body;
+    const company = req.company;
 
     if (!employee) {
       return res.status(400).json({ success: false, message: "Employee is required." });
@@ -73,7 +75,7 @@ export const createMissedPunchOut = async (req, res) => {
     };
 
     // Check if a missed punch-out request already exists
-    const existingMissedPunchOut = await MissedPunchOut.findOne({ employee, attendanceDate });
+    const existingMissedPunchOut = await MissedPunchOut.findOne({ employee, attendanceDate, company });
 
     if (existingMissedPunchOut) {
       if (existingMissedPunchOut?.status === "Approved" || existingMissedPunchOut?.status === "Pending") {
@@ -82,7 +84,7 @@ export const createMissedPunchOut = async (req, res) => {
     };
 
     // Check if attendance exists and if punch-in and punch-out are valid
-    const attendance = await Attendance.findOne({ employee, attendanceDate });
+    const attendance = await Attendance.findOne({ employee, attendanceDate, company });
 
     if (!attendance) {
       return res.status(400).json({ success: false, message: `Attendance not exists for date ${attendanceDate}` });
@@ -97,23 +99,29 @@ export const createMissedPunchOut = async (req, res) => {
     };
 
     // Create new missed punch-out request
-    const newMissedPunchOut = new MissedPunchOut({ employee, attendanceDate, punchOutTime, approvedBy });
+    const newMissedPunchOut = new MissedPunchOut({ employee, attendanceDate, punchOutTime, approvedBy, company });
 
     await newMissedPunchOut.save();
 
     // Send email
-    const appliedBy = await Team.findById(employee);
-    const subject = `${appliedBy?.name} applied for missed punch out for attendance date ${attendanceDate}`;
-    const htmlContent = `<p>Missed punch out request has been applied by ${appliedBy?.name} for attendance date ${attendanceDate}.</p><p>Please review the request.</p>`;
-    sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+    const appliedBy = await Team.findOne({ _id: employee, company }).populate("office");
+
+    if (appliedBy?.office?.noReplyEmail && appliedBy?.office?.noReplyEmailAppPassword) {
+      const from = appliedBy?.office?.noReplyEmail;
+      const to = from;
+      const password = appliedBy?.office?.noReplyEmailAppPassword;
+      const subject = `${appliedBy?.name} applied for missed punch out for attendance date ${attendanceDate}`;
+      const htmlContent = `<p>Missed punch out request has been applied by ${appliedBy?.name} for attendance date ${attendanceDate}.</p><p>Please review the request.</p>`;
+      sendEmail(from, to, password, subject, htmlContent);
+    };
 
     // Send push notification to admin
-    const teams = await Team
-      .find()
+    const teams = await Company
+      .find({ _id: appliedBy?.company })
       .populate({ path: 'role', select: "name" })
       .exec();
 
-    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "company" && team?.fcmToken);
 
     if (filteredAdmins?.length > 0) {
       const payload = {
@@ -135,7 +143,7 @@ export const createMissedPunchOut = async (req, res) => {
 // Get all missed punch out entries
 export const getAllMissedPunchOuts = async (req, res) => {
   try {
-    let query = {};
+    let query = { company: req.company };
     let sort = {};
 
     // Filter by year only (all month)
@@ -186,7 +194,6 @@ export const getAllMissedPunchOuts = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .populate("employee")
-      .populate("approvedBy")
       .exec();
 
     if (!missedPunchOuts) {
@@ -206,9 +213,8 @@ export const getMissedPunchOutById = async (req, res) => {
   try {
     const { id } = req.params;
     const missedPunchOut = await MissedPunchOut
-      .findById(id)
+      .findOne({ _id: id, company: req.company })
       .populate("employee")
-      .populate("approvedBy")
       .exec();
 
     if (!missedPunchOut) {
@@ -225,38 +231,34 @@ export const getMissedPunchOutById = async (req, res) => {
 export const getPendingPunchOutRequests = async (req, res) => {
   try {
     const pendingRequests = await MissedPunchOut
-      .find({ status: 'Pending' })
+      .find({ status: 'Pending', company: req.company })
       .sort({ createdAt: -1 })
       .populate('employee', 'name')
       .exec();
 
-    res.status(200).json({ success: true, data: pendingRequests });
+    return res.status(200).json({ success: true, data: pendingRequests });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
 // Update missed punch out request and handle attendance based on status
 export const updateMissedPunchOut = async (req, res) => {
   const session = await mongoose.startSession();
+  session.startTransaction();
 
   try {
-    session.startTransaction();
-
     const { id } = req.params;
-    const { status, approvedBy } = req.body;
+    const { status } = req.body;
 
     if (!status) {
       return res.status(400).json({ success: false, message: "Status is required." });
     };
 
-    if (!approvedBy) {
-      return res.status(400).json({ success: false, message: "Approver is required." });
-    };
-
     const missedPunchOut = await MissedPunchOut
-      .findById(id)
+      .findOne({ _id: id, company: req.company })
       .populate("employee")
+      .populate("employee.office")
       .session(session);
 
     if (!missedPunchOut) {
@@ -271,20 +273,17 @@ export const updateMissedPunchOut = async (req, res) => {
       return res.status(400).json({ success: false, message: "This missed punch out request is already in pending." });
     };
 
-    const approveBy = await Team
-      .findById(approvedBy)
-      .session(session);
-
-    if (!approveBy) {
-      return res.status(404).json({ success: false, message: "Approver not found." });
-    };
-
     if (status === "Rejected") {
       missedPunchOut.status = "Rejected";
-      missedPunchOut.approvedBy = approvedBy;
       await missedPunchOut.save({ session });
 
-      sendEmail(missedPunchOut?.employee?.email, "Your Missed Punch Out Request Rejected", `<p>Your missed punch out request for attendance date ${missedPunchOut?.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      const from = missedPunchOut?.employee?.office?.noReplyEmail;
+      const to = missedPunchOut?.employee?.email;
+      const password = missedPunchOut?.employee?.office?.noReplyEmailAppPassword;
+
+      if (from && to && password) {
+        sendEmail(from, to, password, "Your Missed Punch Out Request Rejected", `<p>Your missed punch out request for attendance date ${missedPunchOut?.attendanceDate} has been rejected.</p><p>Regards,<br/>${missedPunchOut?.employee?.office?.name}</p>`);
+      };
 
       if (missedPunchOut?.employee?.fcmToken) {
         const payload = {
@@ -305,6 +304,7 @@ export const updateMissedPunchOut = async (req, res) => {
       employee: missedPunchOut?.employee,
       attendanceDate: missedPunchOut?.attendanceDate,
       punchIn: true,
+      company: req.company,
     }).session(session);
 
     if (!attendance) {
@@ -322,10 +322,15 @@ export const updateMissedPunchOut = async (req, res) => {
       await attendance.save({ session });
 
       missedPunchOut.status = "Approved";
-      missedPunchOut.approvedBy = approvedBy;
       await missedPunchOut.save({ session });
 
-      sendEmail(missedPunchOut?.employee?.email, "Your Missed Punch Out Request Approved", `<p>Your missed punch out request for attendance date ${missedPunchOut?.attendanceDate} has been approved and punch out time ${missedPunchOut?.punchOutTime} is marked.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      const from = missedPunchOut?.employee?.office?.noReplyEmail;
+      const to = missedPunchOut?.employee?.email;
+      const password = missedPunchOut?.employee?.office?.noReplyEmailAppPassword;
+
+      if (from && to && password) {
+        sendEmail(form, to, password, "Your Missed Punch Out Request Approved", `<p>Your missed punch out request for attendance date ${missedPunchOut?.attendanceDate} has been approved and punch out time ${missedPunchOut?.punchOutTime} is marked.</p><p>Regards,<br/>${missedPunchOut?.employee?.office?.name}</p>`);
+      };
 
       if (missedPunchOut?.employee?.fcmToken) {
         const payload = {
@@ -346,7 +351,6 @@ export const updateMissedPunchOut = async (req, res) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    console.error(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -355,7 +359,7 @@ export const updateMissedPunchOut = async (req, res) => {
 export const deleteMissedPunchOut = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedMissedPunchOut = await MissedPunchOut.findByIdAndDelete(id);
+    const deletedMissedPunchOut = await MissedPunchOut.findOneAndDelete({ _id: id, company: req.company });
 
     if (!deletedMissedPunchOut) {
       return res.status(404).json({ success: false, message: "Missed punch out request not found." });

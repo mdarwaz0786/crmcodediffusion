@@ -1,20 +1,20 @@
 import express from "express";
 import { markAttendanceDateRange, markAttendanceSingleDay, newCreateAttendance, newDeleteAttendance, newFetchAllAttendance, newFetchMonthlyStatistic, newFetchSingleAttendance, newUpdateAttendance, newUpdatePunchTimeAttendance } from "../controllers/newAttendance.controller.js";
-import { isLoggedIn } from "../middleware/auth.middleware.js";
+import { authenticateUser } from "../middleware/newAuth.middleware.js";
 
 // router object
 const router = express.Router();
 
 // routes
-router.post("/create-newAttendance", isLoggedIn, newCreateAttendance);
-router.post("/mark-attendanceDateRange", isLoggedIn, markAttendanceDateRange);
-router.post("/mark-attendanceSingleDay", isLoggedIn, markAttendanceSingleDay);
-router.get("/all-newAttendance", isLoggedIn, newFetchAllAttendance);
-router.get("/single-newAttendance/:id", isLoggedIn, newFetchSingleAttendance);
-router.get("/monthly-newStatistic", isLoggedIn, newFetchMonthlyStatistic);
-router.put("/update-newAttendance", isLoggedIn, newUpdateAttendance);
-router.put("/update-punchTime", isLoggedIn, newUpdatePunchTimeAttendance);
-router.delete("/delete-newAttendance/:id", isLoggedIn, newDeleteAttendance);
+router.post("/create-newAttendance", authenticateUser, newCreateAttendance);
+router.get("/all-newAttendance", authenticateUser, newFetchAllAttendance);
+router.get("/single-newAttendance/:id", authenticateUser, newFetchSingleAttendance);
+router.get("/monthly-newStatistic", authenticateUser, newFetchMonthlyStatistic);
+router.put("/update-newAttendance", authenticateUser, newUpdateAttendance);
+router.delete("/delete-newAttendance/:id", authenticateUser, newDeleteAttendance);
+router.post("/mark-attendanceDateRange", authenticateUser, markAttendanceDateRange);
+router.post("/mark-attendanceSingleDay", authenticateUser, markAttendanceSingleDay);
+router.put("/update-punchTime", authenticateUser, newUpdatePunchTimeAttendance);
 
 export default router;
 

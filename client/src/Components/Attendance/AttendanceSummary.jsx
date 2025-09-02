@@ -45,7 +45,7 @@ const AttendanceSummary = ({ attendance }) => {
       <div style={itemStyle}><span style={boldText}>Month:</span> <span>{formatDate(attendance?.month)}</span></div>
       <div style={itemStyle}><span style={boldText}>Total Days in Month:</span> <span>{attendance?.totalDaysInMonth}</span></div>
       <div style={itemStyle}><span style={boldText}>Total Holidays:</span> <span>{attendance?.totalHolidays}</span></div>
-      <div style={itemStyle}><span style={boldText}>Total Sundays:</span> <span>{attendance?.totalSundays}</span></div>
+      <div style={itemStyle}><span style={boldText}>Total Weekly Off:</span> <span>{attendance?.totalWeeklyOff}</span></div>
       <div style={itemStyle}><span style={boldText}>Company&apos;s Working Days:</span> <span>{attendance?.companyWorkingDays}</span></div>
       <div style={itemStyle}><span style={boldText}>Company&apos;s Working Hours:</span> <span>{formatTimeToHoursMinutes(attendance?.companyWorkingHours)}</span></div>
       <div style={itemStyle}><span style={boldText}>Present Days:</span> <span style={highlightStyle}>{attendance?.employeePresentDays}</span></div>

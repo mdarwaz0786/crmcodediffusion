@@ -44,7 +44,7 @@ const AddService = () => {
     return <Preloader />;
   };
 
-  if (!team?.role?.name.toLowerCase() === "admin") {
+  if (!team?.role?.permissions?.service?.create) {
     return <Navigate to="/" />;
   };
 

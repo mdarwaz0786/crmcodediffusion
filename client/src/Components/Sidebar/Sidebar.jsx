@@ -23,13 +23,13 @@ const Sidebar = () => {
           <div id="sidebar-menu" className="sidebar-menu">
             <ul>
               <li className="clinicdropdown">
-                <Link to="#">
+                <Link to="/profile">
                   <img src={usericon} className="img-fluid" alt="Profile" />
                   <div className="user-names">
                     {
                       isLoggedIn ? (
                         <>
-                          <h5>{team?.name}</h5>
+                          <h5>{team?.name || team?.companyName}</h5>
                           <h6>{team?.role?.name}</h6>
                         </>
                       ) : (
@@ -54,8 +54,8 @@ const Sidebar = () => {
               <li>
                 {
                   (permissions?.project?.access ||
-                    permissions?.leeds?.access ||
-                    permissions?.projectDeployment?.access) && (
+                    permissions?.projectDeployment?.access ||
+                    team?.isSuperAdmin) && (
                     <h6 className="submenu-hdr">CRM</h6>
                   )
                 }
@@ -66,13 +66,18 @@ const Sidebar = () => {
                     )
                   }
                   {
-                    (permissions?.leeds?.access) && (
-                      <li><Link to="/leeds" className={currentPath === "/leeds" ? "active" : ""} id={isMobile && active === "leeds" ? "mobile_btn" : ""} onClick={() => handleActive("leeds")}><i style={{ color: currentPath === "/leeds" ? "" : "#FFA201" }} className="ti ti-file-stack"></i><span>Leads</span></Link></li>
+                    (team?.isSuperAdmin) && (
+                      <li><Link to="/leads" className={currentPath === "/leads" ? "active" : ""} id={isMobile && active === "leads" ? "mobile_btn" : ""} onClick={() => handleActive("leads")}><i style={{ color: currentPath === "/leads" ? "" : "#FFA201" }} className="ti ti-file-stack"></i><span>Leads</span></Link></li>
                     )
                   }
                   {
                     (permissions?.projectDeployment?.access) && (
                       <li><Link to="/project-deployment" className={currentPath === "/project-deployment" ? "active" : ""} id={isMobile && active === "projectDeployment" ? "mobile_btn" : ""} onClick={() => handleActive("projectDeployment")}><i style={{ color: currentPath === "/project-deployment" ? "" : "#FFA201" }} className="ti ti-cloud-upload"></i><span>Project Deployment</span></Link></li>
+                    )
+                  }
+                  {
+                    (team?.isSuperAdmin) && (
+                      <li><Link to="/company" className={currentPath === "/company" ? "active" : ""} id={isMobile && active === "company" ? "mobile_btn" : ""} onClick={() => handleActive("company")}><i style={{ color: currentPath === "/company" ? "" : "#FFA201" }} className="ti ti-building-skyscraper"></i><span>Company</span></Link></li>
                     )
                   }
                 </ul>
@@ -122,9 +127,9 @@ const Sidebar = () => {
               <li>
                 {
                   (permissions?.customer?.access ||
+                    permissions?.payment?.access ||
                     permissions?.ticket?.access ||
-                    team?.role?.name.toLowerCase() === "admin" ||
-                    team?.role?.name.toLowerCase() === "hr"
+                    permissions?.addOnServicee?.access
                   ) && (
                     <h6 className="submenu-hdr">Client</h6>
                   )
@@ -136,7 +141,7 @@ const Sidebar = () => {
                     )
                   }
                   {
-                    (team?.role?.name.toLowerCase() === "admin") && (
+                    (permissions?.payment?.access) && (
                       <li><Link to="/payment" className={currentPath === "/payment" ? "active" : ""} id={isMobile && active === "payment" ? "mobile_btn" : ""} onClick={() => handleActive("payment")}><i style={{ color: currentPath === "/payment" ? "" : "#FFA201" }} className="ti ti-wallet"></i><span>Payment</span></Link></li>
                     )
                   }
@@ -146,7 +151,7 @@ const Sidebar = () => {
                     )
                   }
                   {
-                    (team?.role?.name.toLowerCase() === "admin") && (
+                    (permissions?.addOnService?.access) && (
                       <li><Link to="/add-on-service" className={currentPath === "/add-on-service" ? "active" : ""} id={isMobile && active === "addOnService" ? "mobile_btn" : ""} onClick={() => handleActive("addOnService")}><i style={{ color: currentPath === "/add-on-service" ? "" : "#FFA201" }} className="ti ti-layers-union"></i><span>Add On Service</span></Link></li>
                     )
                   }
@@ -155,10 +160,15 @@ const Sidebar = () => {
 
               <li>
                 {
-                  (
-                    team?.role?.name.toLowerCase() === "admin" ||
-                    team?.role?.name.toLowerCase() === "hr" ||
-                    permissions?.team?.access
+                  (permissions?.team?.access ||
+                    permissions?.attendance?.access ||
+                    permissions?.salary?.access ||
+                    permissions?.notification?.access ||
+                    permissions?.workSummary?.access ||
+                    permissions?.leaveApproval?.access ||
+                    permissions?.missedPunchOut?.access ||
+                    permissions?.latePunchIn?.access ||
+                    permissions?.compOff?.access
                   ) && (
                     <h6 className="submenu-hdr">EMPLOYEE</h6>
                   )
@@ -170,42 +180,42 @@ const Sidebar = () => {
                     )
                   }
                   {
-                    (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr") && (
+                    (permissions?.attendance?.access) && (
                       <li><Link to="/attendance" className={currentPath === "/attendance" ? "active" : ""} id={isMobile && active === "attendance" ? "mobile_btn" : ""} onClick={() => handleActive("attendance")}><i style={{ color: currentPath === "/attendance" ? "" : "#FFA201" }} className="ti ti-checklist"></i><span>Attendance</span></Link></li>
                     )
                   }
                   {
-                    (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr") && (
+                    (permissions?.salary?.access) && (
                       <li><Link to="/salary" className={currentPath === "/salary" ? "active" : ""} id={isMobile && active === "salary" ? "mobile_btn" : ""} onClick={() => handleActive("salary")}><i style={{ color: currentPath === "/salary" ? "" : "#FFA201" }} className="ti ti-wallet"></i><span>Salary</span></Link></li>
                     )
                   }
                   {
-                    (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr") && (
+                    (permissions?.notification?.access) && (
                       <li><Link to="/send-notification" className={currentPath === "/send-notification" ? "active" : ""} id={isMobile && active === "sendNotification" ? "mobile_btn" : ""} onClick={() => handleActive("sendNotification")}><i style={{ color: currentPath === "/send-notification" ? "" : "#FFA201" }} className="ti ti-bell"></i><span>Send Notification</span></Link></li>
                     )
                   }
                   {
-                    (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr") && (
+                    (permissions?.workSummary?.access) && (
                       <li><Link to="/work-detail" className={currentPath === "/work-detail" ? "active" : ""} id={isMobile && active === "workDetail" ? "mobile_btn" : ""} onClick={() => handleActive("workDetail")}><i style={{ color: currentPath === "/work-detail" ? "" : "#FFA201" }} className="ti ti-clipboard"></i><span>Work Summary</span></Link></li>
                     )
                   }
                   {
-                    (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr") && (
+                    (permissions?.leaveApproval?.access) && (
                       <li><Link to="/leave-request" className={currentPath === "/leave-request" ? "active" : ""} id={isMobile && active === "leaveRequest" ? "mobile_btn" : ""} onClick={() => handleActive("leaveRequest")}><i style={{ color: currentPath === "/leave-request" ? "" : "#FFA201" }} className="ti ti-user-check"></i><span>Leave Request</span></Link></li>
                     )
                   }
                   {
-                    (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr") && (
+                    (permissions?.missedPunchOut?.access) && (
                       <li><Link to="/missed-punch-out" className={currentPath === "/missed-punch-out" ? "active" : ""} id={isMobile && active === "missedPunchOut" ? "mobile_btn" : ""} onClick={() => handleActive("missedPunchOut")}><i style={{ color: currentPath === "/missed-punch-out" ? "" : "#FFA201" }} className="ti ti-clock-exclamation"></i><span>Missed Punch Out</span></Link></li>
                     )
                   }
                   {
-                    (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr") && (
+                    (permissions?.latePunchIn?.access) && (
                       <li><Link to="/late-punch-in" className={currentPath === "/late-punch-in" ? "active" : ""} id={isMobile && active === "latePunchIn" ? "mobile_btn" : ""} onClick={() => handleActive("latePunchIn")}><i style={{ color: currentPath === "/late-punch-in" ? "" : "#FFA201" }} className="ti ti-clock-hour-3"></i><span>Late Punch In</span></Link></li>
                     )
                   }
                   {
-                    (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr") && (
+                    (permissions?.compOff?.access) && (
                       <li><Link to="/comp-off" className={currentPath === "/comp-off" ? "active" : ""} id={isMobile && active === "CompOff" ? "mobile_btn" : ""} onClick={() => handleActive("CompOff")}><i style={{ color: currentPath === "/comp-off" ? "" : "#FFA201" }} className="ti ti-user-plus"></i><span>Comp Off</span></Link></li>
                     )
                   }
@@ -213,10 +223,14 @@ const Sidebar = () => {
               </li>
 
               <li>
-                <h6 className="submenu-hdr">Setting</h6>
+                {
+                  (team?.isSuperAdmin) && (
+                    <h6 className="submenu-hdr">Setting</h6>
+                  )
+                }
                 <ul>
                   {
-                    (team?.role?.name?.toLowerCase() === "admin") && (
+                    (team?.isSuperAdmin) && (
                       <li><Link to="/app-setting" className={currentPath === "/app-setting" ? "active" : ""} id={isMobile && active === "appSetting" ? "mobile_btn" : ""} onClick={() => handleActive("appSetting")}><i className="ti ti-settings" style={{ color: currentPath === "/app-setting" ? "" : "#FFA201" }} /><span>App Setting</span></Link></li>
                     )
                   }
@@ -225,18 +239,20 @@ const Sidebar = () => {
 
               <li>
                 {
-                  (team?.role?.name?.toLowerCase() === "admin") && (
+                  (permissions?.office?.access ||
+                    permissions?.holiday?.access
+                  ) && (
                     <h6 className="submenu-hdr">Office</h6>
                   )
                 }
                 <ul>
                   {
-                    (team?.role?.name?.toLowerCase() === "admin") && (
+                    (permissions?.office?.access) && (
                       <li><Link to="/office" className={currentPath === "/office" ? "active" : ""} id={isMobile && active === "office" ? "mobile_btn" : ""} onClick={() => handleActive("office")}><i style={{ color: currentPath === "/office" ? "" : "#FFA201" }} className="ti ti-building"></i><span>Office</span></Link></li>
                     )
                   }
                   {
-                    (team?.role?.name?.toLowerCase() === "admin") && (
+                    (permissions?.holiday?.access) && (
                       <li><Link to="/holiday" className={currentPath === "/holiday" ? "active" : ""} id={isMobile && active === "holiday" ? "mobile_btn" : ""} onClick={() => handleActive("holiday")}><i style={{ color: currentPath === "/holiday" ? "" : "#FFA201" }} className="ti ti-sun"></i><span>Holiday</span></Link></li>
                     )
                   }
@@ -253,7 +269,8 @@ const Sidebar = () => {
                     permissions?.projectType?.access ||
                     permissions?.projectStatus?.access ||
                     permissions?.projectCategory?.access ||
-                    permissions?.projectPriority?.access) && (
+                    permissions?.projectPriority?.access ||
+                    permissions?.service?.access) && (
                     <h6 className="submenu-hdr">Master</h6>
                   )
                 }
@@ -279,7 +296,7 @@ const Sidebar = () => {
                     )
                   }
                   {
-                    (team?.role?.name.toLowerCase() === "admin") && (
+                    (permissions?.service?.access) && (
                       <li><Link to="/service" className={currentPath === "/service" ? "active" : ""} id={isMobile && active === "service" ? "mobile_btn" : ""} onClick={() => handleActive("service")}><i style={{ color: currentPath === "/service" ? "" : "#FFA201" }} className="ti ti-briefcase"></i><span>Service</span></Link></li>
                     )
                   }

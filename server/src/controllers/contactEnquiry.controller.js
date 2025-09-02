@@ -5,11 +5,10 @@ const paginateResults = (query, page, limit) => {
   return query.skip(skip).limit(limit);
 };
 
+// Create contact enquiry
 export const createEnquiry = async (req, res) => {
   try {
     const { name, email, mobile, message, serviceType } = req.body;
-
-    console.log(req.body);
 
     if (!name || !email || !mobile || !message || !serviceType) {
       return res.status(400).json({ success: false, message: "All fields are required." });
@@ -25,6 +24,7 @@ export const createEnquiry = async (req, res) => {
   };
 };
 
+// Get all contact enquiry
 export const getEnquiries = async (req, res) => {
   try {
     let { search, serviceType, sortBy, order, page, limit } = req.query;
@@ -76,6 +76,7 @@ export const getEnquiries = async (req, res) => {
   };
 };
 
+// Get single contact enquiry
 export const getEnquiryById = async (req, res) => {
   try {
     const enquiry = await ContactEnquiry.findById(req.params.id);
@@ -91,6 +92,7 @@ export const getEnquiryById = async (req, res) => {
   };
 };
 
+// Update contact enquiry
 export const updateEnquiry = async (req, res) => {
   try {
     const updatedEnquiry = await ContactEnquiry.findByIdAndUpdate(req.params.id, req.body, {
@@ -109,6 +111,7 @@ export const updateEnquiry = async (req, res) => {
   };
 };
 
+// Delete contact enquiry
 export const deleteEnquiry = async (req, res) => {
   try {
     const deletedEnquiry = await ContactEnquiry.findByIdAndDelete(req.params.id);

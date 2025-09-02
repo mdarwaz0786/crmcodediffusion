@@ -55,45 +55,30 @@ const teamSchema = new mongoose.Schema(
     office: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "OfficeLocation",
+      index: true,
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
     },
     department: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Department",
     },
-    allotedLeaveBalance: {
-      type: String,
-      default: "2",
-    },
-    currentLeaveBalance: {
-      type: String,
-      default: "2",
-    },
-    usedLeaveBalance: {
-      type: String,
-      default: "0",
-    },
-    leaveBalanceAllotedHistory: {
-      type: [{
-        date: { type: String },
-        alloted: { type: String },
-      }],
-      default: [],
-    },
     approvedLeaves: {
       type: [{
         date: { type: String },
         reason: { type: String },
-        approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
       }],
       default: [],
     },
     eligibleCompOffDate: {
       type: [{
-        workedDate: { type: String },
+        attendanceDate: { type: String },
         reason: { type: String, trim: true },
         isApplied: { type: Boolean, default: false },
         isApproved: { type: Boolean, default: false },
-        approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
         compOffDate: { type: String },
       }],
       default: [],
@@ -106,10 +91,6 @@ const teamSchema = new mongoose.Schema(
       type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Team" }],
       default: [],
     },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
     fcmToken: {
       type: String,
       default: null,
@@ -119,6 +100,14 @@ const teamSchema = new mongoose.Schema(
       default: null,
     },
     allowMultiDevice: {
+      type: Boolean,
+      default: false,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    isSuperAdmin: {
       type: Boolean,
       default: false,
     },

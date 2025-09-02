@@ -5,26 +5,11 @@ import Project from "../models/project.model.js";
 export const createTicket = async (req, res) => {
   try {
     const { title, description, projectId, priority, ticketType } = req.body;
-
-    if (!req.team || !req.teamType || !req.teamId) {
-      return res.status(401).json({ message: "User not authenticated." });
-    };
-
-    let createdByModel;
-    let createdBy;
-
-    if (req.teamType === "Client") {
-      createdByModel = "Customer";
-      createdBy = req.teamId;
-    } else if (req.teamType === "Employee") {
-      createdByModel = "Team";
-      createdBy = req.teamId;
-    } else {
-      return res.status(400).json({ message: "Invalid user role." });
-    };
+    const company = req.company;
+    const createdBy = req.teamId;
 
     const project = await Project
-      .findOne({ _id: projectId })
+      .findOne({ _id: projectId, company })
       .select("responsiblePerson teamLeader")
       .lean();
 
@@ -49,8 +34,8 @@ export const createTicket = async (req, res) => {
       priority,
       ticketType,
       createdBy,
-      createdByModel,
       image,
+      company,
     });
 
     await newTicket.save();
@@ -64,13 +49,13 @@ export const createTicket = async (req, res) => {
 // Fetch all tickets
 export const fetchAllTickets = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
-    // Check if the role is not "Coordinator" or "Admin"
-    const teamRole = req.team.role.name.toLowerCase();
-    if (teamRole !== "coordinator" && teamRole !== "admin") {
-      const teamId = req.team._id;
+    // Check if the role is not company
+    const teamRole = req.team?.role?.name?.toLowerCase();
+    if (teamRole !== "company") {
+      const teamId = req.team?._id;
       filter.$or = [
         { assignedTo: { $in: [teamId] } },
         { createdBy: teamId },
@@ -147,7 +132,7 @@ export const fetchAllTickets = async (req, res) => {
 export const fetchSingleTicket = async (req, res) => {
   try {
     const ticket = await Ticket
-      .findById(req.params.id)
+      .findOne({ _id: req.params.id, company: req.company })
       .populate("createdBy project assignedTo")
       .exec();
 
@@ -170,11 +155,9 @@ export const updateTicket = async (req, res) => {
     if (req.file) {
       const file = req.file;
       updateData.image = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
-    } else if (req.body.removeImage === "true") {
-      updateData.image = "";
     };
 
-    const ticket = await Ticket.findByIdAndUpdate(ticketId, updateData, { new: true });
+    const ticket = await Ticket.findOneAndUpdate({ _id: ticketId, company: req.company }, updateData, { new: true, runValidators: true });
 
     if (!ticket) {
       return res.status(404).json({ success: false, message: "Ticket not found" });
@@ -190,8 +173,7 @@ export const updateTicket = async (req, res) => {
 export const deleteTicket = async (req, res) => {
   try {
     const ticketId = req.params.id;
-    const ticket = await Ticket
-      .findByIdAndDelete(ticketId);
+    const ticket = await Ticket.findOneAndDelete({ _id: ticketId, company: req.company });
 
     if (!ticket) {
       return res.status(404).json({ success: false, message: "Ticket not found" });

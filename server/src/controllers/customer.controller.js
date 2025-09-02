@@ -5,8 +5,9 @@ import generateClientToken from "../utils/generateClientToken.js";
 export const createCustomer = async (req, res) => {
   try {
     const { name, email, password, mobile, GSTNumber, companyName, state, address, role } = req.body;
+    const company = req.company;
 
-    const customer = new Customer({ name, email, password, mobile, GSTNumber, companyName, state, address, role });
+    const customer = new Customer({ name, email, password, mobile, GSTNumber, companyName, state, address, role, company });
     await customer.save();
 
     return res.status(200).json({ success: true, message: "Customer created successfully", customer });
@@ -71,6 +72,7 @@ export const loggedInCustomer = async (req, res) => {
     const customer = await Customer
       .findById(req.team?._id)
       .populate({ path: "role", select: "" })
+      .populate({ path: "company", select: "-password" })
       .exec();
 
     if (!customer) {
@@ -86,10 +88,10 @@ export const loggedInCustomer = async (req, res) => {
 // Controller for fetching all customer
 export const fetchAllCustomer = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
-    const userRole = req.team.role.name.toLowerCase();
+    const userRole = req.team?.role?.name?.toLowerCase();
 
     if (userRole === "client") {
       filter._id = req.teamId;
@@ -136,6 +138,7 @@ export const fetchAllCustomer = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .populate("role")
+      .populate({ path: "company", select: "-password" })
       .exec();
 
     if (!customer) {
@@ -154,10 +157,12 @@ export const fetchAllCustomer = async (req, res) => {
 export const fetchSingleCustomer = async (req, res) => {
   try {
     const customerId = req.params.id;
+    const company = req.company;
 
     const customer = await Customer
-      .findById(customerId)
+      .findOne({ _id: customerId, company })
       .populate("role")
+      .populate({ path: "company", select: "-password" })
       .exec();
 
     if (!customer) {
@@ -174,11 +179,12 @@ export const fetchSingleCustomer = async (req, res) => {
 export const updateCustomer = async (req, res) => {
   try {
     const customerId = req.params.id;
+    const company = req.company;
 
     const { name, email, password, mobile, GSTNumber, companyName, state, address, role } = req.body;
 
     const updatedCustomer = await Customer
-      .findByIdAndUpdate(customerId, { name, email, password, mobile, GSTNumber, companyName, state, address, role }, { new: true });
+      .findByIdAndUpdate({ _id: customerId, company }, { name, email, password, mobile, GSTNumber, companyName, state, address, role }, { new: true, runValidators: true });
 
     if (!updatedCustomer) {
       return res.status(404).json({ success: false, message: "Customer not found" });
@@ -194,9 +200,10 @@ export const updateCustomer = async (req, res) => {
 export const deleteCustomer = async (req, res) => {
   try {
     const customerId = req.params.id;
+    const company = req.company;
 
     const deletedCustomer = await Customer
-      .findByIdAndDelete(customerId);
+      .findOneAndDelete({ _id: customerId, company });
 
     if (!deletedCustomer) {
       return res.status(400).json({ success: false, message: "Customer not found" });

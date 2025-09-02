@@ -2,7 +2,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState } from "react";
 import axios from 'axios';
-import { toast } from 'react-toastify';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from "../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
@@ -128,28 +127,6 @@ const Office = () => {
     };
   }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, isLoading, team]);
 
-  const handleDelete = async (id) => {
-    let isdelete = prompt("If you want to delete, type \"yes\".");
-
-    if (isdelete === "yes") {
-      try {
-        const response = await axios.delete(`${base_url}/api/v1/officeLocation/delete-officeLocation/${id}`, {
-          headers: {
-            Authorization: validToken,
-          },
-        });
-
-        if (response?.data?.success) {
-          toast.success("Deleted successfully");
-          fetchAllData();
-        };
-      } catch (error) {
-        console.log("Error while deleting office:", error.message);
-        toast.error("Error while deleting");
-      };
-    };
-  };
-
   const exportOfficeAsExcel = () => {
     if (!data || data?.length === 0) {
       alert("No data available to export");
@@ -203,7 +180,7 @@ const Office = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin") {
+  if (!team?.role?.permissions?.office?.access) {
     return <Navigate to="/" />;
   };
 
@@ -420,11 +397,6 @@ const Office = () => {
                                     <Link to={`/edit-office/${d?._id}`} className="dropdown-item">
                                       <i className="ti ti-edit text-blue"></i>
                                       Update
-                                    </Link>
-                                    <hr className="horizontal-line" />
-                                    <Link to="#" className="dropdown-item" onClick={() => handleDelete(d?._id)}>
-                                      <i className="ti ti-trash text-danger"></i>
-                                      Delete
                                     </Link>
                                   </div>
                                 </div>

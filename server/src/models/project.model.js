@@ -8,7 +8,6 @@ const projectSchema = new mongoose.Schema(
     },
     projectId: {
       type: String,
-      unique: true,
     },
     customer: {
       type: mongoose.Schema.Types.ObjectId,
@@ -57,36 +56,6 @@ const projectSchema = new mongoose.Schema(
       default: 0,
       trim: true,
     },
-    payment: [
-      {
-        teamMember: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Team",
-        },
-        amount: {
-          type: Number,
-          default: 0,
-          trim: true,
-        },
-        date: {
-          type: String,
-        },
-      },
-    ],
-    totalPaid: {
-      type: Number,
-      default: 0,
-    },
-    totalDues: {
-      type: Number,
-      default: 0,
-    },
-    startDate: {
-      type: String,
-    },
-    endDate: {
-      type: String,
-    },
     projectDeadline: {
       type: String,
     },
@@ -95,38 +64,14 @@ const projectSchema = new mongoose.Schema(
       default: 0,
       trim: true,
     },
-    workDetail: [
-      {
-        teamMember: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Team",
-        },
-        startTime: {
-          type: String,
-        },
-        endTime: {
-          type: String,
-        },
-        workDescription: {
-          type: String,
-          trim: true,
-        },
-        date: {
-          type: String,
-        },
-      },
-    ],
-    totalSpentHour: {
-      type: Number,
-      default: 0,
-    },
-    totalRemainingHour: {
-      type: Number,
-      default: 0,
-    },
     description: {
       type: String,
       trim: true,
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
     },
   },
   {

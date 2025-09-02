@@ -4,12 +4,13 @@ import ProjectPriority from "../models/projectPriority.model.js";
 export const createProjectPriority = async (req, res) => {
   try {
     const { name, description } = req.body;
+    const company = req.company;
 
     if (!name) {
       return res.status(400).json({ success: false, message: "Name is required." });
     };
 
-    const projectPriority = new ProjectPriority({ name, description });
+    const projectPriority = new ProjectPriority({ name, description, company });
     await projectPriority.save();
 
     return res.status(200).json({ success: true, message: "Project priority created successfully", projectPriority });
@@ -21,7 +22,7 @@ export const createProjectPriority = async (req, res) => {
 // Controller for fetching all project priority
 export const fetchAllProjectPriority = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle searching across all fields
@@ -80,7 +81,7 @@ export const fetchSingleProjectPriority = async (req, res) => {
     const projectPriorityId = req.params.id;
 
     const projectPriority = await ProjectPriority
-      .findById(projectPriorityId);
+      .findOne({ _id: projectPriorityId, company: req.company });
 
     if (!projectPriority) {
       return res.status(404).json({ success: false, message: "Project priority not found" });
@@ -100,7 +101,7 @@ export const updateProjectPriority = async (req, res) => {
     const { name, description } = req.body;
 
     const projectPriority = await ProjectPriority
-      .findByIdAndUpdate(projectPriorityId, { name, description }, { new: true });
+      .findOneAndUpdate({ _id: projectPriorityId, company: req.company }, { name, description }, { new: true, run: true });
 
     if (!projectPriority) {
       return res.status(404).json({ success: false, message: "Project priority not found" });
@@ -117,7 +118,7 @@ export const deleteProjectPriority = async (req, res) => {
   try {
     const projectPriorityId = req.params.id;
 
-    const projectPriority = await ProjectPriority.findByIdAndDelete(projectPriorityId);
+    const projectPriority = await ProjectPriority.findOneAndDelete({ _id: projectPriorityId, company: req.company });
 
     if (!projectPriority) {
       return res.status(400).json({ success: false, message: "Project priority not found" });

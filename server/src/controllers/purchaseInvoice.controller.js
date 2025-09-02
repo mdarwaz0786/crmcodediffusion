@@ -12,6 +12,7 @@ export const createPurchaseInvoice = (req, res) => {
 
     try {
       const { name, amount, date } = req.body;
+      const company = req.company;
 
       const bills = req.files.map((file) => {
         return file.buffer.toString("base64");
@@ -22,13 +23,13 @@ export const createPurchaseInvoice = (req, res) => {
         amount,
         date,
         bill: bills,
+        company,
       });
 
       await purchaseInvoice.save();
 
       return res.status(200).json({ success: true, message: "Purchase invoice created successfully", purchaseInvoice });
     } catch (error) {
-      console.log("Error while creating purchase invoice:", error.message);
       return res.status(500).json({ success: false, message: `Error while creating purchase invoice: ${error.message}` });
     };
   });
@@ -84,7 +85,7 @@ const filterFields = (purchaseInvoice, projection) => {
 // Controller for fetching all purchase invoice
 export const fetchAllPurchaseInvoice = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle universal searching across all fields
@@ -167,7 +168,6 @@ export const fetchAllPurchaseInvoice = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "All purchase invoice fetched successfully", purchaseInvoice: filteredPurchaseInvoice, totalCount });
   } catch (error) {
-    console.log("Error while fetching all purchase invoice:", error.message);
     return res.status(500).json({ success: false, message: `Error while fetching all purchase invoice: ${error.message}` });
   };
 };
@@ -176,7 +176,7 @@ export const fetchAllPurchaseInvoice = async (req, res) => {
 export const fetchSinglePurchaseInvoice = async (req, res) => {
   try {
     const purchaseInvoiceId = req.params.id;
-    const purchaseInvoice = await PurchaseInvoice.findById(purchaseInvoiceId);
+    const purchaseInvoice = await PurchaseInvoice.findOne({ _id: purchaseInvoiceId, company: req.company });
 
     if (!purchaseInvoice) {
       return res.status(404).json({ success: false, message: "Purchase invoice not found" });
@@ -188,7 +188,6 @@ export const fetchSinglePurchaseInvoice = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Single purchase invoice fetched successfully", purchaseInvoice: filteredPurchaseInvoice });
   } catch (error) {
-    console.log("Error while fetching single purchase invoice:", error.message);
     return res.status(500).json({ success: false, message: `Error while fetching single purchase invoice: ${error.message}` });
   };
 };
@@ -204,7 +203,7 @@ export const updatePurchaseInvoice = (req, res) => {
       const purchaseInvoiceId = req.params.id;
       const { name, amount, date } = req.body;
 
-      const existingBill = await PurchaseInvoice.findById(purchaseInvoiceId);
+      const existingBill = await PurchaseInvoice.findOne({ _id: purchaseInvoiceId, company: req.company });
 
       if (!existingBill) {
         return res.status(404).json({ success: false, message: "Purchase invoice not found" });
@@ -214,15 +213,14 @@ export const updatePurchaseInvoice = (req, res) => {
 
       const finalBills = [...existingBill.bill, ...bills];
 
-      const updatedInvoice = await PurchaseInvoice.findByIdAndUpdate(
-        purchaseInvoiceId,
+      const updatedInvoice = await PurchaseInvoice.findOneAndUpdate(
+        { _id: purchaseInvoiceId, company: req.company },
         { name, amount, date, bill: finalBills },
-        { new: true }
+        { new: true, runValidators: true },
       );
 
       return res.status(200).json({ success: true, message: "Purchase invoice updated successfully", purchaseInvoice: updatedInvoice });
     } catch (error) {
-      console.log("Error while updating purchase invoice:", error.message);
       return res.status(500).json({ success: false, message: `Error while updating purchase invoice: ${error.message}` });
     };
   });
@@ -232,7 +230,7 @@ export const updatePurchaseInvoice = (req, res) => {
 export const deletePurchaseInvoice = async (req, res) => {
   try {
     const purchaseInvoiceId = req.params.id;
-    const purchaseInvoice = await PurchaseInvoice.findByIdAndDelete(purchaseInvoiceId);
+    const purchaseInvoice = await PurchaseInvoice.findOneAndDelete({ _id: purchaseInvoiceId, company: req.company });
 
     if (!purchaseInvoice) {
       return res.status(400).json({ success: false, message: "Purchase invoice not found" });
@@ -240,7 +238,6 @@ export const deletePurchaseInvoice = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Purchase invoice deleted successfully" });
   } catch (error) {
-    console.log("Error while deleting purchase invoice:", error.message);
     return res.status(500).json({ success: false, message: `Error while deleting purchase invoice: ${error.message}` });
   };
 };

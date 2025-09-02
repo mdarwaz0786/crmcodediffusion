@@ -35,7 +35,6 @@ const ProjectDeployment = () => {
     hostingFilter: "",
   });
   const permissions = team?.role?.permissions?.projectDeployment;
-  const filedPermissions = team?.role?.permissions?.projectDeployment?.fields;
 
   function formatDate(isoDate) {
     const date = new Date(isoDate);
@@ -172,7 +171,7 @@ const ProjectDeployment = () => {
   }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, filters.domainFilter, filters.sslFilter, filters.hostingFilter, isLoading, team, permissions]);
 
   const handleDelete = async (id) => {
-    let isdelete = prompt("If you want to delete, type \"yes\".");
+    let isdelete = prompt("If you want to permanently delete this, type \"yes\".");
 
     if (isdelete === "yes") {
       try {
@@ -541,31 +540,11 @@ const ProjectDeployment = () => {
                             <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
                           </th>
                           <th>#</th>
-                          {
-                            (permissions?.access) && (
-                              <th>View</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.websiteName?.show) && (
-                              <th>Website Name</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.domainExpiryStatus?.show) && (
-                              <th>Domain Status</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.hostingExpiryStatus?.show) && (
-                              <th>Hosting Status</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.sslExpiryStatus?.show) && (
-                              <th>SSL Status</th>
-                            )
-                          }
+                          <th>View</th>
+                          <th>Website Name</th>
+                          <th>Domain Status</th>
+                          <th>Hosting Status</th>
+                          <th>SSL Status</th>
                           <th>Action</th>
                         </tr>
                       </thead>
@@ -577,89 +556,69 @@ const ProjectDeployment = () => {
                                 <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
                               </th>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
-                              {
-                                (permissions?.access) && (
-                                  <td><Link to="#" onClick={() => openInfoModal(d?._id)}><i className="fas fa-eye"></i></Link></td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.websiteName?.show) && (
-                                  <td>
-                                    <span>{d?.websiteName}</span>
-                                    {" "}
-                                    <a href={d?.websiteLink} target="_blank">
-                                      <i className="ti ti-external-link" style={{ color: "blue" }}></i>
-                                    </a>
-                                    {" "}
-                                    <span onClick={() => openModal(d?.client?._id)} style={{ color: '#fff', cursor: 'pointer', fontSize: '0.75rem', padding: '0.1rem 0.3rem', borderRadius: '0.25rem', display: 'inline-block', background: "#FFA201" }}>
-                                      Client Info
-                                    </span>
-                                  </td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.domainExpiryStatus?.show) && (
-                                  <td>
-                                    {
-                                      (parseInt(d?.domainExpireIn) <= 30) ? (
-                                        <div style={{
-                                          color: parseInt(d?.domainExpireIn) <= 30 ? "red" : "green",
-                                        }}>
-                                          Expire in {d?.domainExpireIn}
-                                        </div>
-                                      ) : (
-                                        <div style={{
-                                          color: d?.domainExpiryStatus === "Expired" ? "red" : "green",
-                                        }}>
-                                          {d?.domainExpiryStatus}
-                                        </div>
-                                      )
-                                    }
-                                  </td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.hostingExpiryStatus?.show) && (
-                                  <td>
-                                    {
-                                      (parseInt(d?.hostingExpireIn) <= 30) ? (
-                                        <div style={{
-                                          color: parseInt(d?.hostingExpireIn) <= 30 ? "red" : "green",
-                                        }}>
-                                          Expire in {d?.hostingExpireIn}
-                                        </div>
-                                      ) : (
-                                        <div style={{
-                                          color: d?.hostingExpiryStatus === "Expired" ? "red" : "green",
-                                        }}>
-                                          {d?.hostingExpiryStatus}
-                                        </div>
-                                      )
-                                    }
-                                  </td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.sslExpiryStatus?.show) && (
-                                  <td>
-                                    {
-                                      (parseInt(d?.sslExpireIn) <= 30) ? (
-                                        <div style={{
-                                          color: parseInt(d?.sslExpireIn) <= 30 ? "red" : "green",
-                                        }}>
-                                          Expire in {d?.sslExpireIn}
-                                        </div>
-                                      ) : (
-                                        <div style={{
-                                          color: d?.sslExpiryStatus === "Expired" ? "red" : "green",
-                                        }}>
-                                          {d?.sslExpiryStatus}
-                                        </div>
-                                      )
-                                    }
-                                  </td>
-                                )
-                              }
+                              <td><Link to="#" onClick={() => openInfoModal(d?._id)}><i className="fas fa-eye"></i></Link></td>
+                              <td>
+                                <span>{d?.websiteName}</span>
+                                {" "}
+                                <a href={d?.websiteLink} target="_blank">
+                                  <i className="ti ti-external-link" style={{ color: "blue" }}></i>
+                                </a>
+                                {" "}
+                                <span onClick={() => openModal(d?.client?._id)} style={{ color: '#fff', cursor: 'pointer', fontSize: '0.75rem', padding: '0.1rem 0.3rem', borderRadius: '0.25rem', display: 'inline-block', background: "#FFA201" }}>
+                                  Client Info
+                                </span>
+                              </td>
+                              <td>
+                                {
+                                  (parseInt(d?.domainExpireIn) <= 30) ? (
+                                    <div style={{
+                                      color: parseInt(d?.domainExpireIn) <= 30 ? "red" : "green",
+                                    }}>
+                                      Expire in {d?.domainExpireIn}
+                                    </div>
+                                  ) : (
+                                    <div style={{
+                                      color: d?.domainExpiryStatus === "Expired" ? "red" : "green",
+                                    }}>
+                                      {d?.domainExpiryStatus}
+                                    </div>
+                                  )
+                                }
+                              </td>
+                              <td>
+                                {
+                                  (parseInt(d?.hostingExpireIn) <= 30) ? (
+                                    <div style={{
+                                      color: parseInt(d?.hostingExpireIn) <= 30 ? "red" : "green",
+                                    }}>
+                                      Expire in {d?.hostingExpireIn}
+                                    </div>
+                                  ) : (
+                                    <div style={{
+                                      color: d?.hostingExpiryStatus === "Expired" ? "red" : "green",
+                                    }}>
+                                      {d?.hostingExpiryStatus}
+                                    </div>
+                                  )
+                                }
+                              </td>
+                              <td>
+                                {
+                                  (parseInt(d?.sslExpireIn) <= 30) ? (
+                                    <div style={{
+                                      color: parseInt(d?.sslExpireIn) <= 30 ? "red" : "green",
+                                    }}>
+                                      Expire in {d?.sslExpireIn}
+                                    </div>
+                                  ) : (
+                                    <div style={{
+                                      color: d?.sslExpiryStatus === "Expired" ? "red" : "green",
+                                    }}>
+                                      {d?.sslExpiryStatus}
+                                    </div>
+                                  )
+                                }
+                              </td>
                               <td>
                                 <div className="table-action">
                                   <Link to="#" className="action-icon" data-bs-toggle="dropdown" aria-expanded="false">

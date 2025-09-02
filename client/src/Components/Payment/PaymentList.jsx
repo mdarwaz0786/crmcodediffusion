@@ -149,7 +149,7 @@ const PaymentList = () => {
   }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, filters.year, filters.month, isLoading, team]);
 
   const handleDelete = async (id) => {
-    let isdelete = prompt("If you want to delete, type \"yes\".");
+    let isdelete = prompt("If you want to permanently delete this, type \"yes\".");
 
     if (isdelete === "yes") {
       try {
@@ -236,7 +236,7 @@ const PaymentList = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin") {
+  if (!team?.role?.permissions?.payment?.access) {
     return <Navigate to="/" />;
   };
 

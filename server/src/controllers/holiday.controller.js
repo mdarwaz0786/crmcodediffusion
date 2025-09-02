@@ -5,6 +5,7 @@ import XLSX from 'xlsx';
 export const createHoliday = async (req, res) => {
   try {
     const { reason, type, date } = req.body;
+    const company = req.company;
 
     if (!reason) {
       return res.status(400).json({ success: false, message: "Reason is required" });
@@ -15,19 +16,18 @@ export const createHoliday = async (req, res) => {
     };
 
     // Check if a holiday already exists with the same date
-    const existingHoliday = await Holiday.findOne({ date: date });
+    const existingHoliday = await Holiday.findOne({ date: date, company: req.company });
 
     if (existingHoliday) {
       existingHoliday.reason = reason;
       await existingHoliday.save();
       return res.status(200).json({ success: true, holiday: existingHoliday });
     } else {
-      const newHoliday = new Holiday({ reason, type, date, });
+      const newHoliday = new Holiday({ reason, type, date, company });
       await newHoliday.save();
       return res.status(201).json({ success: true, holiday: newHoliday });
     };
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -35,6 +35,8 @@ export const createHoliday = async (req, res) => {
 // Upload multiple holidays via Excel
 export const uploadHolidays = async (req, res) => {
   try {
+    const company = req.company;
+
     if (!req.file) {
       return res.status(400).json({ success: false, message: "Please upload an Excel file" });
     };
@@ -84,12 +86,12 @@ export const uploadHolidays = async (req, res) => {
     // Insert or update holidays if exits
     const promises = holidays.map(async (holiday) => {
       const { date, reason, type } = holiday;
-      const existingHoliday = await Holiday.findOne({ date });
+      const existingHoliday = await Holiday.findOne({ date: date, company: req.company });
       if (existingHoliday) {
         existingHoliday.reason = reason;
         await existingHoliday.save();
       } else {
-        await Holiday.create({ reason, type, date });
+        await Holiday.create({ reason, type, date, company });
       };
     });
 
@@ -98,7 +100,6 @@ export const uploadHolidays = async (req, res) => {
 
     return res.status(200).json({ success: true, holiday: holidays });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -109,17 +110,17 @@ export const fetchUpcomingHoliday = async (req, res) => {
     const currentDate = new Date().toISOString().split("T")[0];
 
     const holiday = await Holiday
-      .find({ date: { $gte: currentDate } })
+      .find({ date: { $gte: currentDate }, company: req.company })
       .sort({ date: 1 })
       .exec();
 
     return res.status(200).json({ success: true, holiday });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
 
+// Group holiday by month
 export const getHolidaysByMonth = async (req, res) => {
   try {
     const year = req.query.year || new Date().getFullYear();
@@ -127,9 +128,8 @@ export const getHolidaysByMonth = async (req, res) => {
     const holidaysByMonth = await Holiday.aggregate([
       {
         $match: {
-          date: {
-            $regex: `^${year}-`,
-          },
+          date: { $regex: `^${year}-` },
+          company: new mongoose.Types.ObjectId(req.company),
         },
       },
       {
@@ -187,7 +187,6 @@ export const getHolidaysByMonth = async (req, res) => {
 
     return res.status(200).json({ success: true, data: holidaysByMonth });
   } catch (error) {
-    console.error(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -195,7 +194,7 @@ export const getHolidaysByMonth = async (req, res) => {
 // Get all holidays
 export const fetchAllHoliday = async (req, res) => {
   try {
-    let query = {};
+    let query = { company: req.company };
     let sort = {};
 
     // Filter by year only (all month)
@@ -258,7 +257,6 @@ export const fetchAllHoliday = async (req, res) => {
 
     return res.status(200).json({ success: true, holiday, totalCount: total });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -267,7 +265,7 @@ export const fetchAllHoliday = async (req, res) => {
 export const fetchSingleHoliday = async (req, res) => {
   try {
     const { id } = req.params;
-    const holiday = await Holiday.findById(id);
+    const holiday = await Holiday.findOne({ _id: id, company: req.company });
 
     if (!holiday) {
       return res.status(404).json({ success: false, message: "Holiday not found" });
@@ -275,7 +273,6 @@ export const fetchSingleHoliday = async (req, res) => {
 
     return res.status(200).json({ success: true, holiday });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -290,7 +287,7 @@ export const updateHoliday = async (req, res) => {
       return res.status(400).json({ success: false, message: "All fields are required" });
     };
 
-    const holiday = await Holiday.findById(id);
+    const holiday = await Holiday.findOne({ _id: id, company: req.company });
 
     if (!holiday) {
       return res.status(404).json({ success: false, message: "Holiday not found" });
@@ -303,7 +300,6 @@ export const updateHoliday = async (req, res) => {
 
     return res.status(200).json({ success: true, holiday });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -313,7 +309,7 @@ export const deleteHoliday = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const holiday = await Holiday.findById(id);
+    const holiday = await Holiday.findOne({ _id: id, company: req.company });
 
     if (!holiday) {
       return res.status(404).json({ success: false, message: "Holiday not found" });
@@ -321,7 +317,6 @@ export const deleteHoliday = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Holiday deleted successfully" });
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };

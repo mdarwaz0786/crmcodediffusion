@@ -1,19 +1,19 @@
 import express from "express";
 import { createInvoice, deleteInvoice, fetchAllInvoice, fetchSingleInvoice, updateInvoice } from "../controllers/proformaInvoice.controller.js";
-import { isLoggedIn } from './../middleware/auth.middleware.js';
+import { authenticateUser } from './../middleware/newAuth.middleware.js';
 import checkMasterActionPermission from "../middleware/masterActionPermission.middleware.js";
 import checkFieldUpdatePermission from "../middleware/checkFieldUpdatePermission.middleware.js";
 
-const fields = ['proformaInvoiceId', 'tax', 'date', 'projectName', 'projectCost', 'clientName', 'GSTNumber', 'shipTo', 'state', 'CGST', 'SGST', 'IGST', 'total', 'subtotal', 'balanceDue', 'email', 'phone'];
+const fields = ['tax', 'date', 'projectCost'];
 
 // router object
 const router = express.Router();
 
 // routes
-router.post("/create-proformaInvoice", isLoggedIn, checkMasterActionPermission("proformaInvoice", "create"), createInvoice);
-router.get("/all-proformaInvoice", isLoggedIn, fetchAllInvoice);
-router.get("/single-proformaInvoice/:id", isLoggedIn, fetchSingleInvoice);
-router.put("/update-proformaInvoice/:id", isLoggedIn, checkMasterActionPermission("proformaInvoice", "update"), checkFieldUpdatePermission('proformaInvoice', fields), updateInvoice);
-router.delete("/delete-proformaInvoice/:id", isLoggedIn, checkMasterActionPermission("proformaInvoice", "delete"), deleteInvoice);
+router.post("/create-proformaInvoice", authenticateUser, checkMasterActionPermission("proformaInvoice", "create"), createInvoice);
+router.get("/all-proformaInvoice", authenticateUser, fetchAllInvoice);
+router.get("/single-proformaInvoice/:id", authenticateUser, fetchSingleInvoice);
+router.put("/update-proformaInvoice/:id", authenticateUser, checkMasterActionPermission("proformaInvoice", "update"), checkFieldUpdatePermission('proformaInvoice', fields), updateInvoice);
+router.delete("/delete-proformaInvoice/:id", authenticateUser, checkMasterActionPermission("proformaInvoice", "delete"), deleteInvoice);
 
 export default router;

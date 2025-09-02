@@ -29,6 +29,8 @@ const MissedPunchOut = () => {
     limit: 20,
   });
 
+  const permissions = team?.role?.permissions?.missedPunchOut;
+
   const fetchAllEmployee = async () => {
     try {
       const response = await axios.get(`${base_url}/api/v1/team/all-team`, {
@@ -46,10 +48,10 @@ const MissedPunchOut = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && permissions.access) {
       fetchAllEmployee();
     };
-  }, [isLoading, team]);
+  }, [isLoading, team, permissions]);
 
   const fetchSingleEmployee = async (selectedEmployee) => {
     try {
@@ -68,10 +70,10 @@ const MissedPunchOut = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && selectedEmployee && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && selectedEmployee && permissions?.access) {
       fetchSingleEmployee(selectedEmployee);
     };
-  }, [isLoading, team, selectedEmployee]);
+  }, [isLoading, team, selectedEmployee, permissions]);
 
   const fetchAllData = async () => {
     try {
@@ -96,7 +98,6 @@ const MissedPunchOut = () => {
         setLoading(false);
       };
     } catch (error) {
-      console.log(error.message);
       setLoading(false);
     };
   };
@@ -118,10 +119,10 @@ const MissedPunchOut = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && permissions?.access) {
       fetchAllData();
     };
-  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team]);
+  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team, permissions]);
 
   const exportMissedPunchOutListAsExcel = () => {
     if (data?.length === 0) {
@@ -179,7 +180,6 @@ const MissedPunchOut = () => {
     try {
       setApproving((prev) => ({ ...prev, [id]: true }));
 
-      // Validation
       if (!status[id]) {
         return toast.error("Select status");
       };
@@ -199,7 +199,6 @@ const MissedPunchOut = () => {
         toast.success("Updated Successfully");
       };
     } catch (error) {
-      console.log("Error while updating:", error.message);
       toast.error(error?.response?.data?.message || "Error while updating");
     } finally {
       fetchAllData();
@@ -211,7 +210,7 @@ const MissedPunchOut = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
+  if (!permissions?.access) {
     return <Navigate to="/" />;
   };
 
@@ -367,7 +366,6 @@ const MissedPunchOut = () => {
                             <th>Attendance Date</th>
                             <th>Punch Out Time</th>
                             <th>Status</th>
-                            <th>Approved By</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -406,7 +404,6 @@ const MissedPunchOut = () => {
                                     }
                                   </form>
                                 </td>
-                                <td>{d?.approvedBy?.name || "N/A"}</td>
                               </tr>
                             ))
                           }

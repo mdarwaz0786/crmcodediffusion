@@ -4,12 +4,16 @@ const departmentSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      unique: true,
       trim: true,
     },
     description: {
       type: String,
       trim: true,
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
     },
   },
   {
@@ -30,5 +34,6 @@ departmentSchema.pre("save", function (next) {
   next();
 });
 
+departmentSchema.index({ name: 1, company: 1 }, { unique: true });
 
 export default mongoose.model("Department", departmentSchema);

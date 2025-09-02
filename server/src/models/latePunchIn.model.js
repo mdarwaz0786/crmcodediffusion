@@ -8,6 +8,11 @@ const latePunchInSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
+    },
     attendanceDate: {
       type: String,
       required: true,
@@ -21,10 +26,6 @@ const latePunchInSchema = new mongoose.Schema(
       type: String,
       enum: ["Pending", "Approved", "Rejected"],
       default: "Pending",
-    },
-    approvedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Team",
     },
   },
   {

@@ -4,12 +4,13 @@ import Designation from "../models/designation.model.js";
 export const createDesignation = async (req, res) => {
   try {
     const { name, description } = req.body;
+    const company = req.company;
 
     if (!name) {
       return res.status(400).json({ success: false, message: "Name is required." });
     };
 
-    const designation = new Designation({ name, description });
+    const designation = new Designation({ name, description, company });
     await designation.save();
 
     return res.status(200).json({ success: true, message: "Designation created successfully", designation });
@@ -21,7 +22,7 @@ export const createDesignation = async (req, res) => {
 // Controller for fetching all designation
 export const fetchAllDesignation = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle searching across all fields
@@ -80,7 +81,7 @@ export const fetchSingleDesignation = async (req, res) => {
     const designationId = req.params.id;
 
     const designation = await Designation
-      .findById(designationId);
+      .findOne({ _id: designationId, company: req.company });
 
     if (!designation) {
       return res.status(404).json({ success: false, message: "Designation not found" });
@@ -100,7 +101,7 @@ export const updateDesignation = async (req, res) => {
     const { name, description } = req.body;
 
     const designation = await Designation
-      .findByIdAndUpdate(designationId, { name, description }, { new: true });
+      .findOneAndUpdate({ _id: designationId, company: req.company }, { name, description }, { new: true, runValidators: true });
 
     if (!designation) {
       return res.status(404).json({ success: false, message: "Designation not found" });
@@ -118,7 +119,7 @@ export const deleteDesignation = async (req, res) => {
     const designationId = req.params.id;
 
     const designation = await Designation
-      .findByIdAndDelete(designationId);
+      .findOneAndDelete({ _id: designationId, company: req.company });
 
     if (!designation) {
       return res.status(400).json({ success: false, message: "Designation not found" });

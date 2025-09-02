@@ -13,6 +13,7 @@ export const createProjectWork = async (req, res) => {
 
   try {
     const { employee, project, status, date, description } = req.body;
+    const company = req.company;
 
     if (!employee || !project || !status || !date || !description) {
       return res.status(400).json({ success: false, message: "All fields are required." });
@@ -25,13 +26,14 @@ export const createProjectWork = async (req, res) => {
       status,
       date,
       description,
+      company,
     });
 
     await newWork.save({ session });
 
     // Find and update project status
     const p = await Project
-      .findById(project)
+      .findOne({ _id: project, company })
       .session(session);
 
     if (!p) {
@@ -44,7 +46,7 @@ export const createProjectWork = async (req, res) => {
 
     // Fetch project status details
     const s = await ProjectStatus
-      .findById(status)
+      .findOne({ _id: status, company })
       .session(session);
 
     if (!s) {
@@ -52,31 +54,37 @@ export const createProjectWork = async (req, res) => {
     };
 
     // Fetch employee details
-    const updateBy = await Team
-      .findById(employee)
+    const existingEmployee = await Team
+      .findOne({ _id: employee, company })
       .session(session);
 
-    if (!updateBy) {
+    if (!existingEmployee) {
       throw new Error("Employee not found.");
     };
 
-    // Send email notification
-    const subject = `${updateBy?.name} Updated Project Status on Date ${date}`;
-    const htmlContent = `<p>${updateBy?.name} updated the project status to ${s?.status} for project ${p?.projectName} on date ${date}</p><p>Status: ${s?.status}</p><p>Description: ${description}</p>`;
-    sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+    if (existingEmployee?.office?.noReplyEmail && existingEmployee?.office?.noReplyEmailAppPassword) {
+      const from = existingEmployee?.office?.noReplyEmail;
+      const to = from;
+      const password = existingEmployee?.office?.noReplyEmailAppPassword;
+
+      const subject = `${existingEmployee?.name} Updated Project Status on Date ${date}`;
+      const htmlContent = `<p>${existingEmployee?.name} updated the project status to ${s?.status} for project ${p?.projectName} on date ${date}</p><p>Status: ${s?.status}</p><p>Description: ${description}</p>`;
+
+      sendEmail(from, to, password, subject, htmlContent);
+    };
 
     // Send push notification to admins
-    const teams = await Team
-      .find()
+    const teams = await Company
+      .find({ _id: existingEmployee?.company })
       .populate({ path: "role", select: "name" })
       .session(session);
 
-    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "company" && team?.fcmToken);
 
     if (filteredAdmins?.length > 0) {
       const payload = {
         notification: {
-          title: `${updateBy?.name} Updated Project Status`,
+          title: `${existingEmployee?.name} Updated Project Status`,
           body: `Updated project status to ${s?.status} for project ${p?.projectName}`,
         },
       };
@@ -103,7 +111,7 @@ export const getProjectWorks = async (req, res) => {
   try {
     let { page, limit, sort, search, project, status, employee, date } = req.query;
 
-    const query = {};
+    const query = { company: req.company };
 
     if (project) {
       query.project = project;
@@ -159,7 +167,7 @@ export const getProjectWorkById = async (req, res) => {
     };
 
     const work = await ProjectWork
-      .findById(id)
+      .findOne({ _id: id, company: req.company })
       .populate("employee project status");
 
     if (!work) {
@@ -181,11 +189,12 @@ export const getGroupedProjectWork = async (req, res) => {
       return res.status(400).json({ success: false, message: "Project ID is required" });
     };
 
-    projectId = new mongoose.Types.ObjectId(projectId);
-
     const pipeline = [
       {
-        $match: { project: projectId },
+        $match: {
+          project: new mongoose.Types.ObjectId(projectId),
+          company: new mongoose.Types.ObjectId(req.company)
+        },
       },
       {
         $lookup: {
@@ -258,7 +267,7 @@ export const updateProjectWork = async (req, res) => {
     };
 
     const updatedWork = await ProjectWork
-      .findByIdAndUpdate(id, req.body, { new: true });
+      .findOneAndUpdate({ _id: id, company: req.company }, req.body, { new: true, runValidators: true });
 
     if (!updatedWork) {
       return res.status(404).json({ success: false, message: "Project Work not found" });
@@ -279,7 +288,7 @@ export const deleteProjectWork = async (req, res) => {
       return res.status(400).json({ success: false, message: "Id is required" });
     };
 
-    const deletedWork = await ProjectWork.findByIdAndDelete(id);
+    const deletedWork = await ProjectWork.findOneAndDelete({ _id: id, company: req.company });
 
     if (!deletedWork) {
       return res.status(404).json({ success: false, message: "Project Work not found" });

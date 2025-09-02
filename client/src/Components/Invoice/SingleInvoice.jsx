@@ -80,7 +80,7 @@ const SingleInvoice = () => {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h4>TAX INVOICE</h4>
           {
-            permissions?.export && (
+            (permissions?.export) && (
               <button className="btn btn-secondary" onClick={exportInvoiceAsPdf}>Download</button>
             )
           }

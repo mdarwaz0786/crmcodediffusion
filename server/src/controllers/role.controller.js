@@ -4,12 +4,19 @@ import Role from "../models/role.model.js";
 export const createRole = async (req, res) => {
   try {
     const { name, permissions } = req.body;
+    const company = req.company;
+
+    const roleName = typeof name === "string" ? name.trim().toLowerCase() : "";
+
+    if (roleName === "company" || roleName === "super admin" || roleName === "superadmin" || roleName === "admin") {
+      return res.status(400).json({ success: false, message: "This role is reserved." });
+    };
 
     if (!name) {
       return res.status(400).json({ success: false, message: "Name is required." });
     };
 
-    const role = new Role({ name, permissions });
+    const role = new Role({ name, permissions, company });
     await role.save();
 
     return res.status(201).json({ success: true, meaasge: "Role created successfully", role });
@@ -21,7 +28,7 @@ export const createRole = async (req, res) => {
 // Controller for fetching all role
 export const fetchAllRole = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle searching across all fields
@@ -74,7 +81,7 @@ export const fetchAllRole = async (req, res) => {
 export const fetchSingleRole = async (req, res) => {
   try {
     const role = await Role
-      .findById(req.params.id);
+      .findOne({ _id: req.params.id, company: req.company });
 
     if (!role) {
       return res.status(404).json({ success: false, message: 'Role not found' });
@@ -92,7 +99,7 @@ export const updateRole = async (req, res) => {
     const { name, permissions } = req.body;
 
     const role = await Role
-      .findByIdAndUpdate(req.params.id, { name, permissions }, { new: true });
+      .findOneAndUpdate({ _id: req.params.id, company: req.company }, { name, permissions }, { new: true, runValidators: true });
 
     if (!role) {
       return res.status(404).json({ success: false, message: 'Role not found' });
@@ -108,7 +115,7 @@ export const updateRole = async (req, res) => {
 export const deleteRole = async (req, res) => {
   try {
     const role = await Role
-      .findByIdAndDelete(req.params.id);
+      .findOneAndDelete({ _id: req.params.id, company: req.company });
 
     if (!role) {
       return res.status(404).json({ success: false, message: 'Role not found' });

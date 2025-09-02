@@ -1,11 +1,13 @@
 import AddOnService from "../models/addOnService.model.js";
 import mongoose from "mongoose";
 
-// Create a new AddOnService
+// Create a new Add On Service
 export const createAddOnService = async (req, res) => {
   try {
-    const addOnService = new AddOnService(req.body);
+    const addOnService = new AddOnService({ ...req.body, company: req.company });
+
     await addOnService.save();
+
     return res.status(201).json({ success: true, data: addOnService });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
@@ -19,10 +21,10 @@ const findObjectIdByString = async (modelName, fieldName, searchString) => {
   return result ? result._id : null;
 };
 
-// Get all AddOnServices
+// Get all Add On Services
 export const getAllAddOnServices = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle searching across all fields
@@ -71,53 +73,69 @@ export const getAllAddOnServices = async (req, res) => {
   };
 };
 
-// Get a single AddOnService by ID
+// Get a single Add On Service by ID
 export const getAddOnServiceById = async (req, res) => {
   try {
-    const addOnService = await AddOnService.findById(req.params.id).populate("clientName projectName serviceName");
+    const addOnService = await AddOnService
+      .findOne({ _id: req.params.id, company: req.company })
+      .populate("clientName projectName serviceName")
+      .exec();
+
     if (!addOnService) {
       return res.status(404).json({ success: false, message: "Add on service not found" });
     };
+
     return res.status(200).json({ success: true, data: addOnService });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   };
 };
 
-// Get AddOnService by projectId
+// Get Add On Service by projectId
 export const getAddOnServiceByProjectId = async (req, res) => {
   try {
     const { projectId } = req.params;
-    const addOnService = await AddOnService.findOne({ projectName: projectId }).populate("clientName projectName serviceName");
+
+    const addOnService = await AddOnService
+      .findOne({ projectName: projectId, company: req.company })
+      .populate("clientName projectName serviceName")
+      .exec();
+
     if (!addOnService) {
       return res.status(404).json({ success: false, message: "No add on service for this project" });
     };
+
     return res.status(200).json({ success: true, data: addOnService });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   };
 };
 
-// Update an AddOnService by ID
+// Update an Add On Service by ID
 export const updateAddOnService = async (req, res) => {
   try {
-    const addOnService = await AddOnService.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const addOnService = await AddOnService
+      .findOneAndUpdate({ _id: req.params.id, company: req.company }, req.body, { new: true, runValidators: true });
+
     if (!addOnService) {
       return res.status(404).json({ success: false, message: "Add on service not found" });
     };
+
     return res.status(200).json({ success: true, data: addOnService });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   };
 };
 
-// Delete an AddOnService by ID
+// Delete an Add On Service by ID
 export const deleteAddOnService = async (req, res) => {
   try {
-    const addOnService = await AddOnService.findByIdAndDelete(req.params.id);
+    const addOnService = await AddOnService.findOneAndDelete({ _id: req.params.id, company: req.company });
+
     if (!addOnService) {
       return res.status(404).json({ success: false, message: "Add on service not found" });
     };
+
     return res.status(200).json({ success: true, message: "Add on service deleted successfully" });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

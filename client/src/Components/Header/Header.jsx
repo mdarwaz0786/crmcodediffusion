@@ -6,7 +6,6 @@ import { useAuth } from "../../context/authContext.jsx";
 import Search from "./Search.jsx";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import logo from "../../Assets/logo.png";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const Header = () => {
@@ -44,12 +43,12 @@ const Header = () => {
         {/* Logo */}
         <div className="header-left active">
           <Link to="/" className="logo logo-normal">
-            <img src={logo} alt="logo" />
-            <img src={logo} className="white-logo" alt="white-logo" />
+            <img src={team?.logo || team?.company?.logo} alt="logo" />
+            <img src={team?.logo || team?.company?.logo} className="white-logo" alt="white-logo" />
           </Link>
 
           <Link to="/" className="logo-small">
-            <img src={logo} alt="logo-small" />
+            <img src={team?.logo || team?.company?.logo} alt="logo-small" />
           </Link>
 
           <Link id="toggle_btn" to="#">
@@ -222,22 +221,54 @@ const Header = () => {
                               </li>
                             )
                           }
-                          {/* {
-                            (team?.role?.permissions?.project?.fields?.workDetail?.show) && (
+                          {
+                            (team?.role?.permissions?.office?.create) && (
                               <li>
-                                <Link to="/add-work-detail">
+                                <Link to="/add-office">
                                   <div className="menu-details">
-                                    <span className="menu-list-icon" style={{ background: "black" }}>
-                                      <i className="ti ti-clipboard"></i>
+                                    <span className="menu-list-icon" style={{ background: "lightGreen" }}>
+                                      <i className="ti ti-building"></i>
                                     </span>
                                     <div className="menu-details-content">
-                                      <p>Add Work Summary</p>
+                                      <p>Add Office</p>
                                     </div>
                                   </div>
                                 </Link>
                               </li>
                             )
-                          } */}
+                          }
+                          {
+                            (team?.role?.permissions?.addOnService?.create) && (
+                              <li>
+                                <Link to="/add-add-on-service">
+                                  <div className="menu-details">
+                                    <span className="menu-list-icon" style={{ background: "orange" }}>
+                                      <i className="ti ti-box"></i>
+                                    </span>
+                                    <div className="menu-details-content">
+                                      <p>New Add On Service</p>
+                                    </div>
+                                  </div>
+                                </Link>
+                              </li>
+                            )
+                          }
+                          {
+                            (team?.isSuperAdmin) && (
+                              <li>
+                                <Link to="/add-company">
+                                  <div className="menu-details">
+                                    <span className="menu-list-icon" style={{ background: "cyan" }}>
+                                      <i className="ti ti-code"></i>
+                                    </span>
+                                    <div className="menu-details-content">
+                                      <p>Add Company</p>
+                                    </div>
+                                  </div>
+                                </Link>
+                              </li>
+                            )
+                          }
                         </ul>
                       </div>
 
@@ -275,22 +306,6 @@ const Header = () => {
                               </li>
                             )
                           }
-                          {/* {
-                            (team?.role?.permissions?.projectTiming?.create) && (
-                              <li>
-                                <Link to="/add-project-timeline">
-                                  <div className="menu-details">
-                                    <span className="menu-list-icon" style={{ background: "green" }}>
-                                      <i className="ti ti-clock"></i>
-                                    </span>
-                                    <div className="menu-details-content">
-                                      <p>Add Project Timeline</p>
-                                    </div>
-                                  </div>
-                                </Link>
-                              </li>
-                            )
-                          } */}
                           {
                             (team?.role?.permissions?.projectPriority?.create) && (
                               <li>
@@ -355,6 +370,54 @@ const Header = () => {
                               </li>
                             )
                           }
+                          {
+                            (team?.role?.permissions?.service?.create) && (
+                              <li>
+                                <Link to="/add-service">
+                                  <div className="menu-details">
+                                    <span className="menu-list-icon" style={{ background: "#27ae60" }}>
+                                      <i className="ti ti-headset"></i>
+                                    </span>
+                                    <div className="menu-details-content">
+                                      <p>Add Service</p>
+                                    </div>
+                                  </div>
+                                </Link>
+                              </li>
+                            )
+                          }
+                          {
+                            (team?.role?.permissions?.holiday?.create) && (
+                              <li>
+                                <Link to="/add-holiday">
+                                  <div className="menu-details">
+                                    <span className="menu-list-icon" style={{ background: "#e67e22" }}>
+                                      <i className="ti ti-calendar-event"></i>
+                                    </span>
+                                    <div className="menu-details-content">
+                                      <p>Add Holiday</p>
+                                    </div>
+                                  </div>
+                                </Link>
+                              </li>
+                            )
+                          }
+                          {
+                            (team?.role?.permissions?.department?.create) && (
+                              <li>
+                                <Link to="/add-department">
+                                  <div className="menu-details">
+                                    <span className="menu-list-icon" style={{ background: "#9b59b6" }}>
+                                      <i className="ti ti-users"></i>
+                                    </span>
+                                    <div className="menu-details-content">
+                                      <p>Add Department</p>
+                                    </div>
+                                  </div>
+                                </Link>
+                              </li>
+                            )
+                          }
                         </ul>
                       </div>
                     </div>
@@ -364,14 +427,12 @@ const Header = () => {
             </li>
             {/* /Nav List */}
 
-            {/* Project Count */}
             <li className="nav-item nav-item-box">
               <Link to="#">
                 <i className="ti ti-briefcase"></i>
                 <span className="badge rounded-pill">{total}</span>
               </Link>
             </li>
-            {/* /Project count */}
 
             {/* Profile Dropdown */}
             <li className="nav-item dropdown has-arrow main-drop">
@@ -392,7 +453,7 @@ const Header = () => {
                     isLoggedIn ? (
                       <>
                         <Link className="dropdown-item" to="/profile">
-                          <i className="ti ti-user" /> {team?.name}
+                          <i className="ti ti-user" /> {team?.name || team?.companyName}
                         </Link>
                       </>
                     ) : (
@@ -424,7 +485,7 @@ const Header = () => {
               isLoggedIn ? (
                 <>
                   <Link className="dropdown-item" to="/profile">
-                    <i className="ti ti-user" /> {team?.name}
+                    <i className="ti ti-user" /> {team?.name || team?.companyName}
                   </Link>
                 </>
               ) : (

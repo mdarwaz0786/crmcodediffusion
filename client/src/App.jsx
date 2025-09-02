@@ -91,9 +91,12 @@ import SingleOffice from "./Components/Office/SingleOffice.jsx";
 import Leeds from "./Components/Leeds/Leeds.jsx";
 import SingleLeed from "./Components/Leeds/SingleLeed.jsx";
 import AppSetting from "./Components/AppSetting/AppSetting.jsx";
-import Test from "./Test.jsx";
-import AddAppSetting from "./Components/AppSetting/AddAppSetting.jsx";
 import EditAppSetting from "./Components/AppSetting/EditAppSetting.jsx";
+import AddPlan from "./Components/Plan/AddPlan.jsx";
+import AddCompany from "./Components/Company/AddCompany.jsx";
+import Company from "./Components/Company/Company.jsx";
+import UpdateCompany from "./Components/Company/UpdateCompany.jsx";
+import CompanyDetail from "./Components/Company/CompanyDetail.jsx";
 
 const App = () => {
   return (
@@ -186,12 +189,15 @@ const App = () => {
           <Route path="add-office" element={<AddOffice />} />
           <Route path="edit-office/:id" element={<EditOffice />} />
           <Route path="single-office/:id" element={<SingleOffice />} />
-          <Route path="leeds" element={<Leeds />} />
+          <Route path="leads" element={<Leeds />} />
           <Route path="single-leed/:id" element={<SingleLeed />} />
           <Route path="app-setting" element={<AppSetting />} />
-          <Route path="add-app-setting" element={<AddAppSetting />} />
           <Route path="edit-app-setting/:id" element={<EditAppSetting />} />
-          <Route path="test" element={<Test />} />
+          <Route path="add-plan" element={<AddPlan />} />
+          <Route path="company" element={<Company />} />
+          <Route path="add-company" element={<AddCompany />} />
+          <Route path="edit-company/:id" element={<UpdateCompany />} />
+          <Route path="single-company/:id" element={<CompanyDetail />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />

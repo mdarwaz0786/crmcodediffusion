@@ -64,7 +64,7 @@ const EditService = () => {
     return <Preloader />;
   };
 
-  if (!team?.role?.name.toLowerCase() === "admin") {
+  if (!team?.role?.permissions?.service?.update) {
     return <Navigate to="/" />;
   };
 

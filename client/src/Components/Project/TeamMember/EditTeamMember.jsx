@@ -169,7 +169,6 @@ const EditTeamMember = () => {
   const handleUpdate = async (e, id) => {
     e.preventDefault();
 
-    // Create update object
     const updateData = {
       name,
       email,
@@ -200,8 +199,7 @@ const EditTeamMember = () => {
         navigate(-1);
       };
     } catch (error) {
-      console.log("Error while updating employee:", error.message);
-      toast.error("Error while submitting");
+      toast.error(Error?.response?.data?.message || "Error while submitting");
     };
   };
 

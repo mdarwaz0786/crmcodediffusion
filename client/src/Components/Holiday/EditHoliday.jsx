@@ -15,6 +15,8 @@ const EditHoliday = () => {
   const { validToken, team, isLoading } = useAuth();
   const { id } = useParams();
 
+  const permissions = team?.role?.permissions?.holiday;
+
   const fetchHoliday = async () => {
     try {
       const response = await axios.get(`${base_url}/api/v1/holiday/single-holiday/${id}`, {
@@ -23,8 +25,8 @@ const EditHoliday = () => {
         },
       });
       if (response?.data?.success) {
-        setDate(response.data.holiday.date);
-        setReason(response.data.holiday.reason);
+        setDate(response?.data?.holiday?.date);
+        setReason(response?.data?.holiday?.reason);
       };
     } catch (error) {
       console.log("Error fetching holiday details:", error.message);
@@ -32,10 +34,10 @@ const EditHoliday = () => {
   };
 
   useEffect(() => {
-    if (id && validToken && !isLoading && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (id && validToken && !isLoading && permissions?.access) {
       fetchHoliday();
     };
-  }, [id, validToken, team, isLoading]);
+  }, [id, validToken, team, isLoading, permissions]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -61,16 +63,15 @@ const EditHoliday = () => {
         navigate(-1);
       };
     } catch (error) {
-      console.log("Error while updating Holiday:", error.message);
       toast.error("Error while submitting");
     };
   };
 
   if (isLoading) {
     return <Preloader />;
-  }
+  };
 
-  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
+  if (!permissions?.update) {
     return <Navigate to="/" />;
   };
 
@@ -97,7 +98,6 @@ const EditHoliday = () => {
             </div>
           </div>
         </div>
-
         <div className="submit-button text-end">
           <Link to="#" onClick={() => navigate(-1)} className="btn btn-light sidebar-close">Cancel</Link>
           <Link to="#" className="btn btn-primary" onClick={handleUpdate}>Update</Link>

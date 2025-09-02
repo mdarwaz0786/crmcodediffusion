@@ -1,18 +1,29 @@
 import Team from "../models/team.model.js";
 import LeaveApproval from "../models/leaveApproval.model.js";
 import Holiday from "../models/holiday.model.js";
+import Company from "../models/company.model.js";
 
 export const leaveBalance = async (req, res) => {
   try {
     const { employeeId } = req.params;
+    const company = req.company;
 
-    const employee = await Team.findById(employeeId);
+    const rules = await Company.findById(company);
+
+    if (!rules) {
+      return res.status(400).json({ success: false, message: "Company not found." });
+    };
+
+    const paidLeave = rules?.paidLeavePerMonth;
+    const leaveSystemStartDate = rules?.leaveSystemStartDate;
+
+    const employee = await Team.findOne({ _id: employeeId, company });
 
     if (!employee) {
       return res.status(404).json({ success: false, message: "Employee not found" });
     };
 
-    const leaveSystemStart = new Date("2025-07-01");
+    const leaveSystemStart = new Date(leaveSystemStartDate);
     const joinDate = new Date(employee?.joining);
 
     const accrualStart = joinDate > leaveSystemStart
@@ -31,13 +42,14 @@ export const leaveBalance = async (req, res) => {
     };
 
     // Load all holidays into a Set for fast lookup
-    const holidays = await Holiday.find({});
+    const holidays = await Holiday.find({ company });
     const holidaySet = new Set(holidays?.map((h) => new Date(h?.date).toDateString()));
 
     // Fetch all approved leaves
     const approvedLeaves = await LeaveApproval.find({
       employee: employeeId,
       leaveStatus: "Approved",
+      company,
       startDate: { $gte: accrualStart.toISOString().split("T")[0] },
     });
 
@@ -75,12 +87,12 @@ export const leaveBalance = async (req, res) => {
       const leaveDates = leaveByMonth[month] || [];
       const taken = leaveDates.length;
 
-      cumulativeAdded += 2;
+      cumulativeAdded += Number(paidLeave);
       cumulativeTaken += taken;
 
       summary.push({
         month,
-        leavesAdded: 2,
+        leavesAdded: Number(paidLeave),
         leavesTaken: taken,
         balanceTillMonth: cumulativeAdded - cumulativeTaken,
         leaveDates,

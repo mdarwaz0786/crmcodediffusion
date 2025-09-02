@@ -1,5 +1,5 @@
 /* eslint-disable no-extra-semi */
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authContext.jsx";
 import axios from "axios";
@@ -10,38 +10,20 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const Login = () => {
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
-  const [isClientLogin, setIsClientLogin] = useState(false);
   const navigate = useNavigate();
   const { storeToken } = useAuth();
-
-  useEffect(() => {
-    const userType = localStorage.getItem("userType");
-    if (userType === "Client") {
-      setIsClientLogin(true)
-    } else {
-      setIsClientLogin(false);
-    };
-  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
-      const endpoint = isClientLogin
-        ? `${base_url}/api/v1/customer/login-customer`
-        : `${base_url}/api/v1/team/login-team`;
-
-      const loginField = isClientLogin ? "mobile" : "employeeId";
-
-      const response = await axios.post(endpoint, {
-        [loginField]: loginId,
-        password,
-      });
+      const endpoint = `${base_url}/api/v1/login/login-user`;
+      const response = await axios.post(endpoint, { loginId, password });
 
       if (response?.data?.success) {
         setLoginId("");
         setPassword("");
-        localStorage.setItem("userType", isClientLogin ? "Client" : "Employee");
+        localStorage.setItem("userType", response?.data?.userType);
         storeToken(response?.data?.token);
         toast.success("Login Successful");
         navigate('/');
@@ -62,12 +44,12 @@ const Login = () => {
                 <img src={logo} className="img-fluid" alt="Logo" />
               </div>
               <div className="login-heading">
-                <h4>Login</h4>
-                <p>{isClientLogin ? "Login using your mobile number and password" : "Login using your employee id and password"}</p>
+                <h4 style={{ textAlign: "center" }}>Login</h4>
+                <p>Login using your login ID and Password.</p>
               </div>
               <div className="form-wrap">
                 <label className="col-form-label">
-                  {isClientLogin ? "Mobile Number" : "Employee ID"} <span className="text-danger">*</span>
+                  Login Id <span className="text-danger">*</span>
                 </label>
                 <div className="form-wrap-icon">
                   <input
@@ -95,15 +77,6 @@ const Login = () => {
               </div>
               <div className="form-wrap">
                 <button type="submit" className="btn btn-secondary" onClick={(e) => handleLogin(e)}>Login</button>
-              </div>
-              <div className="form-wrap">
-                <button
-                  type="button"
-                  className="btn btn-link"
-                  onClick={() => setIsClientLogin(!isClientLogin)}
-                >
-                  {isClientLogin ? "Login as Employee" : "Login as Client"}
-                </button>
               </div>
             </div>
           </div>

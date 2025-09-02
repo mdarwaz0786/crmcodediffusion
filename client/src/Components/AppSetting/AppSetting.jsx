@@ -2,7 +2,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import axios from 'axios';
-import { toast } from 'react-toastify';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from "../../context/authContext.jsx";
 import Preloader from "../../Preloader.jsx";
@@ -28,37 +27,16 @@ const AppSetting = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team) {
+    if (!isLoading && team && team?.isSuperAdmin) {
       fetchAllData();
     };
   }, [team, isLoading]);
-
-  const handleDelete = async (id) => {
-    let isdelete = prompt("If you want to delete, type \"yes\".");
-
-    if (isdelete === "yes") {
-      try {
-        const response = await axios.delete(`${base_url}/api/v1/appSetting/delete-appSetting/${id}`, {
-          headers: {
-            Authorization: validToken,
-          },
-        });
-
-        if (response?.data?.success) {
-          toast.success("Deleted successfully");
-          fetchAllData();
-        };
-      } catch (error) {
-        toast.error("Error while deleting");
-      };
-    };
-  };
 
   if (isLoading) {
     return <Preloader />;
   };
 
-  if (!team?.role?.name?.toLowerCase() === "admin") {
+  if (!team?.isSuperAdmin) {
     return <Navigate to="/" />;
   };
 
@@ -117,7 +95,8 @@ const AppSetting = () => {
                               </th>
                               <th>#</th>
                               <th>App Name</th>
-                              <th>App Version</th>
+                              <th>Android Version</th>
+                              <th>IOS Version</th>
                               <th>Action</th>
                             </tr>
                           </thead>
@@ -131,6 +110,7 @@ const AppSetting = () => {
                                   <td>{index + 1}</td>
                                   <td>{d?.appName}</td>
                                   <td>{d?.appVersion}</td>
+                                  <td>{d?.iosAppVersion}</td>
                                   <td>
                                     <div className="table-action">
                                       <Link to="#" className="action-icon" data-bs-toggle="dropdown" aria-expanded="false">
@@ -140,11 +120,6 @@ const AppSetting = () => {
                                         <Link to={`/edit-app-setting/${d?._id}`} className="dropdown-item">
                                           <i className="ti ti-edit text-blue"></i>
                                           Update
-                                        </Link>
-                                        <hr className="horizontal-line" />
-                                        <Link to="#" className="dropdown-item" onClick={() => handleDelete(d?._id)}>
-                                          <i className="ti ti-trash text-danger"></i>
-                                          Delete
                                         </Link>
                                       </div>
                                     </div>

@@ -25,6 +25,8 @@ export const createOfficeLocation = async (req, res) => {
       addressLine3,
     } = req.body;
 
+    const company = req.company;
+
     // Check if required fields are present
     if (
       !uniqueCode ||
@@ -79,6 +81,7 @@ export const createOfficeLocation = async (req, res) => {
       addressLine2,
       addressLine3,
       logo,
+      company,
     });
 
     await officeLocation.save();
@@ -92,7 +95,7 @@ export const createOfficeLocation = async (req, res) => {
 // Get all office locations
 export const fetchAllOfficeLocation = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle searching across all fields
@@ -153,7 +156,7 @@ export const fetchSingleOfficeLocation = async (req, res) => {
     const { id } = req.params;
 
     const officeLocation = await OfficeLocation
-      .findById(id);
+      .findOne({ _id: id, company: req.company });
 
     if (!officeLocation) {
       return res.status(404).json({ success: false, message: "Office location not found." });
@@ -220,7 +223,7 @@ export const updateOfficeLocation = async (req, res) => {
       updateData.logo = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
     };
 
-    const officeLocation = await OfficeLocation.findByIdAndUpdate(id, updateData, {
+    const officeLocation = await OfficeLocation.findOneAndUpdate({ _id: id, company: req.company }, updateData, {
       new: true,
       runValidators: true,
     });
@@ -241,7 +244,7 @@ export const deleteOfficeLocation = async (req, res) => {
     const { id } = req.params;
 
     const officeLocation = await OfficeLocation
-      .findByIdAndDelete(id);
+      .findOneAndDelete({ _id: id, company: req.company });
 
     if (!officeLocation) {
       return res.status(404).json({ success: false, message: "Office location not found." });

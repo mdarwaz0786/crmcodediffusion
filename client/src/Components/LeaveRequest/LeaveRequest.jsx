@@ -29,6 +29,8 @@ const LeaveRequest = () => {
     limit: 20,
   });
 
+  const permission = team?.role?.permissions?.leaveApproval;
+
   const fetchAllEmployee = async () => {
     try {
       const response = await axios.get(`${base_url}/api/v1/team/all-team`, {
@@ -46,10 +48,10 @@ const LeaveRequest = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && permission?.access) {
       fetchAllEmployee();
     };
-  }, [isLoading, team]);
+  }, [isLoading, team, permission]);
 
   const fetchSingleEmployee = async (selectedEmployee) => {
     try {
@@ -68,10 +70,10 @@ const LeaveRequest = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && selectedEmployee && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && selectedEmployee && permission?.access) {
       fetchSingleEmployee(selectedEmployee);
     };
-  }, [isLoading, team, selectedEmployee]);
+  }, [isLoading, team, selectedEmployee, permission]);
 
   const fetchAllData = async () => {
     try {
@@ -96,7 +98,6 @@ const LeaveRequest = () => {
         setLoading(false);
       };
     } catch (error) {
-      console.log(error.message);
       setLoading(false);
     };
   };
@@ -118,10 +119,10 @@ const LeaveRequest = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && permission?.access) {
       fetchAllData();
     };
-  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team]);
+  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team, permission]);
 
   const exportLeaveRequestListAsExcel = () => {
     if (data?.length === 0) {
@@ -181,7 +182,6 @@ const LeaveRequest = () => {
     try {
       setApproving((prev) => ({ ...prev, [leaveId]: true }));
 
-      // Validation
       if (!leaveStatus[leaveId]) {
         return toast.error("Select leave status");
       };
@@ -201,7 +201,6 @@ const LeaveRequest = () => {
         toast.success("Updated Successfully");
       };
     } catch (error) {
-      console.log("Error while updating:", error.message);
       toast.error(error?.response?.data?.message || "Error while updating");
     } finally {
       fetchAllData();
@@ -213,7 +212,7 @@ const LeaveRequest = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
+  if (!permission?.access) {
     return <Navigate to="/" />;
   };
 
@@ -371,7 +370,6 @@ const LeaveRequest = () => {
                             <th>Duration</th>
                             <th>Reason</th>
                             <th>Status</th>
-                            <th>Approved By</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -418,7 +416,6 @@ const LeaveRequest = () => {
                                     }
                                   </form>
                                 </td>
-                                <td>{d?.leaveApprovedBy?.name || "N/A"}</td>
                               </tr>
                             ))
                           }

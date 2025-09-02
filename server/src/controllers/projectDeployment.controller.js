@@ -18,6 +18,7 @@ const calculateExpiry = (expiryDate) => {
 export const createProjectDeployment = async (req, res) => {
   try {
     const { websiteName, websiteLink, client, domainPurchaseDate, domainExpiryDate, hostingPurchaseDate, hostingExpiryDate, sslPurchaseDate, sslExpiryDate } = req.body;
+    const company = req.company;
 
     const { expireIn: domainExpireIn, expiryStatus: domainExpiryStatus } = calculateExpiry(domainExpiryDate);
     const { expireIn: hostingExpireIn, expiryStatus: hostingExpiryStatus } = calculateExpiry(hostingExpiryDate);
@@ -39,12 +40,12 @@ export const createProjectDeployment = async (req, res) => {
       sslExpiryDate,
       sslExpireIn,
       sslExpiryStatus,
+      company,
     });
 
     await newProjectDeployment.save();
     return res.status(201).json({ success: true, message: "Project deployment created successfully", projectDeployment: newProjectDeployment });
   } catch (error) {
-    console.log("Error while creating project deployment", error.message);
     return res.status(500).json({ success: false, message: "Error while creating project deployment", error: error.message });
   };
 };
@@ -128,10 +129,10 @@ const createExpiryFilter = (field, filterType) => {
   return { [field]: { $gte: startDate.format('YYYY-MM-DD'), $lte: endDate.format('YYYY-MM-DD') } };
 };
 
-// READ all Project Deployment
+// Read all Project Deployment
 export const fetchAllProjectDeployment = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle universal searching across all fields
@@ -218,12 +219,11 @@ export const fetchAllProjectDeployment = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "All project deployment fetched successfully", projectDeployment: filteredProjectDeployment, totalCount });
   } catch (error) {
-    console.log("Error while fetching all project deployment:", error.message)
     return res.status(500).json({ success: false, message: "Error while fetching all project deployment", error: error.message });
   };
 };
 
-// READ single Project Deployment by ID
+// Read single Project Deployment by ID
 export const fetchSingleProjectDeployment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -232,7 +232,8 @@ export const fetchSingleProjectDeployment = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid project deployment ID" });
     };
 
-    const projectDeployment = await ProjectDeployment.findById(id)
+    const projectDeployment = await ProjectDeployment
+      .findOne({ _id: id, company: req.company })
       .populate({ path: "client", select: "" })
       .exec();
 
@@ -246,7 +247,6 @@ export const fetchSingleProjectDeployment = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Single project deployment fetched successfully", projectDeployment: filteredProjectDeployment });
   } catch (error) {
-    console.log("Error while fetching single project deployment:", error.message)
     return res.status(500).json({ success: false, message: "Error while fetching single project deployment", error: error.message });
   };
 };
@@ -260,6 +260,7 @@ export const fetchAllExpiringDeployment = async (req, res) => {
 
     // Create filters for domain, hosting, and SSL expiry
     const filter = {
+      company: new mongoose.Types.ObjectId(req.company),
       $or: [
         { domainExpiryDate: { $gte: currentDate, $lte: futureDate } },
         { domainExpiryStatus: "Expired" },
@@ -288,7 +289,6 @@ export const fetchAllExpiringDeployment = async (req, res) => {
       projectDeployment: expiringDeployment,
     });
   } catch (error) {
-    console.error("Error fetching expiring deployments:", error.message);
     return res.status(500).json({
       success: false,
       message: "Error while fetching expiring deployments",
@@ -301,6 +301,7 @@ export const fetchAllExpiringDeployment = async (req, res) => {
 export const updateProjectDeployment = async (req, res) => {
   try {
     const { id } = req.params;
+    const company = req.company;
     const { websiteName, websiteLink, client, domainPurchaseDate, domainExpiryDate, hostingPurchaseDate, hostingExpiryDate, sslPurchaseDate, sslExpiryDate } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -311,8 +312,8 @@ export const updateProjectDeployment = async (req, res) => {
     const { expireIn: hostingExpireIn, expiryStatus: hostingExpiryStatus } = calculateExpiry(hostingExpiryDate);
     const { expireIn: sslExpireIn, expiryStatus: sslExpiryStatus } = calculateExpiry(sslExpiryDate);
 
-    const updatedProjectDeployment = await ProjectDeployment.findByIdAndUpdate(
-      id,
+    const updatedProjectDeployment = await ProjectDeployment.findOneAndUpdate(
+      { _id: id, company },
       {
         websiteName,
         websiteLink,
@@ -330,7 +331,7 @@ export const updateProjectDeployment = async (req, res) => {
         sslExpireIn,
         sslExpiryStatus,
       },
-      { new: true },
+      { new: true, runValidators: true },
     );
 
     if (!updatedProjectDeployment) {
@@ -339,8 +340,7 @@ export const updateProjectDeployment = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Project deployment updated successfully", updatedProjectDeployment });
   } catch (error) {
-    console.log("Error while updating project deployment:", error.message);
-    res.status(500).json({ success: false, message: "Error while updating project deployment", error: error.message });
+    return res.status(500).json({ success: false, message: "Error while updating project deployment", error: error.message });
   };
 };
 
@@ -353,7 +353,7 @@ export const deleteProjectDeployment = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid project deployment ID" });
     };
 
-    const deletedProjectDeployment = await ProjectDeployment.findByIdAndDelete(id);
+    const deletedProjectDeployment = await ProjectDeployment.findOneAndDelete({ _id: id, company: req.company });
 
     if (!deletedProjectDeployment) {
       return res.status(404).json({ success: false, message: "Project deployment not found" });
@@ -361,7 +361,6 @@ export const deleteProjectDeployment = async (req, res) => {
 
     return res.status(200).json({ success: true, message: "Project deployment deleted successfully" });
   } catch (error) {
-    console.log("Error while deleting project deployment:", error.message)
     return res.status(500).json({ success: false, message: "Error while deleting project deployment", error: error.message });
   };
 };

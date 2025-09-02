@@ -87,7 +87,6 @@ const AddTicket = () => {
         navigate(-1);
       };
     } catch (error) {
-      console.log("Error while creating ticket:", error.message);
       toast.error("Error while creating");
     };
   };

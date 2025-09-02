@@ -38,7 +38,6 @@ const Project = () => {
     dateRange: "",
   });
   const permissions = team?.role?.permissions?.project;
-  const fieldPermissions = team?.role?.permissions?.project?.fields;
 
   const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -239,7 +238,7 @@ const Project = () => {
   }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.projectNameFilter, filters.projectIdFilter, filters.statusFilter, filters.dateRange, isLoading, team, permissions]);
 
   const handleDelete = async (id) => {
-    let isdelete = prompt("If you want to delete, type \"yes\".");
+    let isdelete = prompt("If you want to permanently delete this, type \"yes\".");
 
     if (isdelete === "yes") {
       try {
@@ -254,7 +253,6 @@ const Project = () => {
           fetchAllProject();
         };
       } catch (error) {
-        console.log("Error while deleting project:", error.message);
         toast.error("Error while deleting");
       };
     };
@@ -631,41 +629,13 @@ const Project = () => {
                             <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
                           </th>
                           <th>#</th>
-                          {
-                            (permissions?.access) && (
-                              <th>View</th>
-                            )
-                          }
-                          {
-                            (fieldPermissions?.projectId?.show) && (
-                              <th>Project ID</th>
-                            )
-                          }
-                          {
-                            (fieldPermissions?.projectName?.show) && (
-                              <th>Project Name</th>
-                            )
-                          }
-                          {
-                            (fieldPermissions?.customer?.show) && (
-                              <th>Client Name</th>
-                            )
-                          }
-                          {
-                            (fieldPermissions?.projectDeadline?.show) && (
-                              <th>Deadline</th>
-                            )
-                          }
-                          {
-                            (fieldPermissions?.projectPriority?.show) && (
-                              <th>Priority</th>
-                            )
-                          }
-                          {
-                            (fieldPermissions?.projectStatus?.show) && (
-                              <th>Status</th>
-                            )
-                          }
+                          <th>View</th>
+                          <th>ID</th>
+                          <th>Project Name</th>
+                          <th>Client Name</th>
+                          <th>Deadline</th>
+                          <th>Priority</th>
+                          <th>Status</th>
                           <th>Action</th>
                         </tr>
                       </thead>
@@ -677,41 +647,13 @@ const Project = () => {
                                 <label className="checkboxs"><input type="checkbox" /><span className="checkmarks"></span></label>
                               </td>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
-                              {
-                                (permissions?.access) && (
-                                  <td><Link to={`/single-project-detail/${p?._id}`}><i className="fas fa-eye"></i></Link></td>
-                                )
-                              }
-                              {
-                                (fieldPermissions?.projectId?.show) && (
-                                  <td>{p?.projectId}</td>
-                                )
-                              }
-                              {
-                                (fieldPermissions?.projectName?.show) && (
-                                  <td>{p?.projectName}</td>
-                                )
-                              }
-                              {
-                                (fieldPermissions?.customer?.show) && (
-                                  <td>{p?.customer?.name}</td>
-                                )
-                              }
-                              {
-                                (fieldPermissions?.endDate?.show) && (
-                                  <td>{dateFormat(p?.projectDeadline)}</td>
-                                )
-                              }
-                              {
-                                (fieldPermissions?.projectPriority?.show) && (
-                                  <td>{p?.projectPriority?.name}</td>
-                                )
-                              }
-                              {
-                                (fieldPermissions?.projectStatus?.show) && (
-                                  <td>{p?.projectStatus?.status}</td>
-                                )
-                              }
+                              <td><Link to={`/single-project-detail/${p?._id}`}><i className="fas fa-eye"></i></Link></td>
+                              <td>{p?.projectId}</td>
+                              <td>{p?.projectName}</td>
+                              <td>{p?.customer?.name}</td>
+                              <td>{dateFormat(p?.projectDeadline)}</td>
+                              <td>{p?.projectPriority?.name}</td>
+                              <td>{p?.projectStatus?.status || "N/A"}</td>
                               <td>
                                 <div className="table-action">
                                   <Link to="#" className="action-icon" data-bs-toggle="dropdown" aria-expanded="false">
@@ -727,7 +669,7 @@ const Project = () => {
                                       )
                                     }
                                     {
-                                      permissions?.update && permissions?.delete && (
+                                      (permissions?.update) && (permissions?.delete) && (
                                         <hr className="horizontal-line" />
                                       )
                                     }

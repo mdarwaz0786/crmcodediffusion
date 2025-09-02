@@ -3,7 +3,12 @@ import mongoose from "mongoose";
 const appSettingSchema = new mongoose.Schema({
   appVersion: {
     type: String,
-    required: [true, "App version is required"],
+    required: [true, "Android App version is required"],
+    trim: true,
+  },
+  iosAppVersion: {
+    type: String,
+    required: [true, "IOS app version is required"],
     trim: true,
   },
   appName: {
@@ -18,6 +23,11 @@ const appSettingSchema = new mongoose.Schema({
   appStoreLink: {
     type: String,
     trim: true,
+  },
+  status: {
+    type: String,
+    enum: ["Enable", "Disable"],
+    default: "Enable",
   },
 }, { timestamps: true });
 

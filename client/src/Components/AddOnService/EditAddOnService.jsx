@@ -199,7 +199,7 @@ const EditAddOnService = () => {
     return <Preloader />;
   };
 
-  if (!team?.role?.name.toLowerCase() === "admin") {
+  if (!team?.role?.permissions?.addOnService?.update) {
     return <Navigate to="/" />;
   };
 

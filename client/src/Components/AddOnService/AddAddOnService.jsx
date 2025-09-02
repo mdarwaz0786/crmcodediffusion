@@ -173,7 +173,7 @@ const AddAddOnService = () => {
     return <Preloader />;
   };
 
-  if (!team?.role?.name.toLowerCase() === "admin") {
+  if (!team?.role?.permissions?.addOnService?.create) {
     return <Navigate to="/" />;
   };
 

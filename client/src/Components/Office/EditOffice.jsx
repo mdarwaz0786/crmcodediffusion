@@ -203,7 +203,7 @@ const EditOffice = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin") {
+  if (!team?.role?.permissions?.office?.update) {
     return <Navigate to="/" />;
   };
 

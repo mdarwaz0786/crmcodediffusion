@@ -29,6 +29,8 @@ const LatePunchIn = () => {
     limit: 20,
   });
 
+  const permission = team?.role?.permissions?.latePunchIn;
+
   const fetchAllEmployee = async () => {
     try {
       const response = await axios.get(`${base_url}/api/v1/team/all-team`, {
@@ -46,10 +48,10 @@ const LatePunchIn = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && permission?.access) {
       fetchAllEmployee();
     };
-  }, [isLoading, team]);
+  }, [isLoading, team, permission]);
 
   const fetchSingleEmployee = async (selectedEmployee) => {
     try {
@@ -68,10 +70,10 @@ const LatePunchIn = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && selectedEmployee && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && selectedEmployee && permission?.access) {
       fetchSingleEmployee(selectedEmployee);
     };
-  }, [isLoading, team, selectedEmployee]);
+  }, [isLoading, team, selectedEmployee, permission]);
 
   const fetchAllData = async () => {
     try {
@@ -96,7 +98,6 @@ const LatePunchIn = () => {
         setLoading(false);
       };
     } catch (error) {
-      console.log(error.message);
       setLoading(false);
     };
   };
@@ -118,10 +119,10 @@ const LatePunchIn = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && permission?.access) {
       fetchAllData();
     };
-  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team]);
+  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team, permission]);
 
   const exportLatePunchInListAsExcel = () => {
     if (data?.length === 0) {
@@ -179,7 +180,6 @@ const LatePunchIn = () => {
     try {
       setApproving((prev) => ({ ...prev, [id]: true }));
 
-      // Validation
       if (!status[id]) {
         return toast.error("Select status");
       };
@@ -199,7 +199,6 @@ const LatePunchIn = () => {
         toast.success("Updated Successfully");
       };
     } catch (error) {
-      console.log("Error while updating:", error.message);
       toast.error(error?.response?.data?.message || "Error while updating");
     } finally {
       setApproving((prev) => ({ ...prev, [id]: false }));
@@ -210,7 +209,7 @@ const LatePunchIn = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
+  if (!permission?.access) {
     return <Navigate to="/" />;
   };
 
@@ -366,7 +365,6 @@ const LatePunchIn = () => {
                             <th>Attendance Date</th>
                             <th>Punch In Time</th>
                             <th>Status</th>
-                            <th>Approved By</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -405,7 +403,6 @@ const LatePunchIn = () => {
                                     }
                                   </form>
                                 </td>
-                                <td>{d?.approvedBy?.name || "N/A"}</td>
                               </tr>
                             ))
                           }

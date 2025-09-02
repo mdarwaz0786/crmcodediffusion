@@ -8,6 +8,16 @@ const attendanceSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
+    },
+    office: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "OfficeLocation",
+      index: true,
+    },
     attendanceDate: {
       type: String,
       required: true,
@@ -27,7 +37,7 @@ const attendanceSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Present", "Half Day", "Absent", "Holiday", "Sunday", "Saturday", "On Leave", "Comp Off"],
+      enum: ["Present", "Half Day", "Absent", "Holiday", "Sunday", "Saturday", "On Leave", "Comp Off", "Weekly Off"],
       default: "Present",
       index: true,
     },

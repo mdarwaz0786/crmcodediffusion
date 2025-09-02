@@ -26,6 +26,11 @@ const projectWorkSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
+    },
   },
   {
     timestamps: true,

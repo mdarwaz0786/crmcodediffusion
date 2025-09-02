@@ -4,12 +4,13 @@ import ProjectStatus from "../models/projectStatus.model.js";
 export const createProjectStatus = async (req, res) => {
   try {
     const { status, description } = req.body;
+    const company = req.company;
 
     if (!status) {
       return res.status(400).json({ success: false, message: "Status is required." });
     };
 
-    const projectStatus = new ProjectStatus({ status, description });
+    const projectStatus = new ProjectStatus({ status, description, company });
     await projectStatus.save();
 
     return res.status(200).json({ success: true, message: "Project status created successfully", projectStatus });
@@ -21,7 +22,7 @@ export const createProjectStatus = async (req, res) => {
 // Controller for fetching all project status
 export const fetchAllProjectStatus = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle searching across all fields
@@ -80,7 +81,7 @@ export const fetchSingleProjectStatus = async (req, res) => {
     const projectStatusId = req.params.id;
 
     const projectStatus = await ProjectStatus
-      .findById(projectStatusId);
+      .findOne({ _id: projectStatusId, company: req.company });
 
     if (!projectStatus) {
       return res.status(404).json({ success: false, message: "Project status not found" });
@@ -100,7 +101,7 @@ export const updateProjectStatus = async (req, res) => {
     const { status, description } = req.body;
 
     const projectStatus = await ProjectStatus
-      .findByIdAndUpdate(projectStatusId, { status, description }, { new: true });
+      .findOneAndUpdate({ _id: projectStatusId, company: req.company }, { status, description }, { new: true, runValidators: true });
 
     if (!projectStatus) {
       return res.status(404).json({ success: false, message: "Project status not found" });
@@ -117,7 +118,7 @@ export const deleteProjectStatus = async (req, res) => {
   try {
     const projectStatusId = req.params.id;
 
-    const projectStatus = await ProjectStatus.findByIdAndDelete(projectStatusId);
+    const projectStatus = await ProjectStatus.findOneAndDelete({ _id: projectStatusId, company: req.company });
 
     if (!projectStatus) {
       return res.status(400).json({ success: false, message: "Project status not found" });

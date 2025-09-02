@@ -160,7 +160,7 @@ const PurchaseInvoice = () => {
   }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, filters.year, filters.month, isLoading, team, permissions]);
 
   const handleDelete = async (id) => {
-    let isdelete = prompt("If you want to delete, type \"yes\".");
+    let isdelete = prompt("If you want to permanently delete this, type \"yes\".");
 
     if (isdelete === "yes") {
       try {

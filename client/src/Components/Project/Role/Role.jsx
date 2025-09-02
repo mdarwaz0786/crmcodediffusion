@@ -2,7 +2,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState } from "react";
 import axios from 'axios';
-import { toast } from 'react-toastify';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from "../../../context/authContext.jsx";
 import html2pdf from "html2pdf.js";
@@ -130,28 +129,6 @@ const Role = () => {
     };
   }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, isLoading, team, permissions]);
 
-  const handleDelete = async (id) => {
-    let isdelete = prompt("If you want to delete, type \"yes\".");
-
-    if (isdelete === "yes") {
-      try {
-        const response = await axios.delete(`${base_url}/api/v1/role/delete-role/${id}`, {
-          headers: {
-            Authorization: validToken,
-          },
-        });
-
-        if (response?.data?.success) {
-          toast.success("Deleted successfully");
-          fetchAllData();
-        };
-      } catch (error) {
-        console.log("Error while deleting role:", error.message);
-        toast.error("Error while deleting");
-      };
-    };
-  };
-
   const exportRoleListAsExcel = () => {
     if (data?.length === 0) {
       alert("No data available to export");
@@ -160,7 +137,6 @@ const Role = () => {
 
     const exportData = data?.map((entry) => ({
       "Name": entry?.name || "N/A",
-      "Description": entry?.description || "N/A",
     }));
 
     if (exportData?.length === 0) {
@@ -435,19 +411,6 @@ const Role = () => {
                                         <Link to={`/edit-role/${d?._id}`} className="dropdown-item">
                                           <i className="ti ti-edit text-blue"></i>
                                           Update
-                                        </Link>
-                                      )
-                                    }
-                                    {
-                                      permissions?.update && permissions?.delete && (
-                                        <hr className="horizontal-line" />
-                                      )
-                                    }
-                                    {
-                                      (permissions?.delete) && (
-                                        <Link to="#" className="dropdown-item" onClick={() => handleDelete(d?._id)}>
-                                          <i className="ti ti-trash text-danger"></i>
-                                          Delete
                                         </Link>
                                       )
                                     }

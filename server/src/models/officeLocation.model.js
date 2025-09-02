@@ -6,7 +6,11 @@ const officeLocationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      unique: true,
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
     },
     name: {
       type: String,
@@ -103,5 +107,7 @@ officeLocationSchema.pre("save", function (next) {
 
   next();
 });
+
+officeLocationSchema.index({ uniqueCode: 1, company: 1 }, { unique: true });
 
 export default mongoose.model("OfficeLocation", officeLocationSchema);

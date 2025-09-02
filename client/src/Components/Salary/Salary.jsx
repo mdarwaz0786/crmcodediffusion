@@ -25,6 +25,8 @@ const Salary = () => {
     month: initialMonth,
   });
 
+  const permissions = team?.role?.permissions?.salary;
+
   const fetchAllData = async () => {
     try {
       setLoading(true);
@@ -64,10 +66,10 @@ const Salary = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && permissions?.access) {
       fetchAllData();
     };
-  }, [filters.month, filters.year, isLoading, team]);
+  }, [filters.month, filters.year, isLoading, team, permissions]);
 
   const exportSalaryListAsExcel = () => {
     if (data?.length === 0) {
@@ -122,7 +124,7 @@ const Salary = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
+  if (!permissions?.access) {
     return <Navigate to="/" />;
   };
 

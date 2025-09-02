@@ -24,6 +24,8 @@ const WorkDetail = () => {
     limit: 20,
   });
 
+  const permissions = team?.role?.permissions?.workSummary;
+
   const fetchAllEmployee = async () => {
     try {
       const response = await axios.get(`${base_url}/api/v1/team/all-team`, {
@@ -41,10 +43,10 @@ const WorkDetail = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && permissions?.access) {
       fetchAllEmployee();
     };
-  }, [isLoading, team]);
+  }, [isLoading, team, permissions]);
 
   const fetchAllData = async () => {
     try {
@@ -68,7 +70,6 @@ const WorkDetail = () => {
         setLoading(false);
       };
     } catch (error) {
-      console.log(error.message);
       setLoading(false);
     };
   };
@@ -90,10 +91,10 @@ const WorkDetail = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && permissions?.access) {
       fetchAllData();
     };
-  }, [filters.month, filters.year, filters.limit, filters.page, selectedEmployee, isLoading, team]);
+  }, [filters.month, filters.year, filters.limit, filters.page, selectedEmployee, isLoading, team, permissions]);
 
   const exportWorkSummaryListAsExcel = () => {
     if (!data || data?.length === 0) {
@@ -149,7 +150,7 @@ const WorkDetail = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
+  if (!permissions?.access) {
     return <Navigate to="/" />;
   };
 

@@ -192,7 +192,6 @@ const TeamMember = () => {
   const handleUpdate = async (e, id, newStatus) => {
     e.preventDefault();
 
-    // Create update object
     const updateData = {
       isActive: newStatus,
     };
@@ -216,12 +215,9 @@ const TeamMember = () => {
   const handleAllowMultiDevice = async (e, id, isAllowed) => {
     e.preventDefault();
 
-    // Create update object
     const updateData = {
       allowMultiDevice: isAllowed,
     };
-
-    console.log(updateData);
 
     try {
       const response = await axios.put(`${base_url}/api/v1/team/update-team/${id}`, updateData, {
@@ -229,8 +225,6 @@ const TeamMember = () => {
           Authorization: validToken,
         },
       });
-
-      console.log(response?.data);
 
       if (response?.data?.success) {
         fetchAllData();
@@ -483,7 +477,7 @@ const TeamMember = () => {
                               <th>Employee Name</th>
                             )
                           }
-                          <th>Device Id</th>
+                          <th>Mobile</th>
                           <th>Multi Device Login</th>
                           <th>Status</th>
                           {
@@ -517,7 +511,7 @@ const TeamMember = () => {
                                   <td>{d?.name}</td>
                                 )
                               }
-                              <td>{d?.deviceId}</td>
+                              <td>{d?.mobile}</td>
                               <td>
                                 <div className="form-check form-switch" style={{ display: "flex", alignItems: "center" }}>
                                   <input
@@ -544,7 +538,7 @@ const TeamMember = () => {
                                     onChange={(e) => handleUpdate(e, d?._id, e.target.checked)}
                                   />
                                   <label className="form-check-label" htmlFor={d?._id}>
-                                    {d.isActive ? "Active" : "Inactive"}
+                                    {d?.isActive ? "Active" : "Inactive"}
                                   </label>
                                 </div>
                               </td>

@@ -60,6 +60,10 @@ const PaymentDetailPage = () => {
     return <p className="text-center text-danger mt-5">No payment data found.</p>;
   };
 
+  if (!team?.role?.permissions?.payment?.access) {
+    return <Navigate to="/" />;
+  };
+
   return <PaymentDetail payment={payment} txnid={txnid} />;
 };
 

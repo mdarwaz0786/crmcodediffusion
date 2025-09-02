@@ -38,7 +38,6 @@ const AddHoliday = () => {
         navigate(-1);
       };
     } catch (error) {
-      console.log("Error while creating Holiday:", error.message);
       toast.error("Error while submitting");
     };
   };
@@ -47,7 +46,7 @@ const AddHoliday = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
+  if (!team?.role?.permissions?.holiday?.create) {
     return <Navigate to="/" />;
   };
 

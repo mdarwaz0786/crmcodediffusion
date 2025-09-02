@@ -4,7 +4,6 @@ const ticketSchema = new mongoose.Schema(
   {
     ticketId: {
       type: String,
-      unique: true,
       default: () => `T-${Date.now()}`,
     },
     title: {
@@ -46,12 +45,7 @@ const ticketSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      refPath: "createdByModel",
-    },
-    createdByModel: {
-      type: String,
-      required: true,
-      enum: ["Customer", "Team"],
+      ref: "Customer",
     },
     image: {
       type: String,
@@ -75,10 +69,17 @@ const ticketSchema = new mongoose.Schema(
         },
       },
     ],
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
+    },
   },
   {
     timestamps: true,
   },
 );
+
+ticketSchema.index({ ticketId: 1, company: 1 }, { unique: true });
 
 export default mongoose.model("Ticket", ticketSchema);

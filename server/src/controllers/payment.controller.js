@@ -63,7 +63,7 @@ export const paymentSuccess = async (req, res) => {
           paymentDate: date,
           payUResponse,
         },
-        { new: true },
+        { new: true, runValidators: true },
       );
 
       if (!updatedPayment) {
@@ -102,6 +102,7 @@ export const paymentSuccess = async (req, res) => {
         tax: paymentDetail?.tax,
         date: formattedDate,
         office: paymentDetail?.office?._id,
+        company: paymentDetail?.company,
         amount: paymentDetail?.projectCost,
         subtotal: paymentDetail?.subtotal,
         CGST: paymentDetail?.CGST,
@@ -362,10 +363,9 @@ Please find attached the tax invoice for the services/products provided by ${pay
 
 Kindly review the invoice and let us know if you have any questions or need further assistance. If everything is in order, we would appreciate it if you could process the payment by the due date mentioned in the invoice.
 
-Thank you for choosing ${paymentDetail?.office?.name || "Code Diffusion Technologies"} . We look forward to continuing our collaboration.
+Thank you for choosing ${paymentDetail?.office?.name || "Code Diffusion Technologies"}. We look forward to continuing our collaboration.
 
-Best regards,  
-Abhishek Singh  
+Best regards,   
 ${paymentDetail?.office?.name || "Code Diffusion Technologies"} 
 ${paymentDetail?.office?.contact || "+91-7827114607"}
 ${paymentDetail?.office?.email || "info@codediffusion.in"}
@@ -473,7 +473,7 @@ export const paymentFailure = async (req, res) => {
             paymentDate: date,
             payUResponse,
           },
-          { new: true },
+          { new: true, runValidators: true },
         );
 
         return res.status(400).render("paymentFailure", {
@@ -567,12 +567,13 @@ export const redirectTo = async (req, res) => {
 // Get all payments with search, sort, filter, and pagination
 export const getAllPayments = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     if (req.query.search) {
       const searchRegex = new RegExp(req.query.search.trim(), 'i');
       filter = {
+        company: req.company,
         $or: [
           { proformaInvoiceId: searchRegex },
           { clientName: searchRegex },
@@ -676,7 +677,7 @@ export const getPaymentById = async (req, res) => {
 
     // Fetch the payment from the database using the ID
     const payment = await Payment
-      .findById(id)
+      .findOne({ _id: id, company: req.company })
       .populate("office")
       .exec();
 
@@ -699,14 +700,14 @@ export const updatePayment = async (req, res) => {
     const updateData = req.body;
 
     // Check if the payment exists before updating
-    const payment = await Payment.findById(id);
+    const payment = await Payment.findOne({ _id: id, company: req.company });
 
     if (!payment) {
       return res.status(404).json({ success: false, message: "Payment not found" });
     };
 
     // Update the payment with new data
-    const updatedPayment = await Payment.findByIdAndUpdate(id, updateData, {
+    const updatedPayment = await Payment.findOneAndUpdate({ _id: id, company: req.company }, updateData, {
       new: true, // Return the updated payment document
       runValidators: true, // Run validation before saving
     });
@@ -724,14 +725,14 @@ export const deletePayment = async (req, res) => {
     const { id } = req.params;
 
     // Check if the payment exists before deleting
-    const payment = await Payment.findById(id);
+    const payment = await Payment.findOne({ _id: id, company: req.company });
 
     if (!payment) {
       return res.status(404).json({ success: false, message: "Payment not found" });
     };
 
     // Delete the payment
-    await Payment.findByIdAndDelete(id);
+    await Payment.findOneAndDelete({ _id: id, company: req.company });
 
     // Return success message
     return res.status(200).json({ success: true, message: "Payment deleted successfully" });

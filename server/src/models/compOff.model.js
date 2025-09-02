@@ -13,7 +13,7 @@ const compOffSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    date: {
+    compOffDate: {
       type: String,
       index: true,
     },
@@ -23,9 +23,10 @@ const compOffSchema = new mongoose.Schema(
       default: "Pending",
       index: true,
     },
-    approvedBy: {
+    company: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Team",
+      ref: "Company",
+      index: true,
     },
   },
   {

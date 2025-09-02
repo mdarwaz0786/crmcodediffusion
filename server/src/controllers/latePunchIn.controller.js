@@ -1,6 +1,7 @@
 import LatePunchIn from "../models/latePunchIn.model.js";
 import Attendance from "../models/attendance.model.js";
 import Team from "../models/team.model.js";
+import Company from "../models/company.model.js";
 import { sendEmail } from "../services/emailService.js";
 import mongoose from "mongoose";
 import firebase from "../firebase/index.js";
@@ -48,6 +49,7 @@ function compareTime(time1, time2) {
 export const createLatePunchIn = async (req, res) => {
   try {
     const { employee, attendanceDate, approvedBy, punchInTime } = req.body;
+    const company = req.company;
 
     // Validate required fields
     if (!employee) {
@@ -81,7 +83,7 @@ export const createLatePunchIn = async (req, res) => {
     };
 
     // Check if a late punch-in request already exists
-    const existingLatePunchIn = await LatePunchIn.findOne({ employee, attendanceDate });
+    const existingLatePunchIn = await LatePunchIn.findOne({ employee, attendanceDate, company });
 
     if (existingLatePunchIn) {
       if (["Approved", "Pending"].includes(existingLatePunchIn?.status)) {
@@ -90,7 +92,7 @@ export const createLatePunchIn = async (req, res) => {
     };
 
     // Check if attendance exists and punch-in is valid
-    const attendance = await Attendance.findOne({ employee, attendanceDate });
+    const attendance = await Attendance.findOne({ employee, attendanceDate, company });
 
     if (!attendance) {
       return res.status(400).json({ success: false, message: `Attendance not exists for date ${attendanceDate}` });
@@ -101,28 +103,34 @@ export const createLatePunchIn = async (req, res) => {
     };
 
     // Create new late punch-in request
-    const newLatePunchIn = new LatePunchIn({ employee, attendanceDate, punchInTime, approvedBy });
+    const newLatePunchIn = new LatePunchIn({ employee, attendanceDate, punchInTime, approvedBy, company });
     await newLatePunchIn.save();
 
     // Send email
-    const sendBy = await Team.findById(employee);
-    const subject = `${sendBy?.name} applied for late punch-in for attendance date ${attendanceDate} and punch-in time ${punchInTime}`;
-    const htmlContent = `<p>Late punch-in request has been applied by ${sendBy?.name} for attendance date ${attendanceDate} to update punch-in time ${punchInTime}.</p><p>Please review the request.</p>`;
-    sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+    const appliedBy = await Team.findOne({ _id: employee, company }).populate("office");
+
+    if (appliedBy?.office?.noReplyEmail && appliedBy?.office?.noReplyEmailAppPassword) {
+      const from = appliedBy?.office?.noReplyEmail;
+      const to = from;
+      const password = appliedBy?.office?.noReplyEmailAppPassword;
+      const subject = `${appliedBy?.name} applied for late punch-in for attendance date ${attendanceDate} and punch-in time ${punchInTime}`;
+      const htmlContent = `<p>Late punch-in request has been applied by ${appliedBy?.name} for attendance date ${attendanceDate} to update punch-in time ${punchInTime}.</p><p>Please review the request.</p>`;
+      sendEmail(from, to, password, subject, htmlContent);
+    };
 
     // Send push notification to admin
-    const teams = await Team
-      .find()
+    const teams = await Company
+      .find({ _id: appliedBy?.company })
       .populate({ path: 'role', select: "name" })
       .exec();
 
-    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "company" && team?.fcmToken);
 
     if (filteredAdmins?.length > 0) {
       const payload = {
         notification: {
-          title: `${sendBy?.name} Applied for Late Punch-In`,
-          body: `${sendBy?.name} has applied for late punch-in for attendance date ${attendanceDate} to update punch in time ${punchInTime}.`,
+          title: `${appliedBy?.name} Applied for Late Punch-In`,
+          body: `${appliedBy?.name} has applied for late punch-in for attendance date ${attendanceDate} to update punch in time ${punchInTime}.`,
         },
       };
 
@@ -138,7 +146,7 @@ export const createLatePunchIn = async (req, res) => {
 // Get all late punch in entries
 export const getAllLatePunchIns = async (req, res) => {
   try {
-    let query = {};
+    let query = { company: req.company };
     let sort = {};
 
     // Filter by year only (all month)
@@ -189,7 +197,6 @@ export const getAllLatePunchIns = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .populate("employee")
-      .populate("approvedBy")
       .exec();
 
     if (!latePunchIns) {
@@ -208,9 +215,9 @@ export const getAllLatePunchIns = async (req, res) => {
 export const getLatePunchInById = async (req, res) => {
   try {
     const { id } = req.params;
-    const latePunchIn = await LatePunchIn.findById(id)
+    const latePunchIn = await LatePunchIn
+      .findOne({ _id: id, company: req.company })
       .populate("employee")
-      .populate("approvedBy")
       .exec();
 
     if (!latePunchIn) {
@@ -227,14 +234,14 @@ export const getLatePunchInById = async (req, res) => {
 export const getPendingPunchInRequests = async (req, res) => {
   try {
     const pendingRequests = await LatePunchIn
-      .find({ status: 'Pending' })
+      .find({ status: 'Pending', company: req.company })
       .sort({ createdAt: -1 })
       .populate('employee', 'name')
       .exec();
 
-    res.status(200).json({ success: true, data: pendingRequests });
+    return res.status(200).json({ success: true, data: pendingRequests });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   };
 };
 
@@ -245,19 +252,16 @@ export const updateLatePunchIn = async (req, res) => {
 
   try {
     const { id } = req.params;
-    const { status, approvedBy } = req.body;
+    const { status } = req.body;
 
     if (!status) {
       return res.status(400).json({ success: false, message: "Status is required" });
     };
 
-    if (!approvedBy) {
-      return res.status(400).json({ success: false, message: "ApprovedBy is required" });
-    };
-
     const latePunchIn = await LatePunchIn
-      .findById(id)
+      .findOne({ _id: id, company: req.company })
       .populate("employee")
+      .populate("employee.office")
       .session(session);
 
     if (!latePunchIn) {
@@ -272,20 +276,17 @@ export const updateLatePunchIn = async (req, res) => {
       return res.status(400).json({ success: false, message: "This late punch in request is already in pending." });
     };
 
-    const approveBy = await Team
-      .findById(approvedBy)
-      .session(session);
-
-    if (!approveBy) {
-      return res.status(404).json({ success: false, message: "Approver not found." });
-    };
-
     if (status === "Rejected") {
       latePunchIn.status = "Rejected";
-      latePunchIn.approvedBy = approvedBy;
       await latePunchIn.save({ session });
 
-      sendEmail(latePunchIn?.employee?.email, "Your Late Punch In Request Rejected", `<p>Your late punch in request for date ${latePunchIn.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy.name}</p>`);
+      const from = latePunchIn?.employee?.office?.noReplyEmail;
+      const to = latePunchIn?.employee?.email;
+      const password = latePunchIn?.employee?.office?.noReplyEmailAppPassword;
+
+      if (from && to && password) {
+        sendEmail(from, to, password, "Your Late Punch In Request Rejected", `<p>Your late punch in request for date ${latePunchIn?.attendanceDate} has been rejected.</p><p>Regards,<br/>${latePunchIn?.employee?.office?.name}</p>`);
+      };
 
       if (latePunchIn?.employee?.fcmToken) {
         const payload = {
@@ -306,6 +307,7 @@ export const updateLatePunchIn = async (req, res) => {
       employee: latePunchIn?.employee,
       attendanceDate: latePunchIn?.attendanceDate,
       punchIn: true,
+      company: req.company,
     }).session(session);
 
     if (!attendance) {
@@ -315,6 +317,7 @@ export const updateLatePunchIn = async (req, res) => {
     if (status === "Approved") {
       const EXPECTED_PUNCH_IN = "10:00";
       const HALF_DAY_THRESHOLD = "11:00";
+
       const lateIn = calculateTimeDifference(EXPECTED_PUNCH_IN, latePunchIn?.punchInTime);
       const attendanceStatus = compareTime(latePunchIn?.punchInTime, HALF_DAY_THRESHOLD) === 1 ? "Half Day" : "Present";
       attendance.punchInTime = latePunchIn?.punchInTime;
@@ -324,10 +327,15 @@ export const updateLatePunchIn = async (req, res) => {
       await attendance.save({ session });
 
       latePunchIn.status = "Approved";
-      latePunchIn.approvedBy = approvedBy;
       await latePunchIn.save({ session });
 
-      sendEmail(latePunchIn?.employee?.email, "Your Late Punch In Request Approved", `<p>Your late punch in request date ${latePunchIn?.attendanceDate} has been approved and punch in time ${latePunchIn?.punchInTime} is marked.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      const from = latePunchIn?.employee?.office?.noReplyEmail;
+      const to = latePunchIn?.employee?.email;
+      const password = latePunchIn?.employee?.office?.noReplyEmailAppPassword;
+
+      if (from && to && password) {
+        sendEmail(from, to, password, "Your Late Punch In Request Approved", `<p>Your late punch in request for date ${latePunchIn?.attendanceDate} has been approved and punch in time ${latePunchIn?.punchInTime} is marked.</p><p>Regards,<br/>${latePunchIn?.employee?.office?.name}</p>`);
+      };
 
       if (latePunchIn?.employee?.fcmToken) {
         const payload = {
@@ -348,7 +356,6 @@ export const updateLatePunchIn = async (req, res) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    console.log(error.message);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -357,7 +364,7 @@ export const updateLatePunchIn = async (req, res) => {
 export const deleteLatePunchIn = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedLatePunchIn = await LatePunchIn.findByIdAndDelete(id);
+    const deletedLatePunchIn = await LatePunchIn.findOneAndDelete({ _id: id, company: req.company });
 
     if (!deletedLatePunchIn) {
       return res.status(404).json({ success: false, message: "Late punch in request not found." });

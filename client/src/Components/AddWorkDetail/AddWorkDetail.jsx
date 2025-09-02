@@ -24,6 +24,7 @@ const AddWorkDetail = () => {
   }]);
   const { validToken, team, isLoading } = useAuth();
   const navigate = useNavigate();
+
   const permissions = team?.role?.permissions?.project;
   const fieldPermissions = team?.role?.permissions?.project?.fields;
 
@@ -166,7 +167,7 @@ const AddWorkDetail = () => {
     return <Preloader />;
   };
 
-  if (!permissions?.update && !fieldPermissions?.workDetail?.show) {
+  if (!team?.role?.permissions?.workSummary?.create) {
     return <Navigate to="/" />;
   };
 

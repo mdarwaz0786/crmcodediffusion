@@ -75,7 +75,6 @@ const Ticket = () => {
         setLoading(false);
       };
     } catch (error) {
-      console.log(error.message);
       setLoading(false);
     };
   };
@@ -132,7 +131,7 @@ const Ticket = () => {
   }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.ticketIdFilter, isLoading, team, permissions]);
 
   const handleDelete = async (id) => {
-    let isdelete = prompt("If you want to delete, type \"yes\".");
+    let isdelete = prompt("If you want to permanently delete this, type \"yes\".");
 
     if (isdelete === "yes") {
       try {
@@ -147,7 +146,6 @@ const Ticket = () => {
           fetchAllData();
         };
       } catch (error) {
-        console.log("Error while deleting ticket:", error.message);
         toast.error("Error while deleting");
       };
     };

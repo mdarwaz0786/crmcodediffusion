@@ -4,12 +4,13 @@ import ProjectType from "../models/projectType.model.js";
 export const createProjectType = async (req, res) => {
   try {
     const { name, description } = req.body;
+    const company = req.company;
 
     if (!name) {
       return res.status(400).json({ success: false, message: "Name is required." });
     };
 
-    const projectType = new ProjectType({ name, description });
+    const projectType = new ProjectType({ name, description, company });
     await projectType.save();
 
     return res.status(200).json({ success: true, message: "Project type created successfully", projectType });
@@ -21,7 +22,7 @@ export const createProjectType = async (req, res) => {
 // Controller for fetching all project type
 export const fetchAllProjectType = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle searching across all fields
@@ -80,7 +81,7 @@ export const fetchSingleProjectType = async (req, res) => {
     const projectTypeId = req.params.id;
 
     const projectType = await ProjectType
-      .findById(projectTypeId);
+      .findOne({ _id: projectTypeId, company: req.company });
 
     if (!projectType) {
       return res.status(404).json({ success: false, message: "Project type not found" });
@@ -100,7 +101,7 @@ export const updateProjectType = async (req, res) => {
     const { name, description } = req.body;
 
     const projectType = await ProjectType
-      .findByIdAndUpdate(projectTypeId, { name, description }, { new: true });
+      .findOneAndUpdate({ _id: projectTypeId, company: req.company }, { name, description }, { new: true, runValidators: true });
 
     if (!projectType) {
       return res.status(404).json({ success: false, message: "Project type not found" });
@@ -118,7 +119,7 @@ export const deleteProjectType = async (req, res) => {
     const projectTypeId = req.params.id;
 
     const projectType = await ProjectType
-      .findByIdAndDelete(projectTypeId);
+      .findOneAndDelete({ _id: projectTypeId, company: req.company });
 
     if (!projectType) {
       return res.status(400).json({ success: false, message: "Project type not found" });

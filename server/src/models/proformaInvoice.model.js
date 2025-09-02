@@ -4,11 +4,16 @@ const proformaInvoiceSchema = new mongoose.Schema(
   {
     proformaInvoiceId: {
       type: String,
-      unique: true,
     },
     office: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "OfficeLocation",
+      index: true,
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
     },
     date: {
       type: Date,
@@ -92,7 +97,5 @@ const proformaInvoiceSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
-
-proformaInvoiceSchema.index({ date: 1 });
 
 export default mongoose.model("ProformaInvoice", proformaInvoiceSchema);

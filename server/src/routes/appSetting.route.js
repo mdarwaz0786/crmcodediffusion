@@ -1,14 +1,14 @@
 import express from "express";
 import { createAppSetting, deleteAppSetting, getAllAppSetting, getSingleAppSetting, updateAppSetting } from "../controllers/appSetting.controller.js";
-import { isLoggedIn } from "../middleware/auth.middleware.js";
+import { authenticateUser } from "../middleware/newAuth.middleware.js";
 
 const router = express.Router();
 
-router.post("/create-appSetting", isLoggedIn, createAppSetting);
-router.get("/all-appSetting", isLoggedIn, getAllAppSetting);
+router.post("/create-appSetting", authenticateUser, createAppSetting);
+router.get("/all-appSetting", authenticateUser, getAllAppSetting);
 router.get("/app-appSetting", getAllAppSetting);
-router.get("/single-appSetting/:id", isLoggedIn, getSingleAppSetting);
-router.put("/update-appSetting/:id", isLoggedIn, updateAppSetting);
-router.delete("/delete-appSetting/:id", isLoggedIn, deleteAppSetting);
+router.get("/single-appSetting/:id", authenticateUser, getSingleAppSetting);
+router.put("/update-appSetting/:id", authenticateUser, updateAppSetting);
+router.delete("/delete-appSetting/:id", authenticateUser, deleteAppSetting);
 
 export default router;

@@ -129,7 +129,7 @@ const AddOnService = () => {
   }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, isLoading, team]);
 
   const handleDelete = async (id) => {
-    let isdelete = prompt("If you want to delete, type \"yes\".");
+    let isdelete = prompt("If you want to permanently delete this, type \"yes\".");
 
     if (isdelete === "yes") {
       try {
@@ -199,7 +199,7 @@ const AddOnService = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin") {
+  if (!team?.role?.permissions?.addOnService?.access) {
     return <Navigate to="/" />;
   };
 
@@ -271,7 +271,7 @@ const AddOnService = () => {
                             <li>
                               <Link to="/add-add-on-service" className="btn btn-primary">
                                 <i className="ti ti-square-rounded-plus" />
-                                Add New AddOnService
+                                Add New Add On Service
                               </Link>
                             </li>
                           </ul>

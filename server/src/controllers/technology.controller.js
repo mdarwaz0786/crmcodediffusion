@@ -4,12 +4,13 @@ import Technology from "../models/technology.model.js";
 export const createTechnology = async (req, res) => {
   try {
     const { name, description } = req.body;
+    const company = req.company;
 
     if (!name) {
       return res.status(400).json({ success: false, message: "Name is required." });
     };
 
-    const technology = new Technology({ name, description });
+    const technology = new Technology({ name, description, company });
     await technology.save();
 
     return res.status(200).json({ success: true, message: "Technology created successfully", technology });
@@ -21,7 +22,7 @@ export const createTechnology = async (req, res) => {
 // Controller for fetching all technology
 export const fetchAllTechnology = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle searching across all fields
@@ -80,7 +81,7 @@ export const fetchSingleTechnology = async (req, res) => {
     const technologyId = req.params.id;
 
     const technology = await Technology
-      .findById(technologyId);
+      .findOne({ _id: technologyId, company: req.company });
 
     if (!technology) {
       return res.status(404).json({ success: false, message: "Technology not found" });
@@ -100,7 +101,7 @@ export const updateTechnology = async (req, res) => {
     const { name, description } = req.body;
 
     const technology = await Technology
-      .findByIdAndUpdate(technologyId, { name, description }, { new: true });
+      .findByIdAndUpdate(technologyId, { name, description }, { new: true, runValidators: true });
 
     if (!technology) {
       return res.status(404).json({ success: false, message: "Technology not found" });

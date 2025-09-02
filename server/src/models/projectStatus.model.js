@@ -4,12 +4,16 @@ const projectStatusSchema = new mongoose.Schema(
   {
     status: {
       type: String,
-      unique: true,
       trim: true,
     },
     description: {
       type: String,
       trim: true,
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
     },
   },
   {
@@ -28,5 +32,7 @@ projectStatusSchema.pre("save", function (next) {
 
   next();
 });
+
+projectStatusSchema.index({ name: 1, company: 1 }, { unique: true });
 
 export default mongoose.model("ProjectStatus", projectStatusSchema);

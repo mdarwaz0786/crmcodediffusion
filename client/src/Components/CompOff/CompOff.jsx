@@ -29,6 +29,8 @@ const CompOff = () => {
     limit: 20,
   });
 
+  const permissions = team?.role?.permissions?.compOff;
+
   const fetchAllEmployee = async () => {
     try {
       const response = await axios.get(`${base_url}/api/v1/team/all-team`, {
@@ -46,10 +48,10 @@ const CompOff = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && permissions?.access) {
       fetchAllEmployee();
     };
-  }, [isLoading, team]);
+  }, [isLoading, team, permissions]);
 
   const fetchSingleEmployee = async (selectedEmployee) => {
     try {
@@ -68,10 +70,10 @@ const CompOff = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && selectedEmployee && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && selectedEmployee && permissions?.access) {
       fetchSingleEmployee(selectedEmployee);
     };
-  }, [isLoading, team, selectedEmployee]);
+  }, [isLoading, team, selectedEmployee, permissions]);
 
   const fetchAllData = async () => {
     try {
@@ -96,7 +98,6 @@ const CompOff = () => {
         setLoading(false);
       };
     } catch (error) {
-      console.log(error.message);
       setLoading(false);
     };
   };
@@ -118,10 +119,10 @@ const CompOff = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && (team?.role?.name?.toLowerCase() === "admin" || team?.role?.name?.toLowerCase() === "hr")) {
+    if (!isLoading && team && permissions?.access) {
       fetchAllData();
     };
-  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team]);
+  }, [filters.month, filters.year, selectedEmployee, filters.limit, filters.page, filters.sort, isLoading, team, permissions]);
 
   const exportCompOffListAsExcel = () => {
     if (data?.length === 0) {
@@ -132,10 +133,9 @@ const CompOff = () => {
     const exportData = data?.map((entry, index) => ({
       "#": index + 1 || "1",
       "Employee Name": entry?.employee?.name || "N/A",
-      "Worked Date": formatDate(entry?.date) || "N/A",
-      "Comp Off Date": formatDate(entry?.attendanceDate) || "N/A",
+      "Attendance Date": formatDate(entry?.attendanceDate) || "N/A",
+      "Comp Off Date": formatDate(entry?.compOffDate) || "N/A",
       "Status": entry?.status || "N/A",
-      "Approved By": entry?.approvedBy || "N/A",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -179,7 +179,6 @@ const CompOff = () => {
     try {
       setApproving((prev) => ({ ...prev, [id]: true }));
 
-      // Validation
       if (!status[id]) {
         return toast.error("Select status");
       };
@@ -199,7 +198,6 @@ const CompOff = () => {
         toast.success("Updated Successfully");
       };
     } catch (error) {
-      console.log("Error while updating:", error.message);
       toast.error(error?.response?.data?.message || "Error while updating");
     } finally {
       fetchAllData();
@@ -211,7 +209,7 @@ const CompOff = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
+  if (!permissions?.access) {
     return <Navigate to="/" />;
   };
 
@@ -364,10 +362,9 @@ const CompOff = () => {
                             </th>
                             <th>#</th>
                             <th>Employee Name</th>
-                            <th>Worked Date</th>
+                            <th>Attendance Date</th>
                             <th>Comp Off Date</th>
                             <th>Status</th>
-                            <th>Approved By</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -379,8 +376,8 @@ const CompOff = () => {
                                 </td>
                                 <td>{(filters.page - 1) * filters.limit + index + 1}</td>
                                 <td>{d?.employee?.name}</td>
-                                <td>{formatDate(d?.date)}</td>
                                 <td>{formatDate(d?.attendanceDate)}</td>
+                                <td>{formatDate(d?.compOffDate)}</td>
                                 <td>
                                   <form style={{ display: "flex", columnGap: "0.5rem" }} onSubmit={(e) => handleUpdateStatus(e, d?._id)}>
                                     <select
@@ -406,7 +403,6 @@ const CompOff = () => {
                                     }
                                   </form>
                                 </td>
-                                <td>{d?.approvedBy?.name || "N/A"}</td>
                               </tr>
                             ))
                           }

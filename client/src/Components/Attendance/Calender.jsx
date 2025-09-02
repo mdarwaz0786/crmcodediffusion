@@ -127,6 +127,8 @@ const Calender = ({ attendanceData, month, year, employeeId, fetchAllData }) => 
     Absent: 'red',
     Holiday: '#ffb300',
     Sunday: 'blue',
+    Saturday: 'blue',
+    'Weekly Off': 'blue',
     'On Leave': 'purple',
     'Comp Off': 'orange',
     'Half Day': '#00ced1',

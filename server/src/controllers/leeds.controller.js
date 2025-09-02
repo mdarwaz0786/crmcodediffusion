@@ -88,7 +88,7 @@ export const getLeedById = async (req, res) => {
 // Update a lead
 export const updateLeed = async (req, res) => {
   try {
-    const leed = await Leed.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const leed = await Leed.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
 
     if (!leed) {
       return res.status(404).json({ success: false, error: "Leed not found" });

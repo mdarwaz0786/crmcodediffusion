@@ -1,4 +1,3 @@
-// models/payment.model.js
 import mongoose from "mongoose";
 
 const paymentSchema = new mongoose.Schema(
@@ -17,6 +16,12 @@ const paymentSchema = new mongoose.Schema(
     office: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "OfficeLocation",
+      index: true,
+    },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
     },
     projectName: {
       type: String,
@@ -76,7 +81,6 @@ const paymentSchema = new mongoose.Schema(
     },
     transactionId: {
       type: String,
-      unique: true,
       trim: true,
     },
     paymentStatus: {

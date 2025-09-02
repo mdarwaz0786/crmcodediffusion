@@ -4,12 +4,13 @@ import Service from "../models/service.model.js";
 export const createService = async (req, res) => {
   try {
     const { name, permissions } = req.body;
+    const company = req.company;
 
     if (!name) {
       return res.status(400).json({ success: false, message: "Name is required." });
     };
 
-    const service = new Service({ name, permissions });
+    const service = new Service({ name, permissions, company });
     await service.save();
 
     return res.status(201).json({ success: true, data: service });
@@ -21,7 +22,7 @@ export const createService = async (req, res) => {
 // Get all services
 export const getAllServices = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle searching across all fields
@@ -74,7 +75,7 @@ export const getAllServices = async (req, res) => {
 export const getServiceById = async (req, res) => {
   try {
     const service = await Service
-      .findById(req.params.id);
+      .findOne({ _id: req.params.id, company: req.company });
 
     if (!service) {
       return res.status(404).json({ success: false, message: "Service not found" });
@@ -90,7 +91,7 @@ export const getServiceById = async (req, res) => {
 export const updateService = async (req, res) => {
   try {
     const service = await Service
-      .findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+      .findOneAndUpdate({ _id: req.params.id, company: req.company }, req.body, { new: true, runValidators: true });
 
     if (!service) {
       return res.status(404).json({ success: false, message: "Service not found" });
@@ -106,7 +107,7 @@ export const updateService = async (req, res) => {
 export const deleteService = async (req, res) => {
   try {
     const service = await Service
-      .findByIdAndDelete(req.params.id);
+      .findOneAndDelete({ _id: req.params.id, company: req.company });
 
     if (!service) {
       return res.status(404).json({ success: false, message: "Service not found" });

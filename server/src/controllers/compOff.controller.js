@@ -1,5 +1,6 @@
 import CompOff from "../models/compOff.model.js";
 import Team from "../models/team.model.js";
+import Company from "../models/company.model.js";
 import Holiday from "../models/holiday.model.js";
 import mongoose from "mongoose";
 import { sendEmail } from "../services/emailService.js";
@@ -8,16 +9,17 @@ import firebase from "../firebase/index.js";
 // Create new comp off
 export const createCompOff = async (req, res) => {
   const session = await mongoose.startSession();
-  session.startTransaction();
 
   try {
-    const { employee, attendanceDate, date, approvedBy, status } = req.body;
-
-    if (!date) {
-      return res.status(400).json({ success: false, message: "Worked date is required." });
-    };
+    session.startTransaction();
+    const { employee, attendanceDate, compOffDate } = req.body;
+    const company = req.company;
 
     if (!attendanceDate) {
+      return res.status(400).json({ success: false, message: "Attendance date is required." });
+    };
+
+    if (!compOffDate) {
       return res.status(400).json({ success: false, message: "Comp off date is required." });
     };
 
@@ -30,31 +32,31 @@ export const createCompOff = async (req, res) => {
     const appliedDate = new Date(attendanceDate);
     appliedDate.setHours(0, 0, 0, 0);
 
-    if (appliedDate <= today) {
-      return res.status(400).json({ success: false, message: "Comp off date must be a future date." });
+    if (appliedDate < today) {
+      return res.status(400).json({ success: false, message: "Comp off date must be today or a future date.", });
     };
 
     if (appliedDate.getDay() === 0) {
       return res.status(400).json({ success: false, message: "Comp off can not be applied on a Sunday." });
     };
 
-    const isHoliday = await Holiday.findOne({ date: attendanceDate });
+    const isHoliday = await Holiday.findOne({ date: attendanceDate, company });
 
     if (isHoliday) {
       return res.status(400).json({ success: false, message: "Comp off can not be applied on a holiday." });
     };
 
-    const existingCompOff = await CompOff.findOne({ employee, attendanceDate, date });
+    const existingCompOff = await CompOff.findOne({ employee, attendanceDate, compOffDate, company });
 
     if (existingCompOff && ["Approved", "Pending"].includes(existingCompOff?.status)) {
       return res.status(400).json({ success: false, message: `Comp off request for ${attendanceDate} is already applied and status is ${existingCompOff?.status}.` });
     };
 
-    const compOff = new CompOff({ employee, attendanceDate, date, approvedBy, status });
+    const compOff = new CompOff({ employee, attendanceDate, compOffDate, company });
     await compOff.save({ session });
 
     const updatedTeam = await Team.findOneAndUpdate(
-      { _id: employee, "eligibleCompOffDate.workedDate": date },
+      { _id: employee, "eligibleCompOffDate.attendanceDate": attendanceDate, company },
       { $set: { "eligibleCompOffDate.$.isApplied": true } },
       { new: true, session },
     );
@@ -63,19 +65,24 @@ export const createCompOff = async (req, res) => {
       throw new Error("Failed to apply comp off request.");
     };
 
-    const appliedBy = await Team.findById(employee).session(session);
+    const appliedBy = await Team.findOne({ _id: employee, company }).populate("office").session(session);
 
-    const subject = `${appliedBy?.name} apply comp off for date ${attendanceDate}`;
-    const htmlContent = `<p>Comp off request has been applied by ${appliedBy?.name} for date ${attendanceDate}.</p><p>Please review the request.</p>`;
-    sendEmail(process.env.RECEIVER_EMAIL_ID, subject, htmlContent);
+    if (appliedBy?.office?.noReplyEmail && appliedBy?.office?.noReplyEmailAppPassword) {
+      const from = appliedBy?.office?.noReplyEmail;
+      const to = from;
+      const password = appliedBy?.office?.noReplyEmailAppPassword;
+      const subject = `${appliedBy?.name} apply comp off for date ${compOffDate}`;
+      const htmlContent = `<p>Comp off request has been applied by ${appliedBy?.name} for date ${compOffDate}.</p><p>Please review the request.</p>`;
+      sendEmail(from, to, password, subject, htmlContent);
+    };
 
     // Send push notification to admin
-    const teams = await Team
-      .find()
+    const teams = await Company
+      .find({ _id: appliedBy?.company })
       .populate({ path: 'role', select: "name" })
       .exec();
 
-    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "admin");
+    const filteredAdmins = teams?.filter((team) => team?.role?.name?.toLowerCase() === "company" && team?.fcmToken);
 
     if (filteredAdmins?.length > 0) {
       const payload = {
@@ -102,7 +109,7 @@ export const createCompOff = async (req, res) => {
 // Get all Comp offs
 export const getAllCompOffs = async (req, res) => {
   try {
-    let query = {};
+    let query = { company: req.company };
     let sort = {};
 
     // Filter by year only (all month)
@@ -172,7 +179,7 @@ export const getAllCompOffs = async (req, res) => {
 export const getCompOffById = async (req, res) => {
   try {
     const compOff = await CompOff
-      .findById(req.params.id)
+      .findOne({ _id: req.params.id, company: req.company })
       .populate("employee")
       .populate("approvedBy")
       .exec();
@@ -187,11 +194,11 @@ export const getCompOffById = async (req, res) => {
   };
 };
 
-// Controller to fetch Pending status data
+// Controller to fetch pending comp off status
 export const getPendingCompOffRequests = async (req, res) => {
   try {
     const pendingRequests = await CompOff
-      .find({ status: 'Pending' })
+      .find({ status: 'Pending', company: req.company })
       .sort({ createdAt: -1 })
       .populate('employee', 'name')
       .exec();
@@ -209,19 +216,17 @@ export const updateCompOff = async (req, res) => {
 
   try {
     const { id } = req.params;
-    const { status, approvedBy } = req.body;
+    const { status } = req.body;
+    const company = req.company;
 
     if (!status) {
       return res.status(400).json({ success: false, message: "Status is required." });
     };
 
-    if (!approvedBy) {
-      return res.status(400).json({ success: false, message: "Approver is required." });
-    };
-
     const compOff = await CompOff
-      .findById(id)
+      .findOne({ _id: id, company })
       .populate("employee")
+      .populate("employee.office")
       .session(session)
       .exec();
 
@@ -237,20 +242,17 @@ export const updateCompOff = async (req, res) => {
       return res.status(400).json({ success: false, message: "This comp off request is already in pending." });
     };
 
-    const approveBy = await Team
-      .findById(approvedBy)
-      .session(session);
-
-    if (!approveBy) {
-      throw new Error("Approver not found.");
-    };
-
     if (status === "Rejected") {
       compOff.status = "Rejected";
-      compOff.approvedBy = approvedBy;
       await compOff.save({ session });
 
-      sendEmail(compOff?.employee?.email, "Your Comp Off Request Rejected", `<p>Your comp off request date ${compOff?.attendanceDate} has been rejected.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      const from = compOff?.employee?.office?.noReplyEmail;
+      const to = compOff?.employee?.email;
+      const password = compOff?.employee?.office?.noReplyEmailAppPassword;
+
+      if (from && to && password) {
+        sendEmail(from, to, password, "Your Comp Off Request Rejected", `<p>Your comp off request for date ${compOff?.compOffDate} has been rejected.</p><p>Regards,<br/>${compOff?.employee?.office?.name}</p>`);
+      };
 
       if (compOff?.employee?.fcmToken) {
         const payload = {
@@ -269,19 +271,18 @@ export const updateCompOff = async (req, res) => {
 
     if (status === "Approved") {
       compOff.status = "Approved";
-      compOff.approvedBy = approvedBy;
       await compOff.save({ session });
 
       const updatedTeam = await Team.findOneAndUpdate(
         {
           _id: compOff?.employee?._id,
-          "eligibleCompOffDate.workedDate": compOff?.date
+          company,
+          "eligibleCompOffDate.attendanceDate": compOff?.attendanceDate,
         },
         {
           $set: {
             "eligibleCompOffDate.$.isApproved": true,
-            "eligibleCompOffDate.$.approvedBy": approvedBy,
-            "eligibleCompOffDate.$.compOffDate": compOff?.attendanceDate
+            "eligibleCompOffDate.$.compOffDate": compOff?.compOffDate,
           },
         },
         {
@@ -294,13 +295,19 @@ export const updateCompOff = async (req, res) => {
         throw new Error("Failed to approve comp off request.");
       };
 
-      sendEmail(compOff?.employee?.email, "Your Comp Off Request Approved", `<p>Your comp off request date ${compOff?.attendanceDate} has been approved.</p><p>Regards,<br/>${approveBy?.name}</p>`);
+      const from = compOff?.employee?.office?.noReplyEmail;
+      const to = compOff?.employee?.email;
+      const password = compOff?.employee?.office?.noReplyEmailAppPassword;
+
+      if (from && to && password) {
+        sendEmail(from, to, "Your Comp Off Request Approved", `<p>Your comp off request for date ${compOff?.compOffDate} has been approved.</p><p>Regards,<br/>${compOff?.employee?.office?.name}</p>`);
+      };
 
       if (compOff?.employee?.fcmToken) {
         const payload = {
           notification: {
             title: "Comp Off Request Approved",
-            body: `Comp off request for date ${compOff?.attendanceDate} has been approved.`,
+            body: `Comp off request for date ${compOff?.compOffDate} has been approved.`,
           },
         };
         await firebase.messaging().send({ ...payload, token: compOff?.employee?.fcmToken });
@@ -322,7 +329,7 @@ export const updateCompOff = async (req, res) => {
 // Delete a CompOff by ID
 export const deleteCompOff = async (req, res) => {
   try {
-    const compOff = await CompOff.findByIdAndDelete(req.params.id);
+    const compOff = await CompOff.findOneAndDelete({ _id: req.params.id, company: req.company });
 
     if (!compOff) {
       return res.status(404).json({ success: false, message: "Comp off not found." });

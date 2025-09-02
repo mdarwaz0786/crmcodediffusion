@@ -4,12 +4,13 @@ import Department from "../models/department.model.js";
 export const createDepartment = async (req, res) => {
   try {
     const { name, description } = req.body;
+    const company = req.company;
 
     if (!name) {
       return res.status(400).json({ success: false, message: "Name is required." });
     };
 
-    const department = new Department({ name, description });
+    const department = new Department({ name, description, company });
     await department.save();
 
     return res.status(200).json({ success: true, message: "Department created successfully", department });
@@ -21,7 +22,7 @@ export const createDepartment = async (req, res) => {
 // Controller for fetching all department
 export const fetchAllDepartment = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Handle searching across all fields
@@ -80,7 +81,7 @@ export const fetchSingleDepartment = async (req, res) => {
     const departmentId = req.params.id;
 
     const department = await Department
-      .findById(departmentId);
+      .findOne({ _id: departmentId, company: req.company });
 
     if (!department) {
       return res.status(404).json({ success: false, message: "Department not found" });
@@ -100,7 +101,7 @@ export const updateDepartment = async (req, res) => {
     const { name, description } = req.body;
 
     const department = await Department
-      .findByIdAndUpdate(departmentId, { name, description }, { new: true });
+      .findOneAndUpdate({ _id: departmentId, company: req.company }, { name, description }, { new: true, runValidators: true });
 
     if (!department) {
       return res.status(404).json({ success: false, message: "Department not found" });
@@ -118,7 +119,7 @@ export const deleteDepartment = async (req, res) => {
     const departmentId = req.params.id;
 
     const department = await Department
-      .findByIdAndDelete(departmentId);
+      .findOneAndDelete({ _id: departmentId, company: req.company });
 
     if (!department) {
       return res.status(400).json({ success: false, message: "Department not found" });

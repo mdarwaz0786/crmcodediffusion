@@ -16,6 +16,7 @@ const customerSchema = new mongoose.Schema(
     },
     mobile: {
       type: String,
+      unique: true,
       trim: true,
     },
     GSTNumber: {
@@ -38,6 +39,11 @@ const customerSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
     },
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
+    },
     fcmToken: {
       type: String,
       default: null,
@@ -49,6 +55,14 @@ const customerSchema = new mongoose.Schema(
     allowMultiDevice: {
       type: Boolean,
       default: true,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    isSuperAdmin: {
+      type: Boolean,
+      default: false,
     },
   },
   {

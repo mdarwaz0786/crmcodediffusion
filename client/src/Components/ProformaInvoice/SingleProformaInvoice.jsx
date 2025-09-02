@@ -80,7 +80,7 @@ const SingleProformaInvoice = () => {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h4>PROFORMA INVOICE</h4>
           {
-            permissions?.export && (
+            (permissions?.export) && (
               <button className="btn btn-secondary" onClick={exportInvoiceAsPdf}>Download</button>
             )
           }

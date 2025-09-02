@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/authContext.jsx";
 import { toast } from "react-toastify";
+import { Navigate } from 'react-router-dom';
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AddNotification = () => {
@@ -85,6 +86,10 @@ const AddNotification = () => {
     } finally {
       setLoading(false);
     };
+  };
+
+  if (!team?.role?.permissions?.notification?.create) {
+    return <Navigate to="/" />;
   };
 
   return (

@@ -15,9 +15,10 @@ dotenv.config();
 export const createInvoice = async (req, res) => {
   try {
     const { date, tax, office, projectName, projectCost, clientName, companyName, GSTNumber, state, shipTo, email, phone } = req.body;
+    const company = req.company;
 
     const officeLocation = await OfficeLocation
-      .findById(office);
+      .findOne({ _id: office, company });
 
     if (!officeLocation) {
       return res.status(404).json({ success: false, message: "Office not found" });
@@ -65,6 +66,7 @@ export const createInvoice = async (req, res) => {
       IGST: IGST.toFixed(2),
       total: total.toFixed(2),
       balanceDue: total.toFixed(2),
+      company,
     });
 
     // Read the logo file and convert it to Base64
@@ -325,6 +327,7 @@ export const createInvoice = async (req, res) => {
       amount: total.toFixed(2),
       transactionId: txnid,
       paymentStatus: "Pending",
+      company,
     });
 
     const paymentLink = `${serverUrl}/api/v1/payment/payu-payment?key=${key}&txnid=${txnid}&amount=${amount}&productinfo=${encodeURIComponent(
@@ -342,7 +345,6 @@ export const createInvoice = async (req, res) => {
   <p><a href="${paymentLink}" style="background-color:#28a745;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">Pay Now</a></p>
   <p>We look forward to proceeding with the next steps upon your confirmation.</p>
   <p>Best regards,</p>
-  <p>Abhishek Singh</p>
   <p>${officeLocation?.name || "Code Diffusion Technologies"}</p>
   <p>${officeLocation?.contact || "+91-7827114607"}</p>
   <p>${officeLocation?.email || "info@codediffusion.in"}</p>
@@ -421,13 +423,13 @@ const findObjectIdByString = async (modelName, fieldName, searchString) => {
 // Controller for fetching all proforma invoice
 export const fetchAllInvoice = async (req, res) => {
   try {
-    let filter = {};
+    let filter = { company: req.company };
     let sort = {};
 
     // Check if the role is not "Admin"
-    const teamRole = req.team.role.name.toLowerCase();
+    const teamRole = req.team?.role?.name?.toLowerCase();
     if (teamRole === "client") {
-      const gstNumber = req.team.GSTNumber;
+      const gstNumber = req.team?.GSTNumber;
       filter.$or = [
         { GSTNumber: gstNumber },
       ];
@@ -498,8 +500,10 @@ export const fetchAllInvoice = async (req, res) => {
       };
     };
 
+    // Handle sorting
     sort = req.query.sort === 'Ascending' ? { createdAt: 1 } : { createdAt: -1 };
 
+    // Handle pagination
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
     const skip = (page - 1) * limit;
@@ -524,7 +528,6 @@ export const fetchAllInvoice = async (req, res) => {
       invoice: proformaInvoices,
       totalCount,
     });
-
   } catch (error) {
     return res.status(500).json({ success: false, message: "Error while fetching proforma invoice", error: error.message });
   };
@@ -535,7 +538,7 @@ export const fetchSingleInvoice = async (req, res) => {
   try {
     const invoiceId = req.params.id;
     const invoice = await Invoice
-      .findById(invoiceId)
+      .findOne({ _id: invoiceId, company: req.company })
       .populate("office")
       .exec();
 
@@ -555,7 +558,7 @@ export const updateInvoice = async (req, res) => {
     const invoiceId = req.params.id;
     const { date, tax, projectName, projectCost, clientName, GSTNumber, companyName, office, state, shipTo, email, phone } = req.body;
 
-    const invoice = await Invoice.findById(invoiceId);
+    const invoice = await Invoice.findOne({ _id: invoiceId, company: req.company });
 
     if (!invoice) {
       return res.status(404).json({ success: false, message: "Proforma invoice not found" });
@@ -613,7 +616,7 @@ export const updateInvoice = async (req, res) => {
 export const deleteInvoice = async (req, res) => {
   try {
     const invoiceId = req.params.id;
-    const invoice = await Invoice.findByIdAndDelete(invoiceId);
+    const invoice = await Invoice.findOneAndDelete({ _id: invoiceId, company: req.company });
 
     if (!invoice) {
       return res.status(400).json({ success: false, message: "Invoice not found" });

@@ -30,7 +30,6 @@ const ProformaInvoiceList = () => {
     month: "",
   });
   const permissions = team?.role?.permissions?.proformaInvoice;
-  const filedPermissions = team?.role?.permissions?.proformaInvoice?.fields;
 
   const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -154,7 +153,7 @@ const ProformaInvoiceList = () => {
   }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, filters.year, filters.month, isLoading, team, permissions]);
 
   const handleDelete = async (id) => {
-    let isdelete = prompt("If you want to delete, type \"yes\".");
+    let isdelete = prompt("If you want to permanently delete this, type \"yes\".");
 
     if (isdelete === "yes") {
       try {
@@ -516,36 +515,12 @@ const ProformaInvoiceList = () => {
                             <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
                           </th>
                           <th>#</th>
-                          {
-                            (permissions?.access) && (
-                              <th>View</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.proformaInvoiceId?.show) && (
-                              <th>Invoice Id</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.projectName?.show) && (
-                              <th>Project Name</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.clientName?.show) && (
-                              <th>Client Name</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.subtotal?.show) && (
-                              <th>Project Cost</th>
-                            )
-                          }
-                          {
-                            (filedPermissions?.date?.show) && (
-                              <th>Date</th>
-                            )
-                          }
+                          <th>View</th>
+                          <th>Invoice Id</th>
+                          <th>Project Name</th>
+                          <th>Client Name</th>
+                          <th>Project Cost</th>
+                          <th>Date</th>
                           <th>Action</th>
                         </tr>
                       </thead>
@@ -557,36 +532,11 @@ const ProformaInvoiceList = () => {
                                 <label className="checkboxs"><input type="checkbox" id="select-all" /><span className="checkmarks" /></label>
                               </th>
                               <td>{(filters.page - 1) * filters.limit + index + 1}</td>
-                              {
-                                (permissions?.access) && (
-                                  <td><Link to={`/single-proforma-invoice/${d?._id}`}><i className="fas fa-eye"></i></Link></td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.proformaInvoiceId?.show) && (
-                                  <td>{d?.proformaInvoiceId}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.projectName?.show) && (
-                                  <td>{d?.projectName}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.clientName?.show) && (
-                                  <td>{d?.clientName}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.subtotal?.show) && (
-                                  <td>₹{d?.projectCost}</td>
-                                )
-                              }
-                              {
-                                (filedPermissions?.date?.show) && (
-                                  <td>{formatDate(d?.date)}</td>
-                                )
-                              }
+                              <td><Link to={`/single-proforma-invoice/${d?._id}`}><i className="fas fa-eye"></i></Link></td>
+                              <td>{d?.proformaInvoiceId}</td>
+                              <td>{d?.projectName}</td>
+                              <td>{d?.clientName}</td>
+                              <td>₹{d?.projectCost}</td>
                               <td>
                                 <div className="table-action">
                                   <Link to="#" className="action-icon" data-bs-toggle="dropdown" aria-expanded="false">

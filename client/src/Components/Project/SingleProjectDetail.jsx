@@ -121,7 +121,7 @@ const SingleProjectDetail = () => {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2rem" }}>
             <h4>Project Detail</h4>
             {
-              permissions?.export && (
+              (permissions?.export) && (
                 <Link to="#" onClick={exportProjectDetailAsPdf}><button className="btn btn-secondary">Download</button></Link>
               )
             }
@@ -176,12 +176,12 @@ const SingleProjectDetail = () => {
                 )
               }
               {
-                (fieldPermissions?.totalPaid?.show) && (
+                (fieldPermissions?.projectPrice?.show) && (
                   <p className="mb-2"><strong>Total Received:</strong> ₹{totalReceived || 0}</p>
                 )
               }
               {
-                (fieldPermissions?.totalDues?.show) && (
+                (fieldPermissions?.projectPrice?.show) && (
                   <p className="mb-2"><strong>Total Dues:</strong> ₹{parseFloat(data?.projectPrice) - (parseFloat(totalReceived) || 0)}</p>
                 )
               }

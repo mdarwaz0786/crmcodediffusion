@@ -25,8 +25,6 @@ const Leeds = () => {
     limit: 20,
   });
 
-  const permissions = team?.role?.permissions?.leeds;
-
   const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
     const timer = useRef();
@@ -93,10 +91,10 @@ const Leeds = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && permissions?.access) {
+    if (!isLoading && team && team?.isSuperAdmin) {
       fetchAllLeedsName();
     };
-  }, [debouncedSearchName, isLoading, team, permissions]);
+  }, [debouncedSearchName, isLoading, team]);
 
   const handleFilterChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -119,13 +117,13 @@ const Leeds = () => {
   };
 
   useEffect(() => {
-    if (!isLoading && team && permissions?.access) {
+    if (!isLoading && team && team?.isSuperAdmin) {
       fetchAllData();
     };
-  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, isLoading, team, permissions]);
+  }, [debouncedSearch, filters.limit, filters.page, filters.sort, filters.nameFilter, isLoading, team]);
 
   const handleDelete = async (id) => {
-    let isdelete = prompt("If you want to delete, type \"yes\".");
+    let isdelete = prompt("If you want to permanently delete this, type \"yes\".");
 
     if (isdelete === "yes") {
       try {
@@ -136,7 +134,6 @@ const Leeds = () => {
           fetchAllData();
         };
       } catch (error) {
-        console.log("Error while deleting leed:", error.message);
         toast.error("Error while deleting");
       };
     };
@@ -200,7 +197,7 @@ const Leeds = () => {
     return <Preloader />;
   };
 
-  if (!permissions?.access) {
+  if (!team?.isSuperAdmin) {
     return <Navigate to="/" />;
   };
 
@@ -246,7 +243,7 @@ const Leeds = () => {
                         <div className="export-list text-sm-end">
                           <ul>
                             {
-                              (permissions?.export) && (
+                              (team?.isSuperAdmin) && (
                                 <li>
                                   <div className="export-dropdwon">
                                     <Link to="#" className="dropdown-toggle" data-bs-toggle="dropdown">
@@ -273,16 +270,6 @@ const Leeds = () => {
                                 </li>
                               )
                             }
-                            {/* {
-                              (permissions?.create) && (
-                                <li>
-                                  <Link to="/add-leed" className="btn btn-primary">
-                                    <i className="ti ti-square-rounded-plus" />
-                                    Generate New Leed
-                                  </Link>
-                                </li>
-                              )
-                            } */}
                           </ul>
                         </div>
                       </div>
@@ -427,21 +414,8 @@ const Leeds = () => {
                                     <i className="fa fa-ellipsis-v"></i>
                                   </Link>
                                   <div className="dropdown-menu dropdown-menu-right">
-                                    {/* {
-                                      (permissions?.update) && (
-                                        <Link to={`/edit-leed/${d?._id}`} className="dropdown-item">
-                                          <i className="ti ti-edit text-blue"></i>
-                                          Update
-                                        </Link>
-                                      )
-                                    }
                                     {
-                                      (permissions?.update && permissions?.delete) && (
-                                        <hr className="horizontal-line" />
-                                      )
-                                    } */}
-                                    {
-                                      (permissions?.delete) && (
+                                      (team?.isSuperAdmin) && (
                                         <Link to="#" className="dropdown-item" onClick={() => handleDelete(d?._id)}>
                                           <i className="ti ti-trash text-danger"></i>
                                           Delete

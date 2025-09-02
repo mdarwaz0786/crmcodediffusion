@@ -9,10 +9,6 @@ const notificationSchema = new mongoose.Schema(
     date: {
       type: String,
     },
-    sendBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Team",
-    },
     message: {
       type: String,
       trim: true,
@@ -22,10 +18,11 @@ const notificationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    seenBy: [{
-      user: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
-      seenAt: { type: Date, default: Date.now },
-    }],
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
+    },
   },
   {
     timestamps: true,

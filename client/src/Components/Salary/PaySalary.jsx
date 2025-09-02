@@ -15,6 +15,8 @@ const PaySalary = () => {
   const { validToken, team, isLoading } = useAuth();
   const [loading, setLoading] = useState(false);
 
+  const permissions = team?.role?.permissions?.salary;
+
   const handleCreate = async (e) => {
     e.preventDefault();
 
@@ -57,7 +59,7 @@ const PaySalary = () => {
     return <Preloader />;
   };
 
-  if (team?.role?.name?.toLowerCase() !== "admin" && team?.role?.name?.toLowerCase() !== "hr") {
+  if (!permissions?.create) {
     return <Navigate to="/" />;
   };
 

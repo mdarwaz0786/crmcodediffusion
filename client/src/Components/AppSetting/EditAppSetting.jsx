@@ -4,20 +4,23 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/authContext";
 import { toast } from "react-toastify";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const EditAppSetting = () => {
   const { id } = useParams();
-  const { validToken } = useAuth();
+  const { validToken, team } = useAuth();
   const navigate = useNavigate();
   const [appName, setAppName] = useState("");
   const [appVersion, setAppVersion] = useState("");
   const [playStoreLink, setPlayStoreLink] = useState("");
   const [appStoreLink, setAppStoreLink] = useState("");
+  const [iosAppVersion, setIosAppVersion] = useState("");
+  const [status, setStatus] = useState("Enable");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       const response = await axios.put(`${base_url}/api/v1/appSetting/update-appSetting/${id}`,
         {
@@ -25,6 +28,8 @@ const EditAppSetting = () => {
           appVersion,
           playStoreLink,
           appStoreLink,
+          status,
+          iosAppVersion,
         },
         {
           headers: {
@@ -36,6 +41,8 @@ const EditAppSetting = () => {
         setAppVersion();
         setAppStoreLink("");
         setPlayStoreLink("");
+        setStatus("");
+        setIosAppVersion("");
         toast.success("Submitted successfully");
         navigate(-1);
       };
@@ -56,6 +63,8 @@ const EditAppSetting = () => {
         setAppVersion(response?.data?.data?.appVersion);
         setPlayStoreLink(response?.data?.data?.playStoreLink);
         setAppStoreLink(response?.data?.data?.appStoreLink);
+        setStatus(response?.data?.data?.status);
+        setIosAppVersion(response?.data?.data?.iosAppVersion);
       };
     } catch (error) {
       toast.error("Error while submitting");
@@ -63,10 +72,14 @@ const EditAppSetting = () => {
   };
 
   useEffect(() => {
-    if (id && validToken) {
+    if (id && validToken && team && team?.isSuperAdmin) {
       fetchData();
     };
-  }, [id, validToken]);
+  }, [id, validToken, team]);
+
+  if (!team?.isSuperAdmin) {
+    return <Navigate to="/" />;
+  };
 
   return (
     <div className="page-wrapper">
@@ -89,7 +102,7 @@ const EditAppSetting = () => {
               />
             </div>
             <div className="col-md-6">
-              <label className="form-label" htmlFor="appVersion">App Version <span className="text-danger">*</span></label>
+              <label className="form-label" htmlFor="appVersion">Android App Version <span className="text-danger">*</span></label>
               <input
                 className="form-control"
                 type="text"
@@ -98,6 +111,27 @@ const EditAppSetting = () => {
                 value={appVersion}
                 onChange={(e) => setAppVersion(e.target.value)}
               />
+            </div>
+          </div>
+          <div className="row mb-3">
+            <div className="col-md-6">
+              <label className="form-label" htmlFor="iosAppVersion">IOS App Version <span className="text-danger">*</span></label>
+              <input
+                className="form-control"
+                type="text"
+                id="iosAppVersion"
+                name="iosAppVersion"
+                value={iosAppVersion}
+                onChange={(e) => setIosAppVersion(e.target.value)}
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label" htmlFor="status">Status <span className="text-danger">*</span></label>
+              <select className="form-select" name="status" id="status" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <option value="">Select</option>
+                <option value="Enable">Enable</option>
+                <option value="Disable">Disable</option>
+              </select>
             </div>
           </div>
           <div className="row">
