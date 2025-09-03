@@ -129,7 +129,7 @@ export const getHolidaysByMonth = async (req, res) => {
       {
         $match: {
           date: { $regex: `^${year}-` },
-          company: new mongoose.Types.ObjectId(req.company),
+          company: req.company,
         },
       },
       {
@@ -194,6 +194,8 @@ export const getHolidaysByMonth = async (req, res) => {
 // Get all holidays
 export const fetchAllHoliday = async (req, res) => {
   try {
+
+    console.log(req.company)
     let query = { company: req.company };
     let sort = {};
 

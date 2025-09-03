@@ -260,7 +260,7 @@ export const fetchAllExpiringDeployment = async (req, res) => {
 
     // Create filters for domain, hosting, and SSL expiry
     const filter = {
-      company: new mongoose.Types.ObjectId(req.company),
+      company: req.company,
       $or: [
         { domainExpiryDate: { $gte: currentDate, $lte: futureDate } },
         { domainExpiryStatus: "Expired" },

@@ -193,7 +193,7 @@ export const getGroupedProjectWork = async (req, res) => {
       {
         $match: {
           project: new mongoose.Types.ObjectId(projectId),
-          company: new mongoose.Types.ObjectId(req.company)
+          company: req.company
         },
       },
       {

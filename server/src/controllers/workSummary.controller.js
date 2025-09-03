@@ -102,7 +102,7 @@ export const getWorkSummaryById = async (req, res) => {
 // Group work summary by employee
 export const groupWorkSummaryByEmployee = async (req, res) => {
   try {
-    let query = { company: new mongoose.Types.ObjectId(req.company) };
+    let query = { company: req.company };
 
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
