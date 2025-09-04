@@ -44,7 +44,7 @@ export const createLeaveApproval = async (req, res) => {
       };
     };
 
-    const existingEmployee = await Team.finOne({ _id: employee, company }).populate("office");
+    const existingEmployee = await Team.findOne({ _id: employee, company }).populate("office");
 
     if (!existingEmployee) {
       return res.status(404).json({ success: false, message: "Employee not found" });
