@@ -186,11 +186,13 @@ export const newCreateAttendance = async (req, res) => {
         reason,
       };
 
-      // Update the eligibleCompOffDate
-      await Team.findOneAndUpdate(
-        { _id: employee, company: req.company },
-        { $addToSet: { eligibleCompOffDate: compOffEntry } },
-      ).session(session);
+      if (weeklyOff.includes("Sunday") || weeklyOff.includes("Saturday") || holiday) {
+        // Update the eligibleCompOffDate
+        await Team.findOneAndUpdate(
+          { _id: employee, company: req.company },
+          { $addToSet: { eligibleCompOffDate: compOffEntry } },
+        ).session(session);
+      };
     };
 
     const sendBy = await Team.findOne({ _id: employee, company });
