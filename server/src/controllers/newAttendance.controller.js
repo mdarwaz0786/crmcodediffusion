@@ -1057,3 +1057,288 @@ export const newDeleteAttendance = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   };
 };
+
+// Fetch monthly statistic for mobile (latest attendance — today on top)
+export const newFetchMonthlyStatisticMobile = async (req, res) => {
+  try {
+    const { employeeId, month } = req.query;
+    const company = req.company;
+
+    const rules = await Company.findById(company);
+    if (!rules) {
+      return res.status(400).json({ success: false, message: "Company not found." });
+    }
+
+    const weeklyOff = rules?.weeklyOff || [];
+
+    if (!employeeId) {
+      return res.status(400).json({ success: false, message: "Employee Id is required." });
+    }
+
+    if (!month) {
+      return res.status(400).json({ success: false, message: "Month in YYYY-MM format is required." });
+    }
+
+    const employee = await Team
+      .findOne({ _id: employeeId, company })
+      .select("workingHoursPerDay approvedLeaves eligibleCompOffDate joining");
+
+    if (!employee) {
+      return res.status(404).json({ success: false, message: "Employee not found." });
+    }
+
+    let joiningDate = employee?.joining;
+    let [requiredHours, requiredMinutes] = employee?.workingHoursPerDay?.split(":")?.map(Number);
+    let dailyThreshold = requiredHours * 60 + requiredMinutes;
+
+    let [year, monthIndex] = month?.split("-")?.map(Number);
+    let totalDaysInMonth = new Date(year, monthIndex, 0).getDate();
+
+    let calendarData = [];
+
+    let totalPresent = 0;
+    let totalHalfDays = 0;
+    let totalAbsent = 0;
+    let totalOnLeave = 0;
+    let totalHolidays = 0;
+    let totalSundays = 0;
+    let totalSaturdays = 0;
+    let totalWeeklyOff = 0;
+    let totalMinutesWorked = 0;
+    let totalLateIn = 0;
+    let totalCompOff = 0;
+
+    let totalPunchInMinutes = 0;
+    let punchInCount = 0;
+    let averagePunchInTime = 0;
+    let totalPunchOutMinutes = 0;
+    let punchOutCount = 0;
+    let averagePunchOutTime = 0;
+
+    for (let day = 1; day <= totalDaysInMonth; day++) {
+      let _id = "";
+      let status = "";
+      let punchInTime = "";
+      let punchOutTime = "";
+      let hoursWorked = "";
+      let lateIn = "";
+
+      let date = new Date(year, monthIndex - 1, day);
+      let formattedDate = convertToIST(date).toISOString().split("T")[0];
+      let currentDate = convertToIST(new Date()).toISOString().split("T")[0];
+      let attendanceObject;
+
+      if (formattedDate > currentDate) {
+        // Future date (no attendance yet)
+      } else if (formattedDate < joiningDate) {
+        status = "";
+      } else if (date.getDay() === 0 && weeklyOff.includes("Sunday")) {
+        let attendanceRecord = await Attendance.findOne({
+          employee: employeeId,
+          attendanceDate: formattedDate,
+          status: { $in: ["Present", "Half Day"] },
+          company,
+        }).select("_id attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
+
+        if (attendanceRecord) {
+          _id = attendanceRecord._id;
+          status = attendanceRecord.status;
+          punchInTime = attendanceRecord.punchInTime;
+          punchOutTime = attendanceRecord.punchOutTime;
+          hoursWorked = attendanceRecord.hoursWorked;
+          lateIn = attendanceRecord.lateIn;
+
+          if (attendanceRecord.status === "Present") totalPresent++;
+          if (attendanceRecord.status === "Half Day") totalHalfDays++;
+          if (attendanceRecord.hoursWorked) totalMinutesWorked += timeToMinutes(attendanceRecord.hoursWorked);
+          if (attendanceRecord.lateIn !== "00:00") totalLateIn++;
+          if (attendanceRecord.punchInTime) {
+            totalPunchInMinutes += timeToMinutes(attendanceRecord.punchInTime);
+            punchInCount++;
+          }
+          if (attendanceRecord.punchOutTime) {
+            totalPunchOutMinutes += timeToMinutes(attendanceRecord.punchOutTime);
+            punchOutCount++;
+          }
+        } else {
+          status = "Weekly Off";
+          totalSundays++;
+          totalWeeklyOff++;
+        }
+      } else if (date.getDay() === 6 && weeklyOff.includes("Saturday")) {
+        let attendanceRecord = await Attendance.findOne({
+          employee: employeeId,
+          attendanceDate: formattedDate,
+          status: { $in: ["Present", "Half Day"] },
+          company,
+        }).select("_id attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
+
+        if (attendanceRecord) {
+          _id = attendanceRecord._id;
+          status = attendanceRecord.status;
+          punchInTime = attendanceRecord.punchInTime;
+          punchOutTime = attendanceRecord.punchOutTime;
+          hoursWorked = attendanceRecord.hoursWorked;
+          lateIn = attendanceRecord.lateIn;
+
+          if (attendanceRecord.status === "Present") totalPresent++;
+          if (attendanceRecord.status === "Half Day") totalHalfDays++;
+          if (attendanceRecord.hoursWorked) totalMinutesWorked += timeToMinutes(attendanceRecord.hoursWorked);
+          if (attendanceRecord.lateIn !== "00:00") totalLateIn++;
+          if (attendanceRecord.punchInTime) {
+            totalPunchInMinutes += timeToMinutes(attendanceRecord.punchInTime);
+            punchInCount++;
+          }
+          if (attendanceRecord.punchOutTime) {
+            totalPunchOutMinutes += timeToMinutes(attendanceRecord.punchOutTime);
+            punchOutCount++;
+          }
+        } else {
+          status = "Weekly Off";
+          totalSaturdays++;
+          totalWeeklyOff++;
+        }
+      } else {
+        let holiday = await Holiday.findOne({ date: formattedDate, company });
+        let leaveRecord = employee?.approvedLeaves?.some((leave) => leave?.date === formattedDate);
+        let compOffRecord = employee?.eligibleCompOffDate?.some((comp) => comp?.compOffDate === formattedDate);
+
+        if (holiday) {
+          let attendanceRecord = await Attendance.findOne({
+            employee: employeeId,
+            attendanceDate: formattedDate,
+            status: { $in: ["Present", "Half Day"] },
+            company,
+          }).select("_id attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
+
+          if (attendanceRecord) {
+            _id = attendanceRecord._id;
+            status = attendanceRecord.status;
+            punchInTime = attendanceRecord.punchInTime;
+            punchOutTime = attendanceRecord.punchOutTime;
+            hoursWorked = attendanceRecord.hoursWorked;
+            lateIn = attendanceRecord.lateIn;
+
+            if (attendanceRecord.status === "Present") totalPresent++;
+            if (attendanceRecord.status === "Half Day") totalHalfDays++;
+            if (attendanceRecord.hoursWorked) totalMinutesWorked += timeToMinutes(attendanceRecord.hoursWorked);
+            if (attendanceRecord.lateIn !== "00:00") totalLateIn++;
+            if (attendanceRecord.punchInTime) {
+              totalPunchInMinutes += timeToMinutes(attendanceRecord.punchInTime);
+              punchInCount++;
+            }
+            if (attendanceRecord.punchOutTime) {
+              totalPunchOutMinutes += timeToMinutes(attendanceRecord.punchOutTime);
+              punchOutCount++;
+            }
+          } else {
+            status = "Holiday";
+            totalHolidays++;
+          }
+        } else if (compOffRecord) {
+          status = "Comp Off";
+          totalCompOff++;
+        } else if (leaveRecord) {
+          status = "On Leave";
+          totalOnLeave++;
+        } else {
+          let attendanceRecord = await Attendance.findOne({
+            employee: employeeId,
+            attendanceDate: formattedDate,
+            status: { $in: ["Present", "Half Day"] },
+            company,
+          }).select("_id attendanceDate status punchInTime punchOutTime hoursWorked lateIn");
+
+          if (attendanceRecord) {
+            _id = attendanceRecord._id;
+            status = attendanceRecord.status;
+            punchInTime = attendanceRecord.punchInTime;
+            punchOutTime = attendanceRecord.punchOutTime;
+            hoursWorked = attendanceRecord.hoursWorked;
+            lateIn = attendanceRecord.lateIn;
+
+            if (attendanceRecord.status === "Present") totalPresent++;
+            if (attendanceRecord.status === "Half Day") totalHalfDays++;
+            if (attendanceRecord.hoursWorked) totalMinutesWorked += timeToMinutes(attendanceRecord.hoursWorked);
+            if (attendanceRecord.lateIn !== "00:00") totalLateIn++;
+            if (attendanceRecord.punchInTime) {
+              totalPunchInMinutes += timeToMinutes(attendanceRecord.punchInTime);
+              punchInCount++;
+            }
+            if (attendanceRecord.punchOutTime) {
+              totalPunchOutMinutes += timeToMinutes(attendanceRecord.punchOutTime);
+              punchOutCount++;
+            }
+          } else {
+            status = "Absent";
+            totalAbsent++;
+          }
+        }
+      }
+
+      attendanceObject = {
+        attendanceDate: formattedDate,
+        status,
+        ...(punchInTime && { punchInTime }),
+        ...(punchOutTime && { punchOutTime }),
+        ...(hoursWorked && { hoursWorked }),
+        ...(lateIn && { lateIn }),
+        ...(_id && { _id }),
+      };
+
+      calendarData.push(attendanceObject);
+    }
+
+    // Sort calendar data so that today's date is on top, past dates descending, future ascending
+    const today = new Date().toISOString().split("T")[0];
+    calendarData.sort((a, b) => {
+      if (a.attendanceDate === today) return -1; // today always first
+      if (b.attendanceDate === today) return 1;
+      if (a.attendanceDate < today && b.attendanceDate < today)
+        return b.attendanceDate.localeCompare(a.attendanceDate);
+      if (a.attendanceDate > today && b.attendanceDate > today)
+        return a.attendanceDate.localeCompare(b.attendanceDate);
+      return a.attendanceDate < today ? -1 : 1;
+    });
+
+    // Monthly statistics
+    let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalSundays + totalSaturdays + totalCompOff);
+    let companyWorkingHours = companyWorkingDays * dailyThreshold;
+    let requiredWorkingHours = (totalPresent + totalHalfDays) * dailyThreshold;
+
+    averagePunchInTime = punchInCount ? minutesToTime(Math.floor(totalPunchInMinutes / punchInCount)) : null;
+    averagePunchOutTime = punchOutCount ? minutesToTime(Math.floor(totalPunchOutMinutes / punchOutCount)) : null;
+
+    let totalLeaveAndCompOff = totalOnLeave + totalCompOff;
+    let shortFallByLeaveAndCompOff = totalLeaveAndCompOff * dailyThreshold;
+    let actualShortfall = companyWorkingHours - (totalMinutesWorked + shortFallByLeaveAndCompOff);
+
+    const monthlyStatics = {
+      employee: employeeId,
+      month,
+      totalDaysInMonth,
+      companyWorkingDays,
+      companyWorkingHours: minutesToTime(companyWorkingHours),
+      totalHolidays,
+      totalSundays,
+      totalSaturdays,
+      totalWeeklyOff,
+      employeePresentDays: totalPresent,
+      employeeHalfDays: totalHalfDays,
+      employeeAbsentDays: totalAbsent,
+      employeeLeaveDays: totalOnLeave,
+      employeeCompOffDays: totalCompOff,
+      employeeWorkingHours: minutesToTime(totalMinutesWorked),
+      employeeRequiredWorkingHours: minutesToTime(requiredWorkingHours),
+      employeeShortfallHours: negativeMinutesToTime(actualShortfall),
+      employeeLateInDays: totalLateIn,
+      averagePunchInTime,
+      averagePunchOutTime,
+    };
+
+    return res.status(200).json({ success: true, calendarData, monthlyStatics });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
