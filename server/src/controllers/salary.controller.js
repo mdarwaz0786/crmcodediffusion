@@ -54,7 +54,7 @@ const convertToIST = (date) => {
 // Create a new salary record
 export const createSalary = async (req, res) => {
   try {
-    const { employee, month, year, salaryPaid, amountPaid, transactionId } = req.body;
+    const { employee, month, year, salaryPaid, amountPaid, transactionId, salaryCalculationDetail } = req.body;
     const company = req.company;
 
     const rules = await Company.findById(company);
@@ -637,7 +637,7 @@ ${emp?.office?.websiteLink || "https://www.codediffusion.in/"}`,
     await transporter.sendMail(mailOptions);
 
     // Create a new salary record
-    const newSalary = new Salary({ employee, month, year, salaryPaid, amountPaid, transactionId, monthlySalary, company });
+    const newSalary = new Salary({ employee, month, year, salaryPaid, amountPaid, transactionId, monthlySalary, company, salaryCalculationDetail });
 
     // Save the salary record
     await newSalary.save();

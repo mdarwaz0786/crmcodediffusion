@@ -10,7 +10,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const PaySalary = () => {
   const [transactionId, setTransactionId] = useState("");
-  const { employeeId, month, year, totalSalary } = useParams();
+  const { employeeId, month, year, totalSalary, salaryCalculationDetail } = useParams();
   const navigate = useNavigate();
   const { validToken, team, isLoading } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ const PaySalary = () => {
     try {
       setLoading(true);
 
-      if (!totalSalary || !month || !year || !employeeId || !transactionId) {
+      if (!totalSalary || !month || !year || !employeeId || !transactionId || !salaryCalculationDetail) {
         return toast.error("Enter transaction id");
       };
 
@@ -35,6 +35,7 @@ const PaySalary = () => {
           year,
           employee: employeeId,
           salaryPaid: true,
+          salaryCalculationDetail,
         },
         {
           headers: {

@@ -271,7 +271,7 @@ const Salary = () => {
                                       <div><strong>Total Salary Deducted: </strong>{d?.totalDeduction}</div>
                                     </td>
                                     <td style={{ padding: "0.3rem" }}>
-                                      <Link style={{ marginRight: "1rem" }} to={d?.salaryPaid === false ? `/pay-salary/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}` : ""}><button className="btn btn-primary">{d?.salaryPaid ? "Paid" : "Pay Salary"}</button></Link>
+                                      <Link style={{ marginRight: "1rem" }} to={d?.salaryPaid === false ? `/pay-salary/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}/${encodeURIComponent(JSON.stringify(d))}` : ""}><button className="btn btn-primary">{d?.salaryPaid ? "Paid" : "Pay Salary"}</button></Link>
                                       {
                                         d?.salaryPaid && (
                                           <Link style={{ marginRight: "1rem" }} to={`/salary-slip/${d?.employeeId}/${filters.month}/${filters.year}`}><button className="btn btn-primary">View</button></Link>
