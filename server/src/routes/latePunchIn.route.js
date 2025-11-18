@@ -10,7 +10,7 @@ const fields = ["status"];
 const router = express.Router();
 
 // routes
-router.post("/create-latePunchIn", authenticateUser, checkMasterActionPermission("latePunchIn", "create"), createLatePunchIn);
+router.post("/create-latePunchIn", authenticateUser, createLatePunchIn);
 router.get("/all-latePunchIn", authenticateUser, getAllLatePunchIns);
 router.get("/single-latePunchIn/:id", authenticateUser, getLatePunchInById);
 router.get("/pending-latePunchIn", authenticateUser, getPendingPunchInRequests);

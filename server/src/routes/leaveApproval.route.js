@@ -7,7 +7,7 @@ import checkMasterActionPermission from "../middleware/masterActionPermission.mi
 const router = express.Router();
 
 // routes
-router.post("/create-leaveApproval", authenticateUser, checkMasterActionPermission("leaveApproval", "create"), createLeaveApproval);
+router.post("/create-leaveApproval", authenticateUser, createLeaveApproval);
 router.get("/all-leaveApproval", authenticateUser, fetchAllLeaveApproval);
 router.get("/employee-leaveApproval/:employeeId", authenticateUser, getLeaveApprovalByEmployee);
 router.get("/single-leaveApproval/:id", authenticateUser, fetchSingleLeaveApproval);

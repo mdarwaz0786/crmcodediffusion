@@ -10,7 +10,7 @@ const fields = ["status"];
 const router = express.Router();
 
 // routes
-router.post("/create-compOff", authenticateUser, checkMasterActionPermission("compOff", "create"), createCompOff);
+router.post("/create-compOff", authenticateUser, createCompOff);
 router.get("/all-compOff", authenticateUser, getAllCompOffs);
 router.get("/single-compOff/:id", authenticateUser, getCompOffById);
 router.get("/pending-compOff", authenticateUser, getPendingCompOffRequests);

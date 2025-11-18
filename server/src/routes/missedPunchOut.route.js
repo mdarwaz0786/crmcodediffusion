@@ -10,7 +10,7 @@ const fields = ["status"];
 const router = express.Router();
 
 // routes
-router.post("/create-missedPunchOut", authenticateUser, checkMasterActionPermission("missedPunchOut", "create"), createMissedPunchOut);
+router.post("/create-missedPunchOut", authenticateUser, createMissedPunchOut);
 router.get("/all-missedPunchOut", authenticateUser, getAllMissedPunchOuts);
 router.get("/single-missedPunchOut/:id", authenticateUser, getMissedPunchOutById);
 router.get("/pending-missedPunchOut", authenticateUser, getPendingPunchOutRequests);

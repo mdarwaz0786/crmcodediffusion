@@ -118,10 +118,6 @@ export const createLeaveApproval = async (req, res) => {
     // Ensure start date is not the current date or in the past 
     const currentDate = new Date();
 
-    if (start.setHours(0, 0, 0, 0) < currentDate.setHours(0, 0, 0, 0)) {
-      return res.status(400).json({ success: false, message: "Start date can not be in the past, select future date or current date." });
-    };
-
     if (start.setHours(0, 0, 0, 0) > end.setHours(0, 0, 0, 0)) {
       return res.status(400).json({ success: false, message: "Start date can not be later than end date." });
     };
