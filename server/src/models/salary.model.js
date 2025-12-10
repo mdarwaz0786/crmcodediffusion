@@ -37,7 +37,7 @@ const salarySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed,
     default: {},
   },
-});
+}, { timestamps: true });
 
 // Compound index to prevent duplicates
 salarySchema.index({ employee: 1, month: 1, year: 1 }, { unique: true });

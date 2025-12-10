@@ -608,6 +608,36 @@ export const newFetchMonthlyStatistic = async (req, res) => {
     let [year, monthIndex] = month?.split("-")?.map(Number);
     let totalDaysInMonth = new Date(year, monthIndex, 0).getDate();
 
+    let sundayBeforeJoining = 0;
+    let holidayBeforeJoining = 0;
+    let saturdayBeforeJoinig = 0;
+
+    let joining = new Date(joiningDate);
+
+    for (let day = 1; day <= totalDaysInMonth; day++) {
+      let current = new Date(year, monthIndex - 1, day);
+      let formatted = convertToIST(current).toISOString().split("T")[0];
+
+      if (current >= joining) continue;
+
+      if (current.getDay() === 0 && weeklyOff.includes("Sunday")) {
+        sundayBeforeJoining++;
+      }
+
+      if (current.getDay() === 6 && weeklyOff.includes("Saturday")) {
+        saturdayBeforeJoinig++;
+      }
+
+      let holiday = await Holiday.findOne({
+        date: formatted,
+        company
+      });
+
+      if (holiday) {
+        holidayBeforeJoining++;
+      }
+    };
+
     let calendarData = [];
 
     let totalPresent = 0;
@@ -840,7 +870,7 @@ export const newFetchMonthlyStatistic = async (req, res) => {
       calendarData.push(attendanceObject);
     };
 
-    let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalSundays + totalSaturdays + totalCompOff);
+    let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalSundays + totalSaturdays + totalCompOff + sundayBeforeJoining + saturdayBeforeJoinig + holidayBeforeJoining);
     let companyWorkingHours = companyWorkingDays * dailyThreshold;
     let requiredWorkingHours = (totalPresent + totalHalfDays) * dailyThreshold;
 
@@ -1096,6 +1126,36 @@ export const newFetchMonthlyStatisticMobile = async (req, res) => {
 
     let calendarData = [];
 
+    let sundayBeforeJoining = 0;
+    let holidayBeforeJoining = 0;
+    let saturdayBeforeJoinig = 0;
+
+    let joining = new Date(joiningDate);
+
+    for (let day = 1; day <= totalDaysInMonth; day++) {
+      let current = new Date(year, monthIndex - 1, day);
+      let formatted = convertToIST(current).toISOString().split("T")[0];
+
+      if (current >= joining) continue;
+
+      if (current.getDay() === 0 && weeklyOff.includes("Sunday")) {
+        sundayBeforeJoining++;
+      }
+
+      if (current.getDay() === 6 && weeklyOff.includes("Saturday")) {
+        saturdayBeforeJoinig++;
+      }
+
+      let holiday = await Holiday.findOne({
+        date: formatted,
+        company
+      });
+
+      if (holiday) {
+        holidayBeforeJoining++;
+      }
+    };
+
     let totalPresent = 0;
     let totalHalfDays = 0;
     let totalAbsent = 0;
@@ -1302,7 +1362,7 @@ export const newFetchMonthlyStatisticMobile = async (req, res) => {
     });
 
     // Monthly statistics
-    let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalSundays + totalSaturdays + totalCompOff);
+    let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalSundays + totalSaturdays + totalCompOff + sundayBeforeJoining + saturdayBeforeJoinig + holidayBeforeJoining);
     let companyWorkingHours = companyWorkingDays * dailyThreshold;
     let requiredWorkingHours = (totalPresent + totalHalfDays) * dailyThreshold;
 
