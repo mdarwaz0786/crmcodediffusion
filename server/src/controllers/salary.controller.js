@@ -998,6 +998,7 @@ export const newFetchMonthlySalary = async (req, res) => {
           companyWorkingHours: minutesToTime(companyWorkingMinutes),
           companyWorkingDays: totalDaysInMonth - (totalHolidays + totalSundays),
           employeeHoursWorked: minutesToTime(totalMinutesWorked),
+          employeeMinutesWorked: totalMinutesWorked,
           employeeHoursShortfall: minutesToTime(actualShortFall),
           employeeTotalExtraHours: minutesToTime(totalExtraMinutes),
           employeeTotalShortHours: minutesToTime(totalShortMinutes),

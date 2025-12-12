@@ -263,11 +263,12 @@ const Salary = () => {
                                     <td>{d?.monthlySalary}</td>
                                     <td>{d?.totalFinalSalary}</td>
                                     <td>
+                                      <div><strong>One Minute Salary: </strong>{d?.oneMinuteSalary}</div>
                                       <div><strong>Per Day Salary: </strong>{d?.dailySalary}</div>
                                       <div><strong>Salary Of Weekly Off ({`${d?.totalWeeklyOff}`}): </strong>{d?.totalSalaryOfWeeklyOff?.toFixed(2)}</div>
                                       <div><strong>Salary Of On Leave ({`${d?.totalOnLeave}`}): </strong>{d?.totalSalaryOfOnLeave?.toFixed(2)}</div>
                                       <div><strong>Salary Of Comp Off ({`${d?.totalCompOff}`}): </strong>{d?.totalSalaryOfCompOff?.toFixed(2)}</div>
-                                      <div><strong>Salary Of Working Hours ({`${d?.employeeHoursWorked}`}): </strong>{d?.totalSalaryOfWorkedHours?.toFixed(2)}</div>
+                                      <div><strong>Salary Of Working Hours ({`${d?.employeeHoursWorked}`} = {`${d?.employeeMinutesWorked}`} Minutes): </strong>{d?.totalSalaryOfWorkedHours?.toFixed(2)}</div>
                                       <div><strong>Total Salary: </strong>{d?.totalFinalSalary}</div>
                                     </td>
                                     <td style={{ padding: "0.3rem" }}>
