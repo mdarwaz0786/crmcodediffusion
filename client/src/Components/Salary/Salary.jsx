@@ -261,14 +261,14 @@ const Salary = () => {
                                     <td>{index + 1}</td>
                                     <td>{d?.employeeName}</td>
                                     <td>{d?.monthlySalary}</td>
-                                    <td>{d?.totalSalary}</td>
+                                    <td>{d?.totalFinalSalary}</td>
                                     <td>
-                                      <div><strong>Company&apos;s Working Hours: </strong>{d?.companyWorkingHours}</div>
-                                      <div><strong>Employee&apos;s Working Hours: </strong>{d?.employeeHoursWorked}</div>
-                                      <div><strong>Hours Shortfall: </strong>{d?.employeeHoursShortfall}</div>
-                                      <div><strong>Total Deduction Days: </strong>{d?.deductionDays} Days</div>
-                                      <div><strong>Daily Salary: </strong>{d?.dailySalary}</div>
-                                      <div><strong>Total Salary Deducted: </strong>{d?.totalDeduction}</div>
+                                      <div><strong>Per Day Salary: </strong>{d?.dailySalary}</div>
+                                      <div><strong>Salary Of Weekly Off ({`${d?.totalWeeklyOff}`}): </strong>{d?.totalSalaryOfWeeklyOff?.toFixed(2)}</div>
+                                      <div><strong>Salary Of On Leave ({`${d?.totalOnLeave}`}): </strong>{d?.totalSalaryOfOnLeave?.toFixed(2)}</div>
+                                      <div><strong>Salary Of Comp Off ({`${d?.totalCompOff}`}): </strong>{d?.totalSalaryOfCompOff?.toFixed(2)}</div>
+                                      <div><strong>Salary Of Working Hours ({`${d?.employeeHoursWorked}`}): </strong>{d?.totalSalaryOfWorkedHours?.toFixed(2)}</div>
+                                      <div><strong>Total Salary: </strong>{d?.totalFinalSalary}</div>
                                     </td>
                                     <td style={{ padding: "0.3rem" }}>
                                       <Link style={{ marginRight: "1rem" }} to={d?.salaryPaid === false ? `/pay-salary/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}/${encodeURIComponent(JSON.stringify(d))}` : ""}><button className="btn btn-primary">{d?.salaryPaid ? "Paid" : "Pay Salary"}</button></Link>

@@ -41,6 +41,20 @@ function minutesToTime(minutes) {
   return isNegative ? `+${formattedTime}` : formattedTime;
 };
 
+// Helper function to convert negative minutes into time (HH:MM)
+function negativeMinutesToTime(minutes) {
+  if (minutes == null) return;
+
+  const isNegative = minutes < 0;
+  const absMinutes = Math.abs(minutes);
+
+  const hours = Math.floor(absMinutes / 60);
+  const mins = absMinutes % 60;
+
+  const timeStr = `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+  return isNegative ? `+${timeStr}` : `-${timeStr}`;
+};
+
 // Function to convert UTC date to IST
 const convertToIST = (date) => {
   if (!date) {
@@ -53,6 +67,7 @@ const convertToIST = (date) => {
 
 // Create a new salary record
 export const createSalary = async (req, res) => {
+  let pdfPath;
   try {
     const { employee, month, year, salaryPaid, amountPaid, transactionId, salaryCalculationDetail } = req.body;
     const company = req.company;
@@ -591,7 +606,7 @@ export const createSalary = async (req, res) => {
     });
     const page = await browser.newPage();
     await page.setContent(salarySlipHTML);
-    const pdfPath = `salary_slip_${emp?.name}_${numberToMonthName(month)}_${year}.pdf`;
+    pdfPath = `salary_slip_${emp?.name}_${numberToMonthName(month)}_${year}.pdf`;
     await page.pdf({ path: pdfPath, format: 'A4', printBackground: true });
     await browser.close();
 
@@ -647,6 +662,7 @@ ${emp?.office?.websiteLink || "https://www.codediffusion.in/"}`,
 
     return res.status(201).json({ success: true, data: newSalary });
   } catch (error) {
+    fs.unlinkSync(pdfPath);
     return res.status(500).json({ success: false, message: error.message });
   };
 };
@@ -785,6 +801,7 @@ export const newFetchMonthlySalary = async (req, res) => {
     const salaryData = await Promise.all(
       employees?.map(async (employee) => {
         let [requiredHours, requiredMinutes] = employee?.workingHoursPerDay?.split(":")?.map(Number);
+        let joiningDate = employee?.joining;
         let dailyThreshold = requiredHours * 60 + requiredMinutes;
         let monthlySalary = employee?.monthlySalary;
         let workingHoursPerDay = employee?.workingHoursPerDay;
@@ -803,12 +820,19 @@ export const newFetchMonthlySalary = async (req, res) => {
         let totalWeeklyOff = 0;
         let totalMinutesWorked = 0;
 
+        let totalExtraMinutes = 0;
+        let totalShortMinutes = 0;
+
+        let dailySalary = monthlySalary / totalDaysInMonth;
+        let oneMinuteSalary = dailySalary / dailyThreshold;
+
         for (let day = 1; day <= totalDaysInMonth; day++) {
           let date = new Date(year, monthIndex - 1, day);
           let formattedDate = convertToIST(date).toISOString().split("T")[0];
           let currentDate = convertToIST(new Date()).toISOString().split("T")[0];
 
           if (formattedDate > currentDate) {
+          } else if (formattedDate < joiningDate) {
           } else if (date.getDay() === 0 && weeklyOff.includes("Sunday")) {
             let attendanceRecord = await Attendance.findOne({
               employee: employee?._id,
@@ -824,7 +848,14 @@ export const newFetchMonthlySalary = async (req, res) => {
                 totalHalfDays++;
               };
               if (attendanceRecord?.hoursWorked) {
-                totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+                const worked = timeToMinutes(attendanceRecord?.hoursWorked);
+                totalMinutesWorked += worked;
+                if (worked > dailyThreshold) {
+                  totalExtraMinutes += (worked - dailyThreshold);
+                }
+                if (worked < dailyThreshold) {
+                  totalShortMinutes += (dailyThreshold - worked);
+                }
               };
             } else {
               totalSundays++;
@@ -845,7 +876,14 @@ export const newFetchMonthlySalary = async (req, res) => {
                 totalHalfDays++;
               };
               if (attendanceRecord?.hoursWorked) {
-                totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+                const worked = timeToMinutes(attendanceRecord?.hoursWorked);
+                totalMinutesWorked += worked;
+                if (worked > dailyThreshold) {
+                  totalExtraMinutes += (worked - dailyThreshold);
+                }
+                if (worked < dailyThreshold) {
+                  totalShortMinutes += (dailyThreshold - worked);
+                }
               };
             } else {
               totalSaturdays++;
@@ -870,10 +908,17 @@ export const newFetchMonthlySalary = async (req, res) => {
                   totalHalfDays++;
                 };
                 if (attendanceRecord?.hoursWorked) {
-                  totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+                  const worked = timeToMinutes(attendanceRecord?.hoursWorked);
+                  totalMinutesWorked += worked;
+                  if (worked > dailyThreshold) {
+                    totalExtraMinutes += (worked - dailyThreshold);
+                  }
+                  if (worked < dailyThreshold) {
+                    totalShortMinutes += (dailyThreshold - worked);
+                  }
                 };
               } else {
-                totalHolidays++;;
+                totalHolidays++;
               };
             } else if (compOffRecord) {
               totalCompOff++;
@@ -894,7 +939,14 @@ export const newFetchMonthlySalary = async (req, res) => {
                   totalHalfDays++;
                 };
                 if (attendanceRecord?.hoursWorked) {
-                  totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+                  const worked = timeToMinutes(attendanceRecord?.hoursWorked);
+                  totalMinutesWorked += worked;
+                  if (worked > dailyThreshold) {
+                    totalExtraMinutes += (worked - dailyThreshold);
+                  }
+                  if (worked < dailyThreshold) {
+                    totalShortMinutes += (dailyThreshold - worked);
+                  }
                 };
               } else {
                 totalAbsent++;
@@ -904,14 +956,13 @@ export const newFetchMonthlySalary = async (req, res) => {
         };
 
         let totalLeaveAndCompOff = totalOnLeave + totalCompOff;
-        let companyWorkingMinutes = (totalDaysInMonth - (totalHolidays + totalSundays + totalSaturdays + totalCompOff)) * dailyThreshold;
+        let companyWorkingMinutes = (totalDaysInMonth - (totalHolidays + totalWeeklyOff)) * dailyThreshold;
 
         let minutesShortfall = companyWorkingMinutes - totalMinutesWorked;
         let shortFallByLeaveAndCompOff = totalLeaveAndCompOff * dailyThreshold;
         let actualShortFall = minutesShortfall - shortFallByLeaveAndCompOff;
         let deductionDays = actualShortFall > 0 ? Math.ceil(actualShortFall / dailyThreshold) : 0;
 
-        let dailySalary = monthlySalary / totalDaysInMonth;
         let totalDeduction = deductionDays * dailySalary;
         let totalSalary = monthlySalary - totalDeduction;
 
@@ -926,20 +977,37 @@ export const newFetchMonthlySalary = async (req, res) => {
         let salaryPaid = salaryRecord ? salaryRecord?.salaryPaid : false;
         let transactionId = salaryRecord ? salaryRecord?.transactionId : "";
 
+        // Salary Calculation
+        let employeeRequiredWorkingMinutes = (totalDaysInMonth - (totalHolidays + totalWeeklyOff + totalOnLeave + totalCompOff)) * dailyThreshold;
+        let totalSalaryOfWeeklyOff = totalWeeklyOff * dailyThreshold * oneMinuteSalary;
+        let totalSalaryOfOnLeave = totalOnLeave * dailyThreshold * oneMinuteSalary;
+        let totalSalaryOfCompOff = totalCompOff * dailyThreshold * oneMinuteSalary;
+        let totalSalaryOfWorkedHours = totalMinutesWorked * oneMinuteSalary;
+        let totalFinalSalary = totalSalaryOfWeeklyOff + totalSalaryOfOnLeave + totalSalaryOfCompOff + totalSalaryOfWorkedHours;
+
         return {
           month,
           totalDaysInMonth,
           employeeId: employee?._id,
           employeeName: employee?.name,
           monthlySalary,
+          dailySalary: dailySalary.toFixed(2),
           workingHoursPerDay,
           totalSalary: totalSalary.toFixed(2),
           totalDeduction: totalDeduction.toFixed(2),
-          dailySalary: dailySalary.toFixed(2),
           companyWorkingHours: minutesToTime(companyWorkingMinutes),
           companyWorkingDays: totalDaysInMonth - (totalHolidays + totalSundays),
           employeeHoursWorked: minutesToTime(totalMinutesWorked),
           employeeHoursShortfall: minutesToTime(actualShortFall),
+          employeeTotalExtraHours: minutesToTime(totalExtraMinutes),
+          employeeTotalShortHours: minutesToTime(totalShortMinutes),
+          oneMinuteSalary,
+          totalSalaryOfWeeklyOff,
+          totalSalaryOfOnLeave,
+          totalSalaryOfCompOff,
+          totalSalaryOfWorkedHours,
+          totalFinalSalary: totalFinalSalary.toFixed(2),
+          employeeRequiredWorkingHours: minutesToTime(employeeRequiredWorkingMinutes),
           deductionDays,
           totalPresent,
           totalHalfDays,

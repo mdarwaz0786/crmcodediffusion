@@ -85,6 +85,25 @@ const TeamMemberDetail = () => {
     };
   };
 
+  const formatAnyDate = (value) => {
+    // If month only (YYYY-MM)
+    if (/^\d{4}-\d{2}$/.test(value)) {
+      const [year] = value.split("-");
+      const date = new Date(`${value}-01`);
+      const monthName = date.toLocaleString("en-US", { month: "short" });
+      return `${monthName} ${year}`;
+    };
+
+    // If full date (YYYY-MM-DD)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const date = new Date(value);
+      const options = { day: "2-digit", month: "short", year: "numeric" };
+      return date.toLocaleDateString("en-GB", options);
+    };
+
+    return value;
+  };
+
   if (loading) {
     return <p className="text-center mt-5">Loading employee details...</p>;
   };
@@ -98,41 +117,105 @@ const TeamMemberDetail = () => {
   };
 
   return (
-    <div className="page-wrapper">
-      <div className="content">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-          <h4>Employee Detail</h4>
-          <Link to="#" onClick={exportTeamMemberDetailAsPdf}><button className="btn btn-secondary">Download</button></Link>
-          <Link to="#" onClick={() => navigate(-1)}><button className="btn btn-primary">Back</button></Link>
-        </div>
-        <div className="card rounded-3" id="exportTeamMemberDetail">
-          <div className="card-header bg-secondary text-white text-center">
-            <i className="bi bi-person-circle fs-1"></i>
-            <h4 className="text-white mt-2">Employee Details</h4>
+    <>
+      <div className="page-wrapper">
+        <div className="content">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+            <h4>Employee Detail</h4>
+            <Link to="#" onClick={exportTeamMemberDetailAsPdf}><button className="btn btn-secondary">Download</button></Link>
+            <Link to="#" onClick={() => navigate(-1)}><button className="btn btn-primary">Back</button></Link>
           </div>
-          <div className="card-body">
-            <div className="row g-3">
-              <DetailItem label="Employee ID" value={teamMember?.employeeId} />
-              <DetailItem label="Name" value={teamMember?.name} />
-              <DetailItem label="Email" value={teamMember?.email} />
-              <DetailItem label="Mobile" value={teamMember?.mobile} />
-              <DetailItem label="Password" value={teamMember?.password} />
-              <DetailItem label="Monthly Salary" value={teamMember?.monthlySalary} />
-              <DetailItem label="Working Hours/Day" value={formatTimeToHoursMinutes(teamMember?.workingHoursPerDay)} />
-              <DetailItem label="Joining Date" value={formatDate(teamMember?.joining)} />
-              <DetailItem label="Date of Birth" value={formatDate(teamMember?.dob)} />
-              <DetailItem label="Department" value={teamMember?.department?.name} />
-              <DetailItem label="Designation" value={teamMember?.designation?.name} />
-              <DetailItem label="Office" value={teamMember?.office?.name} />
-              <DetailItem label="Active" value={teamMember?.isActive ? "Yes" : "No"} />
-              <DetailItem label="Total Leave Credited" value={leaveBalance?.totalEntitled} />
-              <DetailItem label="Total Leave Debited" value={leaveBalance?.totalTaken} />
-              <DetailItem label="Available Leave Balance" value={leaveBalance?.balance} />
+          <div className="card rounded-3" id="exportTeamMemberDetail">
+            <div className="card-header bg-secondary text-white text-center">
+              <i className="bi bi-person-circle fs-1"></i>
+              <h4 className="text-white mt-2">Employee Details</h4>
+            </div>
+            <div className="card-body">
+              <div className="row g-3">
+                <DetailItem label="Employee ID" value={teamMember?.employeeId} />
+                <DetailItem label="Name" value={teamMember?.name} />
+                <DetailItem label="Email" value={teamMember?.email} />
+                <DetailItem label="Mobile" value={teamMember?.mobile} />
+                <DetailItem label="Password" value={teamMember?.password} />
+                <DetailItem label="Monthly Salary" value={teamMember?.monthlySalary} />
+                <DetailItem label="Working Hours/Day" value={formatTimeToHoursMinutes(teamMember?.workingHoursPerDay)} />
+                <DetailItem label="Joining Date" value={formatDate(teamMember?.joining)} />
+                <DetailItem label="Date of Birth" value={formatDate(teamMember?.dob)} />
+                <DetailItem label="Department" value={teamMember?.department?.name} />
+                <DetailItem label="Designation" value={teamMember?.designation?.name} />
+                <DetailItem label="Office" value={teamMember?.office?.name} />
+                <DetailItem label="Active" value={teamMember?.isActive ? "Yes" : "No"} />
+                <DetailItem label="Total Leave Credited" value={leaveBalance?.totalEntitled} />
+                <DetailItem label="Total Leave Debited" value={leaveBalance?.totalTaken} />
+                <DetailItem label="Available Leave Balance" value={leaveBalance?.balance} />
+              </div>
+            </div>
+          </div>
+
+          <div className="container my-5">
+            <h2 className="mb-4 fw-bold">Leave Summary</h2>
+
+            {/* Overall Summary */}
+            <div className="row mb-4">
+              <div className="col-md-4">
+                <div className="p-3 border rounded bg-light">
+                  <h5>Total Leave Credited:</h5>
+                  <p className="fw-bold">{leaveBalance?.totalEntitled}</p>
+                </div>
+              </div>
+
+              <div className="col-md-4">
+                <div className="p-3 border rounded bg-light">
+                  <h5>Total Leave Debited</h5>
+                  <p className="fw-bold">{leaveBalance?.totalTaken}</p>
+                </div>
+              </div>
+
+              <div className="col-md-4">
+                <div className="p-3 border rounded bg-light">
+                  <h5>Available Leave Balance:</h5>
+                  <p className="fw-bold">{leaveBalance?.balance}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Monthly Table */}
+            <div className="table-responsive">
+              <table className="table table-bordered table-striped">
+                <thead className="table-dark">
+                  <tr>
+                    <th>Month</th>
+                    <th>Credit</th>
+                    <th>Debit</th>
+                    <th>Balance Till Month</th>
+                    <th>Leave Taken Dates</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leaveBalance?.summary?.map((item, index) => (
+                    <tr key={index}>
+                      <td>{formatAnyDate(item?.month)}</td>
+                      <td>{item?.leavesAdded}</td>
+                      <td>{item?.leavesTaken}</td>
+                      <td>{item?.balanceTillMonth}</td>
+                      <td>
+                        {item?.leaveDates?.length > 0 ? (
+                          item.leaveDates
+                            .map((d) => formatAnyDate(d))
+                            .join(", ")
+                        ) : (
+                          <span className="text-muted">No leaves</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

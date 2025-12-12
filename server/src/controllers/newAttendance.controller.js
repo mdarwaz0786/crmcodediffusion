@@ -659,6 +659,9 @@ export const newFetchMonthlyStatistic = async (req, res) => {
     let punchOutCount = 0;
     let averagePunchOutTime = 0;
 
+    let totalExtraMinutes = 0;
+    let totalShortMinutes = 0;
+
     for (let day = 1; day <= totalDaysInMonth; day++) {
       let _id = "";
       let status = "";
@@ -696,7 +699,14 @@ export const newFetchMonthlyStatistic = async (req, res) => {
             totalHalfDays++;
           };
           if (attendanceRecord?.hoursWorked) {
-            totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+            const worked = timeToMinutes(attendanceRecord?.hoursWorked);
+            totalMinutesWorked += worked;
+            if (worked > dailyThreshold) {
+              totalExtraMinutes += (worked - dailyThreshold);
+            }
+            if (worked < dailyThreshold) {
+              totalShortMinutes += (dailyThreshold - worked);
+            }
           };
           if (attendanceRecord?.lateIn !== "00:00") {
             totalLateIn++;
@@ -735,7 +745,14 @@ export const newFetchMonthlyStatistic = async (req, res) => {
             totalHalfDays++;
           };
           if (attendanceRecord?.hoursWorked) {
-            totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+            const worked = timeToMinutes(attendanceRecord?.hoursWorked);
+            totalMinutesWorked += worked;
+            if (worked > dailyThreshold) {
+              totalExtraMinutes += (worked - dailyThreshold);
+            }
+            if (worked < dailyThreshold) {
+              totalShortMinutes += (dailyThreshold - worked);
+            }
           };
           if (attendanceRecord?.lateIn !== "00:00") {
             totalLateIn++;
@@ -778,7 +795,14 @@ export const newFetchMonthlyStatistic = async (req, res) => {
               totalHalfDays++;
             };
             if (attendanceRecord?.hoursWorked) {
-              totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+              const worked = timeToMinutes(attendanceRecord?.hoursWorked);
+              totalMinutesWorked += worked;
+              if (worked > dailyThreshold) {
+                totalExtraMinutes += (worked - dailyThreshold);
+              }
+              if (worked < dailyThreshold) {
+                totalShortMinutes += (dailyThreshold - worked);
+              }
             };
             if (attendanceRecord?.lateIn !== "00:00") {
               totalLateIn++;
@@ -822,7 +846,14 @@ export const newFetchMonthlyStatistic = async (req, res) => {
               totalHalfDays++;
             };
             if (attendanceRecord?.hoursWorked) {
-              totalMinutesWorked += timeToMinutes(attendanceRecord?.hoursWorked);
+              const worked = timeToMinutes(attendanceRecord?.hoursWorked);
+              totalMinutesWorked += worked;
+              if (worked > dailyThreshold) {
+                totalExtraMinutes += (worked - dailyThreshold);
+              }
+              if (worked < dailyThreshold) {
+                totalShortMinutes += (dailyThreshold - worked);
+              }
             };
             if (attendanceRecord?.lateIn !== "00:00") {
               totalLateIn++;
@@ -904,6 +935,11 @@ export const newFetchMonthlyStatistic = async (req, res) => {
       employeeWorkingHours: minutesToTime(totalMinutesWorked),
       employeeRequiredWorkingHours: minutesToTime(requiredWorkingHours),
       employeeShortfallHours: negativeMinutesToTime(actualShortfall),
+      employeeTotalExtraHours: minutesToTime(totalExtraMinutes),
+      employeeTotalShortHours: minutesToTime(totalShortMinutes),
+      employeeHoursByLeaveAndCompOff: minutesToTime(totalLeaveAndCompOff * dailyThreshold),
+      employeeFinalHoursByLeaveCompOffAndWorkedHours: minutesToTime(totalMinutesWorked + (totalLeaveAndCompOff * dailyThreshold)),
+      employeeActualShortFallHours: negativeMinutesToTime(companyWorkingHours - totalMinutesWorked),
       employeeLateInDays: totalLateIn,
       averagePunchInTime,
       averagePunchOutTime,
