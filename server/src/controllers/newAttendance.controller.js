@@ -611,6 +611,7 @@ export const newFetchMonthlyStatistic = async (req, res) => {
     let sundayBeforeJoining = 0;
     let holidayBeforeJoining = 0;
     let saturdayBeforeJoinig = 0;
+    let weeklyOffBeforeJoinig = 0;
 
     let joining = new Date(joiningDate);
 
@@ -622,10 +623,12 @@ export const newFetchMonthlyStatistic = async (req, res) => {
 
       if (current.getDay() === 0 && weeklyOff.includes("Sunday")) {
         sundayBeforeJoining++;
+        weeklyOffBeforeJoinig++;
       }
 
       if (current.getDay() === 6 && weeklyOff.includes("Saturday")) {
         saturdayBeforeJoinig++;
+        weeklyOffBeforeJoinig++;
       }
 
       let holiday = await Holiday.findOne({
@@ -901,7 +904,7 @@ export const newFetchMonthlyStatistic = async (req, res) => {
       calendarData.push(attendanceObject);
     };
 
-    let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalSundays + totalSaturdays + totalCompOff + sundayBeforeJoining + saturdayBeforeJoinig + holidayBeforeJoining);
+    let companyWorkingDays = totalDaysInMonth - (totalHolidays + totalWeeklyOff + totalCompOff + weeklyOffBeforeJoinig + holidayBeforeJoining);
     let companyWorkingHours = companyWorkingDays * dailyThreshold;
     let requiredWorkingHours = (totalPresent + totalHalfDays) * dailyThreshold;
 
@@ -932,17 +935,15 @@ export const newFetchMonthlyStatistic = async (req, res) => {
       employeeAbsentDays: totalAbsent,
       employeeLeaveDays: totalOnLeave,
       employeeCompOffDays: totalCompOff,
-      employeeWorkingHours: minutesToTime(totalMinutesWorked),
-      employeeRequiredWorkingHours: minutesToTime(requiredWorkingHours),
-      employeeShortfallHours: negativeMinutesToTime(actualShortfall),
       employeeTotalExtraHours: minutesToTime(totalExtraMinutes),
       employeeTotalShortHours: minutesToTime(totalShortMinutes),
-      employeeHoursByLeaveAndCompOff: minutesToTime(totalLeaveAndCompOff * dailyThreshold),
-      employeeFinalHoursByLeaveCompOffAndWorkedHours: minutesToTime(totalMinutesWorked + (totalLeaveAndCompOff * dailyThreshold)),
-      employeeActualShortFallHours: negativeMinutesToTime(companyWorkingHours - totalMinutesWorked),
-      employeeLateInDays: totalLateIn,
+      employeeWorkingHours: minutesToTime(totalMinutesWorked),
+      employeeShortfallHoursByWorkingHours: negativeMinutesToTime(companyWorkingHours - totalMinutesWorked),
+      employeeShortfallHours: negativeMinutesToTime(actualShortfall),
       averagePunchInTime,
       averagePunchOutTime,
+      employeeLateInDays: totalLateIn,
+      employeeRequiredWorkingHours: minutesToTime(requiredWorkingHours),
     };
 
     return res.status(200).json({ success: true, calendarData, monthlyStatics });

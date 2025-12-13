@@ -54,16 +54,13 @@ const AttendanceSummary = ({ attendance }) => {
       <div style={itemStyle}><span style={boldText}>Absent Days:</span> <span style={{ color: 'red', fontWeight: 'bold' }}>{attendance?.employeeAbsentDays}</span></div>
       <div style={itemStyle}><span style={boldText}>On Leave Days:</span> <span style={{ color: 'orange', fontWeight: 'bold' }}>{attendance?.employeeLeaveDays}</span></div>
       <div style={itemStyle}><span style={boldText}>Late In Days:</span> <span style={{ color: '#dc3545', fontWeight: 'bold' }}>{attendance?.employeeLateInDays}</span></div>
-      <div style={itemStyle}><span style={boldText}>Employee Over Time:</span> <span>{formatTimeToHoursMinutes(attendance?.employeeTotalExtraHours)}</span></div>
-      <div style={itemStyle}><span style={boldText}>Total Shortfall Hours:</span> <span>{attendance?.employeeActualShortFallHours?.charAt(0) === "+" ? "+" + formatTimeToHoursMinutes(attendance?.employeeActualShortFallHours) : formatTimeToHoursMinutes(attendance?.employeeActualShortFallHours)}</span></div>
       <div style={itemStyle}><span style={boldText}>Total Hours Worked:</span> <span>{formatTimeToHoursMinutes(attendance?.employeeWorkingHours) || 0}</span></div>
-      <div style={itemStyle}><span style={boldText}>Total Hours of Leave and Comp Off:</span> <span>{formatTimeToHoursMinutes(attendance?.employeeHoursByLeaveAndCompOff)}</span></div>
-      <div style={itemStyle}><span style={boldText}>Total Salary Hours: ({`${formatTimeToHoursMinutes(attendance?.employeeWorkingHours)} + ${formatTimeToHoursMinutes(attendance?.employeeHoursByLeaveAndCompOff)}`})
-      </span><span>{formatTimeToHoursMinutes(attendance?.employeeFinalHoursByLeaveCompOffAndWorkedHours)}</span></div>
+      {/* <div style={itemStyle}><span style={boldText}>Shortfall Hours:</span> <span>{attendance?.employeeShortfallHoursByWorkingHours?.charAt(0) === "+" ? "+" + formatTimeToHoursMinutes(attendance?.employeeShortfallHoursByWorkingHours) : formatTimeToHoursMinutes(attendance?.employeeShortfallHoursByWorkingHours)}</span></div> */}
+      {/* <div style={itemStyle}><span style={boldText}>Actual Shortfall Hours:</span> <span>{attendance?.employeeShortfallHours?.charAt(0) === "+" ? "+" + formatTimeToHoursMinutes(attendance?.employeeShortfallHours) : formatTimeToHoursMinutes(attendance?.employeeShortfallHours)}</span></div> */}
       <div style={itemStyle}><span style={boldText}>Average Punch In Time:</span> <span>{formatTimeWithAmPm(attendance?.averagePunchInTime)}</span></div>
       <div style={itemStyle}><span style={boldText}>Average Punch Out Time:</span> <span>{formatTimeWithAmPm(attendance?.averagePunchOutTime)}</span></div>
     </div>
   );
-};
+}
 
 export default AttendanceSummary;
