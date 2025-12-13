@@ -194,7 +194,7 @@ const SalarySlip = () => {
                     </div>
                     <div className="row mb-2">
                       <div className="col-5" style={{ fontWeight: "600", color: "black" }}>Monthly Gross Salary</div>
-                      <div className="col-7" style={{ fontWeight: "400", color: "black" }}>₹{employee?.monthlySalary}</div>
+                      <div className="col-7" style={{ fontWeight: "400", color: "black" }}>₹{Number(employee?.monthlySalary)?.toLocaleString("en-IN")}</div>
                     </div>
                   </div>
                 </div>
@@ -208,19 +208,39 @@ const SalarySlip = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
+                    {/* <tr>
                       <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>Monthly Gross Salary</td>
-                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}> ₹{employee?.monthlySalary}</td>
-                    </tr>
-                    <tr>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}> ₹{Number(employee?.monthlySalary)?.toLocaleString("en-IN")}</td>
+                    </tr> */}
+                    {/* <tr>
                       <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>Total Deduction ({salary[0]?.deductionDays} × ₹{salary[0]?.dailySalary})</td>
                       <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>-₹{salary[0]?.totalDeduction}</td>
+                    </tr> */}
+                    <tr>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>Weekly Off ({`${salary[0]?.totalWeeklyOff}`} &times; ₹{`${salary[0]?.dailySalary?.toFixed(2)}`})</td>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}> ₹{Number(salary[0]?.totalSalaryOfWeeklyOff?.toFixed(2))?.toLocaleString("en-IN")}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>Holidays ({`${salary[0]?.totalHolidays}`} &times; ₹{`${salary[0]?.dailySalary?.toFixed(2)}`})</td>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}> ₹{Number(salary[0]?.totalSalaryOfHoliday?.toFixed(2))?.toLocaleString("en-IN")}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>Leave ({`${salary[0]?.totalOnLeave}`} &times; ₹{`${salary[0]?.dailySalary?.toFixed(2)}`})</td>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}> ₹{Number(salary[0]?.totalSalaryOfOnLeave?.toFixed(2))?.toLocaleString("en-IN")}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>Copm Off ({`${salary[0]?.totalCompOff}`} &times; ₹{`${salary[0]?.dailySalary?.toFixed(2)}`})</td>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}> ₹{Number(salary[0]?.totalSalaryOfCompOff?.toFixed(2)?.toLocaleString("en-IN"))}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}>Working Hours ({`${salary[0]?.employeeHoursWorked}`} = {`${salary[0]?.employeeMinutesWorked}`} Minutes)</td>
+                      <td className="py-2 ps-3" style={{ border: "0.1px solid #eee", color: "black" }}> ₹{Number(salary[0]?.totalSalaryOfWorkedHours?.toFixed(2))?.toLocaleString("en-IN")}</td>
                     </tr>
                   </tbody>
                   <thead>
                     <tr>
                       <th className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}>Net Salary</th>
-                      <th className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}> ₹{salary[0]?.totalSalary}</th>
+                      <th className="py-2 ps-3" style={{ border: "0.1px solid #eee" }}> ₹{Number(salary[0]?.totalFinalSalary?.toFixed(2))?.toLocaleString("en-IN")}</th>
                     </tr>
                   </thead>
                 </table>
@@ -228,15 +248,15 @@ const SalarySlip = () => {
                 <div style={{ border: "1px solid #eee", marginTop: "2rem" }}>
                   <div className="d-flex justify-content-between px-3 mb-2 mt-2">
                     <div style={{ fontWeight: "600", color: "black" }}>Net Payable (Net Salary)</div>
-                    <div style={{ fontWeight: "600", color: "black" }}>₹{salary[0]?.totalSalary}</div>
+                    <div style={{ fontWeight: "600", color: "black" }}>₹{Number(salary[0]?.totalFinalSalary?.toFixed(2))?.toLocaleString("en-IN")}</div>
                   </div>
                   <div className="d-flex justify-content-between px-3 mb-2">
                     <div style={{ fontWeight: "600", color: "black" }}>Amount in Words</div>
-                    <div style={{ fontWeight: "600", color: "black" }}>{numberToWords(salary[0]?.totalSalary)}</div>
+                    <div style={{ fontWeight: "600", color: "black" }}>{numberToWords(salary[0]?.totalFinalSalary)}</div>
                   </div>
                 </div>
 
-                <h5 className="mt-5 mb-2" style={{ color: "black" }}>Salary Deduction Calculation ({getMonthName(month)} {year})</h5>
+                {/* <h5 className="mt-5 mb-2" style={{ color: "black" }}>Salary Deduction Calculation ({getMonthName(month)} {year})</h5>
                 <div className="ps-3" style={{ border: "1px solid #eee" }}>
                   <div className="row mb-2 mt-2 text-center" style={{ color: "black", fontWeight: "600" }}>
                     <div className="col">Required Working Hours</div>
@@ -252,7 +272,7 @@ const SalarySlip = () => {
                     <div className="col">{salary[0]?.employeeHoursShortfall} / {employee?.workingHoursPerDay} = {salary[0]?.deductionDays}</div>
                     <div className="col">{salary[0]?.deductionDays} × ₹{salary[0]?.dailySalary} = ₹{salary[0]?.totalDeduction}</div>
                   </div>
-                </div>
+                </div> */}
 
                 <h5 className="mt-5 mb-2" style={{ color: "black" }}>Attendance Summary ({getMonthName(month)} {year})</h5>
                 <div style={{ border: "1px solid #eee" }}>
@@ -264,6 +284,7 @@ const SalarySlip = () => {
                     <div className="col">Comp Off</div>
                     <div className="col">Weekly Off</div>
                     <div className="col">Holiday</div>
+                    <div className="col">Working Hours</div>
                   </div>
                   <div className="row mb-2 text-center" style={{ color: "black" }}>
                     <div className="col">{monthlyStatics?.employeePresentDays}</div>
@@ -273,7 +294,12 @@ const SalarySlip = () => {
                     <div className="col">{monthlyStatics?.employeeCompOffDays}</div>
                     <div className="col">{monthlyStatics?.totalSundays}</div>
                     <div className="col">{monthlyStatics?.totalHolidays}</div>
+                    <div className="col">{salary[0]?.employeeHoursWorked}</div>
                   </div>
+                </div>
+                <div className="mt-4">
+                  <span style={{ color: "black" }}><span style={{ color: "red" }}>* </span>Notes: One Minute Salary: ₹{salary[0]?.oneMinuteSalary}, {" "}</span>
+                  <span style={{ color: "black" }}>Per Day Salary: ₹{salary[0]?.dailySalary}</span>
                 </div>
                 <p className="text-center mt-5" style={{ color: "black" }}>This is a digitally generated document and does not require a signature or seal.</p>
               </div>
@@ -300,6 +326,7 @@ const SalarySlip = () => {
                     <div className="col">Comp Off</div>
                     <div className="col">Weekly Off</div>
                     <div className="col">Holiday</div>
+                    <div className="col">Working Hours</div>
                   </div>
                   <div className="row mb-2 text-center" style={{ color: "black" }}>
                     <div className="col">{monthlyStatics?.employeePresentDays}</div>
@@ -309,10 +336,11 @@ const SalarySlip = () => {
                     <div className="col">{monthlyStatics?.employeeCompOffDays}</div>
                     <div className="col">{monthlyStatics?.totalSundays}</div>
                     <div className="col">{monthlyStatics?.totalHolidays}</div>
+                    <div className="col">{salary[0]?.employeeHoursWorked}</div>
                   </div>
                 </div>
 
-                <h5 className="mt-5 mb-2" style={{ color: "black" }}>Working Hours Summary ({getMonthName(month)} {year})</h5>
+                {/* <h5 className="mt-5 mb-2" style={{ color: "black" }}>Working Hours Summary ({getMonthName(month)} {year})</h5>
                 <div style={{ border: "1px solid #eee" }}>
                   <div className="row mb-2 mt-2 text-center" style={{ color: "black", fontWeight: "600" }}>
                     <div className="col">Total Working Days</div>
@@ -326,7 +354,7 @@ const SalarySlip = () => {
                     <div className="col">{salary[0]?.employeeHoursWorked}</div>
                     <div className="col">{salary[0]?.employeeHoursShortfall}</div>
                   </div>
-                </div>
+                </div> */}
                 <p className="text-center mt-5" style={{ color: "black" }}>This is a digitally generated document and does not require a signature or seal.</p>
               </div>
             </>

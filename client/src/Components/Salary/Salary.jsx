@@ -261,15 +261,16 @@ const Salary = () => {
                                     <td>{index + 1}</td>
                                     <td>{d?.employeeName}</td>
                                     <td>{d?.monthlySalary}</td>
-                                    <td>{d?.totalFinalSalary}</td>
+                                    <td>{d?.totalFinalSalary?.toFixed(2)}</td>
                                     <td>
                                       <div><strong>One Minute Salary: </strong>{d?.oneMinuteSalary}</div>
                                       <div><strong>Per Day Salary: </strong>{d?.dailySalary}</div>
-                                      <div><strong>Salary Of Weekly Off ({`${d?.totalWeeklyOff}`}): </strong>{d?.totalSalaryOfWeeklyOff?.toFixed(2)}</div>
-                                      <div><strong>Salary Of On Leave ({`${d?.totalOnLeave}`}): </strong>{d?.totalSalaryOfOnLeave?.toFixed(2)}</div>
-                                      <div><strong>Salary Of Comp Off ({`${d?.totalCompOff}`}): </strong>{d?.totalSalaryOfCompOff?.toFixed(2)}</div>
-                                      <div><strong>Salary Of Working Hours ({`${d?.employeeHoursWorked}`} = {`${d?.employeeMinutesWorked}`} Minutes): </strong>{d?.totalSalaryOfWorkedHours?.toFixed(2)}</div>
-                                      <div><strong>Total Salary: </strong>{d?.totalFinalSalary}</div>
+                                      <div><strong>Salary Of Weekly Off ({`${d?.totalWeeklyOff}`}): </strong>{d?.totalSalaryOfWeeklyOff}</div>
+                                      <div><strong>Salary Of Holidays ({`${d?.totalHolidays}`}): </strong>{d?.totalSalaryOfHoliday}</div>
+                                      <div><strong>Salary Of On Leave ({`${d?.totalOnLeave}`}): </strong>{d?.totalSalaryOfOnLeave}</div>
+                                      <div><strong>Salary Of Comp Off ({`${d?.totalCompOff}`}): </strong>{d?.totalSalaryOfCompOff}</div>
+                                      <div><strong>Salary Of Working Hours ({`${d?.employeeHoursWorked}`} = {`${d?.employeeMinutesWorked}`} Minutes): </strong>{d?.totalSalaryOfWorkedHours}</div>
+                                      <div><strong>Total Salary: </strong>{d?.totalFinalSalary?.toFixed(2)}</div>
                                     </td>
                                     <td style={{ padding: "0.3rem" }}>
                                       <Link style={{ marginRight: "1rem" }} to={d?.salaryPaid === false ? `/pay-salary/${d?.employeeId}/${filters.month}/${filters.year}/${d?.totalSalary}/${encodeURIComponent(JSON.stringify(d))}` : ""}><button className="btn btn-primary">{d?.salaryPaid ? "Paid" : "Pay Salary"}</button></Link>

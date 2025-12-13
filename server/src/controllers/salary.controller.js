@@ -978,12 +978,12 @@ export const newFetchMonthlySalary = async (req, res) => {
         let transactionId = salaryRecord ? salaryRecord?.transactionId : "";
 
         // Salary Calculation
-        let employeeRequiredWorkingMinutes = (totalDaysInMonth - (totalHolidays + totalWeeklyOff + totalOnLeave + totalCompOff)) * dailyThreshold;
         let totalSalaryOfWeeklyOff = totalWeeklyOff * dailyThreshold * oneMinuteSalary;
+        let totalSalaryOfHoliday = totalHolidays * dailyThreshold * oneMinuteSalary;
         let totalSalaryOfOnLeave = totalOnLeave * dailyThreshold * oneMinuteSalary;
         let totalSalaryOfCompOff = totalCompOff * dailyThreshold * oneMinuteSalary;
         let totalSalaryOfWorkedHours = totalMinutesWorked * oneMinuteSalary;
-        let totalFinalSalary = totalSalaryOfWeeklyOff + totalSalaryOfOnLeave + totalSalaryOfCompOff + totalSalaryOfWorkedHours;
+        let totalFinalSalary = totalSalaryOfWeeklyOff + totalSalaryOfHoliday + totalSalaryOfOnLeave + totalSalaryOfCompOff + totalSalaryOfWorkedHours;
 
         return {
           month,
@@ -991,10 +991,11 @@ export const newFetchMonthlySalary = async (req, res) => {
           employeeId: employee?._id,
           employeeName: employee?.name,
           monthlySalary,
-          dailySalary: dailySalary.toFixed(2),
+          dailySalary,
           workingHoursPerDay,
-          totalSalary: totalSalary.toFixed(2),
+          deductionDays,
           totalDeduction: totalDeduction.toFixed(2),
+          totalSalary: totalSalary.toFixed(2),
           companyWorkingHours: minutesToTime(companyWorkingMinutes),
           companyWorkingDays: totalDaysInMonth - (totalHolidays + totalSundays),
           employeeHoursWorked: minutesToTime(totalMinutesWorked),
@@ -1004,12 +1005,11 @@ export const newFetchMonthlySalary = async (req, res) => {
           employeeTotalShortHours: minutesToTime(totalShortMinutes),
           oneMinuteSalary,
           totalSalaryOfWeeklyOff,
+          totalSalaryOfHoliday,
           totalSalaryOfOnLeave,
           totalSalaryOfCompOff,
           totalSalaryOfWorkedHours,
-          totalFinalSalary: totalFinalSalary.toFixed(2),
-          employeeRequiredWorkingHours: minutesToTime(employeeRequiredWorkingMinutes),
-          deductionDays,
+          totalFinalSalary,
           totalPresent,
           totalHalfDays,
           totalAbsent,
