@@ -1,0 +1,31 @@
+// Client ENV
+VITE_API_BASE_URL=https://codediffusion.info
+
+// Server ENV
+MONGO_URL=mongodb://admin:Shaurya1819@127.0.0.1:27017/crmcodediffusion?authSource=admin&replicaSet=rs0
+PORT=4000
+NODE_MODE=production
+JWT_SECRET_KEY=codediffusion.info@#Shaurya1819
+EXPIRES_IN=999d
+SENDER_EMAIL_ID=no-reply@codediffusion.in
+SENDER_EMAIL_APP_PASSWORD=rgsjwqxethayybkd
+RECEIVER_EMAIL_ID=no-reply@codediffusion.in
+
+PAYU_MERCHANT_KEY=6GnA96
+PAYU_SALT=0cagoTguxTOUpe9JfttKVqkXOjSoO5SS
+PAYU_BASE_URL=https://secure.payu.in
+SERVER_URL=https://codediffusion.info
+PAYU_SUCCESS_URL=https://codediffusion.info/api/v1/payment/success
+PAYU_FAILURE_URL=https://codediffusion.info/api/v1/payment/failure
+
+FIREBASE_TYPE=service_account
+FIREBASE_PROJECT_ID=code-diffusion-attendance
+FIREBASE_PRIVATE_KEY_ID=5a5ff4a4b0dda2e443cd123399ca03564d0cf75a
+FIREBASE_PRIVATE_KEY= "-----BEGIN PRIVATE KEY-----\nMIIEuwIBADANBgkqhkiG9w0BAQEFAASCBKUwggShAgEAAoIBAQCZVKkloyG2wKE/\nMA0qsacjmFvXrcC0YAyB3FWWBGIkRF2cO/Nh6huKjG1rd1xLDrk7ReViCf0qyk+g\neRj2OgpCCVCdTPzegscF1+pKHOVlVcdDPYHm7NDsutfEvm+Cg8nrMCaj08CqgkVA\nm0pyYHJtgQQ4ZCnkp+xsi5gUFvUREG6/JghLGP8cTqdj3qo0iALze6qSFDlkQfwD\nkxfVYwMNa2LgnDGKPhvd78mrOgXeQMoU6gaewqOF8h5FAmyH1qo8D24tSkGqHz8V\nmgaKxU0EjqDHVbERCxLkJkY16wP01Hh162cqmEdNWwV29Yg6jpumkDCQG4qqMZ7k\n3RYc1cu9AgMBAAECggEANOv/pbn0fPtnrEONh9rhcWu452xVQuyT5I6EC89fgF0I\nYlBe5MDE2ME3UwxTkqR2UnsBfSEtfINvkFe7weCugbRtWp2j+bjxsJahiwsGMj+1\nEwQ7vdSnF841gvanzkhmfQKVk54WtcNY27+9plSbqigJqN0JiJ5c/+n+h5CU7VpR\nmMAO/iIGBsJemKBVjlKeV99/KVk8xB03DQEL88/lCXOLb8rMvNJH0XUFzcMQ1srw\nC7LmmNI2j/A7gj8y8M9j6PydS9n7+xfFnYQ/J00GGty2mrdEtdb8w5MQ1yq1s0/i\nSo1M+/nXuZVGRBC2X3vgooz64bMCUVwjqXX/RXU+EQKBgQDStTUkhQoX9YmyVWj6\nuXn2G8cZ3Jw3N1KVRioxIJj/C6QirHdNbBqu2Kya5W6M8EBs3VgDt2xFuij01j3l\nZGZplBDB4pbip/TC463e4/ohHV/JLyofYsRNcPQLQpbYjZQznHQCY465lrNKsjo9\nJalzUde9LORbLXH+xRcCHeSdOwKBgQC6Sh1Y87lL0oSdG98jnNL3OIQu04X5D5+O\nGXEhI78vxHoCvCd3KGz7WfPVVWFgSC5fCxUKgxnkoUqMf/wbCMslWrarHAkot8pq\nNVeG52/NJ6kNvk+zZOXRx5Sv5u4TnSY4gjDp/d9Ga5Y2P72qPHsLSRz6fLnskxV9\nkLPqq7sLZwJ/LUTBJhdvE7as3qN66mLu0PEm1WeQKEy6cVehuOxH8oONv+VNvFR9\nZxMmAiFInv7+2GS1hBbkLBbStcdRhPcNCaHF9+G2iPuMmlJQCJLyKislaRO4+QU/\nJ2QdCk5EGkJQlMYIJns9LqIx4tpnqLturFfpAbujU/NvikzNpKbHdwKBgQCGUHGg\ndPmgpYRgEnxsHOIuxVzotjHeRVlxBv7+OdvbAPpHhomd7FPHVi/sHMc8uE5W0JK3\nJZdBtNkfPBf1Ff4CTMlvzaL87KbQtO0Ko0uEy5ekBRdJ7PGWsyONQB9fnOq1y4ig\n7R5Sk7eWHZcOatT8ahaus8cJv3K7Od2+0Vrm+QKBgDTa7afXElwPa8wxcM8MH0ks\nqwhrWxL82os3nmwa5+U0lKDGSpJDWauj8lh+Fd5vEesJTdQtg0EhFbl3U/y5iDsn\nptDa29Su2x6ce240j350SKxlPUwvJblFhd9dmrPrUnLiEDu/Bp7k6lk/UYr9faNL\nX/YaAY36/R6x6u9/XpFX\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-fbsvc@code-diffusion-attendance.iam.gserviceaccount.com
+FIREBASE_CLIENT_ID=100415144904474371058
+FIREBASE_AUTH_URI=https://accounts.google.com/o/oauth2/auth
+FIREBASE_TOKEN_URI=https://oauth2.googleapis.com/token
+FIREBASE_AUTH_PROVIDER_X509_CERT_URL=https://www.googleapis.com/oauth2/v1/certs
+FIREBASE_CLIENT_X509_CERT_URL=https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40code-diffusion-attendance.iam.gserviceaccount.com
+FIREBASE_UNIVERSE_DOMAIN=googleapis.com
