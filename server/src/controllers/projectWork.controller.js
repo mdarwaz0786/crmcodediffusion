@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import ProjectWork from "../models/projectWork.model.js";
 import Project from "../models/project.model.js";
+import Company from "../models/company.model.js";
 import Team from "../models/team.model.js";
 import ProjectStatus from "../models/projectStatus.model.js";
 import { sendEmail } from "../services/emailService.js";
@@ -14,6 +15,8 @@ export const createProjectWork = async (req, res) => {
   try {
     const { employee, project, status, date, description } = req.body;
     const company = req.company;
+
+    console.log(company);
 
     if (!employee || !project || !status || !date || !description) {
       return res.status(400).json({ success: false, message: "All fields are required." });
