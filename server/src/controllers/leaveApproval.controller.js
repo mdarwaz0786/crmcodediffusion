@@ -31,18 +31,16 @@ export const createLeaveApproval = async (req, res) => {
       return res.status(400).json({ success: false, message: "Company not found." });
     };
 
-    const paidLeave = rules?.paidLeavePerMonth;
-    const leaveSystemStartDate = rules?.leaveSystemStartDate;;
-
-    // List of required fields
     const requiredFields = ['employee', 'startDate', 'endDate', 'reason'];
 
-    // Check if any required field is missing or empty
     for (const field of requiredFields) {
       if (!req.body[field]) {
         return res.status(400).json({ success: false, message: `${field} is required` });
       };
     };
+
+    const paidLeave = rules?.paidLeavePerMonth;
+    const leaveSystemStartDate = rules?.leaveSystemStartDate;;
 
     const existingEmployee = await Team.findOne({ _id: employee, company }).populate("office");
 
@@ -114,9 +112,6 @@ export const createLeaveApproval = async (req, res) => {
     // Convert startDate and endDate to Date objects
     const start = new Date(startDate);
     const end = new Date(endDate);
-
-    // Ensure start date is not the current date or in the past 
-    const currentDate = new Date();
 
     if (start.setHours(0, 0, 0, 0) > end.setHours(0, 0, 0, 0)) {
       return res.status(400).json({ success: false, message: "Start date can not be later than end date." });
