@@ -167,32 +167,27 @@ export const newCreateAttendance = async (req, res) => {
     ).session(session);
 
     // Check if the day is Sunday or if it is a holiday
-    if (dayName === "Sunday" || dayName === "Saturday" || holiday) {
+    if (weeklyOff.includes(dayName) || holiday) {
+
       let reason = "";
 
-      // If both conditions are true
-      if (dayName === "Sunday" && weeklyOff.includes("Sunday")) {
-        reason = `Worked on ${dayName}`;
-      } else if (dayName === "Saturday" && weeklyOff.includes("Saturday")) {
+      if (weeklyOff.includes(dayName)) {
         reason = `Worked on ${dayName}`;
       } else if (holiday) {
         reason = `Worked on ${holiday.reason}`;
       };
 
       const compOffEntry = {
-        attendanceDate: attendanceDate,
+        attendanceDate,
         isApplied: false,
         isApproved: false,
         reason,
       };
 
-      if (weeklyOff.includes("Sunday") || weeklyOff.includes("Saturday") || holiday) {
-        // Update the eligibleCompOffDate
-        await Team.findOneAndUpdate(
-          { _id: employee, company: req.company },
-          { $addToSet: { eligibleCompOffDate: compOffEntry } },
-        ).session(session);
-      };
+      await Team.findOneAndUpdate(
+        { _id: employee, company: req.company },
+        { $addToSet: { eligibleCompOffDate: compOffEntry } },
+      ).session(session);
     };
 
     const sendBy = await Team.findOne({ _id: employee, company });
