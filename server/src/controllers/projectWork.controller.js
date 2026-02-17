@@ -16,8 +16,6 @@ export const createProjectWork = async (req, res) => {
     const { employee, project, status, date, description } = req.body;
     const company = req.company;
 
-    console.log(company);
-
     if (!employee || !project || !status || !date || !description) {
       return res.status(400).json({ success: false, message: "All fields are required." });
     };
